@@ -12,6 +12,8 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
     <Name>MBrace.Core</Name>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,6 +50,13 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Cloud\ICloud.fsi" />
@@ -64,8 +73,25 @@
     <Compile Include="Cloud\CloudFile.fsi" />
     <Compile Include="Cloud\CloudFile.fs" />
     <Compile Include="Cloud\CloudExtensions.fs" />
+    <None Include="packages.config" />
+    <None Include="app.config" />
+    <Compile Include="Runtime\Runtime.fs" />
+    <Compile Include="Runtime\ICloudRefStore.fs" />
+    <Compile Include="Runtime\IMutableCloudRefStore.fs" />
+    <Compile Include="Runtime\ICloudSeqStore.fs" />
+    <Compile Include="Runtime\ICloudFileStore.fs" />
+    <Compile Include="Runtime\DaemonConfig.fs" />
+    <Compile Include="Runtime\WorkerConfig.fs" />
+    <Compile Include="Runtime\Serializer.fs" />
+    <Compile Include="Runtime\Utils.fs" />
+    <Compile Include="Runtime\Exceptions.fs" />
+    <Compile Include="Runtime\CloudUtils.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FsPickler">
+      <HintPath>..\..\packages\FsPickler.0.8.6.2\lib\net45\FsPickler.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
@@ -83,6 +109,14 @@
       <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="Thespian">
+      <HintPath>..\..\packages\Thespian.0.0.1-alpha1\lib\net45\Thespian.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="UnionArgParser">
+      <HintPath>..\..\packages\UnionArgParser.0.5.9\lib\net40\UnionArgParser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
