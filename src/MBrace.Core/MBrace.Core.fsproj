@@ -73,8 +73,6 @@
     <Compile Include="Cloud\CloudFile.fsi" />
     <Compile Include="Cloud\CloudFile.fs" />
     <Compile Include="Cloud\CloudExtensions.fs" />
-    <None Include="packages.config" />
-    <None Include="app.config" />
     <Compile Include="Runtime\Runtime.fs" />
     <Compile Include="Runtime\ICloudRefStore.fs" />
     <Compile Include="Runtime\IMutableCloudRefStore.fs" />
@@ -86,6 +84,21 @@
     <Compile Include="Runtime\Utils.fs" />
     <Compile Include="Runtime\Exceptions.fs" />
     <Compile Include="Runtime\CloudUtils.fs" />
+    <Compile Include="Interpreter\CoreUtils.fs" />
+    <Compile Include="Interpreter\TagObject.fs" />
+    <Compile Include="Interpreter\CloudRefStore.fs" />
+    <Compile Include="Interpreter\MutableCloudRefStore.fs" />
+    <Compile Include="Interpreter\CloudSeqStore.fs" />
+    <Compile Include="Interpreter\CloudFileInterpretations.fs" />
+    <Compile Include="Interpreter\CloudFileStore.fs" />
+    <Compile Include="Interpreter\StoreLogger.fs" />
+    <Compile Include="Interpreter\CompilerStateMonad.fs" />
+    <None Include="Interpreter\QuotationCompiler.fs" />
+    <Compile Include="Interpreter\Data.fs" />
+    <Compile Include="Interpreter\Compiler.fs" />
+    <Compile Include="Interpreter\Interpreter.fs" />
+    <None Include="packages.config" />
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">
@@ -115,6 +128,10 @@
     </Reference>
     <Reference Include="UnionArgParser">
       <HintPath>..\..\packages\UnionArgParser.0.5.9\lib\net40\UnionArgParser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Unquote">
+      <HintPath>..\..\packages\Unquote.2.2.2\lib\net40\Unquote.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

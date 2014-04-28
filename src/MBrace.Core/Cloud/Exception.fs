@@ -9,7 +9,7 @@
     //
 
     [<AutoOpen>]
-    module private Utils =
+    module private ExceptionUtils =
 
         let inline write<'T> (sI : SerializationInfo) (name : string) (x : 'T) =
             sI.AddValue(name, x, typeof<'T>)
