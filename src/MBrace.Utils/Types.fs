@@ -165,11 +165,13 @@
                 Tail(unfold ())
 
 
+    #nowarn "44"
 
     module Queue =
 
         // immutable queue implementation
 
+        [<Obsolete("use something more efficient")>]
         type Queue<'T> private (front : 'T list, back : 'T list) =
             // TODO: amortize !!!
             let list = lazy (front @ List.rev back)

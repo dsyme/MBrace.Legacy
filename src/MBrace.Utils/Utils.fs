@@ -29,6 +29,11 @@ namespace Nessos.MBrace.Utils
         /// System.Diagnostics.Process.GetCurrentProcess()
         let selfProc = System.Diagnostics.Process.GetCurrentProcess()
 
+        /// detect the running version of F#
+        let fsharpVersion = typeof<int option>.Assembly.GetName().Version
+
+        let isFsharp31 = fsharpVersion >= System.Version("4.3.1")
+
         /// determines if current process runs in console window
         let isConsoleWindow = Environment.UserInteractive && selfProc.MainWindowHandle <> 0n
         
@@ -178,19 +183,22 @@ namespace Nessos.MBrace.Utils
         // http://t0yv0.blogspot.com/2012/07/speeding-up-f-printf.html
 
         type internal Cache<'T> private () =
-            static let atomMap = Atom.atom Map.empty<string, 'T>
+            static let cache = new System.Collections.Concurrent.ConcurrentDictionary<_,_>()
 
             static member Format(format: Printf.StringFormat<'T>) : 'T =
                 let key = format.Value
-                match atomMap.Value.TryFind(key) with
-                | Some r -> r
-                | _ ->
-                    let r = sprintf format
-                    Atom.swap atomMap (fun map -> Map.add key r map)
-                    r
+                let ok, value = cache.TryGetValue key
+                if ok then value
+                else
+                    let f = sprintf format
+                    let _ = cache.TryAdd(key, f)
+                    f
 
         /// fast sprintf
-        let sprintf' fmt = Cache<_>.Format(fmt)
+        let sprintf' fmt =
+            if isFsharp31 then sprintf fmt
+            else
+                Cache<_>.Format(fmt)
 
         /// memoized regex active pattern
         let (|RegexMatch|_|) =
