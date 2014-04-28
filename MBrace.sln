@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{798FCB
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Store", "src\MBrace.Store\MBrace.Store.fsproj", "{D8100318-42BC-4097-A994-8423F0CE1828}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Core", "src\MBrace.Core\MBrace.Core.fsproj", "{5B1AD626-0C09-48EA-8267-493100E1A206}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,10 @@ Global
 		{D8100318-42BC-4097-A994-8423F0CE1828}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8100318-42BC-4097-A994-8423F0CE1828}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8100318-42BC-4097-A994-8423F0CE1828}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B1AD626-0C09-48EA-8267-493100E1A206}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B1AD626-0C09-48EA-8267-493100E1A206}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B1AD626-0C09-48EA-8267-493100E1A206}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B1AD626-0C09-48EA-8267-493100E1A206}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
