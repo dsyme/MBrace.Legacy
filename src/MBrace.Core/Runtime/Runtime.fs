@@ -6,8 +6,9 @@
         open System
 
         open Nessos.Thespian
+        open Nessos.Vagrant
+        
         open Nessos.MBrace
-
         open Nessos.MBrace.Utils
         open Nessos.MBrace.Utils.AssemblyCache
         open Nessos.MBrace.Store
@@ -24,7 +25,7 @@
                 Type : byte []  // serialized System.Type
                 TypeName : string
                 ClientId : Guid
-                Assemblies : AssemblyPacket []
+                Assemblies : PortableAssembly []
             }
 
         type ExecuteResult = Result<obj>
@@ -121,11 +122,11 @@
             | GetAllProcessInfo of IReplyChannel<ProcessInfo []>
             | ClearProcessInfo of IReplyChannel<unit> * ProcessId // Clears process from logs if no longer running
             | ClearAllProcessInfo of IReplyChannel<unit> // Clears all inactive processes
-            | RequestDependencies of IReplyChannel<AssemblyPacket []> * AssemblyId [] // Assembly download API
+            | RequestDependencies of IReplyChannel<PortableAssembly []> * string [] // Assembly download API
             | KillProcess of IReplyChannel<unit> * ProcessId
 
 
-        and ProcessCreationResponse = Process of ProcessInfo | MissingAssemblies of AssemblyId []
+        and ProcessCreationResponse = Process of ProcessInfo | MissingAssemblies of AssemblyLoadResponse []
 
 
         type Runtime = 
