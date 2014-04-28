@@ -73,6 +73,7 @@
     <Compile Include="Cloud\CloudFile.fsi" />
     <Compile Include="Cloud\CloudFile.fs" />
     <Compile Include="Cloud\CloudExtensions.fs" />
+    <Compile Include="AssemblyCache.fs" />
     <Compile Include="Runtime\Runtime.fs" />
     <Compile Include="Runtime\ICloudRefStore.fs" />
     <Compile Include="Runtime\IMutableCloudRefStore.fs" />

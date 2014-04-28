@@ -6,17 +6,17 @@
     open Nessos.MBrace.Runtime.MBraceException
     open Nessos.MBrace.Utils
 
-    type internal Shell =
-        static member Settings = Nessos.MBrace.Shell.Shared.ShellSettingsRegistry.Value
-        
-        static member Compile () =
-            match Shell.Settings with
-            | Some conf ->
-                if conf.Verbose then do printfn "compiling interactions... "
-                match conf.ShellActor.PostAndReply RequestCompilation with
-                | Choice1Of2 assembly -> assembly
-                | Choice2Of2 e -> mfailwithInner e "compilation of interactions has failed; please report to the {m}brace team."
-            | _ -> mfailwith "Compiling interactions only supported in {m}brace shell."
+//    type internal Shell =
+//        static member Settings = Nessos.MBrace.Shell.Shared.ShellSettingsRegistry.Value
+//        
+//        static member Compile () =
+//            match Shell.Settings with
+//            | Some conf ->
+//                if conf.Verbose then do printfn "compiling interactions... "
+//                match conf.ShellActor.PostAndReply RequestCompilation with
+//                | Choice1Of2 assembly -> assembly
+//                | Choice2Of2 e -> mfailwithInner e "compilation of interactions has failed; please report to the {m}brace team."
+//            | _ -> mfailwith "Compiling interactions only supported in {m}brace shell."
 
 
     module internal Error =
