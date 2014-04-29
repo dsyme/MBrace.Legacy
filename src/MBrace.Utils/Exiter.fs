@@ -2,7 +2,7 @@
 
     open System
 
-    type ParserIExiter = UnionArgParser.IExiter
+    type ParserIExiter = Nessos.UnionArgParser.IExiter
 
     type IExiter =
         abstract Exit : ?message : string * ?id : int -> 'T
@@ -53,7 +53,7 @@
         
         let plugExiter (exiter : IExiter) : ParserIExiter =
             {
-                new UnionArgParser.IExiter with
+                new Nessos.UnionArgParser.IExiter with
                     member __.Exit(msg:string,?errorCode:int) =
                         exiter.Exit(message = msg, ?id = errorCode)
             }

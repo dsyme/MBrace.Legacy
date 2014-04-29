@@ -21,9 +21,9 @@
             ///than the runtime.
             static member ClientSideExpressionCheck : bool with set, get
 
-            ///The path that will be used as a local cache by the client. CloudRefs/CloudSeqs
-            ///may be cached there.
-            static member LocalCachePath : string with set, get
+//            ///The path that will be used as a local cache by the client. CloudRefs/CloudSeqs
+//            ///may be cached there.
+//            static member LocalCachePath : string with set, get
 
             ///The (relative/absolute) path to the mbraced.exe.
             static member MBracedExecutablePath : string with set, get
@@ -31,11 +31,11 @@
             ///Gets or sets the StoreProvider used by the client.
             static member StoreProvider : StoreProvider with set, get
         end
-
-namespace Nessos.MBrace.Runtime
-    open Nessos.MBrace.Client
-
-    type MBraceSettingsExtensions =
-        class
-            static member Init : unit -> unit
-        end
+//
+//namespace Nessos.MBrace.Runtime
+//    open Nessos.MBrace.Client
+//
+//    type MBraceSettingsExtensions =
+//        class
+//            static member Init : unit -> unit
+//        end

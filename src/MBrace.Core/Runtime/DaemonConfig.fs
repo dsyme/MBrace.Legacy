@@ -2,7 +2,7 @@
 
     open System
 
-    open UnionArgParser
+    open Nessos.UnionArgParser
 
     open Nessos.MBrace.Utils
 

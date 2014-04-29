@@ -53,7 +53,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="ClientSettings.fsi" />
+    <None Include="ClientSettings.fsi" />
     <Compile Include="ClientSettings.fs" />
     <Compile Include="QuotationAnalysis.fs" />
     <Compile Include="CloudComputation.fs" />
@@ -127,15 +127,15 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="UnionArgParser">
-      <HintPath>..\..\packages\UnionArgParser.0.5.9\lib\net40\UnionArgParser.dll</HintPath>
+      <HintPath>..\..\packages\UnionArgParser.0.6.0\lib\net40\UnionArgParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">
-      <HintPath>..\..\packages\Vagrant.0.1.0\lib\net45\Vagrant.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.1.1\lib\net45\Vagrant.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant.Cecil">
-      <HintPath>..\..\packages\Vagrant.0.1.0\lib\net45\Vagrant.Cecil.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.1.1\lib\net45\Vagrant.Cecil.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

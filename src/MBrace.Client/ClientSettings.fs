@@ -1,9 +1,12 @@
 namespace Nessos.MBrace.Client
 
     open System
+    open System.Reflection
     open System.IO
 
     open Nessos.FsPickler
+    open Nessos.UnionArgParser
+    open Nessos.Vagrant
     open Nessos.Thespian.Serialization
     open Nessos.Thespian.Remote
 
@@ -16,64 +19,36 @@ namespace Nessos.MBrace.Client
     open Nessos.MBrace.Store.Registry
     open Nessos.MBrace.Caching
 
-    module internal ConfigUtils =
-        // TODO: individual registrations should enforce some sort of locking
+    module private ConfigUtils =
 
-        let selfExe = System.Reflection.Assembly.GetExecutingAssembly().Location
+        type Configuration =
+            {
+                ClientId : Guid
 
-        let resolveMBracedExe (settings : ShellSettings option) =
-            match settings with
-            | Some settings -> settings.MBracedLocalExe
-            | None ->
-                let candidate = Path.Combine(Path.GetDirectoryName selfExe, "mbraced.exe")
-                if File.Exists candidate then Some candidate
-                else None
+                MBracedPath : string option
 
-        let registerSerializer (settings : ShellSettings option) =
+                WorkingDirectory : string
 
-            let pickler =
-                match settings with
-                | Some settings -> settings.ShellPickler
-                | None -> new FsPickler()
+                EnableClientSideStaticChecking : bool
 
-            IoC.RegisterValue<FsPickler>(pickler)
-            do Nessos.MBrace.Runtime.Serializer.Register pickler
-            pickler
+                Logger : ILogger
+                Vagrant : VagrantServer
+                StoreProvider : StoreProvider
+            }
 
-        let registerLogger (logger : ILogger option) =
-            let logger = 
-                match logger with
-                | None -> Logger.createNullLogger ()
-                | Some logger -> logger
-
-            IoC.RegisterValue<ILogger>(logger, behaviour = Override)
-
-        let resolveWorkingDirs (settings : ShellSettings option) =
-            let assemblyCachePath, localCachePath =
-                match settings with
-                | Some settings -> settings.AssemblyCachePath, settings.LocalCachePath
-                | None ->
-                    // create a temp directory
-                    let dir = Path.Combine(Path.GetTempPath(), sprintf "mbrace-cache-%d" selfProc.Id)
-                    let assemblyCachePath = Path.Combine(dir, "AssemblyCache")
-                    let localCachePath = Path.Combine(dir, "LocalCache")
-                    let populate () =
-                        if Directory.Exists dir then Directory.Delete(dir, true)
-                        Directory.CreateDirectory dir |> ignore
-                        Directory.CreateDirectory assemblyCachePath |> ignore
-                        Directory.CreateDirectory localCachePath |> ignore
-
-                    retry (RetryPolicy.Retry(2, 0.5<sec>)) populate
-
-                    assemblyCachePath, localCachePath
-
-            IoC.RegisterValue<LocalCacheStore>(LocalCacheStore(localCachePath), "cacheStore")
-            AssemblyCache.SetCacheDir assemblyCachePath
-
-            assemblyCachePath, localCachePath
-
-        let parseStoreProvider (settings : ShellSettings) =
-            StoreProvider.Parse(settings.StoreProvider, settings.StoreEndpoint)
+        and AppConfigParameter =
+            | MBraced_Path of string
+            | Working_Directory of string
+            | [<Mandatory>] Store_Provider of string
+            | [<Mandatory>] Store_Endpoint of string
+        with
+            interface IArgParserTemplate with
+                member config.Usage =
+                    match config with
+                    | MBraced_Path _ -> "path to a local mbraced executable."
+                    | Working_Directory _ -> "the working directory of this client instance. Leave blank for a temp folder."
+                    | Store_Provider _ -> "The type of storage to be used by mbrace."
+                    | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
         let activateDefaultStore (provider : StoreProvider) = 
             let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
@@ -88,92 +63,168 @@ namespace Nessos.MBrace.Client
             IoC.RegisterValue<Nessos.MBrace.Core.StoreLogger>(
                 Nessos.MBrace.Core.StoreLogger(store = storeInfo.Store, batchCount = 42, batchTimespan = 500), behaviour = Override)
 
+        let initConfiguration () =
+            
+            let parser = new UnionArgParser<AppConfigParameter>(bindingFlags = BindingFlags.NonPublic)
+            let thisAssembly = System.Reflection.Assembly.GetExecutingAssembly()
+            let parseResults = parser.ParseAppSettings(thisAssembly)
+            
+            // parse mbraced executable
+            let mbracedExe =
+                match parseResults.TryGetResult <@ MBraced_Path @> with
+                | None ->
+                    let candidate = Path.Combine(Path.GetDirectoryName thisAssembly.Location, "mbraced.exe")
+                    if File.Exists candidate then Some candidate
+                    else None
+                | Some path when not <| File.Exists path ->
+                    mfailwithf "Invalid configuration: '%s' does not exist." path
+                | _ as p -> p
+
+            // working directory
+            let workingDirectory =
+                match parseResults.TryGetResult <@ Working_Directory @> with
+                | None -> Path.Combine(Path.GetTempPath(), sprintf "mbrace-client-%d" selfProc.Id)
+                | Some path -> path
+
+            // parse store provider
+            let storeProvider = 
+                let provider = parseResults.GetResult <@ Store_Provider @>
+                let endpoint = parseResults.GetResult <@ Store_Endpoint @>
+                StoreProvider.Parse(provider, endpoint)
+
+            // Populate working directory
+            let vagrantDir = Path.Combine(workingDirectory, "Vagrant")
+            let assemblyCacheDir = Path.Combine(workingDirectory, "AssemblyCache")
+            let localCacheDir = Path.Combine(workingDirectory, "LocalCache")
+
+            let populate () =
+                if Directory.Exists workingDirectory then Directory.Delete(workingDirectory, true)
+                Directory.CreateDirectory workingDirectory |> ignore
+                Directory.CreateDirectory vagrantDir |> ignore
+                Directory.CreateDirectory assemblyCacheDir |> ignore
+                Directory.CreateDirectory localCacheDir |> ignore
+
+            do retry (RetryPolicy.Retry(2, 0.1<sec>)) populate
+
+            // activate store provider
+            do activateDefaultStore storeProvider
+
+            // activate vagrant
+            let vagrant = new VagrantServer(vagrantDir)
+
+            // register logger
+            let logger = Logger.createNullLogger()
+            IoC.RegisterValue<ILogger>(logger, behaviour = Override)
+
+            // register serializer
+            Serializer.Register vagrant.Pickler
+
+            // initialize connection pool
+            do ConnectionPool.TcpConnectionPool.Init()
+
+            {
+                ClientId = vagrant.UUId
+
+                EnableClientSideStaticChecking = true
+
+                MBracedPath = mbracedExe
+                WorkingDirectory = workingDirectory
+
+                Logger = logger
+                Vagrant = vagrant
+                StoreProvider = storeProvider
+            }
+
 
     open ConfigUtils
 
-
     type MBraceSettings private () =
 
-        static let clientId = Guid.NewGuid()
-        static let mbracedPath = ref None
-        static let defaultStoreProvider = ref None
-        static let clientSideExprCheck = ref true
-        static let localCachePath = ref None
-        static let assemblyCachePath = ref None
+        static let config = Atom.atom <| initConfiguration ()
 
-        static let init =
-            fun () ->
-                try
-                    do Assembly.RegisterAssemblyResolutionHandler()
-                    do ConnectionPool.TcpConnectionPool.Init()
-                    do registerLogger None
-
-                    let acp, lcp = resolveWorkingDirs Shell.Settings
-                    localCachePath := Some lcp
-                    assemblyCachePath := Some acp
-                    mbracedPath := resolveMBracedExe Shell.Settings
-
-                    let _ = registerSerializer Shell.Settings
-
-                    match Shell.Settings with
-                    | None -> ()
-                    | Some settings ->    
-                        defaultStoreProvider := Some <| parseStoreProvider settings
-                        activateDefaultStore defaultStoreProvider.Value.Value
-
-                with e ->
-                    match Shell.Settings with
-                    | Some settings ->
-                        settings.ShellActor.Post <| MBraceConfigError (sprintf "{m}brace fatal error: %s" e.Message, 42)
-                    | None -> 
-                        // will result in type initialization exception, probably not the best way
-                        reraise ()
-            |> runOnce
-
-        static do init ()
+//        static let clientId = Guid.NewGuid()
+//        static let mbracedPath = ref None
+//        static let defaultStoreProvider = ref None
+//        static let clientSideExprCheck = ref true
+//        static let localCachePath = ref None
+//        static let assemblyCachePath = ref None
+//
+//        static let init =
+//            fun () ->
+//                try
+//                    do Assembly.RegisterAssemblyResolutionHandler()
+//                    do ConnectionPool.TcpConnectionPool.Init()
+//                    do registerLogger None
+//
+//                    let acp, lcp = resolveWorkingDirs Shell.Settings
+//                    localCachePath := Some lcp
+//                    assemblyCachePath := Some acp
+//                    mbracedPath := resolveMBracedExe Shell.Settings
+//
+//                    let _ = registerSerializer Shell.Settings
+//
+//                    match Shell.Settings with
+//                    | None -> ()
+//                    | Some settings ->    
+//                        defaultStoreProvider := Some <| parseStoreProvider settings
+//                        activateDefaultStore defaultStoreProvider.Value.Value
+//
+//                with e ->
+//                    match Shell.Settings with
+//                    | Some settings ->
+//                        settings.ShellActor.Post <| MBraceConfigError (sprintf "{m}brace fatal error: %s" e.Message, 42)
+//                    | None -> 
+//                        // will result in type initialization exception, probably not the best way
+//                        reraise ()
+//            |> runOnce
+//
+//        static do init ()
         
-        static member ClientId = clientId
+        static member ClientId = config.Value.ClientId
 
         static member MBracedExecutablePath 
             with get () = 
-                match mbracedPath.Value with 
+                match config.Value.MBracedPath with 
                 | None -> mfailwith "No mbrace daemon executable defined." 
                 | Some p -> p
-            and set p = mbracedPath := Some p
+            and set p = 
+                if File.Exists p then
+                    config.Swap(fun c -> { c with MBracedPath = Some p })
+                else
+                    mfailwithf "Invalid path '%s'." p
 
         static member ClientSideExpressionCheck
-            with get () = clientSideExprCheck.Value
-            and set p = clientSideExprCheck := p
+            with get () = config.Value.EnableClientSideStaticChecking
+            and set p = config.Swap(fun c -> { c with EnableClientSideStaticChecking = p })
 
         static member StoreProvider
-            with get () = 
-                match defaultStoreProvider.Value with 
-                | None -> mfailwith "No default store provider has been specified."
-                | Some p -> p
+            with get () = config.Value.StoreProvider
             and set p = 
-                defaultStoreProvider := Some p
-                activateDefaultStore p
+                lock config (fun () ->
+                    do activateDefaultStore p
+                    config.Swap(fun c -> { c with StoreProvider = p })
+                )
 
-        static member TryGetStoreProvider () = defaultStoreProvider.Value
+        static member WorkingDirectory = config.Value.WorkingDirectory
 
-        static member LocalCachePath
-            with get () = localCachePath.Value.Value
-            and set p =
-                if Directory.Exists p then
-                    IoC.RegisterValue<LocalCacheStore>(LocalCacheStore(p), "cacheStore")
-                else mfailwith "Invalid cache directory specified."
+//        static member LocalCachePath
+//            with get () = localCachePath.Value.Value
+//            and set p =
+//                if Directory.Exists p then
+//                    IoC.RegisterValue<LocalCacheStore>(LocalCacheStore(p), "cacheStore")
+//                else mfailwith "Invalid cache directory specified."
+//
+//        static member AssemblyCachePath
+//            with get () = assemblyCachePath.Value.Value
+//            and set p =
+//                if Directory.Exists p then
+//                    AssemblyCache.SetCacheDir p
+//                else mfailwith "Invalid cache directory specified."
 
-        static member AssemblyCachePath
-            with get () = assemblyCachePath.Value.Value
-            and set p =
-                if Directory.Exists p then
-                    AssemblyCache.SetCacheDir p
-                else mfailwith "Invalid cache directory specified."
+        static member Vagrant = config.Value.Vagrant
 
-        static member internal Initialize () = init()
-
-namespace Nessos.MBrace.Runtime
-    open Nessos.MBrace.Client
-    
-    type MBraceSettingsExtensions =
-        static member Init () = MBraceSettings.Initialize()
+//namespace Nessos.MBrace.Runtime
+//    open Nessos.MBrace.Client
+//    
+//    type MBraceSettingsExtensions =
+//        static member Init () = MBraceSettings.Initialize()
