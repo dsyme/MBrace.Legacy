@@ -10,7 +10,7 @@
         
         open Nessos.MBrace
         open Nessos.MBrace.Utils
-        open Nessos.MBrace.Utils.AssemblyCache
+//        open Nessos.MBrace.Utils.AssemblyCache
         open Nessos.MBrace.Store
 
         type ProcessId = Nessos.MBrace.ProcessId
@@ -25,7 +25,7 @@
                 Type : byte []  // serialized System.Type
                 TypeName : string
                 ClientId : Guid
-                Assemblies : PortableAssembly []
+                Dependencies : AssemblyId []
             }
 
         type ExecuteResult = Result<obj>
@@ -83,7 +83,7 @@
                 Tasks : int
                 Result : ExecuteResultImage option
                 ProcessState: ProcessState
-                Dependencies : AssemblyId []
+                Dependencies : PortableAssembly []
                 ClientId : Guid
             }
 
@@ -115,18 +115,19 @@
             //MBrace.Exception => Failed to activate process
             //MBrace.SystemCorruptedException => system corruption while trying to activate process ;; SYSTEM FAULT
             //MBrace.SystemFailedException => SYSTEM FAULT
-            | CreateDynamicProcess of IReplyChannel<ProcessCreationResponse> * RequestId * ProcessImage
+            | CreateDynamicProcess of IReplyChannel<ProcessInfo> * ProcessImage
 //            | GetProcessResult of IReplyChannel<ExecuteResultImage> * ProcessId // marked for deprecation : client no longer sends messages of this type
 //            | TryGetProcessResult of IReplyChannel<ExecuteResultImage option> * ProcessId // ditto
             | GetProcessInfo of IReplyChannel<ProcessInfo> * ProcessId
             | GetAllProcessInfo of IReplyChannel<ProcessInfo []>
             | ClearProcessInfo of IReplyChannel<unit> * ProcessId // Clears process from logs if no longer running
             | ClearAllProcessInfo of IReplyChannel<unit> // Clears all inactive processes
-            | RequestDependencies of IReplyChannel<PortableAssembly []> * string [] // Assembly download API
+            | LoadDependencies of IReplyChannel<AssemblyLoadResponse []> * PortableAssembly []
+            | RequestDependencies of IReplyChannel<PortableAssembly []> * PortableAssembly [] // Assembly download API
             | KillProcess of IReplyChannel<unit> * ProcessId
 
 
-        and ProcessCreationResponse = Process of ProcessInfo | MissingAssemblies of AssemblyLoadResponse []
+//        and ProcessCreationResponse = Process of ProcessInfo | MissingAssemblies of AssemblyLoadResponse []
 
 
         type Runtime = 

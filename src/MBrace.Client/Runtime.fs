@@ -22,7 +22,7 @@ namespace Nessos.MBrace.Client
 
     [<Sealed>]
     type MBraceRuntime internal (runtimeActor : Actor<ClientRuntimeProxy>, isEncapsulatedActor : bool) =        
-        static do MBraceSettings.Initialize ()
+        static do MBraceSettings.ClientId |> ignore
 
         // the runtime proxy actor is responsible for two things:
         // * keeps a manifest of all runtime nodes as an internal state and updates it accordingly
@@ -125,9 +125,10 @@ namespace Nessos.MBrace.Client
         // temporary store sanity check
         // TODO : shell logger
         do if not <| runtimeUsesCompatibleStore runtime then
-            match Shell.Settings with
-            | Some s when s.Verbose -> eprintfn "Warning: connecting to runtime with incompatible store configuration."
-            | _ -> ()
+            eprintfn "Warning: connecting to runtime with incompatible store configuration."
+//            match Shell.Settings with
+//            | Some s when s.Verbose -> 
+//            | _ -> ()
             
         let postWithReplyAsync msgBuilder =
             async {
@@ -418,7 +419,7 @@ namespace Nessos.MBrace.Client
 
         member __.CreateProcess (expr : Expr<ICloud<'T>>, ?name) =
             try
-                let computation = CloudComputation<_>.Compile(expr, ?name = name)
+                let computation = CloudComputation<_>(expr, ?name = name)
                 processManager.CreateProcess computation
             with e -> Error.handle e
 
@@ -431,14 +432,14 @@ namespace Nessos.MBrace.Client
             } |> Error.handleAsync
 
         member __.RunAsync (expr : Expr<ICloud<'T>>, ?name) =
-            let computation = CloudComputation<_>.Compile(expr, ?name = name)
+            let computation = CloudComputation<_>(expr, ?name = name)
             __.RunAsync computation
 
         member __.Run (computation : CloudComputation<'T>) = __.RunAsync computation |> Error.handleAsync2
             
         member __.Run (expr : Expr<ICloud<'T>>, ?name) =
             try
-                let computation = CloudComputation<_>.Compile(expr, ?name = name)
+                let computation = CloudComputation<_>(expr, ?name = name)
                 __.Run computation 
             with e -> Error.handle e
 

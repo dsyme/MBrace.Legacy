@@ -7,6 +7,8 @@
 
     open Nessos.Thespian
 
+    open Nessos.Vagrant
+
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
@@ -15,7 +17,6 @@
     open Nessos.MBrace.Client.QuotationAnalysis
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.String
-    open Nessos.MBrace.Utils.AssemblyCache
     
     open Microsoft.FSharp.Quotations
 
@@ -133,6 +134,7 @@
                 | Value v -> Some v
                 | CompilerError (MBraceExn e) -> raise e
                 | CompilerError e -> mfailwithInner e "Cloud Compiler error. Process not started."
+                | Killed -> mfailwith "Process has been killed by the user."
                 | Fault e -> raise e
             with e -> Error.handle e
 
@@ -208,9 +210,11 @@
                         else
                             mkMBraceExn (Some e) "Cannot communicate with {m}brace runtime." |> Reply.exn |> reply
                             return state
+
                     | MessageHandlingException (_,_,_,e) ->
                         mkMBraceExn (Some e) "Runtime replied with exception." |> Reply.exn |> reply
                         return state
+
                     | e -> reply <| Reply.Exception e; return state
                 }
 
@@ -218,7 +222,7 @@
 
         let processManager = failoverActor.Ref
 
-        let verbosity = match Shell.Settings with Some conf -> conf.Verbose | _ -> false
+        let verbosity = true // match Shell.Settings with Some conf -> conf.Verbose | _ -> false
 
         let postMsg (msgBuilder : IReplyChannel<'T> -> ProcessManagerMsg) =
             async {
@@ -237,16 +241,14 @@
                 let! processInfo = postMsg <| fun ch -> GetProcessInfo(ch, pid)
 
                 if processInfo.ClientId <> MBraceSettings.ClientId then
-                    let missingAssemblies = processInfo.Dependencies |> Array.filter (not << AssemblyCache.Contains)
+                    let missingAssemblies = processInfo.Dependencies |> Array.filter (not << MBraceSettings.Vagrant.Client.IsLoadedAssembly)
                     if missingAssemblies.Length <> 0 then
                         if verbosity then printfn "Downloading dependencies for cloud process %d..." processInfo.ProcessId
                         
                         let! assemblies = postMsg <| fun ch -> RequestDependencies (ch, missingAssemblies)
-                        for asm in assemblies do
-                            AssemblyCache.Save asm
-                            AssemblyImage.Load asm.Image.Value |> ignore
-                        
-                        //if verbosity then printfn "done"
+                        let loadResults = MBraceSettings.Vagrant.Client.LoadPortableAssemblies assemblies
+                        if loadResults |> List.exists (function Loaded _ -> false | _ -> true) then
+                            return mfailwithf "Protocol error: could not download process dependencies."
 
                 return processInfo
             }
@@ -278,31 +280,42 @@
             async {
                 let requestId = RequestId.NewGuid()
 
-                let rec trySendProcess missingAssemblies =
-                    async {
-                        let processImage, firstRequest =
-                            match missingAssemblies with
-                            | None -> comp.GetHashBundle() , true
-                            | Some missing -> comp.GetMissingImageBundle missing , false
-                        
-                        if verbosity && not firstRequest then printfn "uploading dependencies... "
-
-                        let! response = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, processImage)
-                    
-                        match response with
-                        | Process info ->
-//                            if verbosity && not firstRequest then printfn "done"
-
-                            return Process<'T>(info, processManager)
-                        | MissingAssemblies missing ->
-                            if firstRequest then
-                                return! trySendProcess <| Some missing
-                            else
-                                return mfailwith "Failed to create cloud process."
-                    }
+                let postDependencies dependencies = async {
+                    let! response = processManager <!- fun ch -> LoadDependencies(ch, List.toArray dependencies)
+                    return Array.toList response
+                }
 
                 try
-                    return! trySendProcess None
+                    let! errors = MBraceSettings.Vagrant.SubmitObjectDependencies(postDependencies, comp.Value, false)
+
+                    let! info = processManager <!- fun ch -> CreateDynamicProcess(ch, comp.Image)
+
+                    return Process<'T>(info, processManager)
+//                let rec trySendProcess missingAssemblies =
+//                    async {
+//                        let processImage, firstRequest =
+//                            match missingAssemblies with
+//                            | None -> comp.GetHashBundle() , true
+//                            | Some missing -> comp.GetMissingImageBundle missing , false
+//                        
+//                        if verbosity && not firstRequest then printfn "uploading dependencies... "
+//
+//                        let! response = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, processImage)
+//                    
+//                        match response with
+//                        | Process info ->
+////                            if verbosity && not firstRequest then printfn "done"
+//
+//                            return Process<'T>(info, processManager)
+//                        | MissingAssemblies missing ->
+//                            if firstRequest then
+//                                return! trySendProcess <| Some missing
+//                            else
+//                                return mfailwith "Failed to create cloud process."
+//                    }
+//
+//                try
+//                    return! trySendProcess None
                 with
                 | MBraceExn e -> return! Async.Raise e
                 | MessageHandlingException (_,_,_,e) ->

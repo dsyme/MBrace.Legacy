@@ -13,7 +13,6 @@ namespace Nessos.MBrace.Client
     open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
-    open Nessos.MBrace.Utils.AssemblyCache
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Store
     open Nessos.MBrace.Store.Registry

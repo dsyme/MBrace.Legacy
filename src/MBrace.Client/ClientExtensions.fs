@@ -7,10 +7,10 @@ open Nessos.MBrace
 [<AutoOpen>]
 module ClientExtensions =
     type MBrace =
-        static member internal Compile (expr : Expr<ICloud<'R>>, ?name) = CloudComputation<_>.Compile (expr, ?name = name)
-        static member internal Compile (f : Expr<'I -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
-        static member internal Compile (f : Expr<'I1 -> 'I2 -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
-        static member internal Compile (f : Expr<'I1 -> 'I2 -> 'I3 -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
+        static member internal Compile (expr : Expr<ICloud<'R>>, ?name) = CloudComputation<_>(expr, ?name = name)
+//        static member internal Compile (f : Expr<'I -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
+//        static member internal Compile (f : Expr<'I1 -> 'I2 -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
+//        static member internal Compile (f : Expr<'I1 -> 'I2 -> 'I3 -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
 
         static member internal RunRemoteTask (runtime: MBraceRuntime) (expr : Expr<ICloud<'T>>) =
             let computation = MBrace.Compile expr

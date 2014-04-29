@@ -40,7 +40,7 @@ module Logs =
 type MBraceNode private (nodeRef: ActorRef<Runtime>, uri: Uri) as self = 
     // NOTE : uri field denotes mbrace uri
 
-    static do MBraceSettings.Initialize ()
+    static do MBraceSettings.ClientId |> ignore
 
     let handleError (e : exn) : 'T =
         match e with
@@ -220,7 +220,7 @@ type MBraceNode private (nodeRef: ActorRef<Runtime>, uri: Uri) as self =
             let logFiles = defaultArg logFiles []
 //            let compressSerialization = defaultArg compressSerialization MBraceSettings.SerializerCompression
 //            let serializerName = defaultArg serializerName MBraceSettings.SerializerName
-            let storeProvider = List.tryPick id [ storeProvider ; MBraceSettings.TryGetStoreProvider () ]
+            let storeProvider = defaultArg storeProvider MBraceSettings.StoreProvider
 
             // build arguments
             let args =
@@ -240,11 +240,9 @@ type MBraceNode private (nodeRef: ActorRef<Runtime>, uri: Uri) as self =
                     match permissions with Some p -> yield Permissions (int p) | _ -> ()
                     match workingDirectory with Some w -> yield Working_Directory w | _ -> ()
                     match logLevel with Some l -> yield Log_Level l.Value | _ -> ()
-                    match storeProvider with
-                    | None -> ()
-                    | Some sp ->
-                        yield Store_Provider sp.Name
-                        yield Store_EndPoint sp.EndPoint
+
+                    yield Store_Provider storeProvider.Name
+                    yield Store_EndPoint storeProvider.EndPoint
                 ]
         
             return! MBraceNode.SpawnAsync(args, ?background = background)

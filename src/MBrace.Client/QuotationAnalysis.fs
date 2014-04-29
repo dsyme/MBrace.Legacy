@@ -214,55 +214,55 @@ namespace Nessos.MBrace.Client
 
             aux false [] [expr]
 
-        // creates a memoizing function that traverses for dependency that satisfies predicate
-        // None : no dependency satisfying pred
-        // Some(bool, decl) : bool is true iff decl is same as argument
-        let createDependencyLocator (pred : FsiDeclaration -> bool) =
-            let lookupDeclaration = 
-                match Shell.Settings with 
-                | Some conf -> fun id -> conf.DeclarationIndex.Value.TryFind id 
-                | None -> fun _ -> None
-
-            let seek =
-                Ymemoize (fun seek (id : DeclarationId) ->
-                    match lookupDeclaration id with
-                    | None -> None
-                    | Some declaration when pred declaration -> Some declaration
-                    | Some declaration when declaration.Type = SafeProperty || declaration.Type = DeletedProperty -> None
-                    | Some declaration -> declaration.Dependencies |> List.tryPick (function Fsi (id,_) -> seek id | _ -> None))
-
-            fun (m : MethodOrProperty) -> 
-                match shellAssembly.Value with
-                | None -> None
-                | Some shellAsmb when m.DeclaringType.Assembly <> shellAsmb -> None
-                | _ -> 
-                    let id = DeclarationId.OfMemberInfo m.MemberInfo
-                    match seek id with
-                    | None -> None
-                    | Some decl -> Some(decl.Id = id, decl)
-
-
-        // declaration contains dependency from function in this assembly
-        let declarationDependsOnClientMethod =
-            createDependencyLocator 
-                (fun decl -> 
-                    decl.Type <> SafeProperty &&
-                    decl.Dependencies |> List.exists (function External (_,a) -> a = thisAssembly.Value | _ -> false))
-
-        let declarationDependsOnUnsafeProperty =
-            createDependencyLocator (fun decl -> decl.Type = UnsafeProperty)
-
-        let declarationDependsOnErasedProperty =
-            createDependencyLocator (fun decl -> decl.Type = DeletedProperty)
-
-
-        let inCurrentInteraction =
-            match Shell.Settings, shellAssembly.Value with 
-            | Some conf, Some shellAsmb ->
-                fun (t : Type) ->
-                    t.Assembly = shellAsmb &&
-                        rootModuleOrNamespace t |> conf.ModuleIndex.Value.ContainsKey |> not
-            | _ -> fun _ -> false
+//        // creates a memoizing function that traverses for dependency that satisfies predicate
+//        // None : no dependency satisfying pred
+//        // Some(bool, decl) : bool is true iff decl is same as argument
+//        let createDependencyLocator (pred : FsiDeclaration -> bool) =
+//            let lookupDeclaration = 
+//                match Shell.Settings with 
+//                | Some conf -> fun id -> conf.DeclarationIndex.Value.TryFind id 
+//                | None -> fun _ -> None
+//
+//            let seek =
+//                Ymemoize (fun seek (id : DeclarationId) ->
+//                    match lookupDeclaration id with
+//                    | None -> None
+//                    | Some declaration when pred declaration -> Some declaration
+//                    | Some declaration when declaration.Type = SafeProperty || declaration.Type = DeletedProperty -> None
+//                    | Some declaration -> declaration.Dependencies |> List.tryPick (function Fsi (id,_) -> seek id | _ -> None))
+//
+//            fun (m : MethodOrProperty) -> 
+//                match shellAssembly.Value with
+//                | None -> None
+//                | Some shellAsmb when m.DeclaringType.Assembly <> shellAsmb -> None
+//                | _ -> 
+//                    let id = DeclarationId.OfMemberInfo m.MemberInfo
+//                    match seek id with
+//                    | None -> None
+//                    | Some decl -> Some(decl.Id = id, decl)
+//
+//
+//        // declaration contains dependency from function in this assembly
+//        let declarationDependsOnClientMethod =
+//            createDependencyLocator 
+//                (fun decl -> 
+//                    decl.Type <> SafeProperty &&
+//                    decl.Dependencies |> List.exists (function External (_,a) -> a = thisAssembly.Value | _ -> false))
+//
+//        let declarationDependsOnUnsafeProperty =
+//            createDependencyLocator (fun decl -> decl.Type = UnsafeProperty)
+//
+//        let declarationDependsOnErasedProperty =
+//            createDependencyLocator (fun decl -> decl.Type = DeletedProperty)
+//
+//
+//        let inCurrentInteraction =
+//            match Shell.Settings, shellAssembly.Value with 
+//            | Some conf, Some shellAsmb ->
+//                fun (t : Type) ->
+//                    t.Assembly = shellAsmb &&
+//                        rootModuleOrNamespace t |> conf.ModuleIndex.Value.ContainsKey |> not
+//            | _ -> fun _ -> false
                 
 
         let checkForErrors (expr : Expr) =
@@ -278,9 +278,9 @@ namespace Nessos.MBrace.Client
 
                 let qname = match q.Name with None -> "Cloud block" | Some n -> sprintf' "Cloud block '%s'" n
 
-                let checkType (t : Type) =
-                    if inCurrentInteraction t then 
-                        errorf "%s depends on type '%s' that was declared in this interaction; this is not permitted." qname t.Name
+//                let checkType (t : Type) =
+//                    if inCurrentInteraction t then 
+//                        errorf "%s depends on type '%s' that was declared in this interaction; this is not permitted." qname t.Name
             
                 let checkBranch (e : Expr) =
                     match e with
@@ -288,47 +288,47 @@ namespace Nessos.MBrace.Client
                         let bindings = gatherTopLevelCloudBindings body
                         for binding in bindings do
                             if not <| Serializer.Pickler.IsSerializableType binding.Type then
-                                errorf "%s has top-level binding '%s' of type '%s' that is not serializable." qname binding.Name binding.Type.Name
+                                errorf "%s has binding '%s' of type '%s' that is not serializable." qname binding.Name binding.Type.Name
                     | MethodOrProperty mop ->
                         let mname = sprintf' "%s '%s'" (if mop.IsMethod then "function" else "value") mop.Name
-                        if inCurrentInteraction mop.DeclaringType then
-                            errorf "%s contains %s that was declared in this interaction; this is not permitted." qname mname
-                        elif mop.yieldsICloud() && not mop.IsReflectedDefinition then
+//                        if inCurrentInteraction mop.DeclaringType then
+//                            errorf "%s contains %s that was declared in this interaction; this is not permitted." qname mname
+                        if mop.yieldsICloud() && not mop.IsReflectedDefinition then
                             errorf "Cloud block '%s' missing [<Cloud>] attribute." mop.Name
                         elif mop.yieldsICloud() && mop.DeclaringType <> typeof<CloudBuilder> && not mop.MethodInfo.IsStatic then
                             errorf "Cloud block '%s' is non-static; this is not supported." mop.Name
-                        else
-                            match declarationDependsOnErasedProperty mop with
-                            | Some(true, _) -> errorf "%s contains unsupported '%s'." qname mname
-                            | Some(_,d) ->
-                                errorf "%s depends on unsupported value '%s'." qname d.Name
-                            | None ->
-
-                            match declarationDependsOnClientMethod mop with
-                            | Some(_, d) -> 
-                                errorf "%s depends on {m}brace %s '%s'; this is not permitted." 
-                                    qname (if d.Type = Method then "function" else "value") d.Name
-                            // separate check if method itself is of client
-                            | None when mop.DeclaringType.Assembly = thisAssembly.Value ->
-                                errorf "%s depends on {m}brace %s '%s'; this is not permitted."
-                                    qname (if mop.IsMethod then "function" else "value") mop.Name
-                            | None ->
-
-                            if not <| mop.HasAttribute<NoWarnAttribute>() then
-                                match declarationDependsOnUnsafeProperty mop with
-                                | Some(true, _) when mop.yieldsICloud() ->
-                                    warnf "Cloud block '%s' is declared as value. Consider converting it to a function instead." mop.Name
-                                | Some(true, _) ->
-                                    warnf "%s captures '%s' in its closure. Consider converting it to a function instead." qname mname
-                                | Some(_, d) ->
-                                    warnf "%s captures '%s' in its closure. Consider converting it to a function instead." qname d.Name
-                                | _ -> ()
+//                        else
+//                            match declarationDependsOnErasedProperty mop with
+//                            | Some(true, _) -> errorf "%s contains unsupported '%s'." qname mname
+//                            | Some(_,d) ->
+//                                errorf "%s depends on unsupported value '%s'." qname d.Name
+//                            | None ->
+//
+//                            match declarationDependsOnClientMethod mop with
+//                            | Some(_, d) -> 
+//                                errorf "%s depends on {m}brace %s '%s'; this is not permitted." 
+//                                    qname (if d.Type = Method then "function" else "value") d.Name
+//                            // separate check if method itself is of client
+//                            | None when mop.DeclaringType.Assembly = thisAssembly.Value ->
+//                                errorf "%s depends on {m}brace %s '%s'; this is not permitted."
+//                                    qname (if mop.IsMethod then "function" else "value") mop.Name
+//                            | None ->
+//
+//                            if not <| mop.HasAttribute<NoWarnAttribute>() then
+//                                match declarationDependsOnUnsafeProperty mop with
+//                                | Some(true, _) when mop.yieldsICloud() ->
+//                                    warnf "Cloud block '%s' is declared as value. Consider converting it to a function instead." mop.Name
+//                                | Some(true, _) ->
+//                                    warnf "%s captures '%s' in its closure. Consider converting it to a function instead." qname mname
+//                                | Some(_, d) ->
+//                                    warnf "%s captures '%s' in its closure. Consider converting it to a function instead." qname d.Name
+//                                | _ -> ()
                         
-                            ()
-                    | Value(o,_) when o <> null -> checkType <| o.GetType()
+//                            ()
+//                    | Value(o,_) when o <> null -> checkType <| o.GetType()
                     | _ -> ()
 
-                    try checkType e.Type with _ -> ()
+//                    try checkType e.Type with _ -> ()
 
 
                 Expr.iter checkBranch q.Expr
@@ -339,29 +339,35 @@ namespace Nessos.MBrace.Client
             warnings.Value, errors.Value
 
 
-        // a wrapper for assembly exportation
-        type AssemblyContainer (assembly : AssemblyKind) =
-            let header = { FullName = assembly.FullName ; Hash = AssemblyCache.ComputeHash assembly.Location }
+//        // a wrapper for assembly exportation
+//        type AssemblyContainer (assembly : AssemblyKind) =
+//            let header = { FullName = assembly.FullName ; Hash = AssemblyCache.ComputeHash assembly.Location }
+//
+//            member __.Location = assembly.Location
+//            member __.Header   = header
+//            member __.HashPacket = { Header = header ; Image = None }
+//            member __.ImagePacket = { Header = header ; Image = Some <| AssemblyImage.Create assembly.Location }
 
-            member __.Location = assembly.Location
-            member __.Header   = header
-            member __.HashPacket = { Header = header ; Image = None }
-            member __.ImagePacket = { Header = header ; Image = Some <| AssemblyImage.Create assembly.Location }
-
-
-
-        let clientSideCompile (expr : Expr<ICloud<'T>>) =
+        let clientSideCompile throwOnError (expr : Expr<ICloud<'T>>) =
             let warnings, errors = checkForErrors expr
 
-            if MBraceSettings.ClientSideExpressionCheck then
-                if not errors.IsEmpty then
-                    let errors = errors |> Seq.map (fun e -> e.ToString()) |> String.concat "\n"
-                    mfailwithf "Supplied cloud block contains errors:\n%s" errors
+            if throwOnError && not errors.IsEmpty then
+                let errors = errors |> Seq.map (fun e -> e.ToString()) |> String.concat "\n"
+                mfailwithf "Supplied cloud block contains errors:\n%s" errors
 
-            // warning: this compiles shell code as a side-effect
-            let dependencies = analyzeQuotationDependencies expr
+            // force compilation now, if needed
+            let dependencies = MBraceSettings.Vagrant.ComputeObjectDependencies(expr, permitCompilation = true)
 
-            if dependencies |> Array.exists (function FsiTypeProvider _ -> true | _ -> false) then
-                mfailwith "Type providers not supported."
-        
-            dependencies |> Array.map (fun a -> AssemblyContainer a), Seq.toList warnings
+            warnings, errors, dependencies
+
+    
+
+
+
+//            // warning: this compiles shell code as a side-effect
+//            let dependencies = analyzeQuotationDependencies expr
+//
+//            if dependencies |> Array.exists (function FsiTypeProvider _ -> true | _ -> false) then
+//                mfailwith "Type providers not supported."
+//        
+//            dependencies |> Array.map (fun a -> AssemblyContainer a), Seq.toList warnings
