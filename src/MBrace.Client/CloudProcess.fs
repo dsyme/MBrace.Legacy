@@ -241,7 +241,7 @@
                 let! processInfo = postMsg <| fun ch -> GetProcessInfo(ch, pid)
 
                 if processInfo.ClientId <> MBraceSettings.ClientId then
-                    let missingAssemblies = processInfo.Dependencies |> Array.filter (not << MBraceSettings.Vagrant.Client.IsLoadedAssembly)
+                    let missingAssemblies = processInfo.Dependencies |> List.filter (failwith "") //(not << MBraceSettings.Vagrant.Client.IsLoadedAssembly)
                     if missingAssemblies.Length <> 0 then
                         if verbosity then printfn "Downloading dependencies for cloud process %d..." processInfo.ProcessId
                         
@@ -281,8 +281,8 @@
                 let requestId = RequestId.NewGuid()
 
                 let postDependencies dependencies = async {
-                    let! response = processManager <!- fun ch -> LoadDependencies(ch, List.toArray dependencies)
-                    return Array.toList response
+                    let! response = processManager <!- fun ch -> LoadDependencies(ch, dependencies)
+                    return response
                 }
 
                 try

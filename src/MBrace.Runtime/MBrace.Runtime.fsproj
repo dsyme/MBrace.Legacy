@@ -5,13 +5,13 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>a303fe2d-ebac-42af-aad3-3700bdd996bd</ProjectGuid>
+    <ProjectGuid>17b6679b-ab3e-42ee-aeb3-86e4fb4ab29b</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>MBrace.Client</RootNamespace>
-    <AssemblyName>MBrace.Client</AssemblyName>
+    <RootNamespace>MBrace.Runtime</RootNamespace>
+    <AssemblyName>MBrace.Runtime</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
-    <Name>MBrace.Client</Name>
+    <Name>MBrace.Runtime</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -23,7 +23,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\MBrace.Client.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\MBrace.Runtime.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,7 +32,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\MBrace.Client.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\MBrace.Runtime.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -50,32 +50,38 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utils.fs" />
-    <None Include="ClientSettings.fsi" />
-    <Compile Include="ClientSettings.fs" />
-    <Compile Include="QuotationAnalysis.fs" />
-    <Compile Include="CloudComputation.fs" />
-    <None Include="CloudProcess.fsi" />
-    <Compile Include="CloudProcess.fs" />
-    <Compile Include="Node.fsi" />
-    <Compile Include="Node.fs" />
-    <Compile Include="Runtime.fsi" />
-    <Compile Include="Runtime.fs" />
-    <Compile Include="ClientExtensions.fs" />
-    <None Include="mbrace.fsx" />
-    <None Include="Tests.fsx" />
-    <None Include="PCG.fsx" />
-    <None Include="wordcount.fsx" />
-    <None Include="eirik.fsx" />
-    <None Include="MutableTests.fsx" />
-    <None Include="mapreduce.fsx" />
-    <None Include="raytracingtest.fsx" />
-    <None Include="perf-test-wordcount.fsx" />
-    <None Include="azure-perf-tests.fsx" />
-    <None Include="jan.fsx" />
-    <None Include="trap.fsx" />
+    <Compile Include="Actor.fs" />
+    <Compile Include="PerformanceMonitor.fs" />
+    <Compile Include="PublicTypes.fs" />
+    <Compile Include="MessageTypes.fs" />
+    <Compile Include="ActivationStrategies.fs" />
+    <Compile Include="AssemblyManager.fs" />
+    <Compile Include="ProcessMonitorForCluster.fs" />
+    <Compile Include="ProcessManager.fs" />
+    <Compile Include="ProcessDomainDb.fs" />
+    <Compile Include="ProcessDomainManager.fs" />
+    <Compile Include="InMemoryProcessDomainManager.fs" />
+    <Compile Include="WorkerPool.fs" />
+    <Compile Include="ContinuationMap.fs" />
+    <Compile Include="TaskLog.fs" />
+    <Compile Include="Scheduler.fs" />
+    <Compile Include="TaskManager.fs" />
+    <Compile Include="Logger.fs" />
+    <Compile Include="Worker.fs" />
+    <Compile Include="MBraceNode.fs" />
+    <Compile Include="Definitions.fs" />
+    <None Include="Experiments.fsx" />
+    <None Include="IMem.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
@@ -84,6 +90,7 @@
       <HintPath>..\..\packages\FsPickler.0.8.6.2\lib\net45\FsPickler.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Mono.Cecil">
       <HintPath>..\..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.dll</HintPath>
       <Private>True</Private>
@@ -107,21 +114,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\MBrace.Core\MBrace.Core.fsproj">
-      <Name>MBrace.Core</Name>
-      <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\MBrace.Store\MBrace.Store.fsproj">
-      <Name>MBrace.Store</Name>
-      <Project>{d8100318-42bc-4097-a994-8423f0ce1828}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
-      <Name>MBrace.Utils</Name>
-      <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <Reference Include="Thespian">
       <HintPath>..\..\packages\Thespian.0.0.2-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>
@@ -143,13 +135,23 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\MBrace.Core\MBrace.Core.fsproj">
+      <Name>MBrace.Core</Name>
+      <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Store\MBrace.Store.fsproj">
+      <Name>MBrace.Store</Name>
+      <Project>{d8100318-42bc-4097-a994-8423f0ce1828}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
+      <Name>MBrace.Utils</Name>
+      <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

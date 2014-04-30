@@ -25,7 +25,7 @@
                 Type : byte []  // serialized System.Type
                 TypeName : string
                 ClientId : Guid
-                Dependencies : AssemblyId []
+                Dependencies : AssemblyId list
             }
 
         type ExecuteResult = Result<obj>
@@ -83,7 +83,7 @@
                 Tasks : int
                 Result : ExecuteResultImage option
                 ProcessState: ProcessState
-                Dependencies : PortableAssembly []
+                Dependencies : AssemblyId list
                 ClientId : Guid
             }
 
@@ -122,8 +122,8 @@
             | GetAllProcessInfo of IReplyChannel<ProcessInfo []>
             | ClearProcessInfo of IReplyChannel<unit> * ProcessId // Clears process from logs if no longer running
             | ClearAllProcessInfo of IReplyChannel<unit> // Clears all inactive processes
-            | LoadDependencies of IReplyChannel<AssemblyLoadResponse []> * PortableAssembly []
-            | RequestDependencies of IReplyChannel<PortableAssembly []> * PortableAssembly [] // Assembly download API
+            | LoadDependencies of IReplyChannel<AssemblyLoadResponse list> * PortableAssembly list
+            | RequestDependencies of IReplyChannel<PortableAssembly list> * AssemblyId list // Assembly download API
             | KillProcess of IReplyChannel<unit> * ProcessId
 
 

@@ -44,7 +44,7 @@
                 Computation = Serializer.Pickler.Pickle expr
                 Type = Serializer.Pickler.Pickle expr.Type
                 TypeName = Reflection.prettyPrint typeof<'T>
-                Dependencies = dependencies |> Seq.map (fun d -> VagrantUtils.ComputeAssemblyId d) |> Seq.toArray
+                Dependencies = dependencies |> List.map VagrantUtils.ComputeAssemblyId
             }
 
 
