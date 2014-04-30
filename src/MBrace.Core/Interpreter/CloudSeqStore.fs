@@ -13,7 +13,7 @@
     open Nessos.MBrace.Store
     open Nessos.MBrace.Caching
     
-    type internal CloudSeqStore (store : IStore, ?logger : ILogger) = 
+    type CloudSeqStore (store : IStore, ?logger : ILogger) = 
         let cacheStoreLazy = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler

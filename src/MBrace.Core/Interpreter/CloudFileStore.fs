@@ -11,7 +11,7 @@
     open Nessos.MBrace.Store
     open Nessos.MBrace.Caching
 
-    type internal CloudFileStore (store : IStore, ?logger : ILogger) =
+    type CloudFileStore (store : IStore, ?logger : ILogger) =
         let cache = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
 
         let logger = match logger with Some logger -> logger | None -> IoC.Resolve<ILogger>()
