@@ -29,6 +29,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Worker", "src\MBrace
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Daemon", "src\MBrace.Daemon\MBrace.Daemon.fsproj", "{C737F3E4-0D61-49D2-8D80-48D062E1DCDC}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Runtime.Tests", "tests\MBrace.Runtime.Tests\MBrace.Runtime.Tests.fsproj", "{B0EDB59E-83C5-4C31-8F7B-8E78EBF8B59F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4420A617-86A3-47ED-9D71-3321D6B24045}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,8 +67,15 @@ Global
 		{C737F3E4-0D61-49D2-8D80-48D062E1DCDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C737F3E4-0D61-49D2-8D80-48D062E1DCDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C737F3E4-0D61-49D2-8D80-48D062E1DCDC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0EDB59E-83C5-4C31-8F7B-8E78EBF8B59F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0EDB59E-83C5-4C31-8F7B-8E78EBF8B59F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0EDB59E-83C5-4C31-8F7B-8E78EBF8B59F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0EDB59E-83C5-4C31-8F7B-8E78EBF8B59F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B0EDB59E-83C5-4C31-8F7B-8E78EBF8B59F} = {4420A617-86A3-47ED-9D71-3321D6B24045}
 	EndGlobalSection
 EndGlobal
