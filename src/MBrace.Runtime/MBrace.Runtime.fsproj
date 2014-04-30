@@ -83,6 +83,7 @@
     <None Include="Experiments.fsx" />
     <None Include="IMem.fsx" />
     <None Include="packages.config" />
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">
@@ -126,11 +127,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">
-      <HintPath>..\..\packages\Vagrant.0.1.1\lib\net45\Vagrant.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.1.2\lib\net45\Vagrant.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant.Cecil">
-      <HintPath>..\..\packages\Vagrant.0.1.1\lib\net45\Vagrant.Cecil.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.1.2\lib\net45\Vagrant.Cecil.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
