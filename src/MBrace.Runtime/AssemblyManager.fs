@@ -17,17 +17,22 @@ open Nessos.MBrace.Utils.Reflection
 //    | None -> AssemblyCache.TryGetPacket id
 //    | Some a -> Some <| AssemblyPacket.OfAssembly a
 
-let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cached: Set<AssemblyId>) (msg: AssemblyManager) = 
+let private cache = lazy IoC.Resolve<AssemblyCache>()
+let private vagrant = lazy IoC.Resolve<VagrantClient> ()
+
+let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cached: Map<AssemblyId, int>) (msg: AssemblyManager) = 
     async {
-        return raise <| new NotImplementedException()
-//        match msg with
-//        | CacheAssemblies(RR ctx reply, assemblyPackets) ->
-//            //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
-//            try
-//                let cacheRef = ref cached
-//
-//                // returns Some header iff not cached
-//                let cachePacket (packet : AssemblyPacket) =
+        match msg with
+        | CacheAssemblies(RR ctx reply, assemblies) ->
+            //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
+            try
+                let cacheRef = ref cached
+
+                // returns 'Some id' iff not cached
+                let cache (pa : PortableAssembly) =
+                    match defaultArg (cacheRef.Value.TryFind pa.Id) with
+                    | None
+                    | Some 
 //                    if cacheRef.Value.Contains packet.Header then
 //                        // the paranoid will point out that if somebody manually deletes
 //                        // assemblies from the directory, the actor cache state will be rendered corrupt
@@ -46,54 +51,54 @@ let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cached: Set<AssemblyId>) 
 //                assemblyPackets |> Array.choose cachePacket |> Value |> reply
 //
 //                return cacheRef.Value
-//            with e ->
-//                ctx.LogError e //"AssemblyManager: Failed to cache assemblies."
-//                reply (Exception e)
-//
-//                return cached
-//
-//        | GetImages(RR ctx reply, from) ->
-//            try
-//                let source = 
-//                    match from with
-//                    | None -> cached :> _ seq
-//                    | Some hashes -> hashes :> _ seq
-//
-//                source |> Seq.map (tryGetPacket >> Option.get)
-//                        |> Seq.toArray
-//                        |> Value
-//                        |> reply
-//            with e ->
-//                ctx.LogError e //"AssemblyManager: Failed to get cached images."
-//                reply <| Exception e
-//
-//            return cached
-//
-//        | GetAllHashes(RR ctx reply) ->
-//            cached |> Set.toArray |> Value |> reply
-//
-//            return cached
-//
-//        | AssemblyManager.Clear ->
-//            return Set.empty
-//            
-//        | LoadAssemblies assemblies ->
-//            try
-//                for assembly in assemblies do
-//                    AssemblyId.TryLoad assembly |> ignore
-//            with e -> ctx.LogError e
-//
-//            return cached
-//
-//        | LoadAssembliesSync(RR ctx reply, assemblies) ->
-//            try
-//                for assembly in assemblies do
-//                    AssemblyId.TryLoad assembly |> ignore
-//
-//                reply nothing
-//            with e -> ctx.LogError e
-//
-//            return cached
+            with e ->
+                ctx.LogError e //"AssemblyManager: Failed to cache assemblies."
+                reply (Exception e)
+
+                return cached
+
+        | GetImages(RR ctx reply, from) ->
+            try
+                let source = 
+                    match from with
+                    | None -> cached :> _ seq
+                    | Some hashes -> hashes :> _ seq
+
+                source |> Seq.map (tryGetPacket >> Option.get)
+                        |> Seq.toArray
+                        |> Value
+                        |> reply
+            with e ->
+                ctx.LogError e //"AssemblyManager: Failed to get cached images."
+                reply <| Exception e
+
+            return cached
+
+        | GetAllHashes(RR ctx reply) ->
+            cached |> Set.toArray |> Value |> reply
+
+            return cached
+
+        | AssemblyManager.Clear ->
+            return Set.empty
+            
+        | LoadAssemblies assemblies ->
+            try
+                for assembly in assemblies do
+                    AssemblyId.TryLoad assembly |> ignore
+            with e -> ctx.LogError e
+
+            return cached
+
+        | LoadAssembliesSync(RR ctx reply, assemblies) ->
+            try
+                for assembly in assemblies do
+                    AssemblyId.TryLoad assembly |> ignore
+
+                reply nothing
+            with e -> ctx.LogError e
+
+            return cached
     }
 
 

@@ -241,14 +241,17 @@
                 let! processInfo = postMsg <| fun ch -> GetProcessInfo(ch, pid)
 
                 if processInfo.ClientId <> MBraceSettings.ClientId then
-                    let missingAssemblies = processInfo.Dependencies |> List.filter (failwith "") //(not << MBraceSettings.Vagrant.Client.IsLoadedAssembly)
+                    let missingAssemblies = processInfo.Dependencies |> List.filter (not << MBraceSettings.Vagrant.Client.IsLoadedAssembly)
                     if missingAssemblies.Length <> 0 then
                         if verbosity then printfn "Downloading dependencies for cloud process %d..." processInfo.ProcessId
                         
                         let! assemblies = postMsg <| fun ch -> RequestDependencies (ch, missingAssemblies)
                         let loadResults = MBraceSettings.Vagrant.Client.LoadPortableAssemblies assemblies
-                        if loadResults |> List.exists (function Loaded _ -> false | _ -> true) then
-                            return mfailwithf "Protocol error: could not download process dependencies."
+                        return
+                            match loadResults |> List.tryFind (function Loaded _ -> false | _ -> true) with
+                            | None -> ()
+                            | Some a ->
+                                mfailwithf "Protocol error: could not download dependency '%s'." a.Id.FullName
 
                 return processInfo
             }
@@ -281,14 +284,15 @@
                 let requestId = RequestId.NewGuid()
 
                 let postDependencies dependencies = async {
-                    let! response = processManager <!- fun ch -> LoadDependencies(ch, dependencies)
+                    let! response = processManager <!- fun ch -> LoadDependencies(ch, requestId, dependencies)
                     return response
                 }
 
                 try
+                    // serialization errors for dynamic assemblies
                     let! errors = MBraceSettings.Vagrant.SubmitObjectDependencies(postDependencies, comp.Value, false)
 
-                    let! info = processManager <!- fun ch -> CreateDynamicProcess(ch, comp.Image)
+                    let! info = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, comp.Image)
 
                     return Process<'T>(info, processManager)
 //                let rec trySendProcess missingAssemblies =
