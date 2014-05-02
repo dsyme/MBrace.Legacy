@@ -59,7 +59,6 @@
     <Compile Include="Cache.fs" />
     <Compile Include="CacheStore.fs" />
     <None Include="packages.config" />
-    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">

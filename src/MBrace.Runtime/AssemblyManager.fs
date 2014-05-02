@@ -17,17 +17,23 @@ open Nessos.MBrace.Utils.Reflection
 //    | None -> AssemblyCache.TryGetPacket id
 //    | Some a -> Some <| AssemblyPacket.OfAssembly a
 
+let private cache = lazy IoC.Resolve<AssemblyCache>()
+let private vagrant = lazy IoC.Resolve<VagrantClient> ()
+
 let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cached: Set<AssemblyId>) (msg: AssemblyManager) = 
     async {
         return raise <| new NotImplementedException()
 //        match msg with
-//        | CacheAssemblies(RR ctx reply, assemblyPackets) ->
-//            //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
+//        | CacheAssemblies(RR ctx reply, assemblies) -> 
+            //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
 //            try
 //                let cacheRef = ref cached
 //
-//                // returns Some header iff not cached
-//                let cachePacket (packet : AssemblyPacket) =
+//                // returns 'Some id' iff not cached
+//                let cache (pa : PortableAssembly) =
+//                    match defaultArg (cacheRef.Value.TryFind pa.Id) with
+//                    | None
+//                    | Some 
 //                    if cacheRef.Value.Contains packet.Header then
 //                        // the paranoid will point out that if somebody manually deletes
 //                        // assemblies from the directory, the actor cache state will be rendered corrupt

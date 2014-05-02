@@ -71,7 +71,6 @@
     <None Include="ReversibleTests.fsx" />
     <None Include="SerializerTests.fsx" />
     <None Include="packages.config" />
-    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

@@ -126,13 +126,13 @@
 
         let (|ProcessManagerReply|_|) (msg : ProcessManager) =
             match msg with
-            | CreateDynamicProcess (r,_) -> r :> IReplyChannel |> Some
+            | CreateDynamicProcess (r,_,_) -> r :> IReplyChannel |> Some
             | GetProcessInfo (r,_) -> r :> IReplyChannel |> Some
             | GetAllProcessInfo r -> r :> IReplyChannel |> Some
             | KillProcess (r,_) -> r :> IReplyChannel |> Some
             | ClearProcessInfo (r,_) -> r :> IReplyChannel |> Some
             | ClearAllProcessInfo r -> r :> IReplyChannel |> Some
-            | LoadDependencies(r,_) -> r :> IReplyChannel |> Some
+            | LoadDependencies(r,_,_) -> r :> IReplyChannel |> Some
             | RequestDependencies(r,_) -> r :> IReplyChannel |> Some
 
 

@@ -8,18 +8,6 @@
     open Nessos.MBrace.Runtime.MBraceException
     open Nessos.MBrace.Utils
 
-    [<AutoOpen>]
-    module internal Utils =
-
-        type VagrantClient with
-            
-            member client.IsLoadedAssembly (pa : PortableAssembly) =
-                match client.LoadPortableAssembly pa with
-                | Loaded _ -> true
-                | _ -> false
-                
-
-
     module internal Error =
 
         let handle =

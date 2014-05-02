@@ -11,7 +11,7 @@
     open Nessos.MBrace.Caching
     
 
-    type internal CloudRefStore(store : IStore, ?cache : Cache, ?logger : ILogger) =
+    type CloudRefStore(store : IStore, ?cache : Cache, ?logger : ILogger) =
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
         let cache = match cache with Some cache -> cache | None -> new Cache()
         let logger = match logger with Some logger -> logger | None -> IoC.Resolve<ILogger>()

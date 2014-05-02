@@ -13,7 +13,7 @@ type private Message =
     | QueueItem of (ProcessId * LogEntry)
     | QueueAndFlush of (ProcessId * LogEntry) * AsyncReplyChannel<unit>
 
-type internal StoreLogger (?store : IStore, ?batchCount, ?batchTimespan) =
+type StoreLogger (?store : IStore, ?batchCount, ?batchTimespan) =
     let store = defaultArg store (IoC.Resolve<IStore>())
 //    let serializer = new FsCoreSerializer ()
     let batchCount = defaultArg batchCount 50
