@@ -58,7 +58,6 @@
     <Compile Include="StoreRegistry.fs" />
     <Compile Include="Cache.fs" />
     <Compile Include="CacheStore.fs" />
-    <Compile Include="LocalCache.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
