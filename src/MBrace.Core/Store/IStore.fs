@@ -1,4 +1,4 @@
-namespace Nessos.MBrace.Store
+﻿namespace Nessos.MBrace.Store
     open System
     open System.IO
 
@@ -7,9 +7,6 @@ namespace Nessos.MBrace.Store
     type Folder = string
     type File = string
     type Tag = string
-
-    /// Unique store identifier
-    type StoreId = StoreId of byte []
 
     type IStore =
 
@@ -37,5 +34,5 @@ namespace Nessos.MBrace.Store
         abstract UpdateMutable      : Folder * File * (Stream -> Async<unit>) * Tag -> Async<bool * Tag>
         abstract ForceUpdateMutable : Folder * File * (Stream -> Async<unit>) -> Async<Tag>
 
-    and IStoreFactory =
+    type IStoreFactory =
         abstract CreateStoreFromConnectionString: connectionString : string -> IStore

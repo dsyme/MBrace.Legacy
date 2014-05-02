@@ -11,7 +11,7 @@
         open Nessos.MBrace
         open Nessos.MBrace.Utils
 //        open Nessos.MBrace.Utils.AssemblyCache
-        open Nessos.MBrace.Store
+        //open Nessos.MBrace.Store
 
         type ProcessId = Nessos.MBrace.ProcessId
         type RequestId = System.Guid
@@ -129,6 +129,8 @@
 
 //        and ProcessCreationResponse = Process of ProcessInfo | MissingAssemblies of AssemblyLoadResponse []
 
+        /// Unique store identifier
+        type StoreId = StoreId of byte []
 
         type Runtime = 
             //MasterBoot(replyChannel, endPointsOfSlaveNodes, numOfAltMasterNodes)
@@ -192,4 +194,4 @@
 
 namespace Nessos.MBrace.Client
 
-    type StoreId = Nessos.MBrace.Store.StoreId
+    type StoreId = Nessos.MBrace.Runtime.CommonAPI.StoreId

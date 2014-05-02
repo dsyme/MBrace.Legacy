@@ -73,18 +73,13 @@
     <Compile Include="Cloud\CloudFile.fsi" />
     <Compile Include="Cloud\CloudFile.fs" />
     <Compile Include="Cloud\CloudExtensions.fs" />
-    <Compile Include="Runtime\Runtime.fs" />
-    <Compile Include="Runtime\ICloudRefStore.fs" />
-    <Compile Include="Runtime\IMutableCloudRefStore.fs" />
-    <Compile Include="Runtime\ICloudSeqStore.fs" />
-    <Compile Include="Runtime\ICloudFileStore.fs" />
-    <Compile Include="Runtime\DaemonConfig.fs" />
-    <Compile Include="Runtime\WorkerConfig.fs" />
-    <Compile Include="Runtime\Serializer.fs" />
-    <Compile Include="Runtime\Utils.fs" />
-    <Compile Include="Runtime\Exceptions.fs" />
-    <Compile Include="Runtime\CloudUtils.fs" />
-    <Compile Include="Interpreter\CoreUtils.fs" />
+    <Compile Include="Store\IStore.fs" />
+    <Compile Include="Store\Cache.fs" />
+    <Compile Include="Store\CacheStore.fs" />
+    <Compile Include="Store\ICloudFileStore.fs" />
+    <Compile Include="Store\ICloudRefStore.fs" />
+    <Compile Include="Store\ICloudSeqStore.fs" />
+    <Compile Include="Store\IMutableCloudRefStore.fs" />
     <Compile Include="Interpreter\TagObject.fs" />
     <Compile Include="Interpreter\CloudRefStore.fs" />
     <Compile Include="Interpreter\MutableCloudRefStore.fs" />
@@ -97,6 +92,15 @@
     <Compile Include="Interpreter\Data.fs" />
     <Compile Include="Interpreter\Compiler.fs" />
     <Compile Include="Interpreter\Interpreter.fs" />
+    <Compile Include="Runtime\Runtime.fs" />
+    <Compile Include="Runtime\StoreRegistry.fs" />
+    <Compile Include="Runtime\DaemonConfig.fs" />
+    <Compile Include="Runtime\WorkerConfig.fs" />
+    <Compile Include="Runtime\Serializer.fs" />
+    <Compile Include="Runtime\Utils.fs" />
+    <Compile Include="Runtime\Exceptions.fs" />
+    <Compile Include="Runtime\CloudUtils.fs" />
+    <Compile Include="Runtime\CoreUtils.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
@@ -128,11 +132,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\MBrace.Store\MBrace.Store.fsproj">
-      <Name>MBrace.Store</Name>
-      <Project>{d8100318-42bc-4097-a994-8423f0ce1828}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
       <Name>MBrace.Utils</Name>
       <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>

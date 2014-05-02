@@ -11,9 +11,18 @@ namespace Nessos.MBrace.Core
     open Nessos.Thespian.PowerPack
     
     open Nessos.MBrace
-    open Nessos.MBrace.Runtime
+    //open Nessos.MBrace.Runtime
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Store
+
+    type InterpreterConfiguration =
+        {
+            CloudSeqStore         : ICloudSeqStore
+            CloudRefStore         : ICloudRefStore
+            CloudFileStore        : ICloudFileStore
+            IMutableCloudRefStore : IMutableCloudRefStore
+            Serializer            : Nessos.FsPickler.FsPickler
+        }
 
     module internal Interpreter =
         let logger = IoC.Resolve<ILogger>()
@@ -504,12 +513,18 @@ namespace Nessos.MBrace.Core
 
         and internal runLocal (processId : int) (taskId : string) 
                                 (functions : FunctionInfo list) (traceEnabled : bool)
-                                (stack : CloudExpr list) : Async<Value> = 
+                                (stack : CloudExpr list)
+                                (serializer : Nessos.FsPickler.FsPickler) : Async<Value> = 
             
             /// Serialize and deserialize a CloudExpr to force ``call by value`` semantics
             /// on parallel/choice expressions and ensure consistency between distributed execution
             /// and local/shared-memory scenarios
-            let deepClone : CloudExpr -> CloudExpr = Nessos.MBrace.Runtime.Serializer.Clone
+            let deepClone : CloudExpr -> CloudExpr = 
+                fun x ->
+                    use mem = new System.IO.MemoryStream()
+                    serializer.Serialize(mem, x)
+                    mem.Position <- 0L
+                    serializer.Deserialize<CloudExpr>(mem)
             
             let rec runLocal' (traceEnabled : bool) (stack : CloudExpr list) = 
                 async {
@@ -522,7 +537,7 @@ namespace Nessos.MBrace.Core
                         return! runLocal' traceEnabled <| cloudExpr :: rest
                     | ParallelExpr (cloudExprs, elementType) :: rest ->
                         let cloudExprs = Array.map deepClone cloudExprs
-                        let! values = cloudExprs |> Array.map (fun cloudExpr -> runLocal processId taskId functions traceEnabled [cloudExpr]) |> Async.Parallel
+                        let! values = cloudExprs |> Array.map (fun cloudExpr -> runLocal processId taskId functions traceEnabled [cloudExpr] serializer) |> Async.Parallel
                         match values |> Array.tryPick (fun value -> match value with Exc (ex, ctx) -> Some ex | _ -> None) with
                         | Some _ -> 
                             let parallelException = new Nessos.MBrace.ParallelCloudException(processId, values |> Array.map (fun value -> match value with Obj (value, _) -> ValueResult value | Exc (ex, ctx) -> ExceptionResult (ex, ctx) | _ -> raise <| new InvalidOperationException(sprintf "Invalid state %A" value))) :> exn
@@ -537,7 +552,7 @@ namespace Nessos.MBrace.Core
                         let! result = 
                                 choiceExprs |> Array.map (fun choiceExpr ->
                                                             async {
-                                                                let! result = runLocal processId taskId functions traceEnabled [choiceExpr] 
+                                                                let! result = runLocal processId taskId functions traceEnabled [choiceExpr] serializer
                                                                 match result with
                                                                 | Obj (ObjValue value, t) ->
                                                                     if value = null then // value is option type and we use the fact that None is represented as null
@@ -556,11 +571,10 @@ namespace Nessos.MBrace.Core
                     | _ -> return raise <| new InvalidOperationException(sprintf "Invalid state %A" stack)
                 }
             runLocal' traceEnabled stack
-
-                
-        and runLocalWrapper (computation : ICloud<'T>) =
+              
+        and runLocalWrapper (computation : ICloud<'T>) (serializer : Nessos.FsPickler.FsPickler) =
             async {
-                let! result = runLocal 0 "" [] false [unWrapCloudExpr computation]
+                let! result = runLocal 0 "" [] false [unWrapCloudExpr computation] serializer
                 match result with
                 | Obj (ObjValue value, t) -> return value :?> 'T
                 | Exc (ex, ctx) -> return raise ex

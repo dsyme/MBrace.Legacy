@@ -2,7 +2,7 @@
 
     open System.Runtime.Serialization
 
-    open Nessos.Thespian.PowerPack
+    //open Nessos.Thespian.PowerPack
 
     [<AutoOpen>]
     module TagObject = 

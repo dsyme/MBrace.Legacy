@@ -52,10 +52,8 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="IStore.fs" />
     <Compile Include="PersistentAtomMap.fs" />
     <Compile Include="FileSystemStore.fs" />
-    <Compile Include="StoreRegistry.fs" />
     <Compile Include="Cache.fs" />
     <Compile Include="CacheStore.fs" />
     <None Include="packages.config" />
@@ -75,6 +73,11 @@
     <Reference Include="System.Runtime.Caching" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MBrace.Core\MBrace.Core.fsproj">
+      <Name>MBrace.Core</Name>
+      <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
       <Name>MBrace.Utils</Name>
       <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
