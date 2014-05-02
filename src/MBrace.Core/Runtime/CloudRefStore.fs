@@ -11,10 +11,8 @@
     open Nessos.MBrace.Caching
     
 
-    type CloudRefStore(store : IStore, ?cache : Cache, ?logger : ILogger) =
+    type CloudRefStore(store : IStore, cache : Cache) =
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
-        let cache = match cache with Some cache -> cache | None -> new Cache()
-        let logger = match logger with Some logger -> logger | None -> IoC.Resolve<ILogger>()
 
         let extension = "ref"
         let postfix = fun s -> sprintf' "%s.%s" s extension

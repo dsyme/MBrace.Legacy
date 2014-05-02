@@ -13,8 +13,8 @@ type private Message =
     | QueueItem of (ProcessId * LogEntry)
     | QueueAndFlush of (ProcessId * LogEntry) * AsyncReplyChannel<unit>
 
-type StoreLogger (?store : IStore, ?batchCount, ?batchTimespan) =
-    let store = defaultArg store (IoC.Resolve<IStore>())
+type StoreLogger (store : IStore, ?batchCount, ?batchTimespan) =
+//    let store = defaultArg store (IoC.Resolve<IStore>())
 //    let serializer = new FsCoreSerializer ()
     let batchCount = defaultArg batchCount 50
     let batchTimespan = defaultArg batchTimespan 500
@@ -102,34 +102,39 @@ type StoreLogger (?store : IStore, ?batchCount, ?batchTimespan) =
     do batch.Start()
     do timer.Start()
 
-    member self.LogEntry (pid : ProcessId, entry : LogEntry) =
-        batch.Post(QueueItem(pid, entry))
+    interface ILogStore with
 
-    member self.LogEntryAndFlush = self.LogEntry >> self.Flush
+        member self.LogEntry (pid : ProcessId, entry : LogEntry) =
+            batch.Post(QueueItem(pid, entry))
 
-    member self.Flush () =
-        batch.PostAndReply(Flush)
+        member self.LogEntryAndFlush(pid : ProcessId, entry : LogEntry) = 
+            let self = self :> ILogStore
+            self.LogEntry(pid, entry) |> self.Flush
 
-    member self.DumpLogs (pid : ProcessId) : Async<LogEntry []> =
-        fetch pid
+        member self.Flush () =
+            batch.PostAndReply(Flush)
 
-    member self.DumpLogs () : Async<LogEntry []> = 
-        async {
-            let! pids = store.GetFolders() 
-            let pids = pids |> Array.choose isLogDir
-            let! logs = pids |> Array.map self.DumpLogs
+        member self.DumpLogs (pid : ProcessId) : Async<LogEntry []> =
+            fetch pid
+
+        member self.DumpLogs () : Async<LogEntry []> = 
+            async {
+                let self = self :> ILogStore
+                let! pids = store.GetFolders() 
+                let pids = pids |> Array.choose isLogDir
+                let! logs = pids |> Array.map self.DumpLogs
+                                 |> Async.Parallel
+                return logs |> Array.concat
+            }
+
+        member self.DeleteLogs (pid : ProcessId) : Async<unit> =
+            store.Delete(container pid)
+
+        member self.DeleteLogs () : Async<unit> =
+            async {
+                let! pids = store.GetFolders() 
+                let pids = pids |> Array.choose isLogDir
+                return! pids |> Array.map (fun pid -> store.Delete(container pid))
                              |> Async.Parallel
-            return logs |> Array.concat
-        }
-
-    member self.DeleteLogs (pid : ProcessId) : Async<unit> =
-        store.Delete(container pid)
-
-    member self.DeleteLogs () : Async<unit> =
-        async {
-            let! pids = store.GetFolders() 
-            let pids = pids |> Array.choose isLogDir
-            return! pids |> Array.map (fun pid -> store.Delete(container pid))
-                         |> Async.Parallel
-                         |> Async.Ignore
-        }
+                             |> Async.Ignore
+            }

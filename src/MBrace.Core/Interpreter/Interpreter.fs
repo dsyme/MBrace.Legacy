@@ -8,29 +8,12 @@ namespace Nessos.MBrace.Core
     open Microsoft.FSharp.Quotations
     open Microsoft.FSharp.Quotations.Patterns
 
-    open Nessos.Thespian.PowerPack
-    
     open Nessos.MBrace
-    //open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Store
 
-    type InterpreterConfiguration =
-        {
-            CloudSeqStore         : ICloudSeqStore
-            CloudRefStore         : ICloudRefStore
-            CloudFileStore        : ICloudFileStore
-            IMutableCloudRefStore : IMutableCloudRefStore
-            Serializer            : Nessos.FsPickler.FsPickler
-        }
-
     module internal Interpreter =
-        let logger = IoC.Resolve<ILogger>()
-        let cloudSeqStoreLazy = lazy ( IoC.Resolve<ICloudSeqStore>() ) 
-        let cloudFileStoreLazy = lazy ( IoC.Resolve<ICloudFileStore>() ) 
-        let cloudRefStoreLazy = lazy ( IoC.Resolve<ICloudRefStore>() )
-        let mutablecloudrefstorelazy = lazy ( IoC.Resolve<IMutableCloudRefStore>() )
-        let cloudLogStoreLazy = lazy ( IoC.Resolve<StoreLogger>() )
 
         //increasing number as user/trace log id
         let private logIdCounter = new AtomicCounter()
@@ -38,7 +21,16 @@ namespace Nessos.MBrace.Core
         // Monadic Trampoline Interpreter
         let rec internal run (processId : int) (taskId : string) 
                                 (functions : FunctionInfo list) (traceEnabled : bool)
-                                (stack : CloudExpr list) : Async<CloudExpr list> = 
+                                (stack : CloudExpr list)
+                                (config : InterpreterConfiguration) : Async<CloudExpr list> = 
+            
+            let logger = config.Logger
+            let cloudSeqStoreLazy = config.CloudSeqStore
+            let cloudFileStoreLazy = config.CloudFileStore
+            let cloudRefStoreLazy = config.CloudRefStore
+            let mutablecloudrefstorelazy = config.MutableCloudRefStore
+            let cloudLogStoreLazy = config.LogStore
+            
             let rec run' (traceEnabled : bool) (stack : CloudExpr list) =
                 // Helper Functions
                 let userLog msg = 
@@ -514,7 +506,7 @@ namespace Nessos.MBrace.Core
         and internal runLocal (processId : int) (taskId : string) 
                                 (functions : FunctionInfo list) (traceEnabled : bool)
                                 (stack : CloudExpr list)
-                                (serializer : Nessos.FsPickler.FsPickler) : Async<Value> = 
+                                (config : InterpreterConfiguration) : Async<Value> = 
             
             /// Serialize and deserialize a CloudExpr to force ``call by value`` semantics
             /// on parallel/choice expressions and ensure consistency between distributed execution
@@ -522,13 +514,13 @@ namespace Nessos.MBrace.Core
             let deepClone : CloudExpr -> CloudExpr = 
                 fun x ->
                     use mem = new System.IO.MemoryStream()
-                    serializer.Serialize(mem, x)
+                    config.Serializer.Value.Serialize(mem, x)
                     mem.Position <- 0L
-                    serializer.Deserialize<CloudExpr>(mem)
+                    config.Serializer.Value.Deserialize<CloudExpr>(mem)
             
             let rec runLocal' (traceEnabled : bool) (stack : CloudExpr list) = 
                 async {
-                    let! stack' = run processId taskId functions traceEnabled stack 
+                    let! stack' = run processId taskId functions traceEnabled stack config
                     match stack' with 
                     | [ValueExpr value] -> return value
                     | GetWorkerCountExpr :: rest -> 
@@ -537,7 +529,7 @@ namespace Nessos.MBrace.Core
                         return! runLocal' traceEnabled <| cloudExpr :: rest
                     | ParallelExpr (cloudExprs, elementType) :: rest ->
                         let cloudExprs = Array.map deepClone cloudExprs
-                        let! values = cloudExprs |> Array.map (fun cloudExpr -> runLocal processId taskId functions traceEnabled [cloudExpr] serializer) |> Async.Parallel
+                        let! values = cloudExprs |> Array.map (fun cloudExpr -> runLocal processId taskId functions traceEnabled [cloudExpr] config) |> Async.Parallel
                         match values |> Array.tryPick (fun value -> match value with Exc (ex, ctx) -> Some ex | _ -> None) with
                         | Some _ -> 
                             let parallelException = new Nessos.MBrace.ParallelCloudException(processId, values |> Array.map (fun value -> match value with Obj (value, _) -> ValueResult value | Exc (ex, ctx) -> ExceptionResult (ex, ctx) | _ -> raise <| new InvalidOperationException(sprintf "Invalid state %A" value))) :> exn
@@ -552,7 +544,7 @@ namespace Nessos.MBrace.Core
                         let! result = 
                                 choiceExprs |> Array.map (fun choiceExpr ->
                                                             async {
-                                                                let! result = runLocal processId taskId functions traceEnabled [choiceExpr] serializer
+                                                                let! result = runLocal processId taskId functions traceEnabled [choiceExpr] config
                                                                 match result with
                                                                 | Obj (ObjValue value, t) ->
                                                                     if value = null then // value is option type and we use the fact that None is represented as null
@@ -572,9 +564,9 @@ namespace Nessos.MBrace.Core
                 }
             runLocal' traceEnabled stack
               
-        and runLocalWrapper (computation : ICloud<'T>) (serializer : Nessos.FsPickler.FsPickler) =
+        and runLocalWrapper (computation : ICloud<'T>) (config : InterpreterConfiguration) =
             async {
-                let! result = runLocal 0 "" [] false [unWrapCloudExpr computation] serializer
+                let! result = runLocal 0 "" [] false [unWrapCloudExpr computation] config
                 match result with
                 | Obj (ObjValue value, t) -> return value :?> 'T
                 | Exc (ex, ctx) -> return raise ex

@@ -12,10 +12,9 @@
 
     open Nessos.FsPickler
 
-    type MutableCloudRefStore(store : IStore, ?logger : ILogger) =
+    type MutableCloudRefStore(store : IStore) =
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
-        let logger = match logger with Some logger -> logger | None -> IoC.Resolve<ILogger>()
 
         let extension = "mref"
         let postfix = fun s -> sprintf' "%s.%s" s extension

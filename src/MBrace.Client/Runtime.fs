@@ -286,7 +286,7 @@ namespace Nessos.MBrace.Client
                 mfailwith "incompatible store configuration."
 
             let clear = defaultArg clear false
-            let cloudLogStore = IoC.Resolve<StoreLogger>()
+            let cloudLogStore = IoC.Resolve<StoreLogger>() :> ILogStore
             let logs = cloudLogStore.DumpLogs(pid)
                        |> Async.RunSynchronously
             match clear with

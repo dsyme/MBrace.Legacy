@@ -13,12 +13,10 @@
     open Nessos.MBrace.Store
     open Nessos.MBrace.Caching
     
-    type CloudSeqStore (store : IStore, ?logger : ILogger) = 
+    type CloudSeqStore (store : IStore) = 
         let cacheStoreLazy = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
-        let logger = match logger with Some logger -> logger | None -> IoC.Resolve<ILogger>()
-
         let extension = "seq"
         let postfix = fun s -> sprintf' "%s.%s" s extension
 

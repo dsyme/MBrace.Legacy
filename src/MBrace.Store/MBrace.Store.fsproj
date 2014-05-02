@@ -54,8 +54,6 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="PersistentAtomMap.fs" />
     <Compile Include="FileSystemStore.fs" />
-    <Compile Include="Cache.fs" />
-    <Compile Include="CacheStore.fs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

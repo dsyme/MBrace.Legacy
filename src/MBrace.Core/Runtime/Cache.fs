@@ -12,7 +12,7 @@
     open Nessos.MBrace.Utils.Retry
     open Nessos.MBrace.Store
 
-    type Cache(?id : string, ?physicalMemoryLimitPercentage : int, ?location : string) = 
+    type Cache(cacheStore : IStore,?id : string, ?physicalMemoryLimitPercentage : int, ?location : string) = 
 //        let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
         // temporary dependency injection hack
         let pickler = IoC.Resolve<FsPickler>()
@@ -33,7 +33,7 @@
 
         let cacheDir = Path.Combine(location, "cache")
         do if Directory.Exists cacheDir then Async.Start <| async { Directory.Delete(cacheDir, true) }
-        let fileSystemStore = new FileSystemStore(cacheDir, name = "cacheStore") :> IStore
+        let fileSystemStore = cacheStore // new FileSystemStore(cacheDir, name = "cacheStore") :> IStore
 
 //#if APPDOMAIN_ISOLATION
 ////        let persistentCache = new System.Collections.Generic.Dictionary<string, string>()
@@ -113,39 +113,39 @@
 
 
 
-    type CachedDictionary<'Key,'Value>(?physicalMemoryLimitPercentage : int, ?location : string) =
-        let cache = new Cache(?physicalMemoryLimitPercentage = physicalMemoryLimitPercentage, ?location = location)
-
-        // probably not too safe
-        let mkHashString (key : obj) : string = key.GetHashCode().ToString()
-
-        member __.Count = cache.Count
-        member __.IsEmpty = cache.IsEmpty
-
-        member __.ContainsKey (k : 'Key) = cache.ContainsKey (mkHashString k)
-        member __.TryFind (k : 'Key) = cache.TryFind (mkHashString k) |> Option.map (fun v -> v :?> 'Value)
-        member __.Set (k : 'Key, v : 'Value) = cache.Set(mkHashString k, v)
-        member __.Get (k : 'Key) =
-            match __.TryFind k with
-            | Some v -> v
-            | None -> raise <| new ArgumentException("Key not found in cache.")
-        member __.Delete (k : 'Key) =
-            match __.ContainsKey k with
-            | true -> cache.Delete(mkHashString k)
-            | false -> raise <| new ArgumentException("Key not found in cache.")
-
-        member self.Item
-            with set (k : 'Key) (v: 'Value) = self.Set(k,v)
-            and get (k : 'Key) = self.Get k
-
-    type CachedSet<'T>(?physicalMemoryLimitPercentage : int, ?location : string) =
-        let cache = new Cache(?physicalMemoryLimitPercentage = physicalMemoryLimitPercentage, ?location = location)
-        let count = ref 0L
-
-        member __.Add (x : 'T) =
-            lock count (fun () -> cache.Set((!count).ToString(), x) ; count := !count + 1L)
-
-        member __.ToSeq () =
-            { 0L..(!count - 1L) } |> Seq.map (fun entry -> cache.Get (entry.ToString()) :?> 'T)
-
-        member __.Clear () = lock count (fun () -> count := 0L)
+//    type CachedDictionary<'Key,'Value>(cacheStore : IStore, ?physicalMemoryLimitPercentage : int, ?location : string) =
+//        let cache = new Cache(cacheStore, ?physicalMemoryLimitPercentage = physicalMemoryLimitPercentage, ?location = location)
+//
+//        // probably not too safe
+//        let mkHashString (key : obj) : string = key.GetHashCode().ToString()
+//
+//        member __.Count = cache.Count
+//        member __.IsEmpty = cache.IsEmpty
+//
+//        member __.ContainsKey (k : 'Key) = cache.ContainsKey (mkHashString k)
+//        member __.TryFind (k : 'Key) = cache.TryFind (mkHashString k) |> Option.map (fun v -> v :?> 'Value)
+//        member __.Set (k : 'Key, v : 'Value) = cache.Set(mkHashString k, v)
+//        member __.Get (k : 'Key) =
+//            match __.TryFind k with
+//            | Some v -> v
+//            | None -> raise <| new ArgumentException("Key not found in cache.")
+//        member __.Delete (k : 'Key) =
+//            match __.ContainsKey k with
+//            | true -> cache.Delete(mkHashString k)
+//            | false -> raise <| new ArgumentException("Key not found in cache.")
+//
+//        member self.Item
+//            with set (k : 'Key) (v: 'Value) = self.Set(k,v)
+//            and get (k : 'Key) = self.Get k
+//
+//    type CachedSet<'T>(cacheStore : IStore, ?physicalMemoryLimitPercentage : int, ?location : string) =
+//        let cache = new Cache(cacheStore, ?physicalMemoryLimitPercentage = physicalMemoryLimitPercentage, ?location = location)
+//        let count = ref 0L
+//
+//        member __.Add (x : 'T) =
+//            lock count (fun () -> cache.Set((!count).ToString(), x) ; count := !count + 1L)
+//
+//        member __.ToSeq () =
+//            { 0L..(!count - 1L) } |> Seq.map (fun entry -> cache.Get (entry.ToString()) :?> 'T)
+//
+//        member __.Clear () = lock count (fun () -> count := 0L)

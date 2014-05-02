@@ -11,10 +11,8 @@
     open Nessos.MBrace.Store
     open Nessos.MBrace.Caching
 
-    type CloudFileStore (store : IStore, ?logger : ILogger) =
+    type CloudFileStore (store : IStore) =
         let cache = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
-
-        let logger = match logger with Some logger -> logger | None -> IoC.Resolve<ILogger>()
 
         interface ICloudFileStore with
             override this.Create(container : Container, id : Id, serialize : (Stream -> Async<unit>)) : Async<ICloudFile> =
