@@ -20,6 +20,6 @@ open System.Reflection
 [<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("mbrace.worker")>]
 [<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("mbraced")>]
 [<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("MBrace.Client")>]
-[<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("MBrace.Runtime.Actors")>]
+[<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("MBrace.Runtime.Base")>]
 
 do ()
