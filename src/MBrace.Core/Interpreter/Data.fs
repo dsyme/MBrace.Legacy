@@ -7,8 +7,6 @@ module internal Nessos.MBrace.Core.Data
     
     open Microsoft.FSharp.Quotations
 
-    open Nessos.Thespian.PowerPack
-
     open Nessos.MBrace
     open Nessos.MBrace.Utils
 
