@@ -11,28 +11,28 @@
     open Nessos.MBrace.Store
     open Nessos.MBrace.Caching
 
-    type CloudFileStore (store : IStore) =
-        let cache = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
+    type CloudFileStore (store : IStore, cache : LocalCacheStore) =
+        //let cache = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
 
         interface ICloudFileStore with
             override this.Create(container : Container, id : Id, serialize : (Stream -> Async<unit>)) : Async<ICloudFile> =
                 async {
-                    match cache.Value with
-                    | None -> 
-                        do! store.Create(container, id, serialize, true)
-                    | Some cache -> 
-                        do! cache.Create(container, id, serialize)
-                        do! cache.Commit(container, id, asFile = true)
+//                    match cache.Value with
+//                    | None -> 
+//                        do! store.Create(container, id, serialize, true)
+//                    | Some cache -> 
+                    do! cache.Create(container, id, serialize)
+                    do! cache.Commit(container, id, asFile = true)
 
                     return CloudFile(id, container) :> _
                 }
 
             override this.Read(file : ICloudFile, deserialize) : Async<obj> =
                 async {
-                    let! stream = 
-                        match cache.Value with
-                        | None       -> store.Read(file.Container, file.Name)
-                        | Some cache -> cache.Read(file.Container, file.Name)
+                    let! stream = cache.Read(file.Container, file.Name)
+//                        match cache.Value with
+//                        | None       -> store.Read(file.Container, file.Name)
+//                        | Some cache -> cache.Read(file.Container, file.Name)
 
                     return! deserialize stream
                 }

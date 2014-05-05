@@ -13,8 +13,8 @@
     open Nessos.MBrace.Store
     open Nessos.MBrace.Caching
     
-    type CloudSeqStore (store : IStore) = 
-        let cacheStoreLazy = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
+    type CloudSeqStore (store : IStore, cacheStore : LocalCacheStore) = 
+        //let cacheStoreLazy = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
         let extension = "seq"
@@ -48,10 +48,10 @@
         let getCloudSeqInfo cont id = 
             async {
                 let id = postfix id
-                use! stream = 
-                    match cacheStoreLazy.Value with
-                    | None       -> store.Read(cont, id)
-                    | Some cache -> cache.Read(cont, id)
+                use! stream = cacheStore.Read(cont,id)
+//                    match cacheStoreLazy.Value with
+//                    | None       -> store.Read(cont, id)
+//                    | Some cache -> cache.Read(cont, id)
                 return getInfo stream
             }
 
@@ -67,11 +67,13 @@
                         return setInfo stream { Size = -1L; Count = length; Type = ty }
                     }
 
-                    match cacheStoreLazy.Value with
-                    | None -> do! store.Create(container, postfix id, serializeTo)
-                    | Some cache -> 
-                        do! cache.Create(container, postfix id, serializeTo)
-                        do! cache.Commit(container, postfix id)
+//                    match cacheStoreLazy.Value with
+//                    | None -> do! store.Create(container, postfix id, serializeTo)
+//                    | Some cache -> 
+//                        do! cache.Create(container, postfix id, serializeTo)
+//                        do! cache.Commit(container, postfix id)
+                    do! cacheStore.Create(container, postfix id, serializeTo)
+                    do! cacheStore.Commit(container, postfix id)
 
                     let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
                     let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| id :> obj; container :> obj |])
@@ -83,10 +85,10 @@
             member this.GetEnumerator<'T> (cseq : ICloudSeq<'T>) : Async<IEnumerator<'T>> =
                 async {
                     let cont, id, ty = cseq.Container, postfix cseq.Name, cseq.Type
-                    let! stream = 
-                        match cacheStoreLazy.Value with
-                        | None       -> store.Read(cont, id)
-                        | Some cache -> cache.Read(cont, id)
+                    let! stream = cacheStore.Read(cont, id)
+//                        match cacheStoreLazy.Value with
+//                        | None       -> store.Read(cont, id)
+//                        | Some cache -> cache.Read(cont, id)
 
                     let info = getInfo stream
 
