@@ -81,6 +81,7 @@
     <Compile Include="Stores\ICloudSeqStore.fs" />
     <Compile Include="Stores\IMutableCloudRefStore.fs" />
     <Compile Include="Stores\ILogStore.fs" />
+    <Compile Include="Stores\InMem\InMemoryStore.fs" />
     <Compile Include="Interpreter\TagObject.fs" />
     <Compile Include="Interpreter\CompilerStateMonad.fs" />
     <Compile Include="Interpreter\Data.fs" />
