@@ -51,9 +51,10 @@ namespace Nessos.MBrace.Client
 
         let activateDefaultStore (provider : StoreProvider) = 
             let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
+            let cache = new Cache(storeInfo.Store)
             IoC.RegisterValue (storeInfo, behaviour = Override)
             IoC.RegisterValue (storeInfo.Store, behaviour = Override)
-            IoC.RegisterValue<ICloudRefStore>(new Nessos.MBrace.Core.CloudRefStore(storeInfo.Store) :> ICloudRefStore, behaviour = Override)
+            IoC.RegisterValue<ICloudRefStore>(new Nessos.MBrace.Core.CloudRefStore(storeInfo.Store, cache) :> ICloudRefStore, behaviour = Override)
             IoC.RegisterValue<IMutableCloudRefStore>(new Nessos.MBrace.Core.MutableCloudRefStore(storeInfo.Store) :> IMutableCloudRefStore, behaviour = Override)
             IoC.RegisterValue<ICloudSeqStore>(
                 new Nessos.MBrace.Core.CloudSeqStore(storeInfo.Store) :> ICloudSeqStore, behaviour = Override)

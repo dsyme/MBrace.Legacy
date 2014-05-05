@@ -83,7 +83,7 @@
                 Tasks : int
                 Result : ExecuteResultImage option
                 ProcessState: ProcessState
-                Dependencies : AssemblyLoadInfo list
+                Dependencies : AssemblyId list
                 ClientId : Guid
             }
 
@@ -115,14 +115,16 @@
             //MBrace.Exception => Failed to activate process
             //MBrace.SystemCorruptedException => system corruption while trying to activate process ;; SYSTEM FAULT
             //MBrace.SystemFailedException => SYSTEM FAULT
-            | CreateDynamicProcess of IReplyChannel<ProcessInfo> * Guid * ProcessImage
+            | CreateDynamicProcess of Guid * IReplyChannel<ProcessInfo> * ProcessImage
+            | GetAssemblyLoadInfo of Guid * IReplyChannel<AssemblyLoadInfo list> * AssemblyId list
+            | LoadAssemblies of Guid * IReplyChannel<AssemblyLoadInfo list> * PortableAssembly list
+
 //            | GetProcessResult of IReplyChannel<ExecuteResultImage> * ProcessId // marked for deprecation : client no longer sends messages of this type
 //            | TryGetProcessResult of IReplyChannel<ExecuteResultImage option> * ProcessId // ditto
             | GetProcessInfo of IReplyChannel<ProcessInfo> * ProcessId
             | GetAllProcessInfo of IReplyChannel<ProcessInfo []>
             | ClearProcessInfo of IReplyChannel<unit> * ProcessId // Clears process from logs if no longer running
             | ClearAllProcessInfo of IReplyChannel<unit> // Clears all inactive processes
-            | LoadDependencies of IReplyChannel<AssemblyLoadInfo list> * Guid * PortableAssembly list
             | RequestDependencies of IReplyChannel<PortableAssembly list> * AssemblyId list // Assembly download API
             | KillProcess of IReplyChannel<unit> * ProcessId
 
