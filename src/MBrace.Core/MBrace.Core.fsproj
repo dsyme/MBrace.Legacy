@@ -89,6 +89,7 @@
     <Compile Include="Interpreter\Interpreter.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
+    <Compile Include="Stores\InMem\InMemoryStore.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">
