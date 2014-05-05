@@ -151,14 +151,14 @@ and AssemblyManager =
 and ProcessDomainManager =
     //Create a process domain
     //nodeManagerOfProcessDomain, processDomainId, isPublic = CreateProcessDomain(newProcessDomainid, preloadAssemblies)
-    | CreateProcessDomain of IReplyChannel<ActorRef<NodeManager> * ProcessDomainId * bool> * AssemblyId[]
+    | CreateProcessDomain of IReplyChannel<ActorRef<NodeManager> * ProcessDomainId * bool> * AssemblyId list
     //Destroy a process domain
     | DestroyProcessDomain of ProcessDomainId
     //Destroy all process domains
     | ClearProcessDomains of IReplyChannel<unit>
     //Allocate process domain for process
     //nodeManagerOfProcessDomain, clusterProxyManager, clusterProxyMap = AllocateProcessDomainForProcess(processId, requiredAssemblies)
-    | AllocateProcessDomainForProcess of IReplyChannel<ActorRef<NodeManager> * ActorRef<ClusterProxyManager> option * Nessos.Thespian.Atom<Map<ActivationReference, ReliableActorRef<RawProxy>>> option> * ProcessId * AssemblyId[]
+    | AllocateProcessDomainForProcess of IReplyChannel<ActorRef<NodeManager> * ActorRef<ClusterProxyManager> option * Nessos.Thespian.Atom<Map<ActivationReference, ReliableActorRef<RawProxy>>> option> * ProcessId * AssemblyId list
 //    | AllocateProcessDomainForProcess of IReplyChannel<ReliableActorRef<NodeManager> * ActorRef<ClusterProxyManager> option> * ProcessId * AssemblyId[]
     //Deallocate the process domain for a process
     | DeallocateProcessDomainForProcess of ProcessId

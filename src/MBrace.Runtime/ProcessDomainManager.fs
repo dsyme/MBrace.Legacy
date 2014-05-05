@@ -252,7 +252,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
                             Db = state.Db |> Database.insert <@ fun db -> db.ProcessDomain @> {
                                 Id = processDomainId
                                 NodeManager = ReliableActorRef.FromRef processDomainNodeManager
-                                LoadedAssemblies = preloadAssemblies |> Set.ofArray
+                                LoadedAssemblies = preloadAssemblies |> Set.ofList
                                 Port = portOpt
                                 ClusterProxyManager = clusterProxyManager
                                 ClusterProxyMap = proxyMap
@@ -371,7 +371,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
                     //Case 2: a subset of the required assemblies is already loaded
                     //in this case the loaded assemblies are a subset of the required assemblies
                     //Case 3: Something is different. Create a new process domain.
-                    let requestedAssemblies = assemblyIds |> Set.ofArray
+                    let requestedAssemblies = assemblyIds |> Set.ofList
                     let selected = 
                         candidateDomains 
                         |> Seq.map (fun (pdid, pidCount) -> 
@@ -408,7 +408,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
                         let nodeAssemblyManager = ReliableActorRef.FromRef (r :?> ActorRef<AssemblyManager>)
                         //FaultPoint
                         //-
-                        do! nodeAssemblyManager <!- fun ch -> LoadAssembliesSync(ch, extendedAssemblies |> Set.toArray)
+                        do! nodeAssemblyManager <!- fun ch -> LoadAssembliesSync(ch, extendedAssemblies |> Set.toList)
 
                         reply <| Value (processDomainNodeManager.UnreliableRef, clusterProxyManager |> Option.map Actor.ref, clusterProxyMap)
 
@@ -460,7 +460,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
 
                         return { state' with 
                                     Db = state.Db |> Database.insert <@ fun db -> db.ProcessDomain @>
-                                                        { Id = newProcessDomainId; NodeManager = processDomainNodeManager'; LoadedAssemblies = assemblyIds |> Set.ofArray; Port = portOpt; KillF = killF; ClusterProxyManager = clusterProxyManager; ClusterProxyMap = proxyMap }
+                                                        { Id = newProcessDomainId; NodeManager = processDomainNodeManager'; LoadedAssemblies = assemblyIds |> Set.ofList; Port = portOpt; KillF = killF; ClusterProxyManager = clusterProxyManager; ClusterProxyMap = proxyMap }
                                                   |> Database.insert <@ fun db -> db.Process @> { Id = processId; ProcessDomain = newProcessDomainId }
                                }
                 | Some processDomain ->

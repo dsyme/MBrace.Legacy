@@ -13,15 +13,16 @@ open Nessos.MBrace.Core
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Utils.Reflection
 
-//let private cache = lazy IoC.Resolve<VagrantCache>()
-//let private loader = lazy IoC.Resolve<VagrantClient> ()
+// Vagrant's cache & assembly loader are thread safe, but this should probably be moved inside the actor state.
+let private cache = lazy IoC.Resolve<VagrantCache>()
+let private loader = lazy IoC.Resolve<VagrantClient> ()
 
-let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cache : VagrantCache) (loader : VagrantClient) (msg: AssemblyManager) = 
+let assemblyManagerBehavior (ctx: BehaviorContext<_>) (msg: AssemblyManager) = 
 
     let loadAssemblies (ids : AssemblyId list) =
         for id in ids do
-            let pa = cache.GetCachedAssembly(id, includeImage = true)
-            match loader.LoadPortableAssembly pa with
+            let pa = cache.Value.GetCachedAssembly(id, includeImage = true)
+            match loader.Value.LoadPortableAssembly pa with
             | Loaded _ | LoadedWithStaticIntialization _ -> ()
             | LoadFault(_,e) -> raise e
             | NotLoaded(id) -> failwithf "Failed to load assembly '%s'." id.FullName
@@ -31,7 +32,7 @@ let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cache : VagrantCache) (lo
         | CacheAssemblies(RR ctx reply, assemblies) -> 
             //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
             try
-                let results = cache.Cache assemblies
+                let results = cache.Value.Cache assemblies
 
                 results |> Value |> reply
 
@@ -41,7 +42,7 @@ let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cache : VagrantCache) (lo
 
         | GetImages(RR ctx reply, assemblies) ->
             try
-                let results = assemblies |> List.map (fun (includeImg,id) -> cache.GetCachedAssembly(id, includeImage = includeImg))
+                let results = assemblies |> List.map (fun (includeImg,id) -> cache.Value.GetCachedAssembly(id, includeImage = includeImg))
 
                 results |> Value |> reply
 
@@ -52,8 +53,8 @@ let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cache : VagrantCache) (lo
         | GetAllImages(RR ctx reply) ->
             try
                 let assemblies = 
-                    cache.CachedAssemblies 
-                    |> List.map (fun info -> cache.GetCachedAssembly(info.Id, includeImage = true))
+                    cache.Value.CachedAssemblies 
+                    |> List.map (fun info -> cache.Value.GetCachedAssembly(info.Id, includeImage = true))
 
                 assemblies |> Value |> reply
 
@@ -63,7 +64,7 @@ let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cache : VagrantCache) (lo
 
         | GetInfo (RR ctx reply, ids) ->
             try
-                let info = cache.GetCachedAssemblyInfo ids
+                let info = cache.Value.GetCachedAssemblyInfo ids
 
                 info |> Value |> reply
 
@@ -73,7 +74,7 @@ let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cache : VagrantCache) (lo
 
         | GetAllInfo(RR ctx reply) ->
             try
-                let ids = cache.CachedAssemblies
+                let ids = cache.Value.CachedAssemblies
 
                 ids |> Value |> reply
 

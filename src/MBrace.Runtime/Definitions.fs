@@ -28,7 +28,7 @@ type internal AssemblyManagerDefinition(parent: DefinitionPath) =
     override __.Dependencies = []
 
     override __.Behavior(configuration: ActivationConfiguration, instanceId: int) = async {
-        return Behavior.stateful Set.empty AssemblyManager.assemblyManagerBehavior
+        return Behavior.stateless AssemblyManager.assemblyManagerBehavior
     }
 
 type internal ProcessDomainManagerDefinition(parent: DefinitionPath, inMemory: bool) =
@@ -78,7 +78,7 @@ type internal ProcessDomainManagerDefinition(parent: DefinitionPath, inMemory: b
             for i in 1..processDomainPoolSize do
                 //TODO!!! Extract this to a method on the ProcessDomainManager type
                 do! RevAsync.FromAsync(
-                        ( processDomainManager <!- fun ch -> CreateProcessDomain(ch, Array.empty) ),
+                        ( processDomainManager <!- fun ch -> CreateProcessDomain(ch, []) ),
                         (fun (_, processDomainId, _) -> async { processDomainManager <-- DestroyProcessDomain processDomainId })
                     ) |> RevAsync.Ignore
         }
@@ -439,7 +439,7 @@ type internal ProcessGroupDefinition(parent: DefinitionPath) =
 
     override __.Name = "process"
     override __.Configuration = 
-        ActivationConfiguration.Specify [Conf.Spec<AssemblyId []>(Configuration.RequiredAssemblies)]
+        ActivationConfiguration.Specify [Conf.Spec<AssemblyId list>(Configuration.RequiredAssemblies)]
     override def.Collocated = [def.WorkerPoolDef; def.ProcessStateDef; def.SchedulerDef; def.TaskManagerDef]
 
     override def.OnActivated(activation: Activation) = 
@@ -681,7 +681,7 @@ type MBraceNodeEventManager() =
 
                     //FaultPoint
                     //-
-                    let! images = masterAssemblyManager <!- fun ch -> GetImages(ch, None)
+                    let! images = masterAssemblyManager <!- GetAllImages
 
                     Log.logInfo "OnAttachToCluster :: Downloaded assemblies."
 
@@ -823,7 +823,7 @@ module ActivationPatterns =
 
                     //Throws
                     //KeyNotFoundException => config value not found ;; System fault ;; rethrow SystemCorruptionException
-                    let requiredAssemblies = activationConfiguration.Get<AssemblyId []>(Configuration.RequiredAssemblies)
+                    let requiredAssemblies = activationConfiguration.Get<AssemblyId list>(Configuration.RequiredAssemblies)
 
                     ctx.LogInfo "Allocating process domain..."
 

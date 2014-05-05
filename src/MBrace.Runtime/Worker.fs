@@ -25,6 +25,8 @@ type State = {
 
 let private cloudRefStore = IoC.Resolve<ICloudRefStore>()
 
+let private config () = IoC.Resolve<InterpreterConfiguration> ()
+
 
 let workerBehavior (processId: ProcessId)
                    (processMonitor: ActorRef<Replicated<ProcessMonitor, ProcessMonitorDb>>)
@@ -39,7 +41,7 @@ let workerBehavior (processId: ProcessId)
         let traceEnabled stack = stack |> List.exists (fun cloudExpr' -> match cloudExpr' with DoEndTraceExpr -> true | _ -> false)
         let rec processTask' stack = 
             async {
-                let! stack' = Interpreter.run processId (taskId.ToString()) functions (traceEnabled stack) stack 
+                let! stack' = Interpreter.run processId (taskId.ToString()) functions (traceEnabled stack) stack (config ())
                 match stack' with
                 | GetWorkerCountExpr :: _ -> return stack'
                 | ParallelExpr (cloudExprs, t) :: rest ->
@@ -54,7 +56,7 @@ let workerBehavior (processId: ProcessId)
                     let choiceValue = ChoiceValue (cloudExprs, t) 
                     return (ValueExpr choiceValue) :: rest
                 | LocalExpr cloudExpr :: rest -> 
-                    let! value = Interpreter.runLocal processId (taskId.ToString()) functions false [cloudExpr]
+                    let! value = Interpreter.runLocal processId (taskId.ToString()) functions false [cloudExpr] (config ())
                     return! processTask' <| (ValueExpr value) :: rest
                 | ValueExpr (Obj (ObjValue value, t)) :: rest when value <> null ->
                     let! cloudRefValue = cloudRefStore.Create<obj>("temp" + (string processId), Guid.NewGuid().ToString(), box value)
