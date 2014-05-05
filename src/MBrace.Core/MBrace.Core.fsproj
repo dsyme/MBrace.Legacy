@@ -83,7 +83,6 @@
     <Compile Include="Stores\ILogStore.fs" />
     <Compile Include="Interpreter\TagObject.fs" />
     <Compile Include="Interpreter\CompilerStateMonad.fs" />
-    <None Include="Interpreter\QuotationCompiler.fs" />
     <Compile Include="Interpreter\Data.fs" />
     <Compile Include="Interpreter\InterpreterConfiguration.fs" />
     <Compile Include="Interpreter\Interpreter.fs" />
