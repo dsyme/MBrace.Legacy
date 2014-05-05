@@ -83,7 +83,7 @@
                 Tasks : int
                 Result : ExecuteResultImage option
                 ProcessState: ProcessState
-                Dependencies : AssemblyId list
+                Dependencies : AssemblyLoadInfo list
                 ClientId : Guid
             }
 
@@ -122,7 +122,7 @@
             | GetAllProcessInfo of IReplyChannel<ProcessInfo []>
             | ClearProcessInfo of IReplyChannel<unit> * ProcessId // Clears process from logs if no longer running
             | ClearAllProcessInfo of IReplyChannel<unit> // Clears all inactive processes
-            | LoadDependencies of IReplyChannel<AssemblyLoadResponse list> * Guid * PortableAssembly list
+            | LoadDependencies of IReplyChannel<AssemblyLoadInfo list> * Guid * PortableAssembly list
             | RequestDependencies of IReplyChannel<PortableAssembly list> * AssemblyId list // Assembly download API
             | KillProcess of IReplyChannel<unit> * ProcessId
 
