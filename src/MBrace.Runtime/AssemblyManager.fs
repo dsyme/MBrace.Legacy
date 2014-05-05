@@ -12,21 +12,19 @@ open Nessos.MBrace.Core
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Utils.Reflection
 
-//let private tryGetPacket id =
-//    match Assembly.TryFind id.FullName with
-//    | None -> AssemblyCache.TryGetPacket id
-//    | Some a -> Some <| AssemblyPacket.OfAssembly a
-
-let private cache = lazy IoC.Resolve<AssemblyCache>()
+// TODO: thread in actor state
+let private cache = lazy IoC.Resolve<VagrantCache>()
 let private vagrant = lazy IoC.Resolve<VagrantClient> ()
 
-let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cached: Set<AssemblyId>) (msg: AssemblyManager) = 
+let assemblyManagerBehavior (ctx: BehaviorContext<_>) (msg: AssemblyManager) = 
     async {
-        return raise <| new NotImplementedException()
-//        match msg with
-//        | CacheAssemblies(RR ctx reply, assemblies) -> 
+        match msg with
+        | CacheAssemblies(RR ctx reply, assemblies) -> 
             //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
-//            try
+            try
+                let results = cache.Value.Cache assemblies
+
+                results |> Value |> reply
 //                let cacheRef = ref cached
 //
 //                // returns 'Some id' iff not cached
@@ -52,14 +50,22 @@ let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cached: Set<AssemblyId>) 
 //                assemblyPackets |> Array.choose cachePacket |> Value |> reply
 //
 //                return cacheRef.Value
-//            with e ->
-//                ctx.LogError e //"AssemblyManager: Failed to cache assemblies."
-//                reply (Exception e)
+            with e ->
+                ctx.LogError e //"AssemblyManager: Failed to cache assemblies."
+                reply (Exception e)
 //
 //                return cached
 //
-//        | GetImages(RR ctx reply, from) ->
-//            try
+        | GetImages(RR ctx reply, assemblies) ->
+            try
+//                let load (includeImage, id : AssemblyId) =
+//                    match cache.Value.TryGetCachedAssembly(id, includeImage = includeImage) with
+//                    | None -> failwithf "AssemblyManager: failed to load image for assembly '%s'" id.FullName
+//                    | Some pa -> pa
+
+                let results = assemblies |> List.map (fun id -> cache.Value.GetCa
+
+                results |> Value |> reply
 //                let source = 
 //                    match from with
 //                    | None -> cached :> _ seq
@@ -69,9 +75,25 @@ let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cached: Set<AssemblyId>) 
 //                        |> Seq.toArray
 //                        |> Value
 //                        |> reply
-//            with e ->
-//                ctx.LogError e //"AssemblyManager: Failed to get cached images."
-//                reply <| Exception e
+            with e ->
+                ctx.LogError e //"AssemblyManager: Failed to get cached images."
+                reply <| Exception e
+
+        | GetAllImages(RR ctx reply) ->
+            try
+                let load (info : AssemblyLoadInfo) =
+                    match cache.Value.TryGetCachedAssembly(id, includeImage = true) with
+                    | None -> failwithf "AssemblyManager: failed to load image for assembly '%s'" id.FullName
+                    | Some pa -> pa
+
+                let pa = 
+                    cache.Value.CachedAssemblies
+                    |> List.map (fun info -> cache.Value.TryGetCachedAssembly)
+
+
+            with e ->
+                ctx.LogError e
+                reply <| Exception e
 //
 //            return cached
 //

@@ -145,7 +145,7 @@ and AssemblyManager =
     | GetAllInfo of IReplyChannel<AssemblyLoadInfo list>
     | LoadAssemblies of AssemblyId[]
     | LoadAssembliesSync of IReplyChannel<unit> * AssemblyId list
-    | Clear
+//    | Clear
 
 and ProcessDomainManager =
     //Create a process domain
