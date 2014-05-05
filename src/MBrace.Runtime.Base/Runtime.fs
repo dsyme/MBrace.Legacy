@@ -115,9 +115,9 @@
             //MBrace.Exception => Failed to activate process
             //MBrace.SystemCorruptedException => system corruption while trying to activate process ;; SYSTEM FAULT
             //MBrace.SystemFailedException => SYSTEM FAULT
-            | CreateDynamicProcess of Guid * IReplyChannel<ProcessInfo> * ProcessImage
-            | GetAssemblyLoadInfo of Guid * IReplyChannel<AssemblyLoadInfo list> * AssemblyId list
-            | LoadAssemblies of Guid * IReplyChannel<AssemblyLoadInfo list> * PortableAssembly list
+            | CreateDynamicProcess of IReplyChannel<ProcessInfo> * Guid * ProcessImage
+            | GetAssemblyLoadInfo of IReplyChannel<AssemblyLoadInfo list> * Guid * AssemblyId list
+            | LoadAssemblies of IReplyChannel<AssemblyLoadInfo list> * Guid * PortableAssembly list
 
 //            | GetProcessResult of IReplyChannel<ExecuteResultImage> * ProcessId // marked for deprecation : client no longer sends messages of this type
 //            | TryGetProcessResult of IReplyChannel<ExecuteResultImage option> * ProcessId // ditto

@@ -314,10 +314,10 @@
                     {
                         new IRemoteAssemblyReceiver with
                             member __.GetLoadedAssemblyInfo (ids : AssemblyId list) =
-                                processManager <!- fun ch -> GetAssemblyLoadInfo(requestId, ch, ids)
+                                processManager <!- fun ch -> GetAssemblyLoadInfo(ch, requestId, ids)
 
                             member __.PushAssemblies (pas : PortableAssembly list) =
-                                processManager <!- fun ch -> LoadAssemblies(requestId, ch, pas)
+                                processManager <!- fun ch -> LoadAssemblies(ch, requestId, pas)
                     
                     }
 
@@ -325,7 +325,7 @@
                     // serialization errors for dynamic assemblies
                     let! errors = MBraceSettings.Vagrant.SubmitObjectDependencies(dependencyUploader, comp.Value, permitCompilation = false)
 
-                    let! info = processManager <!- fun ch -> CreateDynamicProcess(requestId, ch, comp.Image)
+                    let! info = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, comp.Image)
 
                     return Process<'T>(info, processManager)
 //                let rec trySendProcess missingAssemblies =

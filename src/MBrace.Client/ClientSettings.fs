@@ -49,7 +49,7 @@ namespace Nessos.MBrace.Client
                     | Store_Provider _ -> "The type of storage to be used by mbrace."
                     | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
-        let activateDefaultStore (provider : StoreProvider) = 
+        let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
             let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
             let cache = new Cache(storeInfo.Store)
             IoC.RegisterValue (storeInfo, behaviour = Override)
@@ -107,7 +107,7 @@ namespace Nessos.MBrace.Client
             do retry (RetryPolicy.Retry(2, 0.1<sec>)) populate
 
             // activate store provider
-            do activateDefaultStore storeProvider
+            do activateDefaultStore localCacheDir storeProvider
 
             // activate vagrant
             let vagrant = new VagrantServer(vagrantDir)

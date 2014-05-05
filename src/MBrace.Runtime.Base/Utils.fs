@@ -126,9 +126,9 @@
 
         let (|ProcessManagerReply|_|) (msg : ProcessManager) =
             match msg with
-            | GetAssemblyLoadInfo (_,r,_) -> r :> IReplyChannel |> Some
-            | LoadAssemblies (_,r,_) -> r :> IReplyChannel |> Some
-            | CreateDynamicProcess (_,r,_) -> r :> IReplyChannel |> Some
+            | GetAssemblyLoadInfo (r,_,_) -> r :> IReplyChannel |> Some
+            | LoadAssemblies (r,_,_) -> r :> IReplyChannel |> Some
+            | CreateDynamicProcess (r,_,_) -> r :> IReplyChannel |> Some
             | GetProcessInfo (r,_) -> r :> IReplyChannel |> Some
             | GetAllProcessInfo r -> r :> IReplyChannel |> Some
             | KillProcess (r,_) -> r :> IReplyChannel |> Some

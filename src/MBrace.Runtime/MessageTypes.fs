@@ -140,10 +140,11 @@ and ProcessMonitor =
 and AssemblyManager =
     //Throws ;; nothing
     | CacheAssemblies of IReplyChannel<AssemblyLoadInfo list> * PortableAssembly list
+    | GetInfo of IReplyChannel<AssemblyLoadInfo list> * AssemblyId list
+    | GetAllInfo of IReplyChannel<AssemblyLoadInfo list>
     | GetImages of IReplyChannel<PortableAssembly list> * (bool * AssemblyId) list // bool: include static initializers only
     | GetAllImages of IReplyChannel<PortableAssembly list>
-    | GetAllInfo of IReplyChannel<AssemblyLoadInfo list>
-    | LoadAssemblies of AssemblyId[]
+    | LoadAssemblies of AssemblyId list
     | LoadAssembliesSync of IReplyChannel<unit> * AssemblyId list
 //    | Clear
 

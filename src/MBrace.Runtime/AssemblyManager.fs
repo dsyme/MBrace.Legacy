@@ -7,154 +7,149 @@ open Nessos.Vagrant
 
 open Nessos.Thespian
 open Nessos.Thespian.Cluster
+open Nessos.Thespian.Cluster.ActorExtensions
 
 open Nessos.MBrace.Core
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Utils.Reflection
 
-// TODO: thread in actor state
-let private cache = lazy IoC.Resolve<VagrantCache>()
-let private vagrant = lazy IoC.Resolve<VagrantClient> ()
+//let private cache = lazy IoC.Resolve<VagrantCache>()
+//let private loader = lazy IoC.Resolve<VagrantClient> ()
 
-let assemblyManagerBehavior (ctx: BehaviorContext<_>) (msg: AssemblyManager) = 
+let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cache : VagrantCache) (loader : VagrantClient) (msg: AssemblyManager) = 
+
+    let loadAssemblies (ids : AssemblyId list) =
+        for id in ids do
+            let pa = cache.GetCachedAssembly(id, includeImage = true)
+            match loader.LoadPortableAssembly pa with
+            | Loaded _ | LoadedWithStaticIntialization _ -> ()
+            | LoadFault(_,e) -> raise e
+            | NotLoaded(id) -> failwithf "Failed to load assembly '%s'." id.FullName
+
     async {
         match msg with
         | CacheAssemblies(RR ctx reply, assemblies) -> 
             //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
             try
-                let results = cache.Value.Cache assemblies
+                let results = cache.Cache assemblies
 
                 results |> Value |> reply
-//                let cacheRef = ref cached
-//
-//                // returns 'Some id' iff not cached
-//                let cache (pa : PortableAssembly) =
-//                    match defaultArg (cacheRef.Value.TryFind pa.Id) with
-//                    | None
-//                    | Some 
-//                    if cacheRef.Value.Contains packet.Header then
-//                        // the paranoid will point out that if somebody manually deletes
-//                        // assemblies from the directory, the actor cache state will be rendered corrupt
-//                        None
-//                    elif (Assembly.TryFind packet.Header.FullName).IsSome || AssemblyCache.Contains packet.Header then
-//                        cacheRef := cacheRef.Value.Add packet.Header
-//                        None
-//                    else
-//                        match packet.Image with
-//                        | None -> Some packet.Header
-//                        | Some image -> 
-//                            AssemblyCache.Save image |> ignore
-//                            cacheRef := cacheRef.Value.Add packet.Header 
-//                            None
-//
-//                assemblyPackets |> Array.choose cachePacket |> Value |> reply
-//
-//                return cacheRef.Value
+
             with e ->
                 ctx.LogError e //"AssemblyManager: Failed to cache assemblies."
                 reply (Exception e)
-//
-//                return cached
-//
+
         | GetImages(RR ctx reply, assemblies) ->
             try
-//                let load (includeImage, id : AssemblyId) =
-//                    match cache.Value.TryGetCachedAssembly(id, includeImage = includeImage) with
-//                    | None -> failwithf "AssemblyManager: failed to load image for assembly '%s'" id.FullName
-//                    | Some pa -> pa
-
-                let results = assemblies |> List.map (fun id -> cache.Value.GetCa
+                let results = assemblies |> List.map (fun (includeImg,id) -> cache.GetCachedAssembly(id, includeImage = includeImg))
 
                 results |> Value |> reply
-//                let source = 
-//                    match from with
-//                    | None -> cached :> _ seq
-//                    | Some hashes -> hashes :> _ seq
-//
-//                source |> Seq.map (tryGetPacket >> Option.get)
-//                        |> Seq.toArray
-//                        |> Value
-//                        |> reply
+
             with e ->
                 ctx.LogError e //"AssemblyManager: Failed to get cached images."
                 reply <| Exception e
 
         | GetAllImages(RR ctx reply) ->
             try
-                let load (info : AssemblyLoadInfo) =
-                    match cache.Value.TryGetCachedAssembly(id, includeImage = true) with
-                    | None -> failwithf "AssemblyManager: failed to load image for assembly '%s'" id.FullName
-                    | Some pa -> pa
+                let assemblies = 
+                    cache.CachedAssemblies 
+                    |> List.map (fun info -> cache.GetCachedAssembly(info.Id, includeImage = true))
 
-                let pa = 
-                    cache.Value.CachedAssemblies
-                    |> List.map (fun info -> cache.Value.TryGetCachedAssembly)
-
+                assemblies |> Value |> reply
 
             with e ->
                 ctx.LogError e
                 reply <| Exception e
-//
-//            return cached
-//
-//        | GetAllHashes(RR ctx reply) ->
-//            cached |> Set.toArray |> Value |> reply
-//
-//            return cached
-//
-//        | AssemblyManager.Clear ->
-//            return Set.empty
-//            
-//        | LoadAssemblies assemblies ->
-//            try
-//                for assembly in assemblies do
-//                    AssemblyId.TryLoad assembly |> ignore
-//            with e -> ctx.LogError e
-//
-//            return cached
-//
-//        | LoadAssembliesSync(RR ctx reply, assemblies) ->
-//            try
-//                for assembly in assemblies do
-//                    AssemblyId.TryLoad assembly |> ignore
-//
-//                reply nothing
-//            with e -> ctx.LogError e
-//
-//            return cached
+
+        | GetInfo (RR ctx reply, ids) ->
+            try
+                let info = cache.GetCachedAssemblyInfo ids
+
+                info |> Value |> reply
+
+            with e ->
+                ctx.LogError e
+                reply <| Exception e
+
+        | GetAllInfo(RR ctx reply) ->
+            try
+                let ids = cache.CachedAssemblies
+
+                ids |> Value |> reply
+
+            with e ->
+                ctx.LogError e
+                reply <| Exception e
+
+        | LoadAssemblies ids ->
+            try loadAssemblies ids
+            with e -> ctx.LogError e
+
+        | LoadAssembliesSync(RR ctx reply, ids) ->
+            try 
+                loadAssemblies ids
+                reply nothing
+
+            with e -> 
+                ctx.LogError e
+                reply <| Exception e
     }
 
+
+// appears to operate on the assumption that all assembly managers have identical states; is this valid?
+
+/// silly broadcast with reply operator
+let (<!-<) (targets : ActorRef<'T> seq) (msgB : IReplyChannel<'R> -> 'T) =
+    targets |> Seq.map (fun t -> t <!- msgB) |> Async.Parallel
 
 let masterAssemblyManagerBehavior (localAssemblyManager: ActorRef<AssemblyManager>) 
                                   (slaveAssemblyManagerProvider: Async<seq<ActorRef<AssemblyManager>>>) 
                                   (ctx: BehaviorContext<_>)
                                   (msg: AssemblyManager) =
 
-    raise <| NotImplementedException() : Async<unit>
+    async {
+        match msg with
+        | CacheAssemblies(RR ctx reply, assemblies) ->
+            try
+                // step 1. cache local
+                let! result = localAssemblyManager <!- fun ch -> CacheAssemblies(ch, assemblies)
+
+                // step 2. broadcast to children
+                let! slaves = slaveAssemblyManagerProvider
+                let! results = Broadcast.postWithReply (fun ch -> CacheAssemblies(ch, assemblies)) slaves |> Broadcast.exec
+
+                reply <| Value result
+
+            with e ->
+                ctx.LogError e
+                reply <| Exception e
+
+        | _ -> localAssemblyManager <-- msg
+    }
 
 //    //Throws ;; nothing
-//    let assemblyUploadProtocol (initial : AssemblyPacket []) (assemblyManagers : #seq<ActorRef<AssemblyManager>>) =
-//                
+//    let assemblyUploadProtocol (initial : PortableAssembly list) (assemblyManagers : #seq<ActorRef<AssemblyManager>>) =
+                
 //        // memoize getter for broadcast
 //        let tryGetImage = memoize tryGetPacket
-//
+
 //        let printMessageOnce =    
 //            fun () -> ctx.LogInfo "Uploading Assemblies to nodes..."
 //            |> runOnce
-//
+
 //        //Throws
 //        //FailureException => node failure
 //        let sendAssemblies assemblies assemblyManager =
 //            async {
-//                if Array.exists (fun (packet : AssemblyPacket) -> packet.Image.IsSome) assemblies then
-//                    printMessageOnce ()
+////                if Array.exists (fun (packet : AssemblyPacket) -> packet.Image.IsSome) assemblies then
+////                    printMessageOnce ()
 //
 //                //return! worker <!- fun ch -> LoadAssemblies(ch, assemblies)
 //                //FaultPoint
 //                //FailureException => node failure;; do nothing
 //                return! ReliableActorRef.FromRef assemblyManager <!- fun ch -> CacheAssemblies(ch, assemblies)
 //            }
-//                
+                
 //        let uploaderProtocol (assemblyManager : ActorRef<AssemblyManager>) =
 //            async {
 //                //Throws
