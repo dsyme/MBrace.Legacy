@@ -2,26 +2,39 @@
     open System
     open System.IO
     open System.Collections.Generic
+    open System.Collections.Concurrent
+
+    [<Sealed;AbstractClass>]
+    type private InMemoryRegistry private () =
+        static let inmem = new Dictionary<Folder * Nessos.MBrace.Store.File, byte [] * Tag>()
+        static let guid  = Guid.NewGuid().ToString()
+        static let sync  = new Object()
+        
+        static member Registry  with get () = inmem
+        static member Guid      with get () = guid
+        static member Sync      with get () = sync
 
     type InMemoryStore() =
 
-        let inMem = Dictionary<string * string, byte []>()
+        let inMem = InMemoryRegistry.Registry
+        let newTag () = Guid.NewGuid().ToString()
+        let tag = Guid.Empty.ToString()
 
         interface IStore with
-            override self.Name = "In memory store"
-            override self.UUID = Guid.NewGuid().ToString()
+            override self.Name = "InMem"
+            override self.UUID = InMemoryRegistry.Guid
 
             override self.Create(folder : string, file : string, serialize : Stream -> Async<unit>, ?asFile : bool) = 
                 async {
-                    ignore asFile
+                    ignore asFile 
                     use ms = new MemoryStream()
-                    do! serialize(ms)
-                    inMem.Add((folder, file), ms.ToArray())
+                    do! serialize(ms) 
+                    inMem.Add((folder, file), (ms.ToArray(), tag)) 
                 }
              
             override self.Read(folder : string, file : string) : Async<Stream> = 
                 async {
-                    let array = inMem.[folder, file]
+                    let array = fst inMem.[folder, file]
                     return new MemoryStream(array) :> _
                 }
                   
@@ -60,7 +73,7 @@
                 }
 
             override self.Delete(folder : string, file : string) =
-                async {
+                async { 
                     inMem.Remove(folder, file) |> ignore
                 }
 
@@ -70,17 +83,48 @@
                                |> Seq.iter (fun kv -> inMem.Remove(kv) |> ignore)
                 }
 
-            override self.UpdateMutable(folder, file, serialize, oldTag) =
-                raise <| NotImplementedException()
-
-            override self.ForceUpdateMutable(folder, file, serialize) : Async<Tag> =
-                raise <| NotImplementedException()
-
             override self.CreateMutable(folder : string, file : string, serialize : Stream -> Async<unit>) : Async<Tag> = 
-                raise <| NotImplementedException()
+                async {
+                    let t = newTag()
+                    use ms = new MemoryStream()
+                    do! serialize(ms)
+                    lock InMemoryRegistry.Sync (fun () -> inMem.Add((folder, file), (ms.ToArray(), t)) )
+                    return t
+                }
 
             override self.ReadMutable(folder : string, file : string) : Async<Stream * Tag> = 
-                raise <| NotImplementedException()
+                async {
+                    let array, tag = lock InMemoryRegistry.Sync (fun () -> inMem.[folder, file])
+                    return new MemoryStream(array) :> _, tag
+                }
+
+            override self.UpdateMutable(folder, file, serialize, oldTag) =
+                async {
+                    let t = newTag()
+                    use ms = new MemoryStream()
+                    do! serialize(ms)
+                    return
+                        lock InMemoryRegistry.Sync (fun () -> 
+                            let _, tag = inMem.[folder, file]
+                            if oldTag = tag then
+                                inMem.Add((folder,file), (ms.ToArray() ,t))
+                                true, t
+                            else
+                                false, oldTag)
+                }
+                
+            override self.ForceUpdateMutable(folder, file, serialize) : Async<Tag> =
+                async {
+                    let t = newTag()
+                    use ms = new MemoryStream()
+                    do! serialize(ms)
+                    return
+                        lock InMemoryRegistry.Sync (fun () -> 
+                            let _, tag = inMem.[folder, file]
+                            inMem.Add((folder,file), (ms.ToArray() ,t))
+                            t)
+                }
+
 
     type InMemoryStoreFactory () =
         interface IStoreFactory with
