@@ -90,20 +90,33 @@
             // Register Store
             try
                 // has been filled out to fix build; kostas, change this
-                raise <| new NotImplementedException("worker node configuration setup.")
+                //raise <| new NotImplementedException("worker node configuration setup.")
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
-                let cache = new Cache(storeInfo.Store)
-                let localCache = new LocalCacheStore(System.IO.Path.GetTempPath(), storeInfo.Store, storeInfo.Store)
+                
+                // fsStore used but caches
+                // inMemCache used by cref store
+                // localCache used by cseq/cfile store
+                let fsStore = new FileSystemStore(cacheStoreEndpoint)
+                let inMemCache = new Cache(fsStore, Serializer.Pickler)
+                let localCache = new LocalCacheStore(fsStore, storeInfo.Store)
+
+                let crefStore  = new CloudRefStore(storeInfo.Store, inMemCache)  :> ICloudRefStore
+                let cSeqStore  = new CloudSeqStore(storeInfo.Store, localCache)  :> ICloudSeqStore
+                let mrefStore  = new MutableCloudRefStore(storeInfo.Store)       :> IMutableCloudRefStore
+                let cfileStore = new CloudFileStore(storeInfo.Store, localCache) :> ICloudFileStore
+                let clogsStore = new StoreLogger(storeInfo.Store, batchCount = 50, batchTimespan = 500)
+
+                // soon...
                 IoC.RegisterValue<IStore>(storeInfo.Store)
                 IoC.RegisterValue<StoreInfo>(storeInfo)
-                IoC.Register<ICloudRefStore>(fun () -> new CloudRefStore(storeInfo.Store, cache) :> _) 
-                IoC.Register<IMutableCloudRefStore>(fun () -> new MutableCloudRefStore(storeInfo.Store) :> _) 
-                IoC.Register<ICloudSeqStore>(fun () -> new CloudSeqStore(storeInfo.Store, localCache) :> _) 
-                IoC.Register<ICloudFileStore>(fun () -> new CloudFileStore(storeInfo.Store, localCache) :> _) 
-                IoC.Register<StoreLogger>(fun () -> StoreLogger(store = IoC.Resolve<IStore>(), batchCount = 42, batchTimespan = 500))
+                IoC.Register<ICloudRefStore>(fun () -> crefStore) 
+                IoC.Register<IMutableCloudRefStore>(fun () -> mrefStore) 
+                IoC.Register<ICloudSeqStore>(fun () -> cSeqStore) 
+                IoC.Register<ICloudFileStore>(fun () -> cfileStore) 
+                IoC.Register<StoreLogger>(fun () -> clogsStore)
                 if cacheStoreEndpoint <> null then
-                    IoC.RegisterValue(LocalCacheStore(System.IO.Path.GetTempPath(), storeInfo.Store, storeInfo.Store, cacheStoreEndpoint),"cacheStore")
+                    IoC.RegisterValue(localCache,"cacheStore")
 
             with e -> results.Raise (sprintf "Error connecting to store: %s" e.Message, 2)
 

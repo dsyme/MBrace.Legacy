@@ -10,10 +10,8 @@
     open Nessos.MBrace.Store
     //open Nessos.MBrace.Store.Registry
 
-    type LocalCacheStore(path : string, cacheStore : IStore, underlyingStore : IStore, ?id : string ) = 
+    type LocalCacheStore(localCacheStore : IStore, underlyingStore : IStore) = 
         
-        let id = defaultArg id "localCache"
-
         //do if Directory.Exists path then try Directory.Delete(path, true) with _ -> ()
         //let cache = new FileSystemStore(path, name = id) :> IStore
         //let underlyingLazy = lazy StoreRegistry.DefaultStore.Store
@@ -23,15 +21,15 @@
             let s' = String.Convert.toBase32String(bytes)
             if Path.HasExtension(s) then s' + Path.GetExtension(s) else s'
             
-        member this.Name = cacheStore.Name
+        member this.Name = localCacheStore.Name
 
         member this.Create(folder, file, serializeTo) = 
-            cacheStore.Create(base32 folder, base32 file, serializeTo)
+            localCacheStore.Create(base32 folder, base32 file, serializeTo)
 
         member this.Commit(folder, file, ?asFile : bool) = 
             async {
                 let asFile = defaultArg asFile false
-                use! stream = cacheStore.Read(base32 folder, base32 file)
+                use! stream = localCacheStore.Read(base32 folder, base32 file)
                 return! underlyingStore.CopyFrom(folder, file, stream, asFile)
             }
 
@@ -40,11 +38,11 @@
         member private this.Read(folder, file, ?checkCoherence : bool) = 
             async {
                 let checkCoherence = defaultArg checkCoherence true
-                let! cacheExists = cacheStore.Exists(base32 folder, base32 file)
+                let! cacheExists = localCacheStore.Exists(base32 folder, base32 file)
                 let! storeExists = underlyingStore.Exists(folder, file) // TODO: parallel?
                 match cacheExists, storeExists with
                 | true, true -> 
-                    try return! cacheStore.Read(base32 folder, base32 file) 
+                    try return! localCacheStore.Read(base32 folder, base32 file) 
                     with 
                     | :? IOException ->
                         return! retryAsync (RetryPolicy.Infinite(0.5<sec>))
@@ -52,9 +50,9 @@
                 | false, true -> 
                     try
                         use! stream = underlyingStore.Read(folder, file)
-                        do! cacheStore.CopyFrom(base32 folder, base32 file, stream)
+                        do! localCacheStore.CopyFrom(base32 folder, base32 file, stream)
                         stream.Dispose()
-                        return! cacheStore.Read(base32 folder, base32 file)
+                        return! localCacheStore.Read(base32 folder, base32 file)
                     with 
                     | :? IOException -> 
                         return! retryAsync (RetryPolicy.Infinite(0.5<sec>))
@@ -63,7 +61,7 @@
                     if checkCoherence then 
                         return raise <| Exception(sprintf' "Incoherent cache : Item %s - %s found in cache but not in the main store" folder file)
                     else 
-                        return! cacheStore.Read(folder, file)
+                        return! localCacheStore.Read(folder, file)
                 | false, false -> 
                     return raise <| Exception(sprintf' "Item %s - %s not found" folder file)
             }

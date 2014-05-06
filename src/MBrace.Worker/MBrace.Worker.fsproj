@@ -59,8 +59,8 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="ProcessDomain.fs" />
     <None Include="packages.config" />
+    <Compile Include="ProcessDomain.fs" />
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
