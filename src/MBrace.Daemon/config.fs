@@ -18,6 +18,7 @@
         open Nessos.Thespian.Remote.PipeProtocol
         open Nessos.Thespian.Serialization
 
+        open Nessos.MBrace.Core
         open Nessos.MBrace.Client
         open Nessos.MBrace.Runtime
         open Nessos.MBrace.Runtime.Daemon.Configuration
@@ -183,18 +184,19 @@
             Nessos.MBrace.Runtime.Serializer.Register(new FsPickler())
 
 
-        let registerStore (storeProvider : string) (storeEndpoint : string) =
+        let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =
             try
                 let storeInfo = StoreRegistry.Activate(StoreProvider.Parse (storeProvider, storeEndpoint), makeDefault = true)
-
+                let localCacheDir = Path.Combine(workingDirectory, "LocalCache")
+                let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, localCacheDir)
+                // soon...
+                IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue<IStore>(storeInfo.Store)
-                // CloudRefStore
-                raise <| new NotImplementedException("configuration")
-//                IoC.Register<ICloudRefStore>(fun () -> new Nessos.MBrace.Core.CloudRefStore(storeInfo.Store) :> _) 
-//                IoC.Register<ICloudSeqStore>(fun () -> new Nessos.MBrace.Core.CloudSeqStore(storeInfo.Store) :> _) 
-//                IoC.Register<IMutableCloudRefStore>(fun () -> new Nessos.MBrace.Core.MutableCloudRefStore(storeInfo.Store) :> _) 
-//                IoC.Register<ICloudFileStore>(fun () -> new Nessos.MBrace.Core.CloudFileStore(storeInfo.Store) :> _) 
-            
+                IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore.Value) 
+                IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore.Value) 
+                IoC.Register<ICloudSeqStore>(fun () -> coreConfig.CloudSeqStore.Value) 
+                IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore.Value) 
+
                 IoC.RegisterValue(storeEndpoint, "storeEndpoint")
                 IoC.RegisterValue(storeProvider, "storeProvider")
             with e ->

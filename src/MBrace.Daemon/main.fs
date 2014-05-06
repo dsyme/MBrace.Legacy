@@ -121,7 +121,7 @@
             IoC.RegisterValue<IExiter>(exiter)
 
             // Register Store
-            registerStore storeProvider storeEndpoint
+            registerStore storeProvider storeEndpoint workingDirectory
 
             //IoC.RegisterValue(clProcPorts, "mbrace.process.portPool")
             //TODO!!!! THIS IS WRONG
