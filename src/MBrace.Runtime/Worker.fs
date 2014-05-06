@@ -60,7 +60,7 @@ let workerBehavior (processId: ProcessId)
                     return! processTask' <| (ValueExpr value) :: rest
                 | ValueExpr (Obj (ObjValue value, t)) :: rest when value <> null ->
                     let! cloudRefValue = cloudRefStore.Create<obj>("temp" + (string processId), Guid.NewGuid().ToString(), box value)
-                    return (ValueExpr (Obj (CloudRefValue (cloudRefValue :> ICloudRef<obj>), t))) :: rest
+                    return (ValueExpr (Obj (CloudRefValue cloudRefValue, t))) :: rest
                 | _ -> return stack'
             }
         processTask' dump 

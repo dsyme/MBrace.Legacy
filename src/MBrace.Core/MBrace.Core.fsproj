@@ -60,10 +60,9 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Cloud\Primitives.fs" />
-    <None Include="Cloud\ICloud.fsi" />
-    <Compile Include="Cloud\ICloud.fs" />
-    <Compile Include="Cloud\Cloud.fsi" />
     <Compile Include="Cloud\Cloud.fs" />
+    <Compile Include="Cloud\CloudBuilder.fsi" />
+    <Compile Include="Cloud\CloudBuilder.fs" />
     <Compile Include="Cloud\Exception.fs" />
     <Compile Include="Cloud\CloudRef.fsi" />
     <Compile Include="Cloud\CloudRef.fs" />
@@ -79,7 +78,6 @@
     <Compile Include="Core\Logging.fs" />
     <Compile Include="Core\StoreProviders.fs" />
     <Compile Include="Core\Interpreter.fs" />
-    <None Include="packages.config" />
     <Compile Include="InMemory\Configuration.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -90,11 +88,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Caching" />
-    <Reference Include="Unquote">
-      <HintPath>..\..\packages\Unquote.2.2.2\lib\net40\Unquote.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

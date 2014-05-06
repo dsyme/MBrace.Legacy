@@ -48,12 +48,12 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                 ctx.LogInfo "Process image compiled."
 
                 match compilerResult with
-                | Choice1Of2 (resultType, expr, functions) ->
+                | Choice1Of2 (resultType, expr, cloud, functions) ->
                     ctx.LogInfo "Scheduler: Starting process..."
 
                     //the task manager will confirm the creation of the root task
                     let! cref = newRef processId functions
-                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (resultType, [Guid.NewGuid().ToString()], (cref :> ICloudRef<_>), Dump [QuoteExpr expr]))
+                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (resultType, [Guid.NewGuid().ToString()], cref, Dump [cloud.CloudExpr]))
                 | Choice2Of2 e -> 
                     reply nothing
                          

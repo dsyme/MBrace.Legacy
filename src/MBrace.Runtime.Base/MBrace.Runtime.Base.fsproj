@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="IStore.fs" />
+    <Compile Include="CloudPackage.fs" />
     <Compile Include="StoreImplementations.fs" />
     <Compile Include="FileSystemStore.fs" />
     <Compile Include="Cache.fs" />
@@ -125,6 +126,10 @@
     </Reference>
     <Reference Include="UnionArgParser">
       <HintPath>..\..\packages\UnionArgParser.0.6.0\lib\net40\UnionArgParser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Unquote">
+      <HintPath>..\..\packages\Unquote.2.2.2\lib\net40\Unquote.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">

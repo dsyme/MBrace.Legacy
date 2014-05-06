@@ -177,20 +177,20 @@ namespace Nessos.MBrace.Core
                         return! run' traceEnabled <| firstExpr :: DoCombineExpr secondExpr :: rest
                     | DisposableBindExpr (value, t, bindF, objF) :: rest ->
                         return! run' traceEnabled <| ValueExpr (Obj (ObjValue (value :> obj), t)) :: DoBindExpr (bindF, objF) :: DoDisposableBindExpr value :: rest
-                    | [QuoteExpr expr] when expr.Type.IsGenericType && expr.Type.GetGenericTypeDefinition() = typedefof<ICloud<_>> ->
-                        let cloudExpr : CloudExpr = 
-                            try
-                                let cloudExprWrap : ICloud = Swensen.Unquote.Operators.evalRaw expr 
-                                cloudExprWrap.CloudExpr
-                            with ex -> ValueExpr (Exc (ex, None))
-                        return! run' traceEnabled <| [cloudExpr]
-                    | QuoteExpr expr :: rest ->     
-                        let cloudExpr : CloudExpr = 
-                            try                
-                                let result = Swensen.Unquote.Operators.evalRaw expr
-                                ValueExpr (Obj (result, expr.Type))
-                            with ex -> ValueExpr (Exc (ex, None)) 
-                        return! run' traceEnabled <| cloudExpr :: rest
+//                    | [QuoteExpr expr] when expr.Type.IsGenericType && expr.Type.GetGenericTypeDefinition() = typedefof<ICloud<_>> ->
+//                        let cloudExpr : CloudExpr = 
+//                            try
+//                                let cloudExprWrap : ICloud = Swensen.Unquote.Operators.evalRaw expr 
+//                                cloudExprWrap.CloudExpr
+//                            with ex -> ValueExpr (Exc (ex, None))
+//                        return! run' traceEnabled <| [cloudExpr]
+//                    | QuoteExpr expr :: rest ->     
+//                        let cloudExpr : CloudExpr = 
+//                            try                
+//                                let result = Swensen.Unquote.Operators.evalRaw expr
+//                                ValueExpr (Obj (result, expr.Type))
+//                            with ex -> ValueExpr (Exc (ex, None)) 
+//                        return! run' traceEnabled <| cloudExpr :: rest
                     | OfAsyncExpr cloudAsync :: rest ->
                         let asyncCompRef : Async<CloudExpr> ref = ref Unchecked.defaultof<_>
                         let polyMorphicMethodAsync =

@@ -80,7 +80,7 @@ namespace Nessos.MBrace.Core
                          typeDef = typedefof<Tuple<_, _, _, _, _, _, _, _>> -> [Expr.NewTuple args]
             | _ -> args
 
-        let rec compile (pkg : CloudPackage) : (Type * Expr * Function list) = 
+        let rec compile (pkg : CloudPackage) : (Type * Expr * ICloud * Function list) = 
 
             let rec compile (expr : Expr) : CompilerState = 
 
@@ -141,7 +141,7 @@ namespace Nessos.MBrace.Core
                 }
             try
                 let (_, functions) = execute (compile pkg.Expr) []
-                pkg.ReturnType, pkg.Expr, functions
+                pkg.ReturnType, pkg.Expr, pkg.Eval() ,functions
             with | :? Nessos.MBrace.CompilerException  as ex -> reraise ()
                  | ex -> raise <| Nessos.MBrace.CompilerException("Compiler exception", ex)
 

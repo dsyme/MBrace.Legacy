@@ -280,7 +280,7 @@ namespace Nessos.MBrace.Client
             |> Array.toSeq
         member r.ShowLogs(?clear) = r.GetLogs(?clear = clear) |> Logs.show
 
-        member r.GetUserLogs(pid, ?clear) : LogEntry seq =
+        member r.GetUserLogs(pid, ?clear) =
             // interim store sanity check
             if not <| runtimeUsesCompatibleStore runtime then
                 mfailwith "incompatible store configuration."
@@ -293,14 +293,14 @@ namespace Nessos.MBrace.Client
             | true  -> cloudLogStore.DeleteLogs(pid)
                        |> Async.RunSynchronously
             | false -> ()
-            logs :> _
+            logs :> seq<_>
 
-        member r.ShowUserLogs(pid, ?clear) =
+        member r.ShowUserLogs(pid, ?clear) : unit = 
             r.GetUserLogs(pid, ?clear = clear)
             |> Seq.sortBy (function | Trace info -> info.DateTime, info.Id 
-                                    | UserLog info -> info.DateTime, info.Id
+                                    | UserLogInfo info -> info.DateTime, info.Id
                                     | SystemLog (m,l,t) -> t, 0L )
-            |> Logs.show
+            |> (raise <| new NotImplementedException())
 
         /// Deletes a container from the underlying store
         member r.DeleteContainer(container : string) =
