@@ -9,38 +9,39 @@ namespace Nessos.MBrace.Core
     open Microsoft.FSharp.Quotations.Patterns
 
     open Nessos.MBrace
-    open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Utils
-    open Nessos.MBrace.Store
+    open Nessos.MBrace.Core.Utils
 
     module internal Interpreter =
 
         //increasing number as user/trace log id
-        let private logIdCounter = new AtomicCounter()
+        let private logIdCounter = new UniqueIdGenerator()
+
+        /// raise exception with given object
+        let inline throwInvalidState value = failwithf "Invalid state %A" value
 
         // Monadic Trampoline Interpreter
         let rec internal run (processId : int) (taskId : string) 
                                 (functions : FunctionInfo list) (traceEnabled : bool)
                                 (stack : CloudExpr list)
-                                (config : InterpreterConfiguration) : Async<CloudExpr list> = 
-            
-            let logger = config.Logger
-            let cloudSeqStoreLazy = config.CloudSeqStore
-            let cloudFileStoreLazy = config.CloudFileStore
-            let cloudRefStoreLazy = config.CloudRefStore
-            let mutablecloudrefstorelazy = config.MutableCloudRefStore
-            let cloudLogStoreLazy = config.LogStore
+                                (config : InterpreterConfiguration) : Async<CloudExpr list> =
+
+//            let cloudSeqStoreLazy = config.CloudSeqStore
+//            let cloudFileStoreLazy = config.CloudFileStore
+//            let cloudRefStoreLazy = config.CloudRefStore
+//            let mutablecloudrefstorelazy = config.MutableCloudRefStore
+//            let cloudLogStoreLazy = config.LogStore
             
             let rec run' (traceEnabled : bool) (stack : CloudExpr list) =
                 // Helper Functions
                 let userLog msg = 
-                        let id = logIdCounter.Incr()
-                        UserLog { DateTime = DateTime.Now; Message = msg; ProcessId = processId; TaskId = taskId; Id = id }
+                    let id = logIdCounter.Next()
+                    UserLogInfo { DateTime = DateTime.Now; Message = msg; ProcessId = processId; TaskId = taskId; Id = id }
 
                 let tryToExtractInfo (typeName : string) = 
                     match typeName with
                     | RegexMatch "(.+)@(\d+)" [funcName; line] -> Some (funcName, line)
                     | _ -> None
+
                 let rec tryToExtractVars (varName : string) (expr : Expr) = 
                     match expr with
                     | ExprShape.ShapeVar(v) -> []
@@ -132,13 +133,13 @@ namespace Nessos.MBrace.Core
                                         Message = msg
                                         DateTime = DateTime.Now
                                         Environment = dumpContext.Vars
-                                                      |> Seq.map (fun (a,b) -> (a, sprintf' "%A" b))
+                                                      |> Seq.map (fun (a,b) -> (a, sprintf "%A" b))
                                                       |> Map.ofSeq
                                         ProcessId = processId
                                         TaskId = taskId
-                                        Id = logIdCounter.Incr()
+                                        Id = logIdCounter.Next()
                                     }
-                                cloudLogStoreLazy.Value.LogEntry(processId, entry)
+                                config.LogStore.LogEntry(processId, entry)
                             else ()
                         | None -> ()
 
@@ -148,13 +149,13 @@ namespace Nessos.MBrace.Core
                     | ValueExpr _ :: DoEndTryWithExpr (ex, objF) :: _ -> logDump "with block end" <| Some (ex, objF)
                     | ValueExpr (Exc (ex, _)) :: DoTryWithExpr (_, objF) :: _ -> logDump "with block begin" <| Some (ex :> obj, objF)
                     | ValueExpr (Exc (ex, _)) :: _ ->  
-                        logDump (sprintf' "unwind-stack ex = %s: %s" (ex.GetType().Name) ex.Message) (stack |> extractScopeInfo)
+                        logDump (sprintf "unwind-stack ex = %s: %s" (ex.GetType().Name) ex.Message) (stack |> extractScopeInfo)
                     | DelayExpr (_, objF) :: DoWhileExpr _ :: _ -> logDump "while block begin" <| Some (() :> obj, objF)
                     | ValueExpr _ :: DoEndDelayExpr objF :: DoWhileExpr _  :: _ -> logDump "while block end" <| Some (() :> obj, objF)
                     | _ :: DoForExpr (values, n, _, objF) :: _ -> logDump "for loop block" <| Some (values.[n - 1], objF)
-                    | ReturnExpr (value, t) :: _ -> logDump (sprintf' "return %A" value) (stack |> extractScopeInfo)
+                    | ReturnExpr (value, t) :: _ -> logDump (sprintf "return %A" value) (stack |> extractScopeInfo)
                     | DelayExpr (_, objF) :: _ -> logDump "cloud { ... } begin" <| Some (() :> obj, objF)
-                    | BindExpr (_, _, _) :: rest -> logDump (sprintf' "let! begin") (stack |> extractScopeInfo)
+                    | BindExpr (_, _, _) :: rest -> logDump (sprintf "let! begin") (stack |> extractScopeInfo)
                     | ValueExpr (Obj (ObjValue value, _)) :: DoBindExpr (_, objF) :: _ -> logDump "let! continue" <| Some (value, objF) 
                     | ValueExpr (Obj _) :: DoEndDelayExpr objF :: _ -> logDump "cloud { ... } end" <| Some (() :> obj, objF) 
                     | _ -> ()
@@ -185,7 +186,7 @@ namespace Nessos.MBrace.Core
                     | [QuoteExpr expr] when expr.Type.IsGenericType && expr.Type.GetGenericTypeDefinition() = typedefof<ICloud<_>> ->
                         let cloudExpr : CloudExpr = 
                             try
-                                let cloudExprWrap : CloudExprWrap = Swensen.Unquote.Operators.evalRaw expr 
+                                let cloudExprWrap : ICloud = Swensen.Unquote.Operators.evalRaw expr 
                                 cloudExprWrap.CloudExpr
                             with ex -> ValueExpr (Exc (ex, None))
                         return! run' traceEnabled <| [cloudExpr]
@@ -216,194 +217,195 @@ namespace Nessos.MBrace.Core
 
                     | NewRefByNameExpr (container, value, t) :: rest ->
                         let id = Guid.NewGuid().ToString()
-                        let! exec = containAsync <| cloudRefStoreLazy.Value.Create(container, id, value, t)
+                        let! exec = Async.Catch <| config.CloudRefStore.Create(container, id, value, t)
                         match exec with
                         | Choice1Of2 result ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
                         | Choice2Of2 ex ->
-                            return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.StoreException(sprintf' "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetRefByNameExpr (container, id, t) :: rest ->
-                        let! exists = cloudRefStoreLazy.Value.Exists(container, id)
+                        let! exists = config.CloudRefStore.Exists(container, id)
                         if exists then
-                            let! ty = cloudRefStoreLazy.Value.GetRefType(container, id)
+                            let! ty = config.CloudRefStore.GetRefType(container, id)
                             if t <> ty 
-                            then return! run' traceEnabled <| ValueExpr (Exc (new MBraceException(sprintf' "CloudRef type mismatch. Internal type %s, got : %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
+                            then return! run' traceEnabled <| ValueExpr (Exc (new MBraceException(sprintf "CloudRef type mismatch. Internal type %s, got : %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
                             else 
-                                let cloudRefType = typedefof<PersistableCloudRef<_>>.MakeGenericType [| t |]
-                                let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; t :> obj |])
-                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudRef, cloudRefType)) :: rest
+                                let! cloudRef = config.CloudRefStore.Create(id, container, t)
+//                                let cloudRefType = typedefof<PersistableCloudRef<_>>.MakeGenericType [| t |]
+//                                let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; t :> obj |])
+                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudRef, cloudRef.Type)) :: rest
                         else
                             return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.NonExistentObjectStoreException(container, id), None)) :: rest
                     | GetRefsByNameExpr (container) :: rest ->
-                        let! exec = containAsync <| cloudRefStoreLazy.Value.GetRefs(container)
+                        let! exec = Async.Catch <| config.CloudRefStore.GetRefs(container)
                         match exec with
                         | Choice1Of2 refs ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<ICloudRef []>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.StoreException(sprintf' "Cannot access Container: %s" container, ex), None)) :: rest
+                            return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
 
                     | NewMutableRefByNameExpr (container, id, value, t) :: rest ->
-                        let! exists = containAsync <| mutablecloudrefstorelazy.Value.Exists(container, id) 
+                        let! exists = Async.Catch <| config.MutableCloudRefStore.Exists(container, id) 
                         match exists with
                         | Choice1Of2 false ->
-                            let! exec =
-                                mutablecloudrefstorelazy.Value.Create(container, id, value, t)
-                                |> containAsync
+                            let! exec = config.MutableCloudRefStore.Create(container, id, value, t) |> Async.Catch
                             match exec with
                             | Choice1Of2 result ->
                                 return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
                             | Choice2Of2 ex ->
-                                return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
+                                return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                         | Choice1Of2 true ->
-                            return!  run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot create Container: %s, Name: %s. It already exists." container id), None)) :: rest
+                            return!  run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s. It already exists." container id), None)) :: rest
                         | Choice2Of2 ex ->
-                                return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
+                                return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     
                     | ReadMutableRefExpr(mref, ty) :: rest ->
-                        let! exec = containAsync <| mutablecloudrefstorelazy.Value.Read(mref)
+                        let! exec = Async.Catch <| config.MutableCloudRefStore.Read(mref)
                         match exec with
                         | Choice1Of2 result ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, mref.Type)) :: rest
                         | Choice2Of2 ex ->
-                            let! exists = containAsync <| mutablecloudrefstorelazy.Value.Exists(mref.Container, mref.Name)
+                            let! exists = Async.Catch <| config.MutableCloudRefStore.Exists(mref.Container, mref.Name)
                             match exists with
                             | Choice1Of2 false -> return! run' traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(mref.Container, mref.Name), None)) :: rest
-                            | _ -> return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot locate Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
+                            | _ -> return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot locate Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
 
                     | SetMutableRefExpr(mref, value) :: rest ->
-                        let! exec = containAsync <| mutablecloudrefstorelazy.Value.Update(mref, value)
+                        let! exec = Async.Catch <| config.MutableCloudRefStore.Update(mref, value)
                         match exec with
                         | Choice1Of2 result -> 
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, typeof<bool>)) :: rest
                         | Choice2Of2 ex -> 
-                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot update Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot update Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
 
                     | ForceSetMutableRefExpr(mref, value) :: rest ->
-                        let! exec = containAsync <| mutablecloudrefstorelazy.Value.ForceUpdate(mref, value)
+                        let! exec = Async.Catch <| config.MutableCloudRefStore.ForceUpdate(mref, value)
                         match exec with
                         | Choice1Of2 result -> 
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, typeof<bool>)) :: rest
                         | Choice2Of2 ex -> 
-                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot update Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot update Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
                     
                     | GetMutableRefByNameExpr (container, id, t) :: rest ->
-                        let! exists = mutablecloudrefstorelazy.Value.Exists(container, id)
+                        let! exists = config.MutableCloudRefStore.Exists(container, id)
                         if exists then
-                            let! ty = mutablecloudrefstorelazy.Value.GetRefType(container, id)
+                            let! ty = config.MutableCloudRefStore.GetRefType(container, id)
                             if t <> ty 
-                            then return! run' traceEnabled <| ValueExpr (Exc (new Exception(sprintf' "MutableCloudRef type mismatch. Internal type %s, got : %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
+                            then return! run' traceEnabled <| ValueExpr (Exc (new Exception(sprintf "MutableCloudRef type mismatch. Internal type %s, got : %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
                             else 
-                                let cloudRefType = typedefof<MutableCloudRef<_>>.MakeGenericType [| t |]
-                                let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; "" :> obj; t :> obj |])
-                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudRef, cloudRefType)) :: rest
+                                let! cloudRef = config.MutableCloudRefStore.Create(container, id, t)
+//                                let cloudRefType = typedefof<MutableCloudRef<_>>.MakeGenericType [| t |]
+//                                let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; "" :> obj; t :> obj |])
+                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudRef, cloudRef.Type)) :: rest
                         else
                             return! run' traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
                     
                     | GetMutableRefsByNameExpr (container) :: rest ->
-                        let! exec = containAsync <| mutablecloudrefstorelazy.Value.GetRefs(container)
+                        let! exec = Async.Catch <| config.MutableCloudRefStore.GetRefs(container)
                         match exec with
                         | Choice1Of2 refs ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<IMutableCloudRef []>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot access Container: %s" container, ex), None)) :: rest
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
                     
                     | FreeMutableRefExpr(mref) :: rest ->
-                        let! exec = containAsync <| mutablecloudrefstorelazy.Value.Delete(mref.Container, mref.Name)
+                        let! exec = Async.Catch <| config.MutableCloudRefStore.Delete(mref.Container, mref.Name)
                         match exec with
                         | Choice1Of2 () ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot delete MutableCloudRef %A" mref, ex), None)) :: rest
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot delete MutableCloudRef %A" mref, ex), None)) :: rest
 
                     | NewCloudFile(container, id, serialize) :: rest ->
-                        let! exists = containAsync <| cloudFileStoreLazy.Value.Exists(container, id)
+                        let! exists = Async.Catch <| config.CloudFileStore.Exists(container, id)
                         match exists with
                         | Choice1Of2 false ->
-                            let! exec = containAsync <| cloudFileStoreLazy.Value.Create(container, id, serialize)
+                            let! exec = Async.Catch <| config.CloudFileStore.Create(container, id, serialize)
                             match exec with
                             | Choice1Of2 file ->
                                 return! run' traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                             | Choice2Of2 ex ->
-                                return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf' "Cannot create CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
+                                return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot create CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
                         | _ ->
-                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf' "Cannot create CloudFile, Container: %s, Name: %s. It already exists." container id), None)) :: rest
+                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot create CloudFile, Container: %s, Name: %s. It already exists." container id), None)) :: rest
                     
                     | GetCloudFile(container, id) :: rest ->
-                        let! exec = containAsync <| cloudFileStoreLazy.Value.GetFile(container, id)
+                        let! exec = Async.Catch <| config.CloudFileStore.GetFile(container, id)
                         match exec with
                         | Choice1Of2 file ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                         | Choice2Of2 ex ->
-                            let! exec = containAsync <| cloudFileStoreLazy.Value.Exists(container, id)
+                            let! exec = Async.Catch <| config.CloudFileStore.Exists(container, id)
                             match exec with
                             | Choice1Of2 false -> 
                                 return! run' traceEnabled  <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
                             | _ -> 
-                                return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf' "Cannot get CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
+                                return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot get CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
                     
                     | GetCloudFiles(container) :: rest ->
-                        let! exec = containAsync <| cloudFileStoreLazy.Value.GetFiles(container)
+                        let! exec = Async.Catch <| config.CloudFileStore.GetFiles(container)
                         match exec with
                         | Choice1Of2 files ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue files, typeof<ICloudFile []>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf' "Cannot get CloudFiles, Container: %s" container, ex), None)) :: rest
+                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot get CloudFiles, Container: %s" container, ex), None)) :: rest
                     
                     | ReadCloudFile(file, deserialize, t) :: rest ->
-                        let! exec = containAsync <| cloudFileStoreLazy.Value.Read(file, deserialize)
+                        let! exec = Async.Catch <| config.CloudFileStore.Read(file, deserialize)
                         match exec with
                         | Choice1Of2 o ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue o, t)) :: rest
                         | Choice2Of2 ex ->
-                            let! exists = containAsync <| cloudFileStoreLazy.Value.Exists(file.Container, file.Name)
+                            let! exists = Async.Catch <| config.CloudFileStore.Exists(file.Container, file.Name)
                             match exists with
                             | Choice1Of2 false -> return! run' traceEnabled  <| ValueExpr (Exc (new NonExistentObjectStoreException(file.Container, file.Name), None)) :: rest                        
-                            | _ -> return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf' "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
+                            | _ -> return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
 
                     | ReadCloudFileAsSeq(file, deserialize, t) :: rest ->
-                        let! exec = containAsync <| cloudFileStoreLazy.Value.ReadAsSeq(file, deserialize, t)
+                        let! exec = Async.Catch <| config.CloudFileStore.ReadAsSeq(file, deserialize, t)
                         match exec with
                         | Choice1Of2 o ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue o, t)) :: rest
                         | Choice2Of2 ex ->
-                            let! exists = containAsync <| cloudFileStoreLazy.Value.Exists(file.Container, file.Name)
+                            let! exists = Async.Catch <| config.CloudFileStore.Exists(file.Container, file.Name)
                             match exists with
                             | Choice1Of2 false -> return! run' traceEnabled  <| ValueExpr (Exc (new NonExistentObjectStoreException(file.Container, file.Name), None)) :: rest                        
-                            | _ -> return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf' "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
+                            | _ -> return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
 
 
                     | LogExpr msg :: rest ->
                         let entry = userLog msg
-                        cloudLogStoreLazy.Value.LogEntry(processId, entry)
+                        config.LogStore.LogEntry(processId, entry)
                         return! run' traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest
                     | TraceExpr cloudExpr :: rest ->
                         return! run' true <| cloudExpr :: DoEndTraceExpr :: rest
                     | NewCloudSeqByNameExpr (container, values, t) :: rest ->
                         let id = Guid.NewGuid().ToString()
-                        let! exec = containAsync <| cloudSeqStoreLazy.Value.Create(values, container, id, t)
+                        let! exec = Async.Catch <| config.CloudSeqStore.Create(values, container, id, t)
                         match exec with
                         | Choice1Of2 cloudSeq ->
                             return! run' traceEnabled <| (ValueExpr (Obj (ObjValue cloudSeq, typeof<ICloudSeq>))) :: rest
                         | Choice2Of2 ex ->
-                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetCloudSeqByNameExpr (container, id, t) :: rest ->
-                        let! exists = cloudSeqStoreLazy.Value.Exists(container, id)
+                        let! exists = config.CloudSeqStore.Exists(container, id)
                         if exists then
-                            let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| t |]
-                            let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| id :> obj; container :> obj |])
-                            let ty = (cloudSeq :?> ICloudSeq).Type
-                            if t <> ty 
-                            then return! run' traceEnabled <| ValueExpr (Exc (new Exception(sprintf' "CloudSeq type mismatch. Internal type %s, got : %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
-                            else return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudSeq, cloudSeqTy)) :: rest
+                            let! cloudSeq = config.CloudSeqStore.Get(container, id)
+//                            let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| t |]
+//                            let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| id :> obj; container :> obj |])
+//                            let ty = (cloudSeq :?> ICloudSeq).Type
+                            if t <> cloudSeq.Type
+                            then return! run' traceEnabled <| ValueExpr (Exc (new Exception(sprintf "CloudSeq type mismatch. Internal type %s, got : %s" cloudSeq.Type.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
+                            else return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudSeq, cloudSeq.Type)) :: rest
                         else
                             return! run' traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
                     | GetCloudSeqsByNameExpr (container) :: rest ->
-                        let! exec = containAsync <| cloudSeqStoreLazy.Value.GetSeqs(container)
+                        let! exec = Async.Catch <| config.CloudSeqStore.GetSeqs(container)
                         match exec with
                         | Choice1Of2 seqs ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue seqs, typeof<ICloudSeq []>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf' "Cannot access Container: %s" container, ex), None)) :: rest
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
                     | GetProcessIdExpr :: rest ->
                         return! run' traceEnabled <| ValueExpr (Obj (ObjValue processId, typeof<int>)) :: rest
                     | GetTaskIdExpr :: rest ->
@@ -508,15 +510,15 @@ namespace Nessos.MBrace.Core
                                 (stack : CloudExpr list)
                                 (config : InterpreterConfiguration) : Async<Value> = 
             
-            /// Serialize and deserialize a CloudExpr to force ``call by value`` semantics
-            /// on parallel/choice expressions and ensure consistency between distributed execution
-            /// and local/shared-memory scenarios
-            let deepClone : CloudExpr -> CloudExpr = 
-                fun x ->
-                    use mem = new System.IO.MemoryStream()
-                    config.Serializer.Value.Serialize(mem, x)
-                    mem.Position <- 0L
-                    config.Serializer.Value.Deserialize<CloudExpr>(mem)
+//            /// Serialize and deserialize a CloudExpr to force ``call by value`` semantics
+//            /// on parallel/choice expressions and ensure consistency between distributed execution
+//            /// and local/shared-memory scenarios
+//            let deepClone : CloudExpr -> CloudExpr = 
+//                fun x ->
+//                    use mem = new System.IO.MemoryStream()
+//                    config.Serializer.Value.Serialize(mem, x)
+//                    mem.Position <- 0L
+//                    config.Serializer.Value.Deserialize<CloudExpr>(mem)
             
             let rec runLocal' (traceEnabled : bool) (stack : CloudExpr list) = 
                 async {
@@ -528,7 +530,7 @@ namespace Nessos.MBrace.Core
                     | LocalExpr cloudExpr :: rest -> 
                         return! runLocal' traceEnabled <| cloudExpr :: rest
                     | ParallelExpr (cloudExprs, elementType) :: rest ->
-                        let cloudExprs = Array.map deepClone cloudExprs
+                        let cloudExprs = Array.map config.Cloner.Clone cloudExprs
                         let! values = cloudExprs |> Array.map (fun cloudExpr -> runLocal processId taskId functions traceEnabled [cloudExpr] config) |> Async.Parallel
                         match values |> Array.tryPick (fun value -> match value with Exc (ex, ctx) -> Some ex | _ -> None) with
                         | Some _ -> 
@@ -540,7 +542,7 @@ namespace Nessos.MBrace.Core
                             return! runLocal' traceEnabled <| ValueExpr (Obj (ObjValue arrayOfResults, elementType)) :: rest
 
                     | ChoiceExpr (choiceExprs, elementType) :: rest ->
-                        let cloudExprs = Array.map deepClone choiceExprs
+                        let cloudExprs = Array.map config.Cloner.Clone choiceExprs
                         let! result = 
                                 choiceExprs |> Array.map (fun choiceExpr ->
                                                             async {

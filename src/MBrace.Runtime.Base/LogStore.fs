@@ -5,7 +5,7 @@ open System.IO
 open Nessos.MBrace
 open Nessos.MBrace.Runtime
 open Nessos.MBrace.Store
-open Nessos.MBrace.Utils
+//open Nessos.MBrace.Utils
 open Nessos.MBrace.Utils.Retry
 
 type private Message = 
@@ -21,8 +21,8 @@ type StoreLogger (store : IStore, ?batchCount, ?batchTimespan) =
 
     let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
 
-    let container = string >> sprintf' "log%s"
-    let postfix = sprintf' "%s.log"
+    let container = string >> sprintf "log%s"
+    let postfix = sprintf "%s.log"
     let isLogFile (f : string) = f.EndsWith(".log")
     let isLogDir (d : string) = 
         if d.StartsWith("log") then 

@@ -40,7 +40,7 @@
 
         interface ICloudRefStore with
 
-            member self.Create (container : string, id : string, value : obj, t : Type) : Async<IPersistableCloudRef> = 
+            member self.Create (container : string, id : string, value : obj, t : Type) : Async<ICloudRef> = 
                 async {
                     do! store.Create(container, postfix id, 
                             fun stream -> async {
@@ -54,10 +54,10 @@
                     return cloudRef :?> _
             }
 
-            member self.Create<'T> (container : string, id : string, value : 'T) : Async<IPersistableCloudRef<'T>> = 
+            member self.Create<'T> (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
                 async {                    
                     let! cloudRef = (self :> ICloudRefStore).Create(container, id, value :> obj, typeof<'T>) 
-                    return cloudRef :?> IPersistableCloudRef<'T>
+                    return cloudRef :?> ICloudRef<'T>
                 }
 
             member self.Read (container : string, id : string, t : Type) = 
@@ -93,10 +93,10 @@
                             |> Seq.toArray
                 }
 
-            member self.Read(cloudRef : IPersistableCloudRef) : Async<obj> = 
+            member self.Read(cloudRef : ICloudRef) : Async<obj> = 
                 (self :> ICloudRefStore).Read(cloudRef.Container, cloudRef.Name, cloudRef.Type) 
                 
-            member self.Read<'T> (cloudRef : IPersistableCloudRef<'T>) : Async<'T> = 
+            member self.Read<'T> (cloudRef : ICloudRef<'T>) : Async<'T> = 
                 async {
                     let! value = (self :> ICloudRefStore).Read(cloudRef.Container, cloudRef.Name, cloudRef.Type) 
                     return value :?> 'T

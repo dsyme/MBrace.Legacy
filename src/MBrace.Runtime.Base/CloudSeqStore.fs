@@ -55,7 +55,9 @@
                 return getInfo stream
             }
 
-        interface ICloudSeqStore with 
+        interface ICloudSeqStore with
+
+            member this.Get (container, id) = raise <| new NotImplementedException("kostas, fix this!")
             member this.GetCloudSeqInfo (cseq) : Async<CloudSeqInfo> =
                 getCloudSeqInfo cseq.Container cseq.Name
         

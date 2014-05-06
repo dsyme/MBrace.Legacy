@@ -9,23 +9,17 @@
 
     type CloudAttribute = ReflectedDefinitionAttribute
 
-    type ICloud =
-        abstract ReturnType : Type
-    and ICloud<'T> = 
-        inherit ICloud
-    and Result<'T> = ValueResult of 'T | ExceptionResult of (exn * CloudDumpContext option) //ValueResult | ExceptionResult are valid process result
-    and CloudExprWrap internal (cloudExpr : CloudExpr) =
-        member internal self.CloudExpr with get() = cloudExpr
-        override self.ToString () = "cloud { . . . }"
-    and CloudExprWrap<'T> internal (cloudExpr : CloudExpr) =
-        inherit CloudExprWrap(cloudExpr)
-        interface ICloud<'T> with
-            member self.ReturnType = typeof<'T>
-    and internal Container = string
-    and internal Id = string
-    and internal Tag = string
-    and internal ObjFunc = obj
-    and ProcessId = int
+    // keep interface name for sake of compatibility; change later
+
+    [<AbstractClass>]
+    type ICloud internal (cloudExpr : CloudExpr) =
+        abstract Type : Type
+        member internal __.CloudExpr = cloudExpr
+
+    and ICloud<'T> internal (cloudExpr : CloudExpr) =
+        inherit ICloud(cloudExpr)
+        override __.Type = typeof<'T>
+
     and internal CloudExpr = 
         // Monadic Exprs
         | DelayExpr of (unit -> CloudExpr) * ObjFunc
@@ -89,6 +83,7 @@
         | DoDisposableBindExpr of ICloudDisposable
         // Value
         | ValueExpr of Value
+
     and internal Value = 
         | Obj of ObjValue * Type 
         | Exc of exn * CloudDumpContext option
@@ -96,62 +91,29 @@
         | ParallelThunks of (ThunkValue [] * Type)
         | ChoiceValue of (CloudExpr [] * Type)
         | ChoiceThunks of (ThunkValue [] * Type)
+
     and ObjValue =
         | ObjValue of obj
         | CloudRefValue of ICloudRef<obj>
+
+    and Result<'T> = 
+        | ValueResult of 'T 
+        | ExceptionResult of (exn * CloudDumpContext option) //ValueResult | ExceptionResult are valid process results
+
+    and internal Container = string
+    and internal Id = string
+    and internal Tag = string
+    and internal ObjFunc = obj
+    // runtime artifact ; maybe move elsewhere?
+    and ProcessId = int
+
     and internal ThunkValue = Thunk of CloudExpr | ThunkId of string
+
     and internal ICloudAsync = 
         abstract UnPack : IPolyMorphicMethodAsync -> unit
+
     and internal IPolyMorphicMethodAsync = 
         abstract Invoke<'T> : Async<'T> -> unit
-    and ICloudDisposable =
-        inherit ISerializable
-        abstract Dispose : unit -> Async<unit>
-    and ICloudRef = 
-        inherit ISerializable
-        inherit ICloudDisposable
-        abstract Name : string 
-        abstract Container : string
-        abstract Type : Type
-        abstract Value : obj
-        abstract TryValue : obj option
-    and ICloudRef<'T> = 
-        inherit ICloudRef
-        abstract Value : 'T
-        abstract TryValue : 'T option
-    and ICloudSeq =
-        inherit ISerializable
-        inherit ICloudDisposable
-        abstract Name : string
-        abstract Container : string
-        abstract Type : Type
-        abstract Size : int64
-        abstract Count : int
-    and ICloudSeq<'T> =
-        inherit IEnumerable
-        inherit IEnumerable<'T>
-        inherit ICloudSeq
-    and IMutableCloudRef = 
-        inherit ISerializable
-        inherit ICloudDisposable
-        abstract Name : string
-        abstract Container : string
-        abstract Type : Type
-    and IMutableCloudRef<'T> = 
-        inherit IMutableCloudRef
-    and ICloudFile =
-        inherit ISerializable
-        inherit ICloudDisposable
-        abstract Name : string
-        abstract Container : string
-//        abstract ToArray : unit -> byte []
-//        abstract AllText : unit -> string
-//        abstract AllLines : unit -> string seq
-    and internal IMutableCloudRefTagged =
-        inherit IMutableCloudRef
-        abstract Tag : Tag with get, set
-    and internal IMutableCloudRefTagged<'T> =
-        inherit IMutableCloudRefTagged
 
     and CloudDumpContext =
         {
@@ -163,17 +125,16 @@
             Vars : (string * obj) []
         }
 
-    // communicates a proof that expr is of type ICloud<ReturnType>
-    and CloudPackage private (expr : Expr, t : Type) =
-        member __.Expr = expr
-        member __.ReturnType = t
-        static member Create (expr : Expr<ICloud<'T>>) =
-            CloudPackage(expr, typeof<'T>)
-    and  [<System.AttributeUsage(System.AttributeTargets.Class ||| System.AttributeTargets.Method ||| System.AttributeTargets.Property ||| System.AttributeTargets.Constructor, AllowMultiple = false)>]
+    and [<System.AttributeUsage(System.AttributeTargets.Class ||| System.AttributeTargets.Method ||| System.AttributeTargets.Property ||| System.AttributeTargets.Constructor, AllowMultiple = false)>]
          [<Sealed>]
          NoTraceInfoAttribute() = 
             inherit System.Attribute()
             member self.Name = "NoTraceInfo"
-            
-        
-            
+
+    // TODO: move to runtime
+    // communicates a proof that expr is of type ICloud<ReturnType>
+    type CloudPackage private (expr : Expr, t : Type) =
+        member __.Expr = expr
+        member __.ReturnType = t
+        static member Create (expr : Expr<ICloud<'T>>) =
+            CloudPackage(expr, typeof<'T>)

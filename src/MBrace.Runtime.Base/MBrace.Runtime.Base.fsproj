@@ -59,6 +59,8 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="IStore.fs" />
+    <Compile Include="StoreImplementations.fs" />
     <Compile Include="FileSystemStore.fs" />
     <Compile Include="Cache.fs" />
     <Compile Include="CacheStore.fs" />
@@ -70,6 +72,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Exceptions.fs" />
     <Compile Include="CloudUtils.fs" />
+    <Compile Include="CompilerStateMonad.fs" />
     <Compile Include="Compiler.fs" />
     <Compile Include="CoreUtils.fs" />
     <Compile Include="CloudRefStore.fs" />
