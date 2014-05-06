@@ -134,8 +134,9 @@
             do create "AssemblyCache" AssemblyCache.SetCacheDir
             do create "LocalCaches" <| 
                     fun cachePath ->
-                        IoC.RegisterValue(LocalCacheStore(cachePath), "cacheStore")            
-                        IoC.RegisterValue(cachePath, "cacheStoreEndpoint")
+                        raise <| new NotImplementedException("daemon configuration")
+//                        IoC.RegisterValue(LocalCacheStore(cachePath), "cacheStore")            
+//                        IoC.RegisterValue(cachePath, "cacheStoreEndpoint")
 
         let registerProcessDomainExecutable (path : string) =
             let path =
@@ -188,10 +189,11 @@
 
                 IoC.RegisterValue<IStore>(storeInfo.Store)
                 // CloudRefStore
-                IoC.Register<ICloudRefStore>(fun () -> new Nessos.MBrace.Core.CloudRefStore(storeInfo.Store) :> _) 
-                IoC.Register<ICloudSeqStore>(fun () -> new Nessos.MBrace.Core.CloudSeqStore(storeInfo.Store) :> _) 
-                IoC.Register<IMutableCloudRefStore>(fun () -> new Nessos.MBrace.Core.MutableCloudRefStore(storeInfo.Store) :> _) 
-                IoC.Register<ICloudFileStore>(fun () -> new Nessos.MBrace.Core.CloudFileStore(storeInfo.Store) :> _) 
+                raise <| new NotImplementedException("configuration")
+//                IoC.Register<ICloudRefStore>(fun () -> new Nessos.MBrace.Core.CloudRefStore(storeInfo.Store) :> _) 
+//                IoC.Register<ICloudSeqStore>(fun () -> new Nessos.MBrace.Core.CloudSeqStore(storeInfo.Store) :> _) 
+//                IoC.Register<IMutableCloudRefStore>(fun () -> new Nessos.MBrace.Core.MutableCloudRefStore(storeInfo.Store) :> _) 
+//                IoC.Register<ICloudFileStore>(fun () -> new Nessos.MBrace.Core.CloudFileStore(storeInfo.Store) :> _) 
             
                 IoC.RegisterValue(storeEndpoint, "storeEndpoint")
                 IoC.RegisterValue(storeProvider, "storeProvider")

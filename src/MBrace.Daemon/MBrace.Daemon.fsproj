@@ -88,14 +88,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MBrace.Client\MBrace.Client.fsproj">
-      <Name>MBrace.Client</Name>
-      <Project>{a303fe2d-ebac-42af-aad3-3700bdd996bd}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\MBrace.Core\MBrace.Core.fsproj">
       <Name>MBrace.Core</Name>
       <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Runtime.Base\MBrace.Runtime.Base.fsproj">
+      <Name>MBrace.Runtime.Base</Name>
+      <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\MBrace.Runtime\MBrace.Runtime.fsproj">

@@ -27,6 +27,7 @@ namespace Nessos.MBrace.Client
                 MBracedPath : string option
 
                 WorkingDirectory : string
+                LocalCacheDirectory : string
 
                 EnableClientSideStaticChecking : bool
 
@@ -50,18 +51,19 @@ namespace Nessos.MBrace.Client
                     | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
         let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
-            let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-            let cache = new Cache(storeInfo.Store)
-            IoC.RegisterValue (storeInfo, behaviour = Override)
-            IoC.RegisterValue (storeInfo.Store, behaviour = Override)
-            IoC.RegisterValue<ICloudRefStore>(new Nessos.MBrace.Core.CloudRefStore(storeInfo.Store, cache) :> ICloudRefStore, behaviour = Override)
-            IoC.RegisterValue<IMutableCloudRefStore>(new Nessos.MBrace.Core.MutableCloudRefStore(storeInfo.Store) :> IMutableCloudRefStore, behaviour = Override)
-            IoC.RegisterValue<ICloudSeqStore>(
-                new Nessos.MBrace.Core.CloudSeqStore(storeInfo.Store) :> ICloudSeqStore, behaviour = Override)
-            IoC.RegisterValue<ICloudFileStore>(
-                new Nessos.MBrace.Core.CloudFileStore(storeInfo.Store) :> ICloudFileStore, behaviour = Override)
-            IoC.RegisterValue<Nessos.MBrace.Core.StoreLogger>(
-                Nessos.MBrace.Core.StoreLogger(store = storeInfo.Store, batchCount = 42, batchTimespan = 500), behaviour = Override)
+            raise <| new NotImplementedException("configuration") : unit
+//            let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
+//            let cache = new Cache(storeInfo.Store)
+//            IoC.RegisterValue (storeInfo, behaviour = Override)
+//            IoC.RegisterValue (storeInfo.Store, behaviour = Override)
+//            IoC.RegisterValue<ICloudRefStore>(new Nessos.MBrace.Core.CloudRefStore(storeInfo.Store, cache) :> ICloudRefStore, behaviour = Override)
+//            IoC.RegisterValue<IMutableCloudRefStore>(new Nessos.MBrace.Core.MutableCloudRefStore(storeInfo.Store) :> IMutableCloudRefStore, behaviour = Override)
+//            IoC.RegisterValue<ICloudSeqStore>(
+//                new Nessos.MBrace.Core.CloudSeqStore(storeInfo.Store) :> ICloudSeqStore, behaviour = Override)
+//            IoC.RegisterValue<ICloudFileStore>(
+//                new Nessos.MBrace.Core.CloudFileStore(storeInfo.Store) :> ICloudFileStore, behaviour = Override)
+//            IoC.RegisterValue<Nessos.MBrace.Core.StoreLogger>(
+//                Nessos.MBrace.Core.StoreLogger(store = storeInfo.Store, batchCount = 42, batchTimespan = 500), behaviour = Override)
 
         let initConfiguration () =
             
@@ -129,6 +131,8 @@ namespace Nessos.MBrace.Client
 
                 MBracedPath = mbracedExe
                 WorkingDirectory = workingDirectory
+
+                LocalCacheDirectory = localCacheDir
 
                 Logger = logger
                 Vagrant = vagrant
@@ -200,8 +204,9 @@ namespace Nessos.MBrace.Client
         static member StoreProvider
             with get () = config.Value.StoreProvider
             and set p = 
+                // store activation has side-effects ; use lock instead of swap
                 lock config (fun () ->
-                    do activateDefaultStore p
+                    do activateDefaultStore config.Value.LocalCacheDirectory p
                     config.Swap(fun c -> { c with StoreProvider = p })
                 )
 

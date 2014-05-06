@@ -89,17 +89,21 @@
 
             // Register Store
             try
+                // has been filled out to fix build; kostas, change this
+                raise <| new NotImplementedException("worker node configuration setup.")
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
+                let cache = new Cache(storeInfo.Store)
+                let localCache = new LocalCacheStore(System.IO.Path.GetTempPath(), storeInfo.Store, storeInfo.Store)
                 IoC.RegisterValue<IStore>(storeInfo.Store)
                 IoC.RegisterValue<StoreInfo>(storeInfo)
-                IoC.Register<ICloudRefStore>(fun () -> new CloudRefStore(IoC.Resolve<IStore>()) :> _) 
-                IoC.Register<IMutableCloudRefStore>(fun () -> new MutableCloudRefStore(IoC.Resolve<IStore>()) :> _) 
-                IoC.Register<ICloudSeqStore>(fun () -> new CloudSeqStore(IoC.Resolve<IStore>()) :> _) 
-                IoC.Register<ICloudFileStore>(fun () -> new CloudFileStore(IoC.Resolve<IStore>()) :> _) 
+                IoC.Register<ICloudRefStore>(fun () -> new CloudRefStore(storeInfo.Store, cache) :> _) 
+                IoC.Register<IMutableCloudRefStore>(fun () -> new MutableCloudRefStore(storeInfo.Store) :> _) 
+                IoC.Register<ICloudSeqStore>(fun () -> new CloudSeqStore(storeInfo.Store, localCache) :> _) 
+                IoC.Register<ICloudFileStore>(fun () -> new CloudFileStore(storeInfo.Store, localCache) :> _) 
                 IoC.Register<StoreLogger>(fun () -> StoreLogger(store = IoC.Resolve<IStore>(), batchCount = 42, batchTimespan = 500))
                 if cacheStoreEndpoint <> null then
-                    IoC.RegisterValue(LocalCacheStore(cacheStoreEndpoint),"cacheStore")
+                    IoC.RegisterValue(LocalCacheStore(System.IO.Path.GetTempPath(), storeInfo.Store, storeInfo.Store, cacheStoreEndpoint),"cacheStore")
 
             with e -> results.Raise (sprintf "Error connecting to store: %s" e.Message, 2)
 
