@@ -23,13 +23,18 @@ module CoreConfiguration =
         let cfileStore = new CloudFileStore(store, localCache) :> ICloudFileStore
         let clogsStore = new StoreLogger(store, batchCount = 50, batchTimespan = 500) :> ILogStore
 
+        let cloner = 
+            {
+                new IObjectCloner with
+                    member __.Clone(t : 'T) = t |> Serializer.Pickler.Pickle |> Serializer.Pickler.UnPickle
+            }
+
         {
-            CloudRefStore           = lazy crefStore
-            CloudSeqStore           = lazy cseqStore
-            CloudFileStore          = lazy cfileStore
-            MutableCloudRefStore    = lazy mrefStore
-            LogStore                = lazy clogsStore
-            Logger                  = lazy logger
-            Serializer              = lazy pickler
+            CloudRefStore           = crefStore
+            CloudSeqStore           = cseqStore
+            CloudFileStore          = cfileStore
+            MutableCloudRefStore    = mrefStore
+            LogStore                = clogsStore
+            Cloner                  = cloner
         }
         

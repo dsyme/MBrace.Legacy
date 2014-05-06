@@ -64,7 +64,7 @@
         abstract Clone : 'T -> 'T
 
 
-    type InterpreterConfiguration =
+    type CoreConfiguration =
         {
             CloudSeqStore         : ICloudSeqStore
             CloudRefStore         : ICloudRefStore
