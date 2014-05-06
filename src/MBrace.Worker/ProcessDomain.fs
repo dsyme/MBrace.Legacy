@@ -94,29 +94,16 @@
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
                 
-                // fsStore used but caches
-                // inMemCache used by cref store
-                // localCache used by cseq/cfile store
-                let fsStore = new FileSystemStore(cacheStoreEndpoint)
-                let inMemCache = new Cache(fsStore, Serializer.Pickler)
-                let localCache = new LocalCacheStore(fsStore, storeInfo.Store)
-
-                let crefStore  = new CloudRefStore(storeInfo.Store, inMemCache)  :> ICloudRefStore
-                let cSeqStore  = new CloudSeqStore(storeInfo.Store, localCache)  :> ICloudSeqStore
-                let mrefStore  = new MutableCloudRefStore(storeInfo.Store)       :> IMutableCloudRefStore
-                let cfileStore = new CloudFileStore(storeInfo.Store, localCache) :> ICloudFileStore
-                let clogsStore = new StoreLogger(storeInfo.Store, batchCount = 50, batchTimespan = 500)
-
+                let coreConfig = Core.CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, cacheStoreEndpoint)
                 // soon...
+                IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue<IStore>(storeInfo.Store)
                 IoC.RegisterValue<StoreInfo>(storeInfo)
-                IoC.Register<ICloudRefStore>(fun () -> crefStore) 
-                IoC.Register<IMutableCloudRefStore>(fun () -> mrefStore) 
-                IoC.Register<ICloudSeqStore>(fun () -> cSeqStore) 
-                IoC.Register<ICloudFileStore>(fun () -> cfileStore) 
-                IoC.Register<StoreLogger>(fun () -> clogsStore)
-                if cacheStoreEndpoint <> null then
-                    IoC.RegisterValue(localCache,"cacheStore")
+                IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore.Value) 
+                IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore.Value) 
+                IoC.Register<ICloudSeqStore>(fun () -> coreConfig.CloudSeqStore.Value) 
+                IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore.Value) 
+                IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore.Value :?> StoreLogger)
 
             with e -> results.Raise (sprintf "Error connecting to store: %s" e.Message, 2)
 
