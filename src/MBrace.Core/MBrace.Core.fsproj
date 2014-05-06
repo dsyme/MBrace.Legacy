@@ -85,7 +85,7 @@
     <Compile Include="Interpreter\TagObject.fs" />
     <Compile Include="Interpreter\CompilerStateMonad.fs" />
     <Compile Include="Interpreter\Data.fs" />
-    <Compile Include="Interpreter\InterpreterConfiguration.fs" />
+    <Compile Include="Interpreter\CoreConfiguration.fs" />
     <Compile Include="Interpreter\Interpreter.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />

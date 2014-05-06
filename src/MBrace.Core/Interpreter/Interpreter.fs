@@ -22,7 +22,7 @@ namespace Nessos.MBrace.Core
         let rec internal run (processId : int) (taskId : string) 
                                 (functions : FunctionInfo list) (traceEnabled : bool)
                                 (stack : CloudExpr list)
-                                (config : InterpreterConfiguration) : Async<CloudExpr list> = 
+                                (config : CoreConfiguration) : Async<CloudExpr list> = 
             
             let logger = config.Logger
             let cloudSeqStoreLazy = config.CloudSeqStore
@@ -506,7 +506,7 @@ namespace Nessos.MBrace.Core
         and internal runLocal (processId : int) (taskId : string) 
                                 (functions : FunctionInfo list) (traceEnabled : bool)
                                 (stack : CloudExpr list)
-                                (config : InterpreterConfiguration) : Async<Value> = 
+                                (config : CoreConfiguration) : Async<Value> = 
             
             /// Serialize and deserialize a CloudExpr to force ``call by value`` semantics
             /// on parallel/choice expressions and ensure consistency between distributed execution
@@ -564,7 +564,7 @@ namespace Nessos.MBrace.Core
                 }
             runLocal' traceEnabled stack
               
-        and runLocalWrapper (computation : ICloud<'T>) (config : InterpreterConfiguration) =
+        and runLocalWrapper (computation : ICloud<'T>) (config : CoreConfiguration) =
             async {
                 let! result = runLocal 0 "" [] false [unWrapCloudExpr computation] config
                 match result with

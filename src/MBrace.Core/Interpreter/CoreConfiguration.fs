@@ -3,7 +3,7 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime
 
-    type InterpreterConfiguration =
+    type CoreConfiguration =
         {
             CloudSeqStore         : Lazy<ICloudSeqStore            >
             CloudRefStore         : Lazy<ICloudRefStore            >
