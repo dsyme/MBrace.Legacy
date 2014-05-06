@@ -80,7 +80,7 @@
     <Compile Include="Core\StoreProviders.fs" />
     <Compile Include="Core\Interpreter.fs" />
     <None Include="packages.config" />
-    <None Include="app.config" />
+    <Compile Include="InMemory\Configuration.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
