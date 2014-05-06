@@ -11,6 +11,7 @@ namespace Nessos.MBrace.Client
     open Nessos.Thespian.Remote
 
     open Nessos.MBrace
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
     open Nessos.MBrace.Runtime
@@ -51,19 +52,21 @@ namespace Nessos.MBrace.Client
                     | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
         let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
-            raise <| new NotImplementedException("configuration") : unit
-//            let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-//            let cache = new Cache(storeInfo.Store)
-//            IoC.RegisterValue (storeInfo, behaviour = Override)
-//            IoC.RegisterValue (storeInfo.Store, behaviour = Override)
-//            IoC.RegisterValue<ICloudRefStore>(new Nessos.MBrace.Core.CloudRefStore(storeInfo.Store, cache) :> ICloudRefStore, behaviour = Override)
-//            IoC.RegisterValue<IMutableCloudRefStore>(new Nessos.MBrace.Core.MutableCloudRefStore(storeInfo.Store) :> IMutableCloudRefStore, behaviour = Override)
-//            IoC.RegisterValue<ICloudSeqStore>(
-//                new Nessos.MBrace.Core.CloudSeqStore(storeInfo.Store) :> ICloudSeqStore, behaviour = Override)
-//            IoC.RegisterValue<ICloudFileStore>(
-//                new Nessos.MBrace.Core.CloudFileStore(storeInfo.Store) :> ICloudFileStore, behaviour = Override)
-//            IoC.RegisterValue<Nessos.MBrace.Core.StoreLogger>(
-//                Nessos.MBrace.Core.StoreLogger(store = storeInfo.Store, batchCount = 42, batchTimespan = 500), behaviour = Override)
+//            raise <| new NotImplementedException("configuration") : unit
+                
+            let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
+                
+            let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, localCacheDir)
+                
+            // soon
+            IoC.Register<CoreConfiguration>(fun () -> coreConfig)
+            IoC.RegisterValue (storeInfo, behaviour = Override)
+            IoC.RegisterValue (storeInfo.Store, behaviour = Override)
+            IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore.Value) 
+            IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore.Value) 
+            IoC.Register<ICloudSeqStore>(fun () -> coreConfig.CloudSeqStore.Value) 
+            IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore.Value) 
+            IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore.Value :?> StoreLogger)
 
         let initConfiguration () =
             

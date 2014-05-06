@@ -25,7 +25,7 @@ type State = {
 
 let private cloudRefStore = IoC.Resolve<ICloudRefStore>()
 
-let private config () = IoC.Resolve<InterpreterConfiguration> ()
+let private config () = IoC.Resolve<CoreConfiguration> ()
 
 
 let workerBehavior (processId: ProcessId)

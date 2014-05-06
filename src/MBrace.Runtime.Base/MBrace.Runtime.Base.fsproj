@@ -82,6 +82,7 @@
     <Compile Include="CloudFileStore.fs" />
     <Compile Include="LogStore.fs" />
     <Compile Include="PersistentAtomMap.fs" />
+    <Compile Include="CoreConfiguration.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
