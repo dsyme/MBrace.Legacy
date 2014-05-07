@@ -48,7 +48,7 @@
             CloudRefStore         : ICloudRefProvider
             CloudFileStore        : ICloudFileProvider
             MutableCloudRefStore  : IMutableCloudRefProvider
-            LogStore              : ILogStore
+            CloudLogger           : ICloudLogger
             Cloner                : IObjectCloner
         }
 

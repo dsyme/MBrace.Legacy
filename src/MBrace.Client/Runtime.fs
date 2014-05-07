@@ -285,7 +285,7 @@ namespace Nessos.MBrace.Client
                 mfailwith "incompatible store configuration."
 
             let clear = defaultArg clear false
-            let cloudLogStore = IoC.Resolve<StoreLogger>() :> ILogStore
+            let cloudLogStore = IoC.Resolve<StoreLogger>() 
             let logs = cloudLogStore.DumpLogs(pid)
                        |> Async.RunSynchronously
             match clear with
@@ -297,7 +297,7 @@ namespace Nessos.MBrace.Client
         member r.ShowUserLogs(pid, ?clear) : unit = 
             r.GetUserLogs(pid, ?clear = clear)
             |> Seq.sortBy (function | Trace info -> info.DateTime, info.Id 
-                                    | UserLogInfo info -> info.DateTime, info.Id
+                                    | UserLog info -> info.DateTime, info.Id
                                     | SystemLog (m,l,t) -> t, 0L )
             |> (raise <| new NotImplementedException())
 

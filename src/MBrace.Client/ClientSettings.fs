@@ -62,9 +62,9 @@ namespace Nessos.MBrace.Client
             IoC.RegisterValue (storeInfo.Store, behaviour = Override)
             //IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore) 
             //IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore) 
-            IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
-            IoC.Register<ICloudFileProvider>(fun () -> coreConfig.CloudFileStore) 
-            IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore :?> StoreLogger)
+            //IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
+            //IoC.Register<ICloudFileProvider>(fun () -> coreConfig.CloudFileStore) 
+            //IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore :?> StoreLogger)
 
         let initConfiguration () =
             

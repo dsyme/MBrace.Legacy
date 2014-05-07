@@ -5,8 +5,9 @@
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
-//    open Nessos.MBrace.Utils
+    open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
+
 
     type private Message = 
         | Flush of AsyncReplyChannel<unit>
@@ -14,8 +15,6 @@
         | QueueAndFlush of (ProcessId * LogEntry) * AsyncReplyChannel<unit>
 
     type StoreLogger (store : IStore, ?batchCount, ?batchTimespan) =
-    //    let store = defaultArg store (IoC.Resolve<IStore>())
-    //    let serializer = new FsCoreSerializer ()
         let batchCount = defaultArg batchCount 50
         let batchTimespan = defaultArg batchTimespan 500
 
@@ -102,39 +101,44 @@
         do batch.Start()
         do timer.Start()
 
-        interface ILogStore with
+        member self.LogEntry (pid : ProcessId, entry : LogEntry) =
+            batch.Post(QueueItem(pid, entry))
 
-            member self.LogEntry (pid : ProcessId, entry : LogEntry) =
-                batch.Post(QueueItem(pid, entry))
+        member self.LogEntryAndFlush(pid : ProcessId, entry : LogEntry) = 
+            self.LogEntry(pid, entry) |> self.Flush
 
-            member self.LogEntryAndFlush(pid : ProcessId, entry : LogEntry) = 
-                let self = self :> ILogStore
-                self.LogEntry(pid, entry) |> self.Flush
+        member self.Flush () =
+            batch.PostAndReply(Flush)
 
-            member self.Flush () =
-                batch.PostAndReply(Flush)
+        member self.DumpLogs (pid : ProcessId) : Async<LogEntry []> =
+            fetch pid
 
-            member self.DumpLogs (pid : ProcessId) : Async<LogEntry []> =
-                fetch pid
+        member self.DumpLogs () : Async<LogEntry []> = 
+            async {
+                let! pids = store.GetFolders() 
+                let pids = pids |> Array.choose isLogDir
+                let! logs = pids |> Array.map self.DumpLogs
+                                    |> Async.Parallel
+                return logs |> Array.concat
+            }
 
-            member self.DumpLogs () : Async<LogEntry []> = 
-                async {
-                    let self = self :> ILogStore
-                    let! pids = store.GetFolders() 
-                    let pids = pids |> Array.choose isLogDir
-                    let! logs = pids |> Array.map self.DumpLogs
-                                     |> Async.Parallel
-                    return logs |> Array.concat
-                }
+        member self.DeleteLogs (pid : ProcessId) : Async<unit> =
+            store.Delete(container pid)
 
-            member self.DeleteLogs (pid : ProcessId) : Async<unit> =
-                store.Delete(container pid)
+        member self.DeleteLogs () : Async<unit> =
+            async {
+                let! pids = store.GetFolders() 
+                let pids = pids |> Array.choose isLogDir
 
-            member self.DeleteLogs () : Async<unit> =
-                async {
-                    let! pids = store.GetFolders() 
-                    let pids = pids |> Array.choose isLogDir
-                    return! pids |> Array.map (fun pid -> store.Delete(container pid))
-                                 |> Async.Parallel
-                                 |> Async.Ignore
-                }
+                return! pids |> Array.map (fun pid -> store.Delete(container pid))
+                             |> Async.Parallel
+                             |> Async.Ignore
+            }
+
+        interface ICloudLogger with
+            
+            override this.LogTraceInfo(pid, entry) =
+                this.LogEntry(pid, Trace entry)
+
+            override this.LogUserInfo(pid, entry) =
+                this.LogEntry(pid, UserLog entry)

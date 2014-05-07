@@ -76,7 +76,7 @@
             ///the specified process.</summary>
             ///<param name="pid">The process's id.</param>
             ///<param name="clear">Delete the logs.</param>
-            member GetUserLogs : pid:Runtime.ProcessId * ?clear:bool -> Core.LogEntry seq
+            member GetUserLogs : pid:Runtime.ProcessId * ?clear:bool -> Utils.LogEntry seq
             
             ///Sends and receives a value.
             member Echo : input:'a -> 'a

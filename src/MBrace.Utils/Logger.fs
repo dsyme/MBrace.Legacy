@@ -6,6 +6,7 @@ namespace Nessos.MBrace.Utils
     open System.Collections.Generic
     open System.Collections.Concurrent
     open Microsoft.FSharp.Control
+    open Nessos.MBrace.Core
 
     [<AbstractClass>]
     type ILogger () =
@@ -18,26 +19,6 @@ namespace Nessos.MBrace.Utils
             l.LogEntry <| SystemLog (txt', lvl, DateTime.Now)
         member l.LogInfo txt = l.Log txt LogLevel.Info
         member l.LogError exn txt = l.LogWithException exn txt LogLevel.Error
-
-    and TraceInfo = { 
-            Line        : int option
-            File        : string option
-            Function    : string option
-            Message     : string
-            DateTime    : DateTime
-            Environment : IDictionary<string, string>
-            ProcessId   : int
-            TaskId      : string
-            Id          : int64
-        }
-
-    and UserLogInfo = {
-            Message     : string
-            DateTime    : DateTime
-            ProcessId   : int
-            TaskId      : string
-            Id          : int64
-        }
 
     and LogEntry = 
         | SystemLog of string * LogLevel * DateTime

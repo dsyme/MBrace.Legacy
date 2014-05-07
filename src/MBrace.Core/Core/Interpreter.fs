@@ -29,7 +29,7 @@ namespace Nessos.MBrace.Core
                 // Helper Functions
                 let userLog msg = 
                     let id = logIdCounter.Next()
-                    UserLogInfo { DateTime = DateTime.Now; Message = msg; ProcessId = processId; TaskId = taskId; Id = id }
+                    { DateTime = DateTime.Now; Message = msg; ProcessId = processId; TaskId = taskId; Id = id }
 
                 let tryToExtractInfo (typeName : string) = 
                     match typeName with
@@ -120,7 +120,7 @@ namespace Nessos.MBrace.Core
                                 // continue
                                 let dumpContext = extractInfo value objF
                                 let opt f x = if f x then None else Some x
-                                let entry = Trace { 
+                                let entry = { 
                                         File = opt String.IsNullOrEmpty dumpContext.File
                                         Function = opt String.IsNullOrEmpty dumpContext.FunctionName
                                         Line = Some <| (fst dumpContext.Start)
@@ -133,7 +133,7 @@ namespace Nessos.MBrace.Core
                                         TaskId = taskId
                                         Id = logIdCounter.Next()
                                     }
-                                config.LogStore.LogEntry(processId, entry)
+                                config.CloudLogger.LogTraceInfo(processId, entry)
                             else ()
                         | None -> ()
 
@@ -330,7 +330,7 @@ namespace Nessos.MBrace.Core
 
                     | LogExpr msg :: rest ->
                         let entry = userLog msg
-                        config.LogStore.LogEntry(processId, entry)
+                        config.CloudLogger.LogUserInfo(processId, entry)
                         return! run' traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest
                     | TraceExpr cloudExpr :: rest ->
                         return! run' true <| cloudExpr :: DoEndTraceExpr :: rest

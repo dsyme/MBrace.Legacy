@@ -100,9 +100,9 @@
                 IoC.RegisterValue<StoreInfo>(storeInfo)
                 //IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore) 
                 //IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore) 
-                IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
-//                IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore) 
-                IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore :?> StoreLogger)
+                //IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
+                //IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore) 
+                //IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore :?> StoreLogger)
 
             with e -> results.Raise (sprintf "Error connecting to store: %s" e.Message, 2)
 

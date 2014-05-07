@@ -7,12 +7,12 @@
 
     // TODO : change
 
-    type LogEntry =
-        | Trace of TraceInfo
-        | UserLogInfo of UserLogInfo
-        | SystemLog of string * LogLevel * DateTime
+//    type LogEntry =
+//        | Trace of TraceInfo
+//        | UserLogInfo of UserLogInfo
+        //| SystemLog of string * LogLevel * DateTime
 
-    and TraceInfo = 
+    type TraceInfo = 
         { 
             Line        : int option
             File        : string option
@@ -33,16 +33,12 @@
             Id          : int64
         }
 
-    and LogLevel =
-        | Info
-        | Warning
-        | Error
+//    and LogLevel =
+//        | Info
+//        | Warning
+//        | Error
 
-    and ILogStore =
-        abstract LogEntry           : ProcessId * LogEntry  -> unit
-        abstract LogEntryAndFlush   : ProcessId * LogEntry  -> unit
-        abstract Flush              : unit -> unit
-        abstract DumpLogs           : ProcessId -> Async<LogEntry []> 
-        abstract DumpLogs           : unit -> Async<LogEntry []> 
-        abstract DeleteLogs         : ProcessId -> Async<unit> 
-        abstract DeleteLogs         : unit -> Async<unit> 
+    type ICloudLogger = 
+        abstract LogUserInfo  : ProcessId * UserLogInfo -> unit
+        abstract LogTraceInfo : ProcessId * TraceInfo   -> unit
+        
