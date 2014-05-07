@@ -66,11 +66,6 @@
     <Compile Include="Store\FileSystemStore.fs" />
     <Compile Include="Store\LogStore.fs" />
     <Compile Include="Store\StoreRegistry.fs" />
-    <Compile Include="Store\CloudRef.fs" />
-    <Compile Include="Store\MutableCloudRef.fs" />
-    <Compile Include="Store\CloudSeq.fs" />
-    <Compile Include="Store\CloudFile.fs" />
-    <Compile Include="Store\CoreConfiguration.fs" />
     <Compile Include="Base\RuntimeAPI.fs" />
     <Compile Include="Base\Utils.fs" />
     <Compile Include="Base\DaemonConfig.fs" />
@@ -81,6 +76,11 @@
     <Compile Include="Base\Compiler.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
+    <Compile Include="StorePrimitives\CloudRef.fs" />
+    <Compile Include="StorePrimitives\MutableCloudRef.fs" />
+    <Compile Include="StorePrimitives\CloudSeq.fs" />
+    <Compile Include="StorePrimitives\CloudFile.fs" />
+    <Compile Include="StorePrimitives\CoreConfiguration.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">
