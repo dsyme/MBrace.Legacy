@@ -56,7 +56,12 @@ namespace Nessos.MBrace.Runtime.Store
         let getHashCode (txt : string) = hasher.ComputeHash(Encoding.UTF8.GetBytes txt)
 
 
-    type StoreActivator = internal StoreActivator of AssemblyPacket * string * string // Assembly id * factory QN * connection string
+    type StoreActivator = 
+        internal {
+            Packet : AssemblyPacket
+            FactoryAQN : string
+            ConnectionString : string
+        }
 
     and StoreInfo =
         {
@@ -111,17 +116,17 @@ namespace Nessos.MBrace.Runtime.Store
 
             activate makeDefault factoryType connectionString
 
-        static member TryActivate (StoreActivator(packet, factoryQualifiedName, connectionString), ?makeDefault) =
-            match AssemblyPacket.TryLoad packet with
+        static member TryActivate (activator : StoreActivator, ?makeDefault) =
+            match AssemblyPacket.TryLoad activator.Packet with
             | None -> None
             | Some _ ->
-                let factoryType = Type.GetType(factoryQualifiedName, throwOnError = true)
-                Some <| activate makeDefault factoryType connectionString
+                let factoryType = Type.GetType(activator.FactoryAQN, throwOnError = true)
+                Some <| activate makeDefault factoryType activator.ConnectionString
 
         static member GetActivator(id : StoreId, ?includeImage) =
             let storeInfo = StoreRegistry.GetInstance id
             let packet = AssemblyPacket.OfAssembly(storeInfo.Assembly, ?includeImage = includeImage)
-            StoreActivator(packet, storeInfo.FactoryType.AssemblyQualifiedName, storeInfo.ConnectionString)
+            { Packet = packet; FactoryAQN =  storeInfo.FactoryType.AssemblyQualifiedName; ConnectionString = storeInfo.ConnectionString }
 
         static member DefaultStore 
                 with get () =
