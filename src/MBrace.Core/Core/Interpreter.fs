@@ -236,31 +236,19 @@ namespace Nessos.MBrace.Core
                             return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
 
                     | NewMutableRefByNameExpr (container, id, value, t) :: rest ->
-                        let! exists = Async.Catch <| config.MutableCloudRefStore.Exists(container, id) 
-                        match exists with
-                        | Choice1Of2 false ->
-                            let! exec = config.MutableCloudRefStore.Create(container, id, value, t) |> Async.Catch
-                            match exec with
-                            | Choice1Of2 result ->
-                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
-                            | Choice2Of2 ex ->
-                                return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
-                        | Choice1Of2 true ->
-                            return!  run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s. It already exists." container id), None)) :: rest
+                        let! exec = config.MutableCloudRefStore.Create(container, id, value, t) |> Async.Catch
+                        match exec with
+                        | Choice1Of2 result ->
+                            return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
                         | Choice2Of2 ex ->
-                                return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
-                    
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     | ReadMutableRefExpr(mref, ty) :: rest ->
                         let! exec = Async.Catch <| config.MutableCloudRefStore.Read(mref)
                         match exec with
                         | Choice1Of2 result ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, mref.Type)) :: rest
                         | Choice2Of2 ex ->
-                            let! exists = Async.Catch <| config.MutableCloudRefStore.Exists(mref.Container, mref.Name)
-                            match exists with
-                            | Choice1Of2 false -> return! run' traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(mref.Container, mref.Name), None)) :: rest
-                            | _ -> return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot locate Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
-
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot locate Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
                     | SetMutableRefExpr(mref, value) :: rest ->
                         let! exec = Async.Catch <| config.MutableCloudRefStore.Update(mref, value)
                         match exec with
@@ -278,19 +266,15 @@ namespace Nessos.MBrace.Core
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot update Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
                     
                     | GetMutableRefByNameExpr (container, id, t) :: rest ->
-                        let! exists = config.MutableCloudRefStore.Exists(container, id)
-                        if exists then
-                            let! ty = config.MutableCloudRefStore.GetRefType(container, id)
-                            if t <> ty 
-                            then return! run' traceEnabled <| ValueExpr (Exc (new Exception(sprintf "MutableCloudRef type mismatch. Internal type %s, got : %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
+                        let! mref = Async.Catch <| config.MutableCloudRefStore.GetRef(container, id)
+                        match mref with
+                        | Choice1Of2 mref ->
+                            if mref.Type <> t then
+                                return! run' traceEnabled <| ValueExpr (Exc (new Exception(sprintf "MutableCloudRef type mismatch. Internal type %s, got : %s" mref.Type.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
                             else 
-                                let! cloudRef = config.MutableCloudRefStore.Create(container, id, t)
-//                                let cloudRefType = typedefof<MutableCloudRef<_>>.MakeGenericType [| t |]
-//                                let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; "" :> obj; t :> obj |])
-                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudRef, cloudRef.Type)) :: rest
-                        else
-                            return! run' traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
-                    
+                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue mref, mref.Type)) :: rest
+                        | Choice2Of2 ex ->
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot read MutableCloudref with Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetMutableRefsByNameExpr (container) :: rest ->
                         let! exec = Async.Catch <| config.MutableCloudRefStore.GetRefs(container)
                         match exec with
@@ -300,7 +284,7 @@ namespace Nessos.MBrace.Core
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
                     
                     | FreeMutableRefExpr(mref) :: rest ->
-                        let! exec = Async.Catch <| config.MutableCloudRefStore.Delete(mref.Container, mref.Name)
+                        let! exec = Async.Catch <| config.MutableCloudRefStore.Delete(mref)
                         match exec with
                         | Choice1Of2 () ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest

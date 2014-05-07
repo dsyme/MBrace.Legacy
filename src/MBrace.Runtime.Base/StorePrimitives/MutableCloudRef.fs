@@ -10,15 +10,14 @@
 
     type MutableCloudRef<'T>(id : string, container : string, tag : Tag, ty : Type) =
         
-        let mutablecloudrefstorelazy = lazy IoC.Resolve<IMutableCloudRefStore>()
+        let mutablecloudrefstorelazy = lazy IoC.Resolve<MutableCloudRefStore>()
 
         interface IMutableCloudRef with
             member self.Name = id
             member self.Container = container
             member self.Type = ty
             member self.Dispose () =
-                let self = self :> IMutableCloudRef
-                mutablecloudrefstorelazy.Value.Delete(self.Container, self.Name)
+                (mutablecloudrefstorelazy.Value :> IMutableCloudRefProvider).Delete(self)
 
         interface IMutableCloudRef<'T>
 
@@ -43,7 +42,7 @@
                 info.AddValue("type", ty)
 
 
-    type MutableCloudRefStore(store : IStore) =
+    and MutableCloudRefStore(store : IStore) =
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
 
@@ -66,6 +65,13 @@
                 return t
             }
 
+        let readInfo container id = async {
+            let! stream, tag = store.ReadMutable(container, id)        
+            let t = pickler.Deserialize<Type> stream
+            stream.Dispose()
+            return t, tag
+        }
+
         let getIds (container : string) : Async<string []> = async {
                 let! files = store.GetFiles(container)
                 return files 
@@ -74,7 +80,16 @@
                        |> Seq.toArray
             }
 
-        interface IMutableCloudRefStore with
+        member self.GetRefType (container : string, id : string) : Async<Type> =
+            readType container (postfix id)
+
+        member self.Exists(container : string) : Async<bool> = 
+            store.Exists(container)
+
+        member self.Exists(container : string, id : string) : Async<bool> = 
+            store.Exists(container, postfix id)
+
+        interface IMutableCloudRefProvider with
 
             member self.Create (container : string, id : string, value : obj, t : Type) : Async<IMutableCloudRef> = 
                 async {
@@ -88,24 +103,12 @@
                     return cloudRef :?> _
                 }
 
-            member self.Create<'T> (container : string, id : string, value : 'T) : Async<IMutableCloudRef<'T>> = 
-                async {
-                    let! cloudRef = (self :> IMutableCloudRefStore).Create(container, id, value :> obj, typeof<'T>) 
-                    return cloudRef :?> IMutableCloudRef<'T>
-                }
-
             member self.Read(cloudRef : IMutableCloudRef) : Async<obj> = 
                 async {
                     let cloudRef = cloudRef :?> IMutableCloudRefTagged
                     let! ty, value, tag = read cloudRef.Container cloudRef.Name
                     cloudRef.Tag <- tag
                     return value
-                }
-  
-            member self.Read<'T> (cloudRef : IMutableCloudRef<'T>) : Async<'T> = 
-                async {
-                    let! value = (self :> IMutableCloudRefStore).Read(cloudRef :> IMutableCloudRef) 
-                    return value :?> 'T
                 }
 
             member this.Update(cloudRef : IMutableCloudRef, value : obj) : Async<bool>  =
@@ -121,9 +124,6 @@
                     return ok
                 }
 
-            member this.Update<'T>(cloudRef : IMutableCloudRef<'T>, value : 'T) : Async<bool>  =
-                (this :> IMutableCloudRefStore).Update(cloudRef :> IMutableCloudRef, value)
-
             member this.ForceUpdate(cloudRef : IMutableCloudRef, value : obj) =
                 async {
                     let cloudRef = cloudRef :?> IMutableCloudRefTagged
@@ -135,8 +135,13 @@
                     cloudRef.Tag <- tag
                 }
 
-            member self.GetRefType (container : string, id : string) : Async<Type> =
-                readType container (postfix id)
+            member self.GetRef(container , id) : Async<IMutableCloudRef> =
+                async {
+                    let! t, tag = readInfo container (postfix id)
+                    let cloudRefType = typedefof<MutableCloudRef<_>>.MakeGenericType [| t |]
+                    let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; tag :> obj; t :> obj |])
+                    return cloudRef :?> _
+                }
 
             member self.GetRefs(container : string) : Async<IMutableCloudRef []> =
                 async {
@@ -150,11 +155,5 @@
                             |> Seq.toArray
                 }
 
-            member self.Exists(container : string) : Async<bool> = 
-                store.Exists(container)
-
-            member self.Exists(container : string, id : string) : Async<bool> = 
-                store.Exists(container, postfix id)
-
-            member self.Delete(container : string, id : string) : Async<unit> = 
-                store.Delete(container, postfix id)
+            member self.Delete(mref : IMutableCloudRef) : Async<unit> = 
+                store.Delete(mref.Container, postfix mref.Name)

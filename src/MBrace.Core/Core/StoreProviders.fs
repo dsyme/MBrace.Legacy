@@ -21,33 +21,21 @@
         abstract GetRefs : Container ->Async<ICloudRef []>
         abstract GetRef : Container * Id ->Async<ICloudRef>
         abstract Read : ICloudRef -> Async<obj>
-//        abstract Create : Container * Id * 'T -> Async<ICloudRef<'T>>
-//        abstract Exists : Container -> Async<bool>
-//        abstract Exists : Container * Id -> Async<bool>
-//        abstract GetRefType : Container * Id -> Async<System.Type>
-//        abstract Read : Container * Id * System.Type -> Async<obj>
-//        abstract Read : ICloudRef<'T> -> Async<'T>
-    
+
     type ICloudSeqProvider =
-        // added just now : probably needed ; Type argument should not be passed
         abstract GetSeq : Container * Id  -> Async<ICloudSeq>
         abstract Create : System.Collections.IEnumerable * string * string * System.Type -> Async<ICloudSeq>
         abstract Delete : ICloudSeq -> Async<unit>
         abstract GetSeqs : Container -> Async<ICloudSeq []>
 
-    type IMutableCloudRefStore =
-        abstract member Create : Container * Id * obj * System.Type -> Async<IMutableCloudRef>
-        abstract member Create : Container * Id * 'T -> Async<IMutableCloudRef<'T>>
-        abstract member Delete : Container * Id -> Async<unit>
-        abstract member Exists : Container -> Async<bool>
-        abstract member Exists : Container * Id -> Async<bool>
-        abstract member ForceUpdate : IMutableCloudRef * obj -> Async<unit>
-        abstract member GetRefType : Container * Id -> Async<System.Type>
-        abstract member GetRefs : Container -> Async<IMutableCloudRef []>
-        abstract member Read : IMutableCloudRef -> Async<obj>
-        abstract member Read : IMutableCloudRef<'T> -> Async<'T>
-        abstract member Update : IMutableCloudRef * obj -> Async<bool>
-        abstract member Update : IMutableCloudRef<'T> * 'T -> Async<bool>
+    type IMutableCloudRefProvider =
+        abstract Create : Container * Id * obj * System.Type -> Async<IMutableCloudRef>
+        abstract Delete : IMutableCloudRef -> Async<unit>
+        abstract Read : IMutableCloudRef -> Async<obj>
+        abstract GetRef : Container * Id -> Async<IMutableCloudRef>
+        abstract ForceUpdate : IMutableCloudRef * obj -> Async<unit>
+        abstract Update : IMutableCloudRef * obj -> Async<bool>
+        abstract GetRefs : Container -> Async<IMutableCloudRef []>
 
 
     type IObjectCloner =
@@ -59,7 +47,7 @@
             CloudSeqStore         : ICloudSeqProvider
             CloudRefStore         : ICloudRefProvider
             CloudFileStore        : ICloudFileProvider
-            MutableCloudRefStore  : IMutableCloudRefStore
+            MutableCloudRefStore  : IMutableCloudRefProvider
             LogStore              : ILogStore
             Cloner                : IObjectCloner
         }
