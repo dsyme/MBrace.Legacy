@@ -21,11 +21,6 @@ type State = {
     TaskManager: ReliableActorRef<TaskManager>
 } with static member Empty = { TaskManager = ActorRef.empty() |> ReliableActorRef.FromRef }
 
-let private cloudRefStore = IoC.Resolve<ICloudRefStore>()
-
-let private config () = IoC.Resolve<CoreConfiguration> ()
-
-
 let workerBehavior (processId: ProcessId)
                    (processMonitor: ActorRef<Replicated<ProcessMonitor, ProcessMonitorDb>>)
                    (taskMap: Atom<Map<TaskId, IDisposable>>)
@@ -33,13 +28,14 @@ let workerBehavior (processId: ProcessId)
                    (state: State)
                    (msg: Worker) =
     
-    let toCloudRef cloudExpr = cloudRefStore.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr)
+    let config = IoC.Resolve<CoreConfiguration> ()
+    let toCloudRef cloudExpr = config.CloudRefStore.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr, cloudExpr.GetType())
     let taskManager = state.TaskManager
     let processTask (processId : ProcessId, taskId : TaskId, functions : Function list, Dump (dump)) = 
         let traceEnabled stack = stack |> List.exists (fun cloudExpr' -> match cloudExpr' with DoEndTraceExpr -> true | _ -> false)
         let rec processTask' stack = 
             async {
-                let! stack' = Interpreter.run processId (taskId.ToString()) functions (traceEnabled stack) stack (config ())
+                let! stack' = Interpreter.run processId (taskId.ToString()) functions (traceEnabled stack) stack config
                 match stack' with
                 | GetWorkerCountExpr :: _ -> return stack'
                 | ParallelExpr (cloudExprs, t) :: rest ->
@@ -54,11 +50,11 @@ let workerBehavior (processId: ProcessId)
                     let choiceValue = ChoiceValue (cloudExprs, t) 
                     return (ValueExpr choiceValue) :: rest
                 | LocalExpr cloudExpr :: rest -> 
-                    let! value = Interpreter.runLocal processId (taskId.ToString()) functions false [cloudExpr] (config ())
+                    let! value = Interpreter.runLocal processId (taskId.ToString()) functions false [cloudExpr] config
                     return! processTask' <| (ValueExpr value) :: rest
                 | ValueExpr (Obj (ObjValue value, t)) :: rest when value <> null ->
-                    let! cloudRefValue = cloudRefStore.Create<obj>("temp" + (string processId), Guid.NewGuid().ToString(), box value)
-                    return (ValueExpr (Obj (CloudRefValue cloudRefValue, t))) :: rest
+                    let! cloudRefValue = config.CloudRefStore.Create("temp" + (string processId), Guid.NewGuid().ToString(), box value, typeof<obj>)
+                    return (ValueExpr (Obj (CloudRefValue (cloudRefValue  :?> ICloudRef<obj>), t))) :: rest
                 | _ -> return stack'
             }
         processTask' dump 

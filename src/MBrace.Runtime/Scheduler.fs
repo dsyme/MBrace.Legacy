@@ -19,13 +19,17 @@ type State = {
     TaskManager: ActorRef<TaskManager>
 } with static member New continuationMap = { ContinuationMap = continuationMap; TaskManager = ActorRef.empty() }
 
-let private cloudRefStore = IoC.Resolve<ICloudRefStore>()
 
 let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, ProcessMonitorDb>>)
                       (ctx: BehaviorContext<Scheduler>)
                       (state: State)
                       (msg: Scheduler) = 
-    let newRef (processId : int) (value : 'T) = cloudRefStore.Create("temp" + (string processId), Guid.NewGuid().ToString(), value)
+    let coreConfig = IoC.Resolve<CoreConfiguration>()
+    let newRef (processId : int) (value : 'T) = 
+        async {
+            let! cref = coreConfig.CloudRefStore.Create("temp" + (string processId), Guid.NewGuid().ToString(), value, typeof<'T>) 
+            return cref :?> ICloudRef<'T>
+        }
     let taskManager = state.TaskManager
     let continuationMap = state.ContinuationMap
     async {

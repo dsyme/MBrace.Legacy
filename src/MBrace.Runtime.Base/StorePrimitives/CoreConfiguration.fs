@@ -17,7 +17,7 @@
             let inMemCache = new Cache(fsStore, Serializer.Pickler)
             let localCache = new LocalCacheStore(fsStore, store)
 
-            let crefStore  = new CloudRefStore(store, inMemCache)  :> ICloudRefStore
+            let crefStore  = new CloudRefStore(store, inMemCache)  :> ICloudRefProvider
             let cseqStore  = new CloudSeqProvider(store, localCache)  :> ICloudSeqProvider
             let mrefStore  = new MutableCloudRefStore(store)       :> IMutableCloudRefStore
             let cfileStore = new CloudFileStore(store, localCache) :> ICloudFileProvider

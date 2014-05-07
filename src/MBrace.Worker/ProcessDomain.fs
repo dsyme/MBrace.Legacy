@@ -98,7 +98,7 @@
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue<IStore>(storeInfo.Store)
                 IoC.RegisterValue<StoreInfo>(storeInfo)
-                IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore) 
+                //IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore) 
                 IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore) 
                 IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
 //                IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore) 

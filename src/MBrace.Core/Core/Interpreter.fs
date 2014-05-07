@@ -218,18 +218,15 @@ namespace Nessos.MBrace.Core
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetRefByNameExpr (container, id, t) :: rest ->
-                        let! exists = config.CloudRefStore.Exists(container, id)
-                        if exists then
-                            let! ty = config.CloudRefStore.GetRefType(container, id)
-                            if t <> ty 
-                            then return! run' traceEnabled <| ValueExpr (Exc (new MBraceException(sprintf "CloudRef type mismatch. Internal type %s, got : %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
-                            else 
-                                let! cloudRef = config.CloudRefStore.Create(id, container, t)
-//                                let cloudRefType = typedefof<PersistableCloudRef<_>>.MakeGenericType [| t |]
-//                                let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; t :> obj |])
-                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudRef, cloudRef.Type)) :: rest
-                        else
-                            return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.NonExistentObjectStoreException(container, id), None)) :: rest
+                        let! cref = Async.Catch <| config.CloudRefStore.GetRef(container, id)
+                        match cref with
+                        | Choice1Of2 cref ->
+                            if cref.Type <> t then
+                                return! run' traceEnabled <| ValueExpr (Exc (new MBraceException(sprintf "CloudRef type mismatch. Internal type %s, got : %s" cref.Type.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
+                            else
+                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue cref, cref.Type)) :: rest
+                        | Choice2Of2 ex ->
+                            return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot find CloudRef with Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetRefsByNameExpr (container) :: rest ->
                         let! exec = Async.Catch <| config.CloudRefStore.GetRefs(container)
                         match exec with
