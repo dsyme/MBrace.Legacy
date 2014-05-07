@@ -382,17 +382,13 @@ namespace Nessos.MBrace.Core
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetCloudSeqByNameExpr (container, id, t) :: rest ->
-                        let! exists = config.CloudSeqStore.Exists(container, id)
-                        if exists then
-                            // this is wrong : cloudSeq.Type is always the typed passed as parameter. Should be resolved by store
-                            let! cloudSeq = config.CloudSeqStore.GetSeq(container, id, t)
-//                            let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| t |]
-//                            let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| id :> obj; container :> obj |])
-//                            let ty = (cloudSeq :?> ICloudSeq).Type
-                            if t <> cloudSeq.Type
-                            then return! run' traceEnabled <| ValueExpr (Exc (new Exception(sprintf "CloudSeq type mismatch. Internal type %s, got : %s" cloudSeq.Type.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
-                            else return! run' traceEnabled <| ValueExpr (Obj (ObjValue cloudSeq, cloudSeq.Type)) :: rest
-                        else
+                        let! cseq = Async.Catch <| config.CloudSeqStore.GetSeq(container, id)
+                        match cseq with
+                        | Choice1Of2 cseq ->
+                            if t <> cseq.Type
+                            then return! run' traceEnabled <| ValueExpr (Exc (new Exception(sprintf "CloudSeq type mismatch. Internal type %s, got : %s" cseq.Type.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
+                            else return! run' traceEnabled <| ValueExpr (Obj (ObjValue cseq, cseq.Type)) :: rest
+                        | Choice2Of2 exn ->
                             return! run' traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
                     | GetCloudSeqsByNameExpr (container) :: rest ->
                         let! exec = Async.Catch <| config.CloudSeqStore.GetSeqs(container)

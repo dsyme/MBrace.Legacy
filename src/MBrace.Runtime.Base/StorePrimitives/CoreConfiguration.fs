@@ -18,7 +18,7 @@
             let localCache = new LocalCacheStore(fsStore, store)
 
             let crefStore  = new CloudRefStore(store, inMemCache)  :> ICloudRefStore
-            let cseqStore  = new CloudSeqStore(store, localCache)  :> ICloudSeqStore
+            let cseqStore  = new CloudSeqProvider(store, localCache)  :> ICloudSeqProvider
             let mrefStore  = new MutableCloudRefStore(store)       :> IMutableCloudRefStore
             let cfileStore = new CloudFileStore(store, localCache) :> ICloudFileStore
             let clogsStore = new StoreLogger(store, batchCount = 50, batchTimespan = 500) :> ILogStore

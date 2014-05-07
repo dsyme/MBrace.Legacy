@@ -28,22 +28,19 @@
         abstract Read : Container * Id * System.Type -> Async<obj>
         abstract Read : ICloudRef -> Async<obj>
         abstract Read : ICloudRef<'T> -> Async<'T>
-
-    type CloudSeqInfo = { Size : int64; Count : int; Type : Type }
     
-    type ICloudSeqStore =
+    type ICloudSeqProvider =
         // added just now : probably needed ; Type argument should not be passed
-        abstract GetSeq : Container * Id * System.Type -> Async<ICloudSeq>
-
-
+        abstract GetSeq : Container * Id  -> Async<ICloudSeq>
         abstract Create : System.Collections.IEnumerable * string * string * System.Type -> Async<ICloudSeq>
-        abstract Delete : Container * Id -> Async<unit>
-        abstract Exists : Container -> Async<bool>
-        abstract Exists : Container * Id -> Async<bool>
-        abstract GetCloudSeqInfo : ICloudSeq<'T> -> Async<CloudSeqInfo>
-        abstract GetEnumerator : ICloudSeq<'T> -> Async<System.Collections.Generic.IEnumerator<'T>>
-        abstract GetIds : Container -> Async<string []>
+        abstract Delete : ICloudSeq -> Async<unit>
         abstract GetSeqs : Container -> Async<ICloudSeq []>
+
+        //abstract Exists : Container -> Async<bool>
+        //abstract Exists : Container * Id -> Async<bool>
+        //abstract GetCloudSeqInfo : ICloudSeq<'T> -> Async<CloudSeqInfo>
+        //abstract GetEnumerator : ICloudSeq<'T> -> Async<System.Collections.Generic.IEnumerator<'T>>
+        //abstract GetIds : Container -> Async<string []>
 
     type IMutableCloudRefStore =
         abstract member Create : Container * Id * obj * System.Type -> Async<IMutableCloudRef>
@@ -66,7 +63,7 @@
 
     type CoreConfiguration =
         {
-            CloudSeqStore         : ICloudSeqStore
+            CloudSeqStore         : ICloudSeqProvider
             CloudRefStore         : ICloudRefStore
             CloudFileStore        : ICloudFileStore
             MutableCloudRefStore  : IMutableCloudRefStore

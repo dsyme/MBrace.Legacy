@@ -12,10 +12,14 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
 
+    type CloudSeqInfo = { Size : int64; Count : int; Type : Type }
+
+    // TODO: CLOUDSEQINFO CTOR
+
     [<Serializable>]
     [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
     type CloudSeq<'T> (id : string, container : string ) as this =
-        let factoryLazy = lazy IoC.Resolve<ICloudSeqStore>()
+        let factoryLazy = lazy IoC.Resolve<CloudSeqProvider>()
 
         let info = lazy (Async.RunSynchronously <| factoryLazy.Value.GetCloudSeqInfo(this))
 
@@ -26,8 +30,7 @@
             member this.Count = info.Value.Count
             member this.Size = info.Value.Size
             member this.Dispose () =
-                let this = this :> ICloudSeq
-                factoryLazy.Value.Delete(this.Container, this.Name)
+                (factoryLazy.Value :> ICloudSeqProvider).Delete(this)
 
         interface ICloudSeq<'T>
 
@@ -54,8 +57,7 @@
             CloudSeq(info.GetString "id", 
                      info.GetString "container")
     
-    type CloudSeqStore (store : IStore, cacheStore : LocalCacheStore) = 
-        //let cacheStoreLazy = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
+    and CloudSeqProvider (store : IStore, cacheStore : LocalCacheStore) = 
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
         let extension = "seq"
@@ -90,63 +92,25 @@
             async {
                 let id = postfix id
                 use! stream = cacheStore.Read(cont,id)
-//                    match cacheStoreLazy.Value with
-//                    | None       -> store.Read(cont, id)
-//                    | Some cache -> cache.Read(cont, id)
                 return getInfo stream
             }
 
-        interface ICloudSeqStore with
+        member this.GetCloudSeqInfo (cseq : ICloudSeq) : Async<CloudSeqInfo> =
+            getCloudSeqInfo cseq.Container cseq.Name
 
-            // this is wrong: type should not be passed as a parameter: temporary fix
-            member this.GetSeq (container, id, ty) = async {
-                let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
-                let cloudSeq = Activator.CreateInstance(cloudSeqTy,[| id :> obj ; container :> obj |])
-                return cloudSeq :?> ICloudSeq
+        member this.GetEnumerator<'T> (cseq : ICloudSeq<'T>) : Async<IEnumerator<'T>> =
+            async {
+                let cont, id, ty = cseq.Container, postfix cseq.Name, cseq.Type
+                let! stream = cacheStore.Read(cont, id)
+
+                let info = getInfo stream
+
+                if info.Type <> ty then
+                    let msg = sprintf' "CloudSeq type mismatch. Internal type %s, got %s" info.Type.AssemblyQualifiedName ty.AssemblyQualifiedName
+                    return raise <| MBraceException(msg)
+
+                return pickler.DeserializeSequence<'T>(stream, info.Count)
             }
-
-            member this.GetCloudSeqInfo (cseq) : Async<CloudSeqInfo> =
-                getCloudSeqInfo cseq.Container cseq.Name
-        
-            member this.Create (items : IEnumerable, container : string, id : string, ty : Type) : Async<ICloudSeq> =
-                async {
-                    let serializeTo stream = async {
-                        let length = pickler.SerializeSequence(ty, stream, items, leaveOpen = true)
-                        // TODO: move to table storage
-                        return setInfo stream { Size = -1L; Count = length; Type = ty }
-                    }
-
-//                    match cacheStoreLazy.Value with
-//                    | None -> do! store.Create(container, postfix id, serializeTo)
-//                    | Some cache -> 
-//                        do! cache.Create(container, postfix id, serializeTo)
-//                        do! cache.Commit(container, postfix id)
-                    do! cacheStore.Create(container, postfix id, serializeTo)
-                    do! cacheStore.Commit(container, postfix id)
-
-                    let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
-                    let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| id :> obj; container :> obj |])
-                
-                    return cloudSeq :?> _
-                }
-         
-
-            member this.GetEnumerator<'T> (cseq : ICloudSeq<'T>) : Async<IEnumerator<'T>> =
-                async {
-                    let cont, id, ty = cseq.Container, postfix cseq.Name, cseq.Type
-                    let! stream = cacheStore.Read(cont, id)
-//                        match cacheStoreLazy.Value with
-//                        | None       -> store.Read(cont, id)
-//                        | Some cache -> cache.Read(cont, id)
-
-                    let info = getInfo stream
-
-                    if info.Type <> ty then
-                        let msg = sprintf' "CloudSeq type mismatch. Internal type %s, got %s" info.Type.AssemblyQualifiedName ty.AssemblyQualifiedName
-                        return raise <| MBraceException(msg)
-
-                    return pickler.DeserializeSequence<'T>(stream, info.Count)
-                }
 
             member this.GetIds (container : string) : Async<string []> =
                 async {
@@ -157,9 +121,34 @@
                         |> Seq.toArray
                 }
 
+        interface ICloudSeqProvider with
+
+            // this is wrong: type should not be passed as a parameter: temporary fix
+            member this.GetSeq (container, id) = async {
+                let! cseqInfo = getCloudSeqInfo container id
+                let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| cseqInfo.Type |]
+                let cloudSeq = Activator.CreateInstance(cloudSeqTy,[| id :> obj ; container :> obj |])
+                return cloudSeq :?> ICloudSeq
+            }
+
+            member this.Create (items : IEnumerable, container : string, id : string, ty : Type) : Async<ICloudSeq> =
+                async {
+                    let serializeTo stream = async {
+                        let length = pickler.SerializeSequence(ty, stream, items, leaveOpen = true)
+                        return setInfo stream { Size = -1L; Count = length; Type = ty }
+                    }
+                    do! cacheStore.Create(container, postfix id, serializeTo)
+                    do! cacheStore.Commit(container, postfix id)
+
+                    let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
+                    let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| id :> obj; container :> obj |])
+                
+                    return cloudSeq :?> _
+                }
+
             member this.GetSeqs(container : string) : Async<ICloudSeq []> =
                 async {
-                    let! ids = (this :> ICloudSeqStore).GetIds(container)
+                    let! ids = this.GetIds(container)
                     return 
                         ids |> Seq.map (fun id -> (Async.RunSynchronously(getCloudSeqInfo container id)).Type, container, id)
                             |> Seq.map (fun (t,c,i) ->
@@ -169,12 +158,5 @@
                             |> Seq.toArray
                 }
 
-
-            member self.Exists(container : string, id : string) : Async<bool> = 
-                store.Exists(container, postfix id)
-
-            member self.Exists(container : string) : Async<bool> = 
-                store.Exists(container)
-
-            member self.Delete(container : string, id : string) : Async<unit> = 
-                store.Delete(container, postfix id)
+            member self.Delete(cseq : ICloudSeq) : Async<unit> = 
+                store.Delete(cseq.Container, postfix cseq.Name)

@@ -56,13 +56,13 @@ namespace Nessos.MBrace.Client
                 
             let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, localCacheDir)
                 
-            // soon
+            // sooner
             IoC.Register<CoreConfiguration>(fun () -> coreConfig)
             IoC.RegisterValue (storeInfo, behaviour = Override)
             IoC.RegisterValue (storeInfo.Store, behaviour = Override)
             IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore) 
             IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore) 
-            IoC.Register<ICloudSeqStore>(fun () -> coreConfig.CloudSeqStore) 
+            IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
             IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore) 
             IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore :?> StoreLogger)
 
