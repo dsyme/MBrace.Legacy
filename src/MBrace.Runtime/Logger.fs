@@ -5,7 +5,6 @@ open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.BehaviorExtensions
 
 open Nessos.MBrace.Utils
-open Nessos.MBrace.Caching
 
 let rec loggerActorBehaviour (logger : ILogger) (ctx: BehaviorContext<_>) (entry : LoggerMsg) =
     async {

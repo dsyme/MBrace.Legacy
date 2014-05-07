@@ -3,7 +3,6 @@
     open Nessos.Thespian
     
     open Nessos.MBrace
-    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
 
     [<SealedAttribute ()>]
@@ -18,7 +17,7 @@
             member Attach : nodes:#seq<MBraceNode> -> unit
             member AttachAsync : nodes:#seq<MBraceNode> -> Async<unit>
             member AttachLocal : totalNodes:int *
-                                 ?permissions:Runtime.CommonAPI.Permissions * 
+                                 ?permissions:Runtime.Permissions * 
                                  ?debug:bool *
                                  ?background:bool -> unit
 
@@ -36,7 +35,7 @@
             member ClearAllProcessInfo : unit -> unit
             
             ///Clears the process's information from the runtime.
-            member ClearProcessInfo : pid:Runtime.CommonAPI.ProcessId -> unit
+            member ClearProcessInfo : pid:Runtime.ProcessId -> unit
             ///Clears the process's information from the runtime.
             member ClearProcessInfo : pid:string -> unit
             
@@ -54,14 +53,14 @@
             member DeleteContainer : container:string -> unit
             
             ///<summary>Deletes the container for the process from the underlying store.</summary>
-            member DeleteContainer : pid:Runtime.CommonAPI.ProcessId -> unit
+            member DeleteContainer : pid:Runtime.ProcessId -> unit
 
             ///<summary>Deletes a container (folder) from the underlying store.</summary>
             ///<param name="container">The container to delete.</param>            
             member DeleteContainerAsync : container:string -> Async<unit>
 
             ///<summary>Deletes the container for the process from the underlying store.</summary>
-            member DeleteContainerAsync : pid:Runtime.CommonAPI.ProcessId -> Async<unit>
+            member DeleteContainerAsync : pid:Runtime.ProcessId -> Async<unit>
             
             member Detach : node:MBraceNode -> unit
             member Detach : uri:System.Uri -> unit
@@ -77,7 +76,7 @@
             ///the specified process.</summary>
             ///<param name="pid">The process's id.</param>
             ///<param name="clear">Delete the logs.</param>
-            member GetUserLogs : pid:Runtime.CommonAPI.ProcessId * ?clear:bool -> Core.LogEntry seq
+            member GetUserLogs : pid:Runtime.ProcessId * ?clear:bool -> Core.LogEntry seq
             
             ///Sends and receives a value.
             member Echo : input:'a -> 'a
@@ -90,9 +89,9 @@
             override GetHashCode : unit -> int
             
             ///Get the process with the specified id.
-            member GetProcess : pid:Runtime.CommonAPI.ProcessId -> Process
+            member GetProcess : pid:Runtime.ProcessId -> Process
             ///Get the process with the specified id.
-            member GetProcess : pid:Runtime.CommonAPI.ProcessId -> Process<'T>
+            member GetProcess : pid:Runtime.ProcessId -> Process<'T>
 
             ///Get the process with the specified id.
             member GetProcess : pid:string -> Process
@@ -104,7 +103,7 @@
             member Kill : unit -> unit
 
             ///Kill the process with the specified id.
-            member KillProcess : pid:Runtime.CommonAPI.ProcessId -> unit
+            member KillProcess : pid:Runtime.ProcessId -> unit
             
             ///<summary>Send a ping message to the runtime and return the number of milliseconds of the roundtrip.</summary>
             ///<param name="silent">Does not print a PING log in the system logs.</param>
@@ -156,7 +155,7 @@
             ///of a specific process.</summary>
             ///<param name="pid">The process's id.</param>
             ///<param name="clear">Deletes the user logs for this process.</param>
-            member ShowUserLogs : pid:Runtime.CommonAPI.ProcessId * ?clear:bool -> unit
+            member ShowUserLogs : pid:Runtime.ProcessId * ?clear:bool -> unit
 
             ///Shutdown the current runtime.
             member Shutdown : unit -> unit
@@ -172,7 +171,7 @@
             member Alts : MBraceNode list
             
             ///Gets the identifier of the runtime.
-            member Id : Runtime.CommonAPI.DeploymentId
+            member Id : Runtime.DeploymentId
             
             ///Gets a list of the local MBraceNodes.
             member LocalNodes : MBraceNode list
@@ -183,7 +182,7 @@
             ///Gets the list of nodes composing the current runtime.
             member Nodes : MBraceNode list
             
-            static member internal Boot : conf:Runtime.CommonAPI.Configuration -> MBraceRuntime
+            static member internal Boot : conf:Runtime.Configuration -> MBraceRuntime
             
             ///<summary>Boots a {m}brace runtime.</summary>
             ///<param name="nodes">A list of MBraceNodes to use in order to boot the runtime.</param>
@@ -215,7 +214,7 @@
             ///<param name="uris">A list of Uris of nodes to use in order to boot the runtime.</param>   
             static member Boot : uris:string list -> MBraceRuntime
             
-            static member internal BootAsync : conf:Runtime.CommonAPI.Configuration -> Async<MBraceRuntime>
+            static member internal BootAsync : conf:Runtime.Configuration -> Async<MBraceRuntime>
             
 //            ///<summary>Initializes a MBrace.Client. This method should not be called directly 
 //            /// when using the {m}brace shell.</summary>

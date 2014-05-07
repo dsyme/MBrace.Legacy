@@ -1,6 +1,7 @@
-namespace Nessos.MBrace.Core
+namespace Nessos.MBrace.Runtime
 
     open Nessos.MBrace
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.CloudUtils
     open Nessos.MBrace.Utils

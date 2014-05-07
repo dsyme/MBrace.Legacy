@@ -17,11 +17,10 @@ namespace Nessos.MBrace.Runtime.Tests
     open Nessos.Thespian.Serialization
     open Nessos.Thespian.Remote
 
-    open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Client
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Store
-
+    open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Store
+    open Nessos.MBrace.Client
     open Nessos.MBrace.Client.ClientExtensions
 
     [<TestFixture>]

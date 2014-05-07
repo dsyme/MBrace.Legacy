@@ -10,12 +10,11 @@ namespace Nessos.MBrace.Client
     open Nessos.Thespian.PowerPack.RetryExtensions
 
     open Nessos.MBrace
-    open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.CommonAPI
-    open Nessos.MBrace.Runtime.Utils
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Store
     open Nessos.MBrace.Core
+    open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Store
+    open Nessos.MBrace.Runtime.Utils
 
     open Microsoft.FSharp.Quotations
 

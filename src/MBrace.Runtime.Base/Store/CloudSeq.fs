@@ -1,17 +1,58 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.Runtime.Store
 
     open System
     open System.IO
     open System.Collections
     open System.Collections.Generic
+    open System.Runtime.Serialization
 
     open Nessos.FsPickler
 
     open Nessos.MBrace
-    open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Store
-    open Nessos.MBrace.Caching
+
+    [<Serializable>]
+    [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
+    type CloudSeq<'T> (id : string, container : string ) as this =
+        let factoryLazy = lazy IoC.Resolve<ICloudSeqStore>()
+
+        let info = lazy (Async.RunSynchronously <| factoryLazy.Value.GetCloudSeqInfo(this))
+
+        interface ICloudSeq with
+            member this.Name = id
+            member this.Container = container
+            member this.Type = info.Value.Type
+            member this.Count = info.Value.Count
+            member this.Size = info.Value.Size
+            member this.Dispose () =
+                let this = this :> ICloudSeq
+                factoryLazy.Value.Delete(this.Container, this.Name)
+
+        interface ICloudSeq<'T>
+
+        override this.ToString () = sprintf "%s - %s" container id
+
+        member private this.StructuredFormatDisplay = this.ToString()
+
+        interface IEnumerable with
+            member this.GetEnumerator () = 
+                factoryLazy.Value.GetEnumerator(this)
+                |> Async.RunSynchronously :> IEnumerator
+        
+        interface IEnumerable<'T> with
+            member this.GetEnumerator () = 
+                factoryLazy.Value.GetEnumerator(this)  
+                |> Async.RunSynchronously
+            
+        interface ISerializable with
+            member this.GetObjectData (info : SerializationInfo , context : StreamingContext) =
+                info.AddValue ("id", (this :> ICloudSeq<'T>).Name)
+                info.AddValue ("container", (this :> ICloudSeq<'T>).Container)
+
+        new (info : SerializationInfo , context : StreamingContext) =
+            CloudSeq(info.GetString "id", 
+                     info.GetString "container")
     
     type CloudSeqStore (store : IStore, cacheStore : LocalCacheStore) = 
         //let cacheStoreLazy = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")

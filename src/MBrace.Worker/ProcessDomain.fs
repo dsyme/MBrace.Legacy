@@ -15,15 +15,14 @@
         open Nessos.Thespian.Remote.TcpProtocol
 
         open Nessos.MBrace
-        open Nessos.MBrace.Client
-        open Nessos.MBrace.Runtime.Definitions
         open Nessos.MBrace.Core
-        open Nessos.MBrace.Caching
-        open Nessos.MBrace.Runtime.ProcessDomain.Configuration
         open Nessos.MBrace.Utils
-        open Nessos.MBrace.Utils.AssemblyCache 
-        open Nessos.MBrace.Store
-        open Nessos.MBrace.Store.Registry
+        open Nessos.MBrace.Utils.AssemblyCache
+        open Nessos.MBrace.Runtime
+        open Nessos.MBrace.Runtime.Store
+        open Nessos.MBrace.Runtime.Definitions
+        open Nessos.MBrace.Runtime.ProcessDomain.Configuration 
+        open Nessos.MBrace.Client
 
         let selfProc = Process.GetCurrentProcess()
 
@@ -94,7 +93,7 @@
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
                 
-                let coreConfig = Core.CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, cacheStoreEndpoint)
+                let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, cacheStoreEndpoint)
                 // soon...
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue<IStore>(storeInfo.Store)

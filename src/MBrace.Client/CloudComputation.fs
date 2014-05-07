@@ -8,7 +8,6 @@
 
     open Nessos.MBrace
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.CommonAPI
     open Nessos.MBrace.Runtime.MBraceException
 
     open Nessos.MBrace.Utils

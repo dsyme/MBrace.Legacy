@@ -1,4 +1,5 @@
-﻿namespace Nessos.MBrace.Store
+﻿namespace Nessos.MBrace.Runtime.Store
+
     open System
     open System.IO
 
@@ -7,6 +8,8 @@
     type Folder = string
     type File = string
     type Tag = string
+
+    type StoreId = StoreId of byte []
 
     type IStore =
 

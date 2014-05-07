@@ -13,9 +13,7 @@
         open Nessos.Thespian.Remote.PipeProtocol
 
         open Nessos.MBrace.Utils
-        open Nessos.MBrace.Store
-        open Nessos.MBrace.Store.Registry
-        open Nessos.MBrace.Caching
+        open Nessos.MBrace.Runtime.Store
         open Nessos.MBrace.Client
 
         open Nessos.MBrace.Runtime

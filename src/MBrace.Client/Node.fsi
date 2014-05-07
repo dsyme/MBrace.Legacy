@@ -3,7 +3,6 @@
     open Nessos.Thespian
 
     open Nessos.MBrace
-    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime.Daemon.Configuration
 
     ///The module responsible for the LogEntry type.
@@ -21,7 +20,7 @@
     type MBraceNode =
         class
             interface System.IComparable
-            internal new : nref:ActorRef<Runtime.CommonAPI.Runtime> ->
+            internal new : nref:ActorRef<Runtime.Runtime> ->
                                              MBraceNode
 
             ///Create a new MBraceNode object. No node is spawned.
@@ -31,7 +30,7 @@
             ///Create a new MBraceNode object. No node is spawned.
             new : hostname:string * port:int -> MBraceNode
 
-            private new : nodeRef:ActorRef<Runtime.CommonAPI.Runtime> * uri:System.Uri -> MBraceNode
+            private new : nodeRef:ActorRef<Runtime.Runtime> * uri:System.Uri -> MBraceNode
 
             member CompareTo : y:obj -> int
             
@@ -42,7 +41,7 @@
             override GetHashCode : unit -> int
             
             ///Gets usage statistics for this node.
-            member GetPerformanceCounters : unit -> Runtime.CommonAPI.NodePerformanceInfo
+            member GetPerformanceCounters : unit -> Runtime.NodePerformanceInfo
 
             ///Kills violently this node. The node must be local.
             member Kill : unit -> unit
@@ -65,7 +64,7 @@
             member IsLocal : bool
 
             ///Gets the node's permissions.
-            member internal Permissions : Runtime.CommonAPI.Permissions
+            member internal Permissions : Runtime.Permissions
 
             ///Returns whether the node has master permissions.
             member internal PermittedMaster : bool
@@ -77,16 +76,16 @@
             ///Returns a UUID bound to this node instance.
             member DeploymentId : System.Guid
             
-            member internal Ref : ActorRef<Runtime.CommonAPI.Runtime>
+            member internal Ref : ActorRef<Runtime.Runtime>
             
             ///Gets the node's state.
-            member State : Runtime.CommonAPI.NodeType
+            member State : Runtime.NodeType
             
             ///Gets the node's uri.
             member Uri : System.Uri
 
             ///Sets the node's permissions.
-            member internal Permissions : Runtime.CommonAPI.Permissions with set
+            member internal Permissions : Runtime.Permissions with set
             
             ///Sets whether the node has master permissions.
             member internal PermittedMaster : bool with set
@@ -120,7 +119,7 @@
             ///<param name="storeProvider">The store provider to be used.</param>
             static member Spawn : ?hostname:string * ?primaryPort:int * ?workerPorts:int list *
                                 ?logFiles:string list * ?logLevel:LogLevel *
-                                ?permissions:Runtime.CommonAPI.Permissions *
+                                ?permissions:Runtime.Permissions *
                                 ?serializerName:string * ?compressSerialization:bool *
                                 ?debug:bool * ?workingDirectory:string *
                                 ?useTemporaryWorkDir:bool * ?background:bool *
@@ -142,7 +141,7 @@
             ///<param name="storeProvider">The store provider to be used.</param>
             static member SpawnAsync : ?hostname:string * ?primaryPort:int * ?workerPorts:int list *
                                        ?logFiles:string list * ?logLevel:LogLevel *
-                                       ?permissions:Runtime.CommonAPI.Permissions *
+                                       ?permissions:Runtime.Permissions *
                                        ?serializerName:string * ?compressSerialization:bool *
                                        ?debug:bool * ?workingDirectory:string *
                                        ?useTemporaryWorkDir:bool * ?background:bool *
@@ -163,7 +162,7 @@
             static member SpawnMultiple : nodeCount:int * ?workerPortsPerNode:int *
                                         ?hostname:string * ?logFiles:string list *
                                         ?logLevel:LogLevel *
-                                        ?permissions:Runtime.CommonAPI.Permissions *
+                                        ?permissions:Runtime.Permissions *
                                         ?serializerName:string * ?compressSerialization:bool *
                                         ?debug:bool * ?background:bool *
                                         ?storeProvider:StoreProvider -> MBraceNode list
@@ -184,7 +183,7 @@
             member Master : MBraceNode option
             member Nodes : MBraceNode list
             member Slaves : MBraceNode list
-            static member Create : nrefs:seq<Runtime.CommonAPI.NodeRef> -> NodeInfo
+            static member Create : nrefs:seq<Runtime.NodeRef> -> NodeInfo
             static member internal PrettyPrint : nodes:MBraceNode list list * ?displayPerfCounters : bool 
                                                         * ?headers : string * ?useBorders : bool -> string
         end

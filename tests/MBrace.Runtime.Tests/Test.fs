@@ -1335,14 +1335,13 @@ namespace Nessos.MBrace.Runtime.Tests
     open Nessos.Thespian.Serialization
     open Nessos.Thespian.Remote.TcpProtocol
 
-    open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Client
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Utils 
-    open Nessos.MBrace.Store
+    open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Runtime.Definitions
+    open Nessos.MBrace.Client
 
-    type internal RuntimeMsg = CommonAPI.Runtime
+    type internal RuntimeMsg = Runtime.Runtime
     type internal RuntimeInfo = Actor<RuntimeMsg> * MBraceRuntime
 
 //    [<TestFixture>]

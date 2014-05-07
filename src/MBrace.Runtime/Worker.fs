@@ -9,12 +9,10 @@ open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.BehaviorExtensions
 
 open Nessos.MBrace
-open Nessos.MBrace.Runtime
 open Nessos.MBrace.Core
-open Nessos.MBrace.Client
-open Nessos.MBrace.Caching
-open Nessos.MBrace.Store
 open Nessos.MBrace.Utils
+open Nessos.MBrace.Runtime
+open Nessos.MBrace.Runtime.Store
 
 //type alias to prevent conflicts with non-cluster types
 type private ProcessMonitorDb = PublicTypes.ProcessMonitorDb

@@ -11,12 +11,11 @@
 
     open Nessos.MBrace
     open Nessos.MBrace.Core
-    open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.CommonAPI
-    open Nessos.MBrace.Runtime.Utils
-    open Nessos.MBrace.Client.QuotationAnalysis
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.String
+    open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Utils
+    open Nessos.MBrace.Client.QuotationAnalysis
     
     open Microsoft.FSharp.Quotations
 

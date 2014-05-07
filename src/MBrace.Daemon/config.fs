@@ -19,16 +19,14 @@
         open Nessos.Thespian.Serialization
 
         open Nessos.MBrace.Core
-        open Nessos.MBrace.Client
-        open Nessos.MBrace.Runtime
-        open Nessos.MBrace.Runtime.Daemon.Configuration
-        open Nessos.MBrace.Caching
-        open Nessos.MBrace.Store
-        open Nessos.MBrace.Store.Registry
         open Nessos.MBrace.Utils
         open Nessos.MBrace.Utils.Retry
         open Nessos.MBrace.Utils.AssemblyCache
         open Nessos.MBrace.Utils.String
+        open Nessos.MBrace.Runtime
+        open Nessos.MBrace.Runtime.Store
+        open Nessos.MBrace.Runtime.Daemon.Configuration
+        open Nessos.MBrace.Client
 
         // if anyone can suggest a less hacky way, be my guest..
         // a process spawned from command line is UserInteractive but has null window handle

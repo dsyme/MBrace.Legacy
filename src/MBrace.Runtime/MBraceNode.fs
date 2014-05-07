@@ -9,9 +9,9 @@ open Nessos.Thespian.Cluster.BehaviorExtensions
 open Nessos.Thespian.Cluster.BehaviorExtensions.FSM
 
 open Nessos.MBrace
-open Nessos.MBrace.Runtime
-open Nessos.MBrace.Store.Registry
 open Nessos.MBrace.Utils
+open Nessos.MBrace.Runtime
+open Nessos.MBrace.Runtime.Store
 
 let private imemLogger = IoC.TryResolve<Logger.InMemoryLogger> ()
 let internal StateChangeEvent = new Event<NodeType>()
@@ -138,7 +138,7 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
             | MasterBoot(RR ctx reply, configuration) when nodeType = NodeType.Idle ->
                 try
                     // preactively trigger state change on master boot
-                    do StateChangeEvent.Trigger(Nessos.MBrace.Runtime.CommonAPI.NodeType.Master)
+                    do StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeType.Master)
                 
                     ctx.LogInfo "MASTER BOOT..."
                     ctx.LogInfo "---------------------"
@@ -347,9 +347,9 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
             | GetNodeDeploymentInfo(RR ctx reply) ->
                 let nodeType =
                     match nodeType with
-                    | Nessos.Thespian.Cluster.Common.NodeType.Master -> Nessos.MBrace.Runtime.CommonAPI.NodeType.Master
-                    | Nessos.Thespian.Cluster.Common.NodeType.Slave -> Nessos.MBrace.Runtime.CommonAPI.NodeType.Slave
-                    | Nessos.Thespian.Cluster.Common.NodeType.Idle -> Nessos.MBrace.Runtime.CommonAPI.NodeType.Idle
+                    | Nessos.Thespian.Cluster.Common.NodeType.Master -> Nessos.MBrace.Runtime.NodeType.Master
+                    | Nessos.Thespian.Cluster.Common.NodeType.Slave -> Nessos.MBrace.Runtime.NodeType.Slave
+                    | Nessos.Thespian.Cluster.Common.NodeType.Idle -> Nessos.MBrace.Runtime.NodeType.Idle
 
                 let info = Utils.mkNodeDeploymentInfo Permissions.All nodeType
 

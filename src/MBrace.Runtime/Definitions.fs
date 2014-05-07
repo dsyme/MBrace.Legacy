@@ -600,14 +600,14 @@ type MBraceNodeEventManager() =
 
     override __.OnMaster(clusterId: ClusterId) = async {
         if clusterId = "HEAD" then
-            do MBraceNode.StateChangeEvent.Trigger(Nessos.MBrace.Runtime.CommonAPI.NodeType.Master)
+            do MBraceNode.StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeType.Master)
     }
 
     override __.OnAddToCluster(clusterId: ClusterId, clusterManager: ReliableActorRef<ClusterManager>) = async {
         if clusterId = "HEAD" then
             try
                 if not (ActorRef.isCollocated Cluster.ClusterManager) then
-                    do MBraceNode.StateChangeEvent.Trigger(Nessos.MBrace.Runtime.CommonAPI.NodeType.Slave)
+                    do MBraceNode.StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeType.Slave)
 
                 Log.logInfo "OnAddToCluster :: Initializing ProcessDomain cluster..."
 

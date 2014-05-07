@@ -1,7 +1,11 @@
-﻿namespace Nessos.MBrace.Store
+﻿namespace Nessos.MBrace.Runtime.Store
+
     open System
     open System.IO
     open System.Security.AccessControl
+
+    open Nessos.MBrace
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
 
@@ -65,14 +69,14 @@
                                 fs :> _)
                 }
                   
-            override self.GetFiles(folder : string) : Async<Nessos.MBrace.Store.File []> =
+            override self.GetFiles(folder : string) : Async<File []> =
                 async {
                     let path = Path.Combine(path, folder)
                     return Directory.GetFiles(path)
                            |> Array.map Path.GetFileName
                 }
 
-            override self.GetFolders () : Async<Nessos.MBrace.Store.Folder []> =
+            override self.GetFolders () : Async<Folder []> =
                 async {
                     return Directory.GetDirectories(path)
                            |> Array.map Path.GetFileName

@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Caching
+﻿namespace Nessos.MBrace.Runtime.Store
 
     open System
     open System.IO
@@ -10,7 +10,6 @@
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
-    open Nessos.MBrace.Store
 
     type Cache(cacheStore : IStore, pickler : FsPickler, ?id : string, ?physicalMemoryLimitPercentage : int, ?location : string) = 
 //        let pickler = Nessos.MBrace.Runtime.Serializer.Pickler

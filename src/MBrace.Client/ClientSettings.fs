@@ -15,9 +15,7 @@ namespace Nessos.MBrace.Client
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Store
-    open Nessos.MBrace.Store.Registry
-    open Nessos.MBrace.Caching
+    open Nessos.MBrace.Runtime.Store
 
     module private ConfigUtils =
 

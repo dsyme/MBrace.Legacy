@@ -1,14 +1,11 @@
-﻿namespace Nessos.MBrace.Caching
+﻿namespace Nessos.MBrace.Runtime.Store
+
     open System
     open System.IO
-    open System.Text
-    open System.Threading
-    open System.Collections.Concurrent
     open System.Runtime.Serialization
+
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
-    open Nessos.MBrace.Store
-    //open Nessos.MBrace.Store.Registry
 
     type LocalCacheStore(localCacheStore : IStore, underlyingStore : IStore) = 
         

@@ -9,8 +9,9 @@ open Nessos.Thespian.ImemDb
 
 open Nessos.Vagrant
 
-open Nessos.MBrace.Runtime
 open Nessos.MBrace.Utils
+open Nessos.MBrace.Runtime
+
 open ReplicatedState
 
 let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)

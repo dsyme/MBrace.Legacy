@@ -15,14 +15,12 @@ open Nessos.Thespian.Remote.TcpProtocol
 open Nessos.Thespian.Remote.PipeProtocol
 open Nessos.Thespian.PowerPack.RetryExtensions
 
-open Nessos.MBrace.Runtime.CommonAPI
-open Nessos.MBrace.Runtime.Utils
-open Nessos.MBrace.Runtime
-open Nessos.MBrace.Runtime.Daemon.Configuration
 open Nessos.MBrace.Utils
-open Nessos.MBrace.Store
 open Nessos.MBrace.Utils.String
-//open Nessos.MBrace.Utils.Remoting
+
+open Nessos.MBrace.Runtime
+open Nessos.MBrace.Runtime.Utils
+open Nessos.MBrace.Runtime.Daemon.Configuration
 
 
 module Logs =

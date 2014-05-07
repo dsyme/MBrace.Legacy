@@ -4,17 +4,17 @@
     open System.Diagnostics
     open System.Net
 
-    open Nessos.MBrace.Client
-    open Nessos.MBrace.Utils
     open Nessos.Thespian
-//    open Nessos.MBrace.Actors.PowerPack
+
+    open Nessos.MBrace.Utils
+    open Nessos.MBrace.Runtime.Store
 
 
     module Defaults =
         let ClientEndPoint = IPEndPoint(IPAddress.Any, 0)
         let RuntimeDefaultPort = 2675 //2675 is the integer value of the string: "M-Brace Runtime default port."
 //        let RuntimeDefaultInternalPort = 3568 //3568 is the integer value of the string "M-Brace Runtime default inernal port."
-        let DefaultPermissions = Nessos.MBrace.Runtime.CommonAPI.Permissions.All
+        let DefaultPermissions = Nessos.MBrace.Runtime.Permissions.All
         let MaxPid = 10000
         
         let MBracedIpcServerName = "ipcNodeInfo"
@@ -135,6 +135,14 @@
             | ClearProcessInfo (r,_) -> r :> IReplyChannel |> Some
             | ClearAllProcessInfo r -> r :> IReplyChannel |> Some
             | RequestDependencies(r,_) -> r :> IReplyChannel |> Some
+
+        let nodeUsesCompatibleStore (node : NodeRef) =
+            try (node <!= GetStoreId) = StoreRegistry.DefaultStore.Id
+            with _ -> false
+
+        let runtimeUsesCompatibleStore (runtime : ActorRef<ClientRuntimeProxy>) =
+            try runtime <!= (RemoteMsg << GetStoreId) = StoreRegistry.DefaultStore.Id
+            with _ -> false
 
 
     module MBraceUri =

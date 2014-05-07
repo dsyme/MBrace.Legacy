@@ -37,20 +37,18 @@
             | FileSystem _ -> "FileSystem"
             | Plugin(t,_) -> t.AssemblyQualifiedName
 
-namespace Nessos.MBrace.Store.Registry
+namespace Nessos.MBrace.Runtime.Store
     
     open System
     open System.Runtime
     open System.Reflection
-    open System.Text
     open System.Security.Cryptography
+    open System.Text
 
     open Nessos.MBrace.Client
-    open Nessos.MBrace.Store
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.String
     open Nessos.MBrace.Utils.AssemblyCache
-    open Nessos.MBrace.Runtime.CommonAPI
 
     module internal Crypto =
         

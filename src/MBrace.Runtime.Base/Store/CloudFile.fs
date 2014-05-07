@@ -1,15 +1,64 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.Runtime.Store
 
     open System
     open System.IO
     open System.Collections
     open System.Collections.Generic
+    open System.Runtime.Serialization
 
     open Nessos.MBrace
-    open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Store
-    open Nessos.MBrace.Caching
+
+    type CloudFile(id : string, container : string) =
+
+        let fileStoreLazy = lazy IoC.Resolve<ICloudFileStore>()
+
+        interface ICloudFile with
+            member self.Name = id
+            member self.Container = container
+            member self.Dispose () =
+                fileStoreLazy.Value.Delete(container, id)
+
+        override self.ToString() = sprintf' "%s - %s" container id
+
+        new (info : SerializationInfo, context : StreamingContext) = 
+                CloudFile(info.GetValue("id", typeof<string>) :?> string,
+                            info.GetValue("container", typeof<string>) :?> string)
+        
+        interface ISerializable with 
+            member self.GetObjectData(info : SerializationInfo, context : StreamingContext) =
+                info.AddValue("id", id)
+                info.AddValue("container", container)
+
+
+    [<Serializable>]
+    [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
+    type internal CloudFileSeq<'T> (file : ICloudFile, reader:(Stream -> Async<obj>)) =
+        let factoryLazy = lazy IoC.Resolve<ICloudFileStore>()
+
+        override this.ToString () = sprintf' "%s - %s" file.Container file.Name
+
+        member private this.StructuredFormatDisplay = this.ToString()
+
+        interface IEnumerable with
+            member this.GetEnumerator () = 
+                let s = factoryLazy.Value.Read(file, reader) |> Async.RunSynchronously :?> IEnumerable
+                s.GetEnumerator()
+
+        interface IEnumerable<'T> with
+            member this.GetEnumerator () = 
+                let s = factoryLazy.Value.Read(file, reader) |> Async.RunSynchronously :?> IEnumerable<'T> 
+                s.GetEnumerator()
+            
+        interface ISerializable with
+            member this.GetObjectData (info : SerializationInfo , context : StreamingContext) =
+                info.AddValue ("file", file)
+                info.AddValue ("reader", reader)
+
+        new (info : SerializationInfo , context : StreamingContext) =
+            CloudFileSeq(info.GetValue("file", typeof<ICloudFile> ) :?> ICloudFile, 
+                         info.GetValue ("reader", typeof<Stream -> Async<obj>>) :?> Stream -> Async<obj>)
 
     type CloudFileStore (store : IStore, cache : LocalCacheStore) =
         //let cache = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")

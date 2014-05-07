@@ -1,16 +1,47 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.Runtime.Store
 
     open System
     open System.IO
     open System.Runtime.Serialization
 
     open Nessos.MBrace
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Store
-    open Nessos.MBrace.Caching
 
-    open Nessos.FsPickler
+    type MutableCloudRef<'T>(id : string, container : string, tag : Tag, ty : Type) =
+        
+        let mutablecloudrefstorelazy = lazy IoC.Resolve<IMutableCloudRefStore>()
+
+        interface IMutableCloudRef with
+            member self.Name = id
+            member self.Container = container
+            member self.Type = ty
+            member self.Dispose () =
+                let self = self :> IMutableCloudRef
+                mutablecloudrefstorelazy.Value.Delete(self.Container, self.Name)
+
+        interface IMutableCloudRef<'T>
+
+        interface IMutableCloudRefTagged with
+            member val Tag = tag with get, set
+
+        interface IMutableCloudRefTagged<'T>
+
+        override self.ToString() =  sprintf' "%s - %s" container id
+
+        new (info : SerializationInfo, context : StreamingContext) = 
+                MutableCloudRef<'T>(info.GetValue("id", typeof<string>) :?> string,
+                                    info.GetValue("container", typeof<string>) :?> string,
+                                    info.GetValue("tag", typeof<string>) :?> string,
+                                    info.GetValue("type", typeof<Type>) :?> Type)
+        
+        interface ISerializable with 
+            member self.GetObjectData(info : SerializationInfo, context : StreamingContext) =
+                info.AddValue("id", id)
+                info.AddValue("container", container)
+                info.AddValue("tag", (self :> IMutableCloudRefTagged).Tag)
+                info.AddValue("type", ty)
+
 
     type MutableCloudRefStore(store : IStore) =
 
