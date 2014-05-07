@@ -32,8 +32,8 @@
     type CloudSeqInfo = { Size : int64; Count : int; Type : Type }
     
     type ICloudSeqStore =
-        // added just now : probably needed
-        abstract Get : Container * Id (* * Type *) -> Async<ICloudSeq>
+        // added just now : probably needed ; Type argument should not be passed
+        abstract GetSeq : Container * Id * System.Type -> Async<ICloudSeq>
 
 
         abstract Create : System.Collections.IEnumerable * string * string * System.Type -> Async<ICloudSeq>

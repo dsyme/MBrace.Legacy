@@ -57,7 +57,13 @@
 
         interface ICloudSeqStore with
 
-            member this.Get (container, id) = raise <| new NotImplementedException("kostas, fix this!")
+            // this is wrong: type should not be passed as a parameter: temporary fix
+            member this.GetSeq (container, id, ty) = async {
+                let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
+                let cloudSeq = Activator.CreateInstance(cloudSeqTy,[| id :> obj ; container :> obj |])
+                return cloudSeq :?> ICloudSeq
+            }
+
             member this.GetCloudSeqInfo (cseq) : Async<CloudSeqInfo> =
                 getCloudSeqInfo cseq.Container cseq.Name
         

@@ -384,7 +384,8 @@ namespace Nessos.MBrace.Core
                     | GetCloudSeqByNameExpr (container, id, t) :: rest ->
                         let! exists = config.CloudSeqStore.Exists(container, id)
                         if exists then
-                            let! cloudSeq = config.CloudSeqStore.Get(container, id)
+                            // this is wrong : cloudSeq.Type is always the typed passed as parameter. Should be resolved by store
+                            let! cloudSeq = config.CloudSeqStore.GetSeq(container, id, t)
 //                            let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| t |]
 //                            let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| id :> obj; container :> obj |])
 //                            let ty = (cloudSeq :?> ICloudSeq).Type
