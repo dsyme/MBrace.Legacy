@@ -311,31 +311,19 @@ namespace Nessos.MBrace.Core
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot delete MutableCloudRef %A" mref, ex), None)) :: rest
 
                     | NewCloudFile(container, id, serialize) :: rest ->
-                        let! exists = Async.Catch <| config.CloudFileStore.Exists(container, id)
-                        match exists with
-                        | Choice1Of2 false ->
-                            let! exec = Async.Catch <| config.CloudFileStore.Create(container, id, serialize)
-                            match exec with
-                            | Choice1Of2 file ->
-                                return! run' traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
-                            | Choice2Of2 ex ->
-                                return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot create CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
-                        | _ ->
-                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot create CloudFile, Container: %s, Name: %s. It already exists." container id), None)) :: rest
-                    
+                        let! exec = Async.Catch <| config.CloudFileStore.Create(container, id, serialize)
+                        match exec with
+                        | Choice1Of2 file ->
+                            return! run' traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
+                        | Choice2Of2 ex ->
+                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot create CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetCloudFile(container, id) :: rest ->
                         let! exec = Async.Catch <| config.CloudFileStore.GetFile(container, id)
                         match exec with
                         | Choice1Of2 file ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                         | Choice2Of2 ex ->
-                            let! exec = Async.Catch <| config.CloudFileStore.Exists(container, id)
-                            match exec with
-                            | Choice1Of2 false -> 
-                                return! run' traceEnabled  <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
-                            | _ -> 
-                                return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot get CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
-                    
+                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot get CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetCloudFiles(container) :: rest ->
                         let! exec = Async.Catch <| config.CloudFileStore.GetFiles(container)
                         match exec with
@@ -350,22 +338,14 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 o ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue o, t)) :: rest
                         | Choice2Of2 ex ->
-                            let! exists = Async.Catch <| config.CloudFileStore.Exists(file.Container, file.Name)
-                            match exists with
-                            | Choice1Of2 false -> return! run' traceEnabled  <| ValueExpr (Exc (new NonExistentObjectStoreException(file.Container, file.Name), None)) :: rest                        
-                            | _ -> return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
-
+                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
                     | ReadCloudFileAsSeq(file, deserialize, t) :: rest ->
                         let! exec = Async.Catch <| config.CloudFileStore.ReadAsSeq(file, deserialize, t)
                         match exec with
                         | Choice1Of2 o ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue o, t)) :: rest
                         | Choice2Of2 ex ->
-                            let! exists = Async.Catch <| config.CloudFileStore.Exists(file.Container, file.Name)
-                            match exists with
-                            | Choice1Of2 false -> return! run' traceEnabled  <| ValueExpr (Exc (new NonExistentObjectStoreException(file.Container, file.Name), None)) :: rest                        
-                            | _ -> return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
-
+                            return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
 
                     | LogExpr msg :: rest ->
                         let entry = userLog msg

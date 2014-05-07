@@ -7,15 +7,13 @@
 
     // TODO : clean up & document
 
-    type ICloudFileStore =
-        abstract Create   : Container * Id * (Stream -> Async<unit>) -> Async<ICloudFile>
-        abstract Read     : ICloudFile * (Stream -> Async<obj>) -> Async<obj>
-        abstract ReadAsSeq: ICloudFile * (Stream -> Async<obj>) * Type -> Async<obj>
-        abstract GetFiles : Container                            -> Async<ICloudFile []>
-        abstract GetFile  : Container  * Id                      -> Async<ICloudFile   >
-        abstract Exists   : Container                            -> Async<bool         >
-        abstract Exists   : Container  * Id                      -> Async<bool         >
-        abstract Delete   : Container  * Id                      -> Async<unit         >
+    type ICloudFileProvider =
+        abstract Create   : Container * Id * (Stream -> Async<unit>)    -> Async<ICloudFile   >
+        abstract Read     : ICloudFile * (Stream -> Async<obj>)         -> Async<obj          >
+        abstract ReadAsSeq: ICloudFile * (Stream -> Async<obj>) * Type  -> Async<obj          > // TODO : Change return type to IEnumerator
+        abstract GetFiles : Container                                   -> Async<ICloudFile []>
+        abstract GetFile  : Container  * Id                             -> Async<ICloudFile   >
+        abstract Delete   : ICloudFile                                  -> Async<unit         >
 
     type ICloudRefStore =
         abstract Create : Container * Id * obj * System.Type -> Async<ICloudRef>
@@ -65,7 +63,7 @@
         {
             CloudSeqStore         : ICloudSeqProvider
             CloudRefStore         : ICloudRefStore
-            CloudFileStore        : ICloudFileStore
+            CloudFileStore        : ICloudFileProvider
             MutableCloudRefStore  : IMutableCloudRefStore
             LogStore              : ILogStore
             Cloner                : IObjectCloner

@@ -63,7 +63,7 @@ namespace Nessos.MBrace.Client
             IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore) 
             IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore) 
             IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
-            IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore) 
+            IoC.Register<ICloudFileProvider>(fun () -> coreConfig.CloudFileStore) 
             IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore :?> StoreLogger)
 
         let initConfiguration () =

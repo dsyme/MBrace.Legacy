@@ -12,13 +12,13 @@
 
     type CloudFile(id : string, container : string) =
 
-        let fileStoreLazy = lazy IoC.Resolve<ICloudFileStore>()
+        let fileStoreLazy = lazy IoC.Resolve<CloudFileStore>() 
 
         interface ICloudFile with
             member self.Name = id
             member self.Container = container
             member self.Dispose () =
-                fileStoreLazy.Value.Delete(container, id)
+                (fileStoreLazy.Value :> ICloudFileProvider).Delete(self)
 
         override self.ToString() = sprintf' "%s - %s" container id
 
@@ -32,10 +32,11 @@
                 info.AddValue("container", container)
 
 
-    [<Serializable>]
-    [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
-    type internal CloudFileSeq<'T> (file : ICloudFile, reader:(Stream -> Async<obj>)) =
-        let factoryLazy = lazy IoC.Resolve<ICloudFileStore>()
+    and
+     [<Serializable>]
+     [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
+     internal CloudFileSeq<'T> (file : ICloudFile, reader:(Stream -> Async<obj>)) =
+        let factoryLazy =  lazy IoC.Resolve<CloudFileStore>() 
 
         override this.ToString () = sprintf' "%s - %s" file.Container file.Name
 
@@ -43,12 +44,12 @@
 
         interface IEnumerable with
             member this.GetEnumerator () = 
-                let s = factoryLazy.Value.Read(file, reader) |> Async.RunSynchronously :?> IEnumerable
+                let s = (factoryLazy.Value :> ICloudFileProvider).Read(file, reader) |> Async.RunSynchronously :?> IEnumerable
                 s.GetEnumerator()
 
         interface IEnumerable<'T> with
             member this.GetEnumerator () = 
-                let s = factoryLazy.Value.Read(file, reader) |> Async.RunSynchronously :?> IEnumerable<'T> 
+                let s = (factoryLazy.Value :> ICloudFileProvider).Read(file, reader) |> Async.RunSynchronously :?> IEnumerable<'T> 
                 s.GetEnumerator()
             
         interface ISerializable with
@@ -59,17 +60,18 @@
         new (info : SerializationInfo , context : StreamingContext) =
             CloudFileSeq(info.GetValue("file", typeof<ICloudFile> ) :?> ICloudFile, 
                          info.GetValue ("reader", typeof<Stream -> Async<obj>>) :?> Stream -> Async<obj>)
+    
+    and CloudFileStore (store : IStore, cache : LocalCacheStore) =
 
-    type CloudFileStore (store : IStore, cache : LocalCacheStore) =
-        //let cache = lazy IoC.TryResolve<LocalCacheStore>("cacheStore")
+        member this.Exists(container) : Async<bool> =
+            store.Exists(container)
 
-        interface ICloudFileStore with
+        member this.Exists(container, id) : Async<bool> =
+            store.Exists(container,id)
+
+        interface ICloudFileProvider with
             override this.Create(container : Container, id : Id, serialize : (Stream -> Async<unit>)) : Async<ICloudFile> =
                 async {
-//                    match cache.Value with
-//                    | None -> 
-//                        do! store.Create(container, id, serialize, true)
-//                    | Some cache -> 
                     do! cache.Create(container, id, serialize)
                     do! cache.Commit(container, id, asFile = true)
 
@@ -79,10 +81,6 @@
             override this.Read(file : ICloudFile, deserialize) : Async<obj> =
                 async {
                     let! stream = cache.Read(file.Container, file.Name)
-//                        match cache.Value with
-//                        | None       -> store.Read(file.Container, file.Name)
-//                        | Some cache -> cache.Read(file.Container, file.Name)
-
                     return! deserialize stream
                 }
 
@@ -108,14 +106,9 @@
                         return failwith "File does not exist"
                 }
                 
-            override this.Exists(container) : Async<bool> =
-                store.Exists(container)
-
-            override this.Exists(container, id) : Async<bool> =
-                store.Exists(container,id)
             
-            override this.Delete(container, id) : Async<unit> =
-                store.Delete(container,id)
+            override this.Delete(cfile : ICloudFile) : Async<unit> =
+                store.Delete(cfile.Container, cfile.Name)
 
     and private CloudFileReader =
         static member private GetEnumerator<'T> (sr : StreamReader, deserializer : unit -> obj) : IEnumerator<'T> =
