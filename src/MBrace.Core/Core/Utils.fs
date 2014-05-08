@@ -1,6 +1,7 @@
 ﻿namespace Nessos.MBrace.Core
 
     open System
+    open System.Reflection
     open System.Collections.Concurrent
     open System.Text.RegularExpressions
 
@@ -36,6 +37,25 @@
                 then Some (List.tail [ for g in m.Groups -> g.Value ])
                 else None
 
+        let private remoteStackTraceField =
+            let getField name = typeof<System.Exception>.GetField(name, BindingFlags.Instance ||| BindingFlags.NonPublic)
+            match getField "remote_stack_trace" with
+            | null ->
+                match getField "_remoteStackTraceString" with
+                | null -> failwith "a piece of unreliable code has just failed."
+                | f -> f
+            | f -> f
+
+        let inline reraise' (e : #exn) =
+            remoteStackTraceField.SetValue(e, e.StackTrace + System.Environment.NewLine)
+            raise e
+
+
+        type MethodInfo with
+            member m.GuardedInvoke(instance : obj, parameters : obj []) =
+                try m.Invoke(instance, parameters)
+                with :? TargetInvocationException as e when e.InnerException <> null ->
+                    reraise' e.InnerException
 
         type Async with
             static member Raise(e : exn) = Async.FromContinuations(fun (_,ec,_) -> ec e)
