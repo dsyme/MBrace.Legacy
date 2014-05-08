@@ -13,7 +13,7 @@
 
         let valueLazy () = 
             async {
-                let! value = Async.Catch <| cloudRefReaderLazy.Value.ReadValueAsync this
+                let! value = Async.Catch <| (cloudRefReaderLazy.Value :> ICloudRefProvider).Dereference this
                 match value with
                 | Choice1Of2 value -> return value
                 | Choice2Of2 exc ->
@@ -100,25 +100,6 @@
         member self.Exists(container : string, id : string) : Async<bool> = 
             store.Exists(container, postfix id)
 
-        member self.ReadValueAsync (cref : ICloudRef) = 
-            async {
-                let id, container, t = cref.Name, cref.Container, cref.Type
-                let id = postfix id
-
-                // get value
-                match cache.TryFind <| sprintf' "%s" id with
-                | Some value -> 
-                    return value :?> Type * obj |> snd
-                | None -> 
-                    let! ty, value = read container id
-                    if t <> ty then 
-                        let msg = sprintf' "CloudRef type mismatch. Internal type %s, got %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName
-                        raise <| MBraceException(msg)
-                    // update cache
-                    cache.Set(id, (ty, value))
-                    return value
-            }
-
         interface ICloudRefProvider with
 
             member self.CreateNew (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
@@ -163,4 +144,23 @@
                     if cache.ContainsKey(id) then
                         cache.Delete(id)
                     return! store.Delete(cloudRef.Container, id)
+                }
+
+            member self.Dereference (cref : ICloudRef) = 
+                async {
+                    let id, container, t = cref.Name, cref.Container, cref.Type
+                    let id = postfix id
+
+                    // get value
+                    match cache.TryFind <| sprintf' "%s" id with
+                    | Some value -> 
+                        return value :?> Type * obj |> snd
+                    | None -> 
+                        let! ty, value = read container id
+                        if t <> ty then 
+                            let msg = sprintf' "CloudRef type mismatch. Internal type %s, got %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName
+                            raise <| MBraceException(msg)
+                        // update cache
+                        cache.Set(id, (ty, value))
+                        return value
                 }

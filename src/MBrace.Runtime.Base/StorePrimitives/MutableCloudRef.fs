@@ -13,14 +13,13 @@
 
         abstract Tag : string with get, set
 
-    type MutableCloudRef<'T>(id : string, container : string, tag : Tag, ty : Type) =
-        
+    type MutableCloudRef<'T>(id : string, container : string, tag : Tag) =
         let mutablecloudrefstorelazy = lazy IoC.Resolve<MutableCloudRefProvider>()
 
         interface IMutableCloudRef with
             member self.Name = id
             member self.Container = container
-            member self.Type = ty
+            member self.Type = typeof<'T>
             member self.Dispose () =
                 (mutablecloudrefstorelazy.Value :> IMutableCloudRefProvider).Delete(self)
 
@@ -34,15 +33,13 @@
         new (info : SerializationInfo, context : StreamingContext) = 
                 MutableCloudRef<'T>(info.GetValue("id", typeof<string>) :?> string,
                                     info.GetValue("container", typeof<string>) :?> string,
-                                    info.GetValue("tag", typeof<string>) :?> string,
-                                    info.GetValue("type", typeof<Type>) :?> Type)
+                                    info.GetValue("tag", typeof<string>) :?> string)
         
         interface ISerializable with 
             member self.GetObjectData(info : SerializationInfo, context : StreamingContext) =
                 info.AddValue("id", id)
                 info.AddValue("container", container)
                 info.AddValue("tag", (self :> IMutableCloudRefTagged).Tag)
-                info.AddValue("type", ty)
 
 
     and MutableCloudRefProvider(store : IStore) =
@@ -83,6 +80,11 @@
                        |> Seq.toArray
             }
 
+        let defineUntyped (ty : Type, container : string, id : string, tag : string) =
+            let cloudRefTy = typedefof<MutableCloudRef<_>>.MakeGenericType [| ty |]
+            let cloudRef = Activator.CreateInstance(cloudRefTy, [| id :> obj; container :> obj; tag :> obj|])
+            cloudRef :?> IMutableCloudRef
+
         member self.GetRefType (container : string, id : string) : Async<Type> =
             readType container (postfix id)
 
@@ -94,19 +96,33 @@
 
         interface IMutableCloudRefProvider with
 
-            member self.Create (container : string, id : string, value : obj, t : Type) : Async<IMutableCloudRef> = 
+            member self.CreateNew (container : string, id : string, value : 'T) : Async<IMutableCloudRef<'T>> = 
+                async {
+                    let! tag = store.CreateMutable(container, postfix id, 
+                                fun stream -> async {
+                                    pickler.Serialize(stream, typeof<'T>)
+                                    pickler.Serialize(stream, value) })
+
+                    return new MutableCloudRef<'T>(id, container, tag) :> _
+                }
+
+            member self.CreateNewUntyped (container : string, id : string, value : obj, t : Type) : Async<IMutableCloudRef> = 
                 async {
                     let! tag = store.CreateMutable(container, postfix id, 
                                 fun stream -> async {
                                     pickler.Serialize(stream, t)
                                     pickler.Serialize(stream, value) })
 
-                    let cloudRefType = typedefof<MutableCloudRef<_>>.MakeGenericType [| t |]
-                    let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; tag :> obj; t :> obj |])
-                    return cloudRef :?> _
+                    return defineUntyped(t, container, id, tag)
                 }
 
-            member self.Read(cloudRef : IMutableCloudRef) : Async<obj> = 
+            member self.CreateExisting(container , id) : Async<IMutableCloudRef> =
+                async {
+                    let! t, tag = readInfo container (postfix id)
+                    return defineUntyped(t, container, id, tag)
+                }
+
+            member self.Dereference(cloudRef : IMutableCloudRef) : Async<obj> = 
                 async {
                     let cloudRef = cloudRef :?> IMutableCloudRefTagged
                     let! ty, value, tag = read cloudRef.Container cloudRef.Name
@@ -114,7 +130,7 @@
                     return value
                 }
 
-            member this.Update(cloudRef : IMutableCloudRef, value : obj) : Async<bool>  =
+            member this.TryUpdate(cloudRef : IMutableCloudRef, value : obj) : Async<bool>  =
                 async {
                     let cloudRef = cloudRef :?> IMutableCloudRefTagged
                     let t = cloudRef.Type
@@ -138,23 +154,12 @@
                     cloudRef.Tag <- tag
                 }
 
-            member self.GetRef(container , id) : Async<IMutableCloudRef> =
-                async {
-                    let! t, tag = readInfo container (postfix id)
-                    let cloudRefType = typedefof<MutableCloudRef<_>>.MakeGenericType [| t |]
-                    let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; tag :> obj; t :> obj |])
-                    return cloudRef :?> _
-                }
-
-            member self.GetRefs(container : string) : Async<IMutableCloudRef []> =
+            member self.GetContainedRefs(container : string) : Async<IMutableCloudRef []> =
                 async {
                     let! ids = getIds container
                     return 
-                        ids |> Seq.map (fun id -> Async.RunSynchronously(readType container (postfix id)), container, id)
-                            |> Seq.map (fun (t,c,i) ->
-                                    let cloudRefTy = typedefof<MutableCloudRef<_>>.MakeGenericType [| t |]
-                                    let cloudRef = Activator.CreateInstance(cloudRefTy, [| i :> obj; c :> obj; "" :> obj; t :> obj; |])
-                                    cloudRef :?> IMutableCloudRef)
+                        ids |> Seq.map (fun id -> Async.RunSynchronously(readType container (postfix id)), container, id, "")
+                            |> Seq.map defineUntyped
                             |> Seq.toArray
                 }
 

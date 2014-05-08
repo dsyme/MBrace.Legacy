@@ -236,21 +236,21 @@ namespace Nessos.MBrace.Core
                             return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
 
                     | NewMutableRefByNameExpr (container, id, value, t) :: rest ->
-                        let! exec = config.MutableCloudRefProvider.Create(container, id, value, t) |> Async.Catch
+                        let! exec = config.MutableCloudRefProvider.CreateNewUntyped(container, id, value, t) |> Async.Catch
                         match exec with
                         | Choice1Of2 result ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     | ReadMutableRefExpr(mref, ty) :: rest ->
-                        let! exec = Async.Catch <| config.MutableCloudRefProvider.Read(mref)
+                        let! exec = Async.Catch <| config.MutableCloudRefProvider.Dereference(mref)
                         match exec with
                         | Choice1Of2 result ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, mref.Type)) :: rest
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot locate Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
                     | SetMutableRefExpr(mref, value) :: rest ->
-                        let! exec = Async.Catch <| config.MutableCloudRefProvider.Update(mref, value)
+                        let! exec = Async.Catch <| config.MutableCloudRefProvider.TryUpdate(mref, value)
                         match exec with
                         | Choice1Of2 result -> 
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, typeof<bool>)) :: rest
@@ -266,7 +266,7 @@ namespace Nessos.MBrace.Core
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot update Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
                     
                     | GetMutableRefByNameExpr (container, id, t) :: rest ->
-                        let! mref = Async.Catch <| config.MutableCloudRefProvider.GetRef(container, id)
+                        let! mref = Async.Catch <| config.MutableCloudRefProvider.CreateExisting(container, id)
                         match mref with
                         | Choice1Of2 mref ->
                             if mref.Type <> t then
@@ -276,7 +276,7 @@ namespace Nessos.MBrace.Core
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot read MutableCloudref with Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetMutableRefsByNameExpr (container) :: rest ->
-                        let! exec = Async.Catch <| config.MutableCloudRefProvider.GetRefs(container)
+                        let! exec = Async.Catch <| config.MutableCloudRefProvider.GetContainedRefs(container)
                         match exec with
                         | Choice1Of2 refs ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<IMutableCloudRef []>)) :: rest

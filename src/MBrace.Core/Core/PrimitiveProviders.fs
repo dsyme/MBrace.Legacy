@@ -5,7 +5,7 @@
 
     open Nessos.MBrace
 
-    /// Defines a provider abstraction for Cloud refs
+    /// Defines a provider abstraction for cloud refs
     type ICloudRefProvider =
         
         /// Defines a new cloud ref instance 
@@ -15,22 +15,43 @@
         abstract CreateNewUntyped : container:string * id:string * value:obj * ty:Type -> Async<ICloudRef>
 
         /// Defines an already existing cloud ref
-        abstract CreateExisting : Container * Id -> Async<ICloudRef>
+        abstract CreateExisting : container:string * id:string -> Async<ICloudRef>
 
-        /// Deletes a cloud ref in the given location
+        /// Receives the value of given cloud ref
+        abstract Dereference : ICloudRef -> Async<obj>
+
+        /// Deletes a cloud ref
         abstract Delete : ICloudRef -> Async<unit>
 
         /// Receive all cloud ref's defined within the given container
         abstract GetContainedRefs : container:string -> Async<ICloudRef []>
 
+    /// Defines a provider abstraction for mutable cloud refs
     type IMutableCloudRefProvider =
-        abstract Create : Container * Id * obj * System.Type -> Async<IMutableCloudRef>
+        
+        /// Defines a new mutable cloud ref instance
+        abstract CreateNew : container:string * id:string * value:'T -> Async<IMutableCloudRef<'T>>
+
+        // Defines a new mutable cloud ref instance
+        abstract CreateNewUntyped : container:string * id:string * value:obj * ty:Type -> Async<IMutableCloudRef>
+
+        /// Defines an existing mutable cloud ref instance
+        abstract CreateExisting : container:string * id:string -> Async<IMutableCloudRef>
+
+        /// Receives the value of given cloud ref
+        abstract Dereference : IMutableCloudRef -> Async<obj>
+        
+        /// Force update a mutable cloud ref
+        abstract ForceUpdate : IMutableCloudRef * value:obj -> Async<unit>
+
+        /// Try update a mutable cloud ref
+        abstract TryUpdate : IMutableCloudRef * value:obj -> Async<bool>
+
+        /// Deletes a mutable cloud ref
         abstract Delete : IMutableCloudRef -> Async<unit>
-        abstract Read : IMutableCloudRef -> Async<obj>
-        abstract GetRef : Container * Id -> Async<IMutableCloudRef>
-        abstract ForceUpdate : IMutableCloudRef * obj -> Async<unit>
-        abstract Update : IMutableCloudRef * obj -> Async<bool>
-        abstract GetRefs : Container -> Async<IMutableCloudRef []>
+
+        /// Receive all cloud ref's defined within the given container
+        abstract GetContainedRefs : container:string -> Async<IMutableCloudRef []>
 
     type ICloudSeqProvider =
         abstract GetSeq : Container * Id  -> Async<ICloudSeq>
