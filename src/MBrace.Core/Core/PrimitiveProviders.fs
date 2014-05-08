@@ -72,14 +72,28 @@
         /// Deletes a cloud sequence
         abstract Delete : ICloudSeq -> Async<unit>
 
+    /// Defines a provider abstraction for cloud files
     type ICloudFileProvider =
-        abstract Create   : Container * Id * (Stream -> Async<unit>)    -> Async<ICloudFile   >
-        abstract Read     : ICloudFile * (Stream -> Async<obj>)         -> Async<obj          >
-        abstract ReadAsSeq: ICloudFile * (Stream -> Async<obj>) * Type  -> Async<obj          > // TODO : Change return type to IEnumerator
-        abstract GetFiles : Container                                   -> Async<ICloudFile []>
-        abstract GetFile  : Container  * Id                             -> Async<ICloudFile   >
-        abstract Delete   : ICloudFile                                  -> Async<unit         >
+        
+        /// Defines a new cloud file
+        abstract CreateNew : container:string * id:string * writer:(Stream -> Async<unit>) -> Async<ICloudFile>
 
+        /// Defines an existing cloud file
+        abstract CreateExisting : container:string * id:string -> Async<ICloudFile>
+
+        /// Reads from an existing cloud file
+        abstract Read : file:ICloudFile * reader:(Stream -> Async<'T>) -> Async<'T>
+        
+        /// Deserialize a sequence from a given cloud file
+        abstract ReadAsSequence: file:ICloudFile * elementReader:(Stream -> Async<obj>) * seqType:Type  -> Async<IEnumerable>
+
+        /// Delete a cloud file
+        abstract Delete: file:ICloudFile -> Async<unit>
+
+        /// Get all cloud files that exist in specified container
+        abstract GetContainedFiles : container:string -> Async<ICloudFile []>
+
+    /// Defines an object cloning abstraction
     type IObjectCloner =
         abstract Clone : 'T -> 'T
 

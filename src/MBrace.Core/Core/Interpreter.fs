@@ -291,22 +291,22 @@ namespace Nessos.MBrace.Core
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot delete MutableCloudRef %A" mref, ex), None)) :: rest
 
-                    | NewCloudFile(container, id, serialize) :: rest ->
-                        let! exec = Async.Catch <| config.CloudFileProvider.Create(container, id, serialize)
+                    | NewCloudFile(container, id, serializer) :: rest ->
+                        let! exec = Async.Catch <| config.CloudFileProvider.CreateNew(container, id, serializer)
                         match exec with
                         | Choice1Of2 file ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                         | Choice2Of2 ex ->
                             return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot create CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetCloudFile(container, id) :: rest ->
-                        let! exec = Async.Catch <| config.CloudFileProvider.GetFile(container, id)
+                        let! exec = Async.Catch <| config.CloudFileProvider.CreateExisting(container, id)
                         match exec with
                         | Choice1Of2 file ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                         | Choice2Of2 ex ->
                             return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot get CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetCloudFiles(container) :: rest ->
-                        let! exec = Async.Catch <| config.CloudFileProvider.GetFiles(container)
+                        let! exec = Async.Catch <| config.CloudFileProvider.GetContainedFiles container
                         match exec with
                         | Choice1Of2 files ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue files, typeof<ICloudFile []>)) :: rest
@@ -320,8 +320,8 @@ namespace Nessos.MBrace.Core
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue o, t)) :: rest
                         | Choice2Of2 ex ->
                             return! run' traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
-                    | ReadCloudFileAsSeq(file, deserialize, t) :: rest ->
-                        let! exec = Async.Catch <| config.CloudFileProvider.ReadAsSeq(file, deserialize, t)
+                    | ReadCloudFileAsSeq(file, deserializer, t) :: rest ->
+                        let! exec = Async.Catch <| config.CloudFileProvider.ReadAsSequence(file, deserializer, t)
                         match exec with
                         | Choice1Of2 o ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue o, t)) :: rest
