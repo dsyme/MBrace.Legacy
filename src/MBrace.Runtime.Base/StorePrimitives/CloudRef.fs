@@ -86,6 +86,11 @@
                     |> Seq.toArray
             }
 
+        let defineUntyped(ty : Type, container : string, id : string) =
+            let cloudRefType = typedefof<CloudRef<_>>.MakeGenericType [| ty |]
+            let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj |])
+            cloudRef :?> ICloudRef
+
         member self.GetRefType (container : string, id : string) : Async<Type> =
             readType container (postfix id)
 
@@ -134,18 +139,13 @@
                                 pickler.Serialize(stream, value) })
 
                     // construct & return
-
-                    let cloudRefType = typedefof<CloudRef<_>>.MakeGenericType [| t |]
-                    let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj |])
-                    return cloudRef :?> _
+                    return defineUntyped(t, container, id)
             }
 
             member self.CreateExisting(container, id) : Async<ICloudRef> =
                 async {
                     let! t = readType container (postfix id)
-                    let cloudRefType = typedefof<CloudRef<_>>.MakeGenericType [| t |]
-                    let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; t :> obj |])
-                    return cloudRef :?> ICloudRef
+                    return defineUntyped(t, container, id)
                 }
 
             member self.GetContainedRefs(container : string) : Async<ICloudRef []> =
@@ -153,10 +153,7 @@
                     let! ids = getIds container
                     return
                         ids |> Seq.map (fun id -> Async.RunSynchronously(readType container (postfix id)), container, id)
-                            |> Seq.map (fun (t,c,i) ->
-                                    let cloudRefTy = typedefof<CloudRef<_>>.MakeGenericType [| t |]
-                                    let cloudRef = Activator.CreateInstance(cloudRefTy, [| i :> obj; c :> obj; t :> obj |])
-                                    cloudRef :?> ICloudRef)
+                            |> Seq.map defineUntyped
                             |> Seq.toArray
                 }
 
