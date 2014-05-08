@@ -51,8 +51,7 @@ namespace Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Utils.String
     open Nessos.MBrace.Utils.AssemblyCache
 
-    module internal Crypto =
-        
+    module internal Crypto =        
         let hasher = SHA256Managed.Create()
         let getHashCode (txt : string) = hasher.ComputeHash(Encoding.UTF8.GetBytes txt)
 

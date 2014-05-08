@@ -70,40 +70,40 @@
             store.Exists(container,id)
 
         interface ICloudFileProvider with
-            override this.Create(container : Container, id : Id, serialize : (Stream -> Async<unit>)) : Async<ICloudFile> =
+            override this.CreateNew(container : Container, id : Id, writer : (Stream -> Async<unit>)) : Async<ICloudFile> =
                 async {
-                    do! cache.Create(container, id, serialize)
+                    do! cache.Create(container, id, writer)
                     do! cache.Commit(container, id, asFile = true)
 
                     return CloudFile(id, container) :> _
                 }
 
-            override this.Read(file : ICloudFile, deserialize) : Async<obj> =
-                async {
-                    let! stream = cache.Read(file.Container, file.Name)
-                    return! deserialize stream
-                }
-
-            override this.ReadAsSeq(file : ICloudFile, deserialize, ty) : Async<obj> =
-                async {
-                    let cloudFileSeqTy = typedefof<CloudFileSeq<_>>.MakeGenericType [| ty |]
-                    let cloudFileSeq = Activator.CreateInstance(cloudFileSeqTy, [| file :> obj; deserialize :> obj |])
-                    return cloudFileSeq
-                }
-
-            override this.GetFiles(container) : Async<ICloudFile []> =
-                async {
-                    let! files = store.GetFiles(container)
-                    return files |> Array.map (fun name -> CloudFile(name, container) :> _)
-                }
-
-            override this.GetFile (container, id) : Async<ICloudFile> =
+            override this.CreateExisting (container, id) : Async<ICloudFile> =
                 async {
                     let! exists = store.Exists(container, id) 
                     if exists then 
                         return CloudFile(id, container) :> _
                     else 
                         return failwith "File does not exist"
+                }
+
+            override this.Read(file : ICloudFile, deserializer) : Async<'T> =
+                async {
+                    let! stream = cache.Read(file.Container, file.Name)
+                    return! deserializer stream
+                }
+
+            override this.ReadAsSequence(file : ICloudFile, deserializer, ty) : Async<IEnumerable> =
+                async {
+                    let cloudFileSeqTy = typedefof<CloudFileSeq<_>>.MakeGenericType [| ty |]
+                    let cloudFileSeq = Activator.CreateInstance(cloudFileSeqTy, [| file :> obj; deserializer :> obj |])
+                    return cloudFileSeq :?> _
+                }
+
+            override this.GetContainedFiles(container) : Async<ICloudFile []> =
+                async {
+                    let! files = store.GetFiles(container)
+                    return files |> Array.map (fun name -> CloudFile(name, container) :> _)
                 }
                 
             
