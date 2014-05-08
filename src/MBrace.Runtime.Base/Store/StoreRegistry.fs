@@ -45,6 +45,7 @@ namespace Nessos.MBrace.Runtime.Store
     open System.Security.Cryptography
     open System.Text
 
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Client
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.String
@@ -82,7 +83,7 @@ namespace Nessos.MBrace.Runtime.Store
         static let activate makeDefault (factoryType : Type) (connectionString : string) =
             let factory = Activator.CreateInstance(factoryType) :?> IStoreFactory
             let store = factory.CreateStoreFromConnectionString connectionString
-            let id = { AssemblyQualifiedName = factoryType.AssemblyQualifiedName; ConnectionString = (Crypto.getHashCode <|  + ":" + store.UUID) } 
+            let id = { AssemblyQualifiedName = factoryType.AssemblyQualifiedName; UUID = (Crypto.getHashCode <| store.UUID) } 
 
             match storeIndex.Value.TryFind id with
             | Some sI -> sI
@@ -136,3 +137,16 @@ namespace Nessos.MBrace.Runtime.Store
                 and set (s : StoreInfo) =
                     storeIndex.Swap(fun m -> m.Add(s.Id, s))
                     defaultStore := Some s
+
+    type ProviderRegistry private () =
+
+        static let crefProviderIndex    = Atom.atom Map.empty<StoreId, ICloudRefProvider>
+        static let cseqProviderIndex    = Atom.atom Map.empty<StoreId, ICloudSeqProvider>
+        static let cfileProviderIndex   = Atom.atom Map.empty<StoreId, ICloudFileProvider>
+        static let mrefProviderIndex    = Atom.atom Map.empty<StoreId, IMutableCloudRefProvider>
+
+
+
+
+
+

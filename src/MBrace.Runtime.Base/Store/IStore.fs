@@ -12,7 +12,7 @@
     type StoreId = 
         internal {
             AssemblyQualifiedName : string
-            ConnectionString      : byte []
+            UUID                  : byte []
         }
 
         with override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
