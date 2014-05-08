@@ -9,7 +9,13 @@
     type File = string
     type Tag = string
 
-    type StoreId = StoreId of byte []
+    type StoreId = 
+        internal {
+            AssemblyQualifiedName : string
+            ConnectionString      : byte []
+        }
+
+        with override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
 
     type IStore =
 
