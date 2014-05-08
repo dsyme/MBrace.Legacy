@@ -1,6 +1,7 @@
 ﻿namespace Nessos.MBrace.Core
     
     open System
+    open System.Collections
     open System.IO
 
     open Nessos.MBrace
@@ -53,11 +54,23 @@
         /// Receive all cloud ref's defined within the given container
         abstract GetContainedRefs : container:string -> Async<IMutableCloudRef []>
 
+    /// Defines a provider abstraction for cloud sequences
     type ICloudSeqProvider =
-        abstract GetSeq : Container * Id  -> Async<ICloudSeq>
-        abstract Create : System.Collections.IEnumerable * string * string * System.Type -> Async<ICloudSeq>
+        
+        /// Defines a new cloud seq instance
+        abstract CreateNew : container:string * id:string * values:seq<'T> -> Async<ICloudSeq<'T>>
+
+        /// Defines a new untyped cloud seq instance
+        abstract CreateNewUntyped : container:string * id:string * values:IEnumerable * ty:Type -> Async<ICloudSeq>
+
+        /// Defines an existing cloud seq instance
+        abstract CreateExisting : container:string * id:string  -> Async<ICloudSeq>
+
+        /// Receive all cloud seq's defined within the given container
+        abstract GetContainedSeqs : container:string -> Async<ICloudSeq []>
+        
+        /// Deletes a cloud sequence
         abstract Delete : ICloudSeq -> Async<unit>
-        abstract GetSeqs : Container -> Async<ICloudSeq []>
 
     type ICloudFileProvider =
         abstract Create   : Container * Id * (Stream -> Async<unit>)    -> Async<ICloudFile   >

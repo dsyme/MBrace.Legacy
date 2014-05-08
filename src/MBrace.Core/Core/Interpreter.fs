@@ -336,14 +336,14 @@ namespace Nessos.MBrace.Core
                         return! run' true <| cloudExpr :: DoEndTraceExpr :: rest
                     | NewCloudSeqByNameExpr (container, values, t) :: rest ->
                         let id = Guid.NewGuid().ToString()
-                        let! exec = Async.Catch <| config.CloudSeqProvider.Create(values, container, id, t)
+                        let! exec = Async.Catch <| config.CloudSeqProvider.CreateNewUntyped(container, id, values, t)
                         match exec with
                         | Choice1Of2 cloudSeq ->
                             return! run' traceEnabled <| (ValueExpr (Obj (ObjValue cloudSeq, typeof<ICloudSeq>))) :: rest
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetCloudSeqByNameExpr (container, id, t) :: rest ->
-                        let! cseq = Async.Catch <| config.CloudSeqProvider.GetSeq(container, id)
+                        let! cseq = Async.Catch <| config.CloudSeqProvider.CreateExisting(container, id)
                         match cseq with
                         | Choice1Of2 cseq ->
                             if t <> cseq.Type
@@ -352,7 +352,7 @@ namespace Nessos.MBrace.Core
                         | Choice2Of2 exn ->
                             return! run' traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
                     | GetCloudSeqsByNameExpr (container) :: rest ->
-                        let! exec = Async.Catch <| config.CloudSeqProvider.GetSeqs(container)
+                        let! exec = Async.Catch <| config.CloudSeqProvider.GetContainedSeqs(container)
                         match exec with
                         | Choice1Of2 seqs ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue seqs, typeof<ICloudSeq []>)) :: rest

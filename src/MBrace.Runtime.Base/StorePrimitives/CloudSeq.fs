@@ -18,7 +18,7 @@
 
     [<Serializable>]
     [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
-    type CloudSeq<'T> (id : string, container : string ) as this =
+    type CloudSeq<'T> (id : string, container : string) as this =
         let factoryLazy = lazy IoC.Resolve<CloudSeqProvider>()
 
         let info = lazy (Async.RunSynchronously <| factoryLazy.Value.GetCloudSeqInfo(this))
@@ -95,6 +95,11 @@
                 return getInfo stream
             }
 
+        let defineUntyped(ty : Type, container : string, id : string) =
+            let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
+            let cloudSeq = Activator.CreateInstance(cloudSeqTy,[| id :> obj ; container :> obj |])
+            cloudSeq :?> ICloudSeq
+
         member this.GetCloudSeqInfo (cseq : ICloudSeq) : Async<CloudSeqInfo> =
             getCloudSeqInfo cseq.Container cseq.Name
 
@@ -123,38 +128,40 @@
 
         interface ICloudSeqProvider with
 
-            // this is wrong: type should not be passed as a parameter: temporary fix
-            member this.GetSeq (container, id) = async {
-                let! cseqInfo = getCloudSeqInfo container id
-                let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| cseqInfo.Type |]
-                let cloudSeq = Activator.CreateInstance(cloudSeqTy,[| id :> obj ; container :> obj |])
-                return cloudSeq :?> ICloudSeq
+            member this.CreateNew<'T>(container, id, values : seq<'T>) = async {
+                let serializeTo stream = async {
+                    let length = pickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
+                    return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
+                }
+                do! cacheStore.Create(container, postfix id, serializeTo)
+                do! cacheStore.Commit(container, postfix id)
+
+                return CloudSeq<'T>(id, container) :> ICloudSeq<'T>
             }
 
-            member this.Create (items : IEnumerable, container : string, id : string, ty : Type) : Async<ICloudSeq> =
+            member this.CreateNewUntyped (container : string, id : string, values : IEnumerable, ty : Type) : Async<ICloudSeq> =
                 async {
                     let serializeTo stream = async {
-                        let length = pickler.SerializeSequence(ty, stream, items, leaveOpen = true)
+                        let length = pickler.SerializeSequence(ty, stream, values, leaveOpen = true)
                         return setInfo stream { Size = -1L; Count = length; Type = ty }
                     }
                     do! cacheStore.Create(container, postfix id, serializeTo)
                     do! cacheStore.Commit(container, postfix id)
 
-                    let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
-                    let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| id :> obj; container :> obj |])
-                
-                    return cloudSeq :?> _
+                    return defineUntyped(ty, container, id)
                 }
 
-            member this.GetSeqs(container : string) : Async<ICloudSeq []> =
+            member this.CreateExisting (container, id) = async {
+                let! cseqInfo = getCloudSeqInfo container id
+                return defineUntyped(cseqInfo.Type, container, id)
+            }
+
+            member this.GetContainedSeqs(container : string) : Async<ICloudSeq []> =
                 async {
                     let! ids = this.GetIds(container)
                     return 
                         ids |> Seq.map (fun id -> (Async.RunSynchronously(getCloudSeqInfo container id)).Type, container, id)
-                            |> Seq.map (fun (t,c,i) ->
-                                    let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| t |]
-                                    let cloudSeq = Activator.CreateInstance(cloudSeqTy, [| i :> obj; c :> obj |])
-                                    cloudSeq :?> ICloudSeq)
+                            |> Seq.map defineUntyped
                             |> Seq.toArray
                 }
 
