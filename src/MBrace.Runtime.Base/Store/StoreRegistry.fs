@@ -82,7 +82,7 @@ namespace Nessos.MBrace.Runtime.Store
         static let activate makeDefault (factoryType : Type) (connectionString : string) =
             let factory = Activator.CreateInstance(factoryType) :?> IStoreFactory
             let store = factory.CreateStoreFromConnectionString connectionString
-            let id = StoreId (Crypto.getHashCode <| factoryType.AssemblyQualifiedName + ":" + store.UUID)
+            let id = { AssemblyQualifiedName = factoryType.AssemblyQualifiedName; ConnectionString = (Crypto.getHashCode <|  + ":" + store.UUID) } 
 
             match storeIndex.Value.TryFind id with
             | Some sI -> sI
