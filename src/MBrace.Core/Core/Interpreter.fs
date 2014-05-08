@@ -211,14 +211,14 @@ namespace Nessos.MBrace.Core
 
                     | NewRefByNameExpr (container, value, t) :: rest ->
                         let id = Guid.NewGuid().ToString()
-                        let! exec = Async.Catch <| config.CloudRefProvider.Create(container, id, value, t)
+                        let! exec = Async.Catch <| config.CloudRefProvider.CreateNewUntyped(container, id, value, t)
                         match exec with
                         | Choice1Of2 result ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new Nessos.MBrace.StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetRefByNameExpr (container, id, t) :: rest ->
-                        let! cref = Async.Catch <| config.CloudRefProvider.GetRef(container, id)
+                        let! cref = Async.Catch <| config.CloudRefProvider.CreateExisting(container, id)
                         match cref with
                         | Choice1Of2 cref ->
                             if cref.Type <> t then
@@ -228,7 +228,7 @@ namespace Nessos.MBrace.Core
                         | Choice2Of2 ex ->
                             return! run' traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot find CloudRef with Container: %s, Name: %s" container id, ex), None)) :: rest
                     | GetRefsByNameExpr (container) :: rest ->
-                        let! exec = Async.Catch <| config.CloudRefProvider.GetRefs(container)
+                        let! exec = Async.Catch <| config.CloudRefProvider.GetContainedRefs container
                         match exec with
                         | Choice1Of2 refs ->
                             return! run' traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<ICloudRef []>)) :: rest

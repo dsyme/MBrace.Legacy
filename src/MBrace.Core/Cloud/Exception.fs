@@ -171,9 +171,7 @@
         member e.Exceptions = e.results |> Array.choose (fun result -> match result with  ExceptionResult _ -> Some result | _ -> None) 
         member e.Values = e.results |> Array.choose (fun result -> match result with ValueResult _ -> Some result | _ -> None) 
 
-        override e.ToString() = sprintf "%A" e.results // happy?
-
-//                // workaround because of the FUUUUUUCKING string monad.
+        override e.ToString() = sprintf "%A" e.results
 //                let mystring : obj -> string = sprintf "%A" // MAGIC
                 
 //                results

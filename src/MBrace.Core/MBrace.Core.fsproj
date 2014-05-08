@@ -74,9 +74,9 @@
     <Compile Include="Cloud\CloudFile.fs" />
     <Compile Include="Cloud\CloudExtensions.fs" />
     <Compile Include="Core\Utils.fs" />
-    <Compile Include="Core\Data.fs" />
     <Compile Include="Core\Logging.fs" />
-    <Compile Include="Core\StoreProviders.fs" />
+    <Compile Include="Core\Data.fs" />
+    <Compile Include="Core\PrimitiveProviders.fs" />
     <Compile Include="Core\Interpreter.fs" />
     <Compile Include="InMemory\Configuration.fs" />
   </ItemGroup>
