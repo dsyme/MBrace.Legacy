@@ -8,17 +8,10 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
 
-
-    // IMutableCloudRefTagged dead code, what do?
-
-    type internal IMutableCloudRefTagged =
+    type IMutableCloudRefTagged =
         inherit IMutableCloudRef
 
         abstract Tag : string with get, set
-
-    type internal IMutableCloudRefTagged<'T> =
-        inherit IMutableCloudRefTagged
-
 
     type MutableCloudRef<'T>(id : string, container : string, tag : Tag, ty : Type) =
         
@@ -35,8 +28,6 @@
 
         interface IMutableCloudRefTagged with
             member val Tag = tag with get, set
-
-        interface IMutableCloudRefTagged<'T>
 
         override self.ToString() =  sprintf' "%s - %s" container id
 
