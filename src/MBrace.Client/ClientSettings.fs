@@ -54,7 +54,7 @@ namespace Nessos.MBrace.Client
                 
             let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
                 
-            let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, localCacheDir)
+            let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo, localCacheDir)
                 
             // sooner
             IoC.Register<CoreConfiguration>(fun () -> coreConfig)

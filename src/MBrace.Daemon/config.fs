@@ -186,7 +186,7 @@
             try
                 let storeInfo = StoreRegistry.Activate(StoreProvider.Parse (storeProvider, storeEndpoint), makeDefault = true)
                 let localCacheDir = Path.Combine(workingDirectory, "LocalCache")
-                let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, localCacheDir)
+                let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo, localCacheDir)
                 // sooner...
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue<IStore>(storeInfo.Store)

@@ -138,6 +138,7 @@ namespace Nessos.MBrace.Runtime.Store
                     storeIndex.Swap(fun m -> m.Add(s.Id, s))
                     defaultStore := Some s
 
+    [<Sealed; AbstractClassAttribute>]
     type ProviderRegistry private () =
 
         static let crefProviderIndex    = Atom.atom Map.empty<StoreId, ICloudRefProvider>
@@ -145,8 +146,35 @@ namespace Nessos.MBrace.Runtime.Store
         static let cfileProviderIndex   = Atom.atom Map.empty<StoreId, ICloudFileProvider>
         static let mrefProviderIndex    = Atom.atom Map.empty<StoreId, IMutableCloudRefProvider>
 
+        static member private Register<'T>(storeId : StoreId, index : Atom<Map<StoreId,'T>>, provider : 'T) =
+            index.Swap(fun m -> m.Add(storeId, provider))
+
+        static member Register(storeId : StoreId, provider : ICloudRefProvider) =
+            ProviderRegistry.Register(storeId, crefProviderIndex, provider)
+
+        static member Register(storeId : StoreId, provider : ICloudSeqProvider) =
+            ProviderRegistry.Register(storeId, cseqProviderIndex, provider)
+
+        static member Register(storeId : StoreId, provider : ICloudFileProvider) =
+            ProviderRegistry.Register(storeId, cfileProviderIndex, provider)
+
+        static member Register(storeId : StoreId, provider : IMutableCloudRefProvider) =
+            ProviderRegistry.Register(storeId, mrefProviderIndex, provider)
 
 
+        static member private GetInstance<'T>(storeId : StoreId, index : Atom<Map<StoreId, 'T>>) : 'T =
+            match index.Value.TryFind storeId with
+            | Some provider -> provider
+            | None -> invalidOp "Store: missing instance with id '%O'." id
 
+        static member GetCloudRefProviderInstance(storeId : StoreId) =
+            ProviderRegistry.GetInstance(storeId, crefProviderIndex)
 
+        static member GetCloudSeqProviderInstance(storeId : StoreId) =
+            ProviderRegistry.GetInstance(storeId, cseqProviderIndex)
 
+        static member GetCloudFileProviderInstance(storeId : StoreId) =
+            ProviderRegistry.GetInstance(storeId, cfileProviderIndex)
+
+        static member GetMutableCloudRefProviderInstance(storeId : StoreId) =
+            ProviderRegistry.GetInstance(storeId, mrefProviderIndex)

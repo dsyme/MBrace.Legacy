@@ -8,8 +8,8 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Core
 
-    type CloudRef<'T>(id : string, container : string) as this = 
-        let cloudRefReaderLazy = lazy IoC.Resolve<CloudRefProvider>() 
+    type CloudRef<'T>(id : string, container : string, storeId : StoreId) as this = 
+        let cloudRefReaderLazy = lazy(ProviderRegistry.GetCloudRefProviderInstance(storeId) :?> CloudRefProvider)
 
         let valueLazy () = 
             async {
@@ -26,7 +26,9 @@
             } |> Async.RunSynchronously
 
         new (info : SerializationInfo, context : StreamingContext) = 
-            CloudRef<'T>(info.GetValue("id", typeof<string>) :?> string, info.GetValue("container", typeof<string>) :?> string)
+            CloudRef<'T>(info.GetValue("id", typeof<string>) :?> string, 
+                         info.GetValue("container", typeof<string>) :?> string,
+                         info.GetValue("storeId", typeof<StoreId>) :?> StoreId )
 
         override self.ToString() = 
             sprintf' "%s - %s" container id
@@ -57,10 +59,13 @@
             member self.GetObjectData(info : SerializationInfo, context : StreamingContext) =
                 info.AddValue("id", id)
                 info.AddValue("container", container)
+                info.AddValue("storeId", storeId)
     
 
-    and CloudRefProvider(store : IStore, cache : Cache) =
+    and CloudRefProvider(storeInfo : StoreInfo, cache : Cache) =
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
+        let store = storeInfo.Store
+        let storeId = storeInfo.Id
 
         let extension = "ref"
         let postfix = fun s -> sprintf' "%s.%s" s extension
@@ -88,7 +93,7 @@
 
         let defineUntyped(ty : Type, container : string, id : string) =
             let cloudRefType = typedefof<CloudRef<_>>.MakeGenericType [| ty |]
-            let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj |])
+            let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; storeId :> obj |])
             cloudRef :?> ICloudRef
 
         member self.GetRefType (container : string, id : string) : Async<Type> =
@@ -109,7 +114,7 @@
                                 pickler.Serialize(stream, typeof<'T>)
                                 pickler.Serialize(stream, value) })
 
-                    return new CloudRef<'T>(id, container) :> _
+                    return new CloudRef<'T>(id, container, storeId) :> _
             }
 
             member self.CreateNewUntyped (container : string, id : string, value : obj, t : Type) : Async<ICloudRef> = 

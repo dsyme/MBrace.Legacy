@@ -93,7 +93,7 @@
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
                 
-                let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo.Store, cacheStoreEndpoint)
+                let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo, cacheStoreEndpoint)
                 // soon...
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue<IStore>(storeInfo.Store)
