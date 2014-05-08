@@ -8,8 +8,8 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Core
 
-    type PersistableCloudRef<'T>(id : string, container : string, ty : Type) as this = 
-        let cloudRefReaderLazy = lazy IoC.Resolve<CloudRefStore>() 
+    type CloudRef<'T>(id : string, container : string, ty : Type) as this = 
+        let cloudRefReaderLazy = lazy IoC.Resolve<CloudRefProvider>() 
 
         let valueLazy () = 
             async {
@@ -26,7 +26,7 @@
             } |> Async.RunSynchronously
 
         new (info : SerializationInfo, context : StreamingContext) = 
-            PersistableCloudRef<'T>(info.GetValue("id", typeof<string>) :?> string,
+            CloudRef<'T>(info.GetValue("id", typeof<string>) :?> string,
                                     info.GetValue("container", typeof<string>) :?> string,
                                     info.GetValue("type", typeof<Type>) :?> Type)
 
@@ -62,7 +62,7 @@
                 info.AddValue("type", ty)
     
 
-    and CloudRefStore(store : IStore, cache : Cache) =
+    and CloudRefProvider(store : IStore, cache : Cache) =
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
 
         let extension = "ref"
@@ -109,7 +109,7 @@
 
                     // construct & return
 
-                    let cloudRefType = typedefof<PersistableCloudRef<_>>.MakeGenericType [| t |]
+                    let cloudRefType = typedefof<CloudRef<_>>.MakeGenericType [| t |]
                     let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; t :> obj |])
                     return cloudRef :?> _
             }
@@ -136,7 +136,7 @@
             member self.GetRef(container, id) : Async<ICloudRef> =
                 async {
                     let! t = readType container (postfix id)
-                    let cloudRefType = typedefof<PersistableCloudRef<_>>.MakeGenericType [| t |]
+                    let cloudRefType = typedefof<CloudRef<_>>.MakeGenericType [| t |]
                     let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; t :> obj |])
                     return cloudRef :?> ICloudRef
                 }
@@ -147,7 +147,7 @@
                     return
                         ids |> Seq.map (fun id -> Async.RunSynchronously(readType container (postfix id)), container, id)
                             |> Seq.map (fun (t,c,i) ->
-                                    let cloudRefTy = typedefof<PersistableCloudRef<_>>.MakeGenericType [| t |]
+                                    let cloudRefTy = typedefof<CloudRef<_>>.MakeGenericType [| t |]
                                     let cloudRef = Activator.CreateInstance(cloudRefTy, [| i :> obj; c :> obj; t :> obj |])
                                     cloudRef :?> ICloudRef)
                             |> Seq.toArray

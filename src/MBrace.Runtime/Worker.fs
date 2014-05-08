@@ -29,7 +29,7 @@ let workerBehavior (processId: ProcessId)
                    (msg: Worker) =
     
     let config = IoC.Resolve<CoreConfiguration> ()
-    let toCloudRef cloudExpr = config.CloudRefStore.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr, cloudExpr.GetType())
+    let toCloudRef cloudExpr = config.CloudRefProvider.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr, cloudExpr.GetType())
     let taskManager = state.TaskManager
     let processTask (processId : ProcessId, taskId : TaskId, functions : Function list, Dump (dump)) = 
         let traceEnabled stack = stack |> List.exists (fun cloudExpr' -> match cloudExpr' with DoEndTraceExpr -> true | _ -> false)
@@ -53,7 +53,7 @@ let workerBehavior (processId: ProcessId)
                     let! value = Interpreter.runLocal processId (taskId.ToString()) functions false [cloudExpr] config
                     return! processTask' <| (ValueExpr value) :: rest
                 | ValueExpr (Obj (ObjValue value, t)) :: rest when value <> null ->
-                    let! cloudRefValue = config.CloudRefStore.Create("temp" + (string processId), Guid.NewGuid().ToString(), box value, typeof<obj>)
+                    let! cloudRefValue = config.CloudRefProvider.Create("temp" + (string processId), Guid.NewGuid().ToString(), box value, typeof<obj>)
                     return (ValueExpr (Obj (CloudRefValue (cloudRefValue  :?> ICloudRef<obj>), t))) :: rest
                 | _ -> return stack'
             }

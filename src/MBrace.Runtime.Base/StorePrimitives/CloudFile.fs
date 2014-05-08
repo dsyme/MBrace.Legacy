@@ -12,7 +12,7 @@
 
     type CloudFile(id : string, container : string) =
 
-        let fileStoreLazy = lazy IoC.Resolve<CloudFileStore>() 
+        let fileStoreLazy = lazy IoC.Resolve<CloudFileProvider>() 
 
         interface ICloudFile with
             member self.Name = id
@@ -36,7 +36,7 @@
      [<Serializable>]
      [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
      internal CloudFileSeq<'T> (file : ICloudFile, reader:(Stream -> Async<obj>)) =
-        let factoryLazy =  lazy IoC.Resolve<CloudFileStore>() 
+        let factoryLazy =  lazy IoC.Resolve<CloudFileProvider>() 
 
         override this.ToString () = sprintf' "%s - %s" file.Container file.Name
 
@@ -61,7 +61,7 @@
             CloudFileSeq(info.GetValue("file", typeof<ICloudFile> ) :?> ICloudFile, 
                          info.GetValue ("reader", typeof<Stream -> Async<obj>>) :?> Stream -> Async<obj>)
     
-    and CloudFileStore (store : IStore, cache : LocalCacheStore) =
+    and CloudFileProvider (store : IStore, cache : LocalCacheStore) =
 
         member this.Exists(container) : Async<bool> =
             store.Exists(container)

@@ -8,14 +8,14 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
 
-    type IMutableCloudRefTagged =
+    type internal IMutableCloudRefTagged =
         inherit IMutableCloudRef
 
         abstract Tag : string with get, set
 
     type MutableCloudRef<'T>(id : string, container : string, tag : Tag, ty : Type) =
         
-        let mutablecloudrefstorelazy = lazy IoC.Resolve<MutableCloudRefStore>()
+        let mutablecloudrefstorelazy = lazy IoC.Resolve<MutableCloudRefProvider>()
 
         interface IMutableCloudRef with
             member self.Name = id
@@ -45,7 +45,7 @@
                 info.AddValue("type", ty)
 
 
-    and MutableCloudRefStore(store : IStore) =
+    and MutableCloudRefProvider(store : IStore) =
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
 

@@ -44,10 +44,10 @@
 
     type CoreConfiguration =
         {
-            CloudSeqStore         : ICloudSeqProvider
-            CloudRefStore         : ICloudRefProvider
-            CloudFileStore        : ICloudFileProvider
-            MutableCloudRefStore  : IMutableCloudRefProvider
-            CloudLogger           : ICloudLogger
-            Cloner                : IObjectCloner
+            CloudSeqProvider         : ICloudSeqProvider
+            CloudRefProvider         : ICloudRefProvider
+            CloudFileProvider        : ICloudFileProvider
+            MutableCloudRefProvider  : IMutableCloudRefProvider
+            CloudLogger              : ICloudLogger
+            Cloner                   : IObjectCloner
         }

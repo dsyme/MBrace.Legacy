@@ -27,7 +27,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
     let coreConfig = IoC.Resolve<CoreConfiguration>()
     let newRef (processId : int) (value : 'T) = 
         async {
-            let! cref = coreConfig.CloudRefStore.Create("temp" + (string processId), Guid.NewGuid().ToString(), value, typeof<'T>) 
+            let! cref = coreConfig.CloudRefProvider.Create("temp" + (string processId), Guid.NewGuid().ToString(), value, typeof<'T>) 
             return cref :?> ICloudRef<'T>
         }
     let taskManager = state.TaskManager
