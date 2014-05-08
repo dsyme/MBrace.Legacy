@@ -18,7 +18,7 @@
     type ICloudRefProvider =
         abstract Create : Container * Id * obj * System.Type -> Async<ICloudRef>
         abstract Delete : Container * Id -> Async<unit>
-        abstract GetRefs : Container ->Async<ICloudRef []>
+        abstract GetRefs : Container -> Async<ICloudRef []>
         abstract GetRef : Container * Id ->Async<ICloudRef>
         abstract Read : ICloudRef -> Async<obj>
 
@@ -51,29 +51,3 @@
             CloudLogger           : ICloudLogger
             Cloner                : IObjectCloner
         }
-
-
-
-// do we need this?
-//    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//    // Special PersistableCloudRef - special treatment - access to store 
-//    and IPersistableCloudRef =
-//        inherit ICloudRef
-//        abstract Container : string
-//    and IPersistableCloudRef<'T> =
-//        inherit IPersistableCloudRef
-//        inherit ICloudRef<'T>
-
-
-// dead code, commented out
-
-//    type IMemoryCache = 
-//        abstract TryFind        : string -> obj option
-//        abstract Get            : string -> obj
-//        abstract ContainsKey    : string -> bool
-//        abstract Set            : string * obj -> unit
-//        abstract Delete         : string -> unit
-//    type ICacheStore =
-//        abstract Create : Folder * File * (Stream -> Async<unit>) -> Async<unit>
-//        abstract Commit : Folder * File * ?asFile:bool -> Async<unit> 
-//        abstract Read   : Folder * File -> Async<Stream>

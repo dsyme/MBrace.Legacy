@@ -52,11 +52,3 @@
 
         abstract Name : string
         abstract Container : string
-
-    type internal IMutableCloudRefTagged =
-        inherit IMutableCloudRef
-
-        abstract Tag : string with get, set
-
-    type internal IMutableCloudRefTagged<'T> =
-        inherit IMutableCloudRefTagged

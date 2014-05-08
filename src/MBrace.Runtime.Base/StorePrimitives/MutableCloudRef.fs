@@ -8,6 +8,18 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
 
+
+    // IMutableCloudRefTagged dead code, what do?
+
+    type internal IMutableCloudRefTagged =
+        inherit IMutableCloudRef
+
+        abstract Tag : string with get, set
+
+    type internal IMutableCloudRefTagged<'T> =
+        inherit IMutableCloudRefTagged
+
+
     type MutableCloudRef<'T>(id : string, container : string, tag : Tag, ty : Type) =
         
         let mutablecloudrefstorelazy = lazy IoC.Resolve<MutableCloudRefStore>()
