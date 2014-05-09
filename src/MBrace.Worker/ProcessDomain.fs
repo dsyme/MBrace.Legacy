@@ -86,6 +86,17 @@
             // Register Serialization
             do Nessos.MBrace.Runtime.Serializer.Register(new FsPickler())
 
+            // Register Logger
+            IoC.Register<ILogger>(
+                fun () ->
+                    (fun () -> getParentLogger Serialization.SerializerRegistry.DefaultName parentAddress)
+                    |> Logger.lazyWrap
+                    // prepend "ProcessDomain" prefix to all log entries
+                    |> Logger.convert
+                        (function SystemLog (txt, lvl, date) -> 
+                                    SystemLog (sprintf' "ProcessDomain(%A):: %s" processDomainId txt, lvl, date))
+            )
+
             // Register Store
             try
                 // has been filled out to fix build; kostas, change this
@@ -93,7 +104,7 @@
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
                 
-                let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo, cacheStoreEndpoint)
+                let coreConfig = CoreConfiguration.activate(IoC.Resolve<ILogger>(), storeInfo, cacheStoreEndpoint)
                 // soon...
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue<IStore>(storeInfo.Store)
@@ -114,16 +125,6 @@
 
             //Debug.Listeners.Add(new TextWriterTraceListener("mbrace-process-log.txt")) |> ignore
 
-            // Register Logger
-            IoC.Register<ILogger>(
-                fun () ->
-                    (fun () -> getParentLogger Serialization.SerializerRegistry.DefaultName parentAddress)
-                    |> Logger.lazyWrap
-                    // prepend "ProcessDomain" prefix to all log entries
-                    |> Logger.convert
-                        (function SystemLog (txt, lvl, date) -> 
-                                    SystemLog (sprintf' "ProcessDomain(%A):: %s" processDomainId txt, lvl, date))
-            )
 
             // Register exiter
             IoC.RegisterValue<IExiter>(exiter)

@@ -186,14 +186,9 @@
             try
                 let storeInfo = StoreRegistry.Activate(StoreProvider.Parse (storeProvider, storeEndpoint), makeDefault = true)
                 let localCacheDir = Path.Combine(workingDirectory, "LocalCache")
-                let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo, localCacheDir)
+                let coreConfig = CoreConfiguration.activate(IoC.Resolve<ILogger>(), storeInfo, localCacheDir)
                 // sooner...
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
-                IoC.RegisterValue<IStore>(storeInfo.Store)
-                //IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore) 
-                //IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore) 
-                //IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
-                //IoC.Register<ICloudFileStore>(fun () -> coreConfig.CloudFileStore) 
 
                 IoC.RegisterValue(storeEndpoint, "storeEndpoint")
                 IoC.RegisterValue(storeProvider, "storeProvider")

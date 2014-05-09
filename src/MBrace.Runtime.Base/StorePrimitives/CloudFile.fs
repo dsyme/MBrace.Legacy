@@ -10,33 +10,42 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
 
-    type CloudFile(id : string, container : string) =
-
-        let fileStoreLazy = lazy IoC.Resolve<CloudFileProvider>() 
+    type internal CloudFile(id : string, container : string, provider : CloudFileProvider) =
 
         interface ICloudFile with
             member self.Name = id
             member self.Container = container
             member self.Dispose () =
-                (fileStoreLazy.Value :> ICloudFileProvider).Delete(self)
+                (provider :> ICloudFileProvider).Delete(self)
 
         override self.ToString() = sprintf' "%s - %s" container id
 
+        member __.Provider with get () = provider
+
         new (info : SerializationInfo, context : StreamingContext) = 
-                CloudFile(info.GetValue("id", typeof<string>) :?> string,
-                            info.GetValue("container", typeof<string>) :?> string)
+            let id = info.GetString("id")
+            let container = info.GetString("container")
+            let storeId = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
+            let provider =
+                match StoreRegistry.TryGetCoreConfiguration storeId with
+                | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
+                | Some config -> config.CloudFileProvider :?> CloudFileProvider
+
+            new CloudFile(id, container, provider)
         
         interface ISerializable with 
             member self.GetObjectData(info : SerializationInfo, context : StreamingContext) =
                 info.AddValue("id", id)
                 info.AddValue("container", container)
+                info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
 
 
     and
      [<Serializable>]
      [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
      internal CloudFileSeq<'T> (file : ICloudFile, reader:(Stream -> Async<obj>)) =
-        let factoryLazy =  lazy IoC.Resolve<CloudFileProvider>() 
+
+        let provider = (file :?> CloudFile).Provider
 
         override this.ToString () = sprintf' "%s - %s" file.Container file.Name
 
@@ -44,12 +53,12 @@
 
         interface IEnumerable with
             member this.GetEnumerator () = 
-                let s = (factoryLazy.Value :> ICloudFileProvider).Read(file, reader) |> Async.RunSynchronously :?> IEnumerable
+                let s = (provider :> ICloudFileProvider).Read(file, reader) |> Async.RunSynchronously :?> IEnumerable
                 s.GetEnumerator()
 
         interface IEnumerable<'T> with
             member this.GetEnumerator () = 
-                let s = (factoryLazy.Value :> ICloudFileProvider).Read(file, reader) |> Async.RunSynchronously :?> IEnumerable<'T> 
+                let s = (provider :> ICloudFileProvider).Read(file, reader) |> Async.RunSynchronously :?> IEnumerable<'T> 
                 s.GetEnumerator()
             
         interface ISerializable with
@@ -61,7 +70,9 @@
             CloudFileSeq(info.GetValue("file", typeof<ICloudFile> ) :?> ICloudFile, 
                          info.GetValue ("reader", typeof<Stream -> Async<obj>>) :?> Stream -> Async<obj>)
     
-    and CloudFileProvider (store : IStore, cache : LocalCacheStore) =
+    and internal CloudFileProvider (storeInfo : StoreInfo, cache : LocalCacheStore) =
+
+        let store = storeInfo.Store
 
         member this.Exists(container) : Async<bool> =
             store.Exists(container)
@@ -69,20 +80,22 @@
         member this.Exists(container, id) : Async<bool> =
             store.Exists(container,id)
 
+        member __.StoreId = storeInfo.Id
+
         interface ICloudFileProvider with
             override this.CreateNew(container : Container, id : Id, writer : (Stream -> Async<unit>)) : Async<ICloudFile> =
                 async {
                     do! cache.Create(container, id, writer)
                     do! cache.Commit(container, id, asFile = true)
 
-                    return CloudFile(id, container) :> _
+                    return CloudFile(id, container, this) :> _
                 }
 
             override this.CreateExisting (container, id) : Async<ICloudFile> =
                 async {
                     let! exists = store.Exists(container, id) 
                     if exists then 
-                        return CloudFile(id, container) :> _
+                        return CloudFile(id, container, this) :> _
                     else 
                         return failwith "File does not exist"
                 }
@@ -103,7 +116,7 @@
             override this.GetContainedFiles(container) : Async<ICloudFile []> =
                 async {
                     let! files = store.GetFiles(container)
-                    return files |> Array.map (fun name -> CloudFile(name, container) :> _)
+                    return files |> Array.map (fun name -> CloudFile(name, container, this) :> _)
                 }
                 
             

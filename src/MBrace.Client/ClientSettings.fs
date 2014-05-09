@@ -50,21 +50,13 @@ namespace Nessos.MBrace.Client
                     | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
         let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
-//            raise <| new NotImplementedException("configuration") : unit
-                
             let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
+            let coreConfig = CoreConfiguration.activate(IoC.Resolve<ILogger>(), storeInfo, localCacheDir)
                 
-            let coreConfig = CoreConfiguration.Create(IoC.Resolve<ILogger>(), Serializer.Pickler, storeInfo, localCacheDir)
-                
-            // sooner
-            IoC.Register<CoreConfiguration>(fun () -> coreConfig)
-            IoC.RegisterValue (storeInfo, behaviour = Override)
+            // soonish
+            IoC.RegisterValue (coreConfig,      behaviour = Override)
+            IoC.RegisterValue (storeInfo,       behaviour = Override)
             IoC.RegisterValue (storeInfo.Store, behaviour = Override)
-            //IoC.Register<ICloudRefStore>(fun () -> coreConfig.CloudRefStore) 
-            //IoC.Register<IMutableCloudRefStore>(fun () -> coreConfig.MutableCloudRefStore) 
-            //IoC.Register<ICloudSeqProvider>(fun () -> coreConfig.CloudSeqStore) 
-            //IoC.Register<ICloudFileProvider>(fun () -> coreConfig.CloudFileStore) 
-            //IoC.Register<StoreLogger>(fun () -> coreConfig.LogStore :?> StoreLogger)
 
         let initConfiguration () =
             
@@ -109,18 +101,18 @@ namespace Nessos.MBrace.Client
 
             do retry (RetryPolicy.Retry(2, 0.1<sec>)) populate
 
-            // activate store provider
-            do activateDefaultStore localCacheDir storeProvider
-
             // activate vagrant
             let vagrant = new VagrantServer(vagrantDir)
+
+            // register serializer
+            Serializer.Register vagrant.Pickler
 
             // register logger
             let logger = Logger.createNullLogger()
             IoC.RegisterValue<ILogger>(logger, behaviour = Override)
 
-            // register serializer
-            Serializer.Register vagrant.Pickler
+            // activate store provider
+            do activateDefaultStore localCacheDir storeProvider
 
             // initialize connection pool
             do ConnectionPool.TcpConnectionPool.Init()

@@ -12,13 +12,13 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
 
-    type CloudSeqInfo = { Size : int64; Count : int; Type : Type }
+    type internal CloudSeqInfo = { Size : int64; Count : int; Type : Type }
 
     // TODO: CLOUDSEQINFO CTOR
 
     [<Serializable>]
     [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
-    type CloudSeq<'T> (id : string, container : string, provider : CloudSeqProvider) as this =
+    type internal CloudSeq<'T> (id : string, container : string, provider : CloudSeqProvider) as this =
 
         let info = lazy (Async.RunSynchronously <| provider.GetCloudSeqInfo(this))
 
@@ -51,6 +51,7 @@
             member this.GetObjectData (info : SerializationInfo , context : StreamingContext) =
                 info.AddValue ("id", (this :> ICloudSeq<'T>).Name)
                 info.AddValue ("container", (this :> ICloudSeq<'T>).Container)
+                info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
 
         new (info : SerializationInfo , context : StreamingContext) =
             let id        = info.GetString "id"
@@ -64,9 +65,10 @@
 
             new CloudSeq<'T>(id, container, provider)
     
-    and CloudSeqProvider (store : IStore, cacheStore : LocalCacheStore) = 
+    and internal CloudSeqProvider (storeInfo : StoreInfo, cacheStore : LocalCacheStore) as this = 
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
+        let store = storeInfo.Store
         let extension = "seq"
         let postfix = fun s -> sprintf' "%s.%s" s extension
 
@@ -104,8 +106,10 @@
 
         let defineUntyped(ty : Type, container : string, id : string) =
             let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
-            let cloudSeq = Activator.CreateInstance(cloudSeqTy,[| id :> obj ; container :> obj |])
+            let cloudSeq = Activator.CreateInstance(cloudSeqTy,[| id :> obj ; container :> obj; this :> obj |])
             cloudSeq :?> ICloudSeq
+
+        member __.StoreId = storeInfo.Id
 
         member this.GetCloudSeqInfo (cseq : ICloudSeq) : Async<CloudSeqInfo> =
             getCloudSeqInfo cseq.Container cseq.Name
