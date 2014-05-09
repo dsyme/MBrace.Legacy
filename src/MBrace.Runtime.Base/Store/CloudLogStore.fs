@@ -14,7 +14,7 @@
         | QueueItem of (ProcessId * LogEntry)
         | QueueAndFlush of (ProcessId * LogEntry) * AsyncReplyChannel<unit>
 
-    type StoreLogger (store : IStore, ?batchCount, ?batchTimespan) =
+    type CloudLogStore (store : IStore, ?batchCount, ?batchTimespan) =
         let batchCount = defaultArg batchCount 50
         let batchTimespan = defaultArg batchTimespan 500
 
