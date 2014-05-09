@@ -124,6 +124,10 @@
       <HintPath>..\..\packages\Thespian.0.0.2-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Unquote">
+      <HintPath>..\..\packages\Unquote.2.2.2\lib\net40\Unquote.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

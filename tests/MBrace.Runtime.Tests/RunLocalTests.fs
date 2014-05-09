@@ -42,6 +42,6 @@
         override test.SerializationTest () = ()
 
         override test.ExecuteExpression<'T>(expr: Expr<ICloud<'T>>): 'T =
-            let cexpr = (expr |> Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation) :?> ICloud<'T>
+            let cexpr = Swensen.Unquote.Operators.eval expr
             MBrace.RunLocal cexpr
 

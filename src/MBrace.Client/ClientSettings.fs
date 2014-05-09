@@ -40,7 +40,7 @@ namespace Nessos.MBrace.Client
         and AppConfigParameter =
             | MBraced_Path of string
             | Working_Directory of string
-            | [<Mandatory>] Store_Provider of string
+            | Store_Provider of string
             | Store_Endpoint of string
         with
             interface IArgParserTemplate with
@@ -87,9 +87,11 @@ namespace Nessos.MBrace.Client
 
             // parse store provider
             let storeProvider =
-                let storeProvider = parseResults.GetResult <@ Store_Provider @>
-                let endpoint = defaultArg (parseResults.TryGetResult <@ Store_Endpoint @>) ""
-                StoreProvider.Parse(storeProvider, endpoint)
+                match parseResults.TryGetResult <@ Store_Provider @> with
+                | None -> LocalFS
+                | Some sp ->
+                    let endpoint = defaultArg (parseResults.TryGetResult <@ Store_Endpoint @>) ""
+                    StoreProvider.Parse(sp, endpoint)
 
             // Populate working directory
             let vagrantDir = Path.Combine(workingDirectory, "Vagrant")
@@ -146,44 +148,6 @@ namespace Nessos.MBrace.Client
     type MBraceSettings private () =
 
         static let config = Atom.atom <| initConfiguration ()
-
-//        static let clientId = Guid.NewGuid()
-//        static let mbracedPath = ref None
-//        static let defaultStoreProvider = ref None
-//        static let clientSideExprCheck = ref true
-//        static let localCachePath = ref None
-//        static let assemblyCachePath = ref None
-//
-//        static let init =
-//            fun () ->
-//                try
-//                    do Assembly.RegisterAssemblyResolutionHandler()
-//                    do ConnectionPool.TcpConnectionPool.Init()
-//                    do registerLogger None
-//
-//                    let acp, lcp = resolveWorkingDirs Shell.Settings
-//                    localCachePath := Some lcp
-//                    assemblyCachePath := Some acp
-//                    mbracedPath := resolveMBracedExe Shell.Settings
-//
-//                    let _ = registerSerializer Shell.Settings
-//
-//                    match Shell.Settings with
-//                    | None -> ()
-//                    | Some settings ->    
-//                        defaultStoreProvider := Some <| parseStoreProvider settings
-//                        activateDefaultStore defaultStoreProvider.Value.Value
-//
-//                with e ->
-//                    match Shell.Settings with
-//                    | Some settings ->
-//                        settings.ShellActor.Post <| MBraceConfigError (sprintf "{m}brace fatal error: %s" e.Message, 42)
-//                    | None -> 
-//                        // will result in type initialization exception, probably not the best way
-//                        reraise ()
-//            |> runOnce
-//
-//        static do init ()
         
         static member ClientId = config.Value.ClientId
 
@@ -206,7 +170,8 @@ namespace Nessos.MBrace.Client
 
         static member StoreProvider
             with get () = config.Value.StoreProvider
-            and set p = 
+
+            and set p =
                 // store activation has side-effects ; use lock instead of swap
                 lock config (fun () ->
                     let coreConfig = activateDefaultStore config.Value.LocalCacheDirectory p
@@ -215,24 +180,4 @@ namespace Nessos.MBrace.Client
 
         static member WorkingDirectory = config.Value.WorkingDirectory
 
-//        static member LocalCachePath
-//            with get () = localCachePath.Value.Value
-//            and set p =
-//                if Directory.Exists p then
-//                    IoC.RegisterValue<LocalCacheStore>(LocalCacheStore(p), "cacheStore")
-//                else mfailwith "Invalid cache directory specified."
-//
-//        static member AssemblyCachePath
-//            with get () = assemblyCachePath.Value.Value
-//            and set p =
-//                if Directory.Exists p then
-//                    AssemblyCache.SetCacheDir p
-//                else mfailwith "Invalid cache directory specified."
-
         static member Vagrant = config.Value.Vagrant
-
-//namespace Nessos.MBrace.Runtime
-//    open Nessos.MBrace.Client
-//    
-//    type MBraceSettingsExtensions =
-//        static member Init () = MBraceSettings.Initialize()

@@ -138,9 +138,7 @@
 
             do create "AssemblyCache" AssemblyCache.SetCacheDir
             do create "LocalCaches" <| 
-                    fun cachePath ->
-                        //raise <| new NotImplementedException("daemon configuration")
-                        //IoC.RegisterValue(LocalCacheStore(cachePath), "cacheStore")            
+                    fun cachePath ->          
                         IoC.RegisterValue(cachePath, "cacheStoreEndpoint")
 
         let registerProcessDomainExecutable (path : string) =

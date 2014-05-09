@@ -101,14 +101,11 @@
 
             // Register Store
             try
-                // has been filled out to fix build; kostas, change this
-                //raise <| new NotImplementedException("worker node configuration setup.")
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
                 
                 let coreConfig = CoreConfiguration.activate(IoC.Resolve<ILogger>(), storeInfo, cacheStoreEndpoint)
-                // soon...
-                IoC.Register<CoreConfiguration>(fun () -> coreConfig)
+                IoC.RegisterValue<CoreConfiguration>(coreConfig)
                 IoC.RegisterValue<IStore>(storeInfo.Store)
                 IoC.RegisterValue<StoreInfo>(storeInfo)
 
