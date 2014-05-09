@@ -9,44 +9,45 @@
         open Nessos.MBrace.Runtime
         open Nessos.FsPickler
 
-        let Create (logger : ILogger, storeInfo : StoreInfo, cacheStoreEndpoint) : CoreConfiguration =
-            let store = storeInfo.Store
-            // fsStore used but caches
-            // inMemCache used by cref store
-            // localCache used by cseq/cfile store
-            let fsStore = new FileSystemStore(cacheStoreEndpoint)
-            let inMemCache = new Cache(fsStore, Serializer.Pickler)
-            let localCache = new LocalCacheStore(fsStore, store)
+        let Activate (logger : ILogger, storeInfo : StoreInfo, cacheStoreEndpoint) : CoreConfiguration =
+            match StoreRegistry.TryGetCoreConfiguration storeInfo.Id with
+            | Some config -> config
+            | None ->
+                let store = storeInfo.Store
+                // fsStore used but caches
+                // inMemCache used by cref store
+                // localCache used by cseq/cfile store
+                let fsStore = new FileSystemStore(cacheStoreEndpoint)
+                let inMemCache = new Cache(fsStore, Serializer.Pickler)
+                let localCache = new LocalCacheStore(fsStore, store)
 
-            let crefStore  = new CloudRefProvider(storeInfo, inMemCache)  :> ICloudRefProvider
-            let cseqStore  = new CloudSeqProvider(store, localCache)  :> ICloudSeqProvider
-            let mrefStore  = new MutableCloudRefProvider(store)       :> IMutableCloudRefProvider
-            let cfileStore = new CloudFileProvider(store, localCache) :> ICloudFileProvider
-            let clogsStore = new StoreLogger(store, batchCount = 50, batchTimespan = 500) 
+                let crefStore  = new CloudRefProvider(storeInfo, inMemCache)  :> ICloudRefProvider
+                let cseqStore  = new CloudSeqProvider(store, localCache)  :> ICloudSeqProvider
+                let mrefStore  = new MutableCloudRefProvider(storeInfo)       :> IMutableCloudRefProvider
+                let cfileStore = new CloudFileProvider(store, localCache) :> ICloudFileProvider
+                let clogsStore = new StoreLogger(store, batchCount = 50, batchTimespan = 500) 
 
-//            ProviderRegistry.Register(storeInfo.Id, crefStore)
+                let cloner = 
+                    {
+                        new IObjectCloner with
+                            member __.Clone(t : 'T) =
+                                use m = new System.IO.MemoryStream()
+                                Serializer.Pickler.Serialize(m, t)
+                                m.Position <- 0L
+                                Serializer.Pickler.Deserialize<'T>(m)
+                    }
 
-            let cloner = 
-                {
-                    new IObjectCloner with
-                        member __.Clone(t : 'T) =
-                            use m = new System.IO.MemoryStream()
-                            Serializer.Pickler.Serialize(m, t)
-                            m.Position <- 0L
-                            Serializer.Pickler.Deserialize<'T>(m)
-                }
+                let coreConfig =
+                    {
+                        CloudRefProvider        = crefStore
+                        CloudSeqProvider        = cseqStore
+                        CloudFileProvider       = cfileStore
+                        MutableCloudRefProvider = mrefStore
+                        CloudLogger             = clogsStore
+                        Cloner                  = cloner
+                    }
 
-            let coreConfig =
-                {
-                    CloudRefProvider        = crefStore
-                    CloudSeqProvider        = cseqStore
-                    CloudFileProvider       = cfileStore
-                    MutableCloudRefProvider = mrefStore
-                    CloudLogger             = clogsStore
-                    Cloner                  = cloner
-                }
+                StoreRegistry.RegisterCoreConfiguration(storeInfo.Id, coreConfig)
 
-            StoreRegistry.RegisterCoreConfiguration(storeInfo.Id, coreConfig)
-
-            coreConfig
+                coreConfig
         
