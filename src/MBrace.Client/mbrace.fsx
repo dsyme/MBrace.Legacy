@@ -1,5 +1,6 @@
 ﻿#I "bin/Debug"
 #r "bin/debug/MBrace.Core.dll"
+#r "bin/debug/MBrace.Runtime.Base.dll"
 #r "bin/debug/MBrace.Client.dll"
 
 open Nessos.MBrace
