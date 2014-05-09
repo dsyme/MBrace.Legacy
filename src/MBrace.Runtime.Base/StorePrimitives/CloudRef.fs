@@ -8,7 +8,7 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Core
 
-    type CloudRef<'T> internal (id : string, container : string, provider : CloudRefProvider) as this = 
+    type internal CloudRef<'T> (id : string, container : string, provider : CloudRefProvider) as this = 
 
         let valueLazy () = 
             async {

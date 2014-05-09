@@ -11,10 +11,11 @@ MBraceSettings.MBracedExecutablePath <- __SOURCE_DIRECTORY__ + "/../MBrace.Daemo
 
 let hello =
     cloud {
-        let! cref = CloudRef.New 42
-        return cref.Value
+        return! CloudRef.New 42
     }
 
-MBrace.RunLocal hello
+let t = MBrace.RunLocal hello
+t.Value
 
-let nodes = MBraceNode.SpawnMultiple(3)
+
+//let nodes = MBraceNode.SpawnMultiple(3)

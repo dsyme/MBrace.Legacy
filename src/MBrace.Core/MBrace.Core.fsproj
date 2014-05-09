@@ -78,7 +78,6 @@
     <Compile Include="Core\Data.fs" />
     <Compile Include="Core\PrimitiveProviders.fs" />
     <Compile Include="Core\Interpreter.fs" />
-    <Compile Include="InMemory\Configuration.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
