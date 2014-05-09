@@ -123,7 +123,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="UnionArgParser">
-      <HintPath>..\..\packages\UnionArgParser.0.6.0\lib\net40\UnionArgParser.dll</HintPath>
+      <HintPath>..\..\packages\UnionArgParser.0.6.2\lib\net40\UnionArgParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">

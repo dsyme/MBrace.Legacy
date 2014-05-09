@@ -65,17 +65,6 @@
     <Compile Include="Runtime.fs" />
     <Compile Include="ClientExtensions.fs" />
     <None Include="mbrace.fsx" />
-    <None Include="Tests.fsx" />
-    <None Include="PCG.fsx" />
-    <None Include="wordcount.fsx" />
-    <None Include="eirik.fsx" />
-    <None Include="MutableTests.fsx" />
-    <None Include="mapreduce.fsx" />
-    <None Include="raytracingtest.fsx" />
-    <None Include="perf-test-wordcount.fsx" />
-    <None Include="azure-perf-tests.fsx" />
-    <None Include="jan.fsx" />
-    <None Include="trap.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
@@ -131,7 +120,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="UnionArgParser">
-      <HintPath>..\..\packages\UnionArgParser.0.6.0\lib\net40\UnionArgParser.dll</HintPath>
+      <HintPath>..\..\packages\UnionArgParser.0.6.2\lib\net40\UnionArgParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">

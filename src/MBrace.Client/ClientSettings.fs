@@ -39,7 +39,7 @@ namespace Nessos.MBrace.Client
             | MBraced_Path of string
             | Working_Directory of string
             | [<Mandatory>] Store_Provider of string
-            | [<Mandatory>] Store_Endpoint of string
+            | Store_Endpoint of string
         with
             interface IArgParserTemplate with
                 member config.Usage =
@@ -60,7 +60,7 @@ namespace Nessos.MBrace.Client
 
         let initConfiguration () =
             
-            let parser = new UnionArgParser<AppConfigParameter>(bindingFlags = BindingFlags.NonPublic)
+            let parser = new UnionArgParser<AppConfigParameter>()
             let thisAssembly = System.Reflection.Assembly.GetExecutingAssembly()
             let parseResults = parser.ParseAppSettings(thisAssembly)
             
@@ -82,10 +82,10 @@ namespace Nessos.MBrace.Client
                 | Some path -> path
 
             // parse store provider
-            let storeProvider = 
-                let provider = parseResults.GetResult <@ Store_Provider @>
-                let endpoint = parseResults.GetResult <@ Store_Endpoint @>
-                StoreProvider.Parse(provider, endpoint)
+            let storeProvider =
+                let storeProvider = parseResults.GetResult <@ Store_Provider @>
+                let endpoint = defaultArg (parseResults.TryGetResult <@ Store_Endpoint @>) ""
+                StoreProvider.Parse(storeProvider, endpoint)
 
             // Populate working directory
             let vagrantDir = Path.Combine(workingDirectory, "Vagrant")
