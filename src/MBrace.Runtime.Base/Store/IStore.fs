@@ -9,6 +9,7 @@
     type File = string
     type Tag = string
 
+    [<StructuralEquality ; StructuralComparison>]
     type StoreId = 
         internal {
             AssemblyQualifiedName : string

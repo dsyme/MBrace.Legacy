@@ -9,7 +9,7 @@
         open Nessos.MBrace.Runtime
         open Nessos.FsPickler
 
-        let Create (logger : ILogger, pickler : FsPickler, storeInfo : StoreInfo, cacheStoreEndpoint) : CoreConfiguration =
+        let Create (logger : ILogger, storeInfo : StoreInfo, cacheStoreEndpoint) : CoreConfiguration =
             let store = storeInfo.Store
             // fsStore used but caches
             // inMemCache used by cref store
@@ -24,20 +24,29 @@
             let cfileStore = new CloudFileProvider(store, localCache) :> ICloudFileProvider
             let clogsStore = new StoreLogger(store, batchCount = 50, batchTimespan = 500) 
 
-            ProviderRegistry.Register(storeInfo.Id, crefStore)
+//            ProviderRegistry.Register(storeInfo.Id, crefStore)
 
             let cloner = 
                 {
                     new IObjectCloner with
-                        member __.Clone(t : 'T) = t |> Serializer.Pickler.Pickle |> Serializer.Pickler.UnPickle
+                        member __.Clone(t : 'T) =
+                            use m = new System.IO.MemoryStream()
+                            Serializer.Pickler.Serialize(m, t)
+                            m.Position <- 0L
+                            Serializer.Pickler.Deserialize<'T>(m)
                 }
 
-            {
-                CloudRefProvider        = crefStore
-                CloudSeqProvider        = cseqStore
-                CloudFileProvider       = cfileStore
-                MutableCloudRefProvider = mrefStore
-                CloudLogger             = clogsStore
-                Cloner                  = cloner
-            }
+            let coreConfig =
+                {
+                    CloudRefProvider        = crefStore
+                    CloudSeqProvider        = cseqStore
+                    CloudFileProvider       = cfileStore
+                    MutableCloudRefProvider = mrefStore
+                    CloudLogger             = clogsStore
+                    Cloner                  = cloner
+                }
+
+            StoreRegistry.RegisterCoreConfiguration(storeInfo.Id, coreConfig)
+
+            coreConfig
         
