@@ -1,11 +1,17 @@
-﻿#r "../Nessos.MBrace.Client/bin/debug/Nessos.MBrace.Utils.dll"
-#r "../Nessos.MBrace.Client/bin/debug/Nessos.MBrace.Actors.dll"
-#r "../Nessos.MBrace.Client/bin/debug/Nessos.MBrace.Base.dll"
-#r "../Nessos.MBrace.Client/bin/debug/Nessos.MBrace.Store.dll"
-#r "../Nessos.MBrace.Client/bin/debug/Nessos.MBrace.Client.dll"
-#r "../Nessos.MBrace.Lib/bin/debug/Nessos.MBrace.Lib.dll"
+﻿//#r "bin/debug/MBrace.Utils.dll"
+#I "bin/debug"
+#r "bin/debug/MBrace.Core.dll"
+#r "bin/debug/Thespian.dll"
+#r "bin/debug/MBrace.Client.dll"
+
 
 open Nessos.MBrace.Client
+
+let rt = MBraceNode.SpawnMultiple(3)
+
+
+
+
 
 // end of init
 
@@ -199,3 +205,4 @@ let func () = cloud {
 let rt = MBrace.InitLocal 3
 
 rt.Run <@ func () @>
+

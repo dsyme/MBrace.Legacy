@@ -82,9 +82,15 @@
                     |> Logger.wrapAsync
             )
 
+
+
             //Debug.Listeners.Add(new Nessos.Thespian.Cluster.Log.LoggerTraceListener()) |> ignore
 
-            IoC.Resolve<ILogger>()
+            let l = IoC.Resolve<ILogger>()
+
+            ThespianLogger.Register(l)
+
+            l
 
 
         let parseMBraceProc (id : int) =
@@ -133,9 +139,9 @@
             do create "AssemblyCache" AssemblyCache.SetCacheDir
             do create "LocalCaches" <| 
                     fun cachePath ->
-                        raise <| new NotImplementedException("daemon configuration")
-//                        IoC.RegisterValue(LocalCacheStore(cachePath), "cacheStore")            
-//                        IoC.RegisterValue(cachePath, "cacheStoreEndpoint")
+                        //raise <| new NotImplementedException("daemon configuration")
+                        //IoC.RegisterValue(LocalCacheStore(cachePath), "cacheStore")            
+                        IoC.RegisterValue(cachePath, "cacheStoreEndpoint")
 
         let registerProcessDomainExecutable (path : string) =
             let path =

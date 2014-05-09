@@ -79,6 +79,7 @@
     <Compile Include="Base\CloudUtils.fs" />
     <Compile Include="Base\CompilerStateMonad.fs" />
     <Compile Include="Base\Compiler.fs" />
+    <Compile Include="Base\ThespianLogger.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>

@@ -111,6 +111,8 @@ namespace Nessos.MBrace.Client
             let logger = Logger.createNullLogger()
             IoC.RegisterValue<ILogger>(logger, behaviour = Override)
 
+            ThespianLogger.Register(logger)
+
             // activate store provider
             do activateDefaultStore localCacheDir storeProvider
 
