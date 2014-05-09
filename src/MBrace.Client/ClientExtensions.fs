@@ -29,9 +29,7 @@ module ClientExtensions =
             // force exception to be raised if no store provider has been set
             MBraceSettings.StoreProvider |> ignore
 
-            raise <| new System.NotImplementedException("runLocal")
-
-//            Nessos.MBrace.Core.Interpreter.runLocalWrapper computation
+            Nessos.MBrace.Core.Interpreter.runLocalWrapper MBraceSettings.DefaultCoreConfiguration computation
 
         /// Runs the given computation locally without the need of a runtime.
         static member RunLocal (computation : ICloud<'T>) : 'T = 

@@ -518,7 +518,7 @@ namespace Nessos.MBrace.Core
                 }
             runLocal' traceEnabled stack
               
-        and runLocalWrapper (computation : ICloud<'T>) (config : CoreConfiguration) =
+        and runLocalWrapper (config : CoreConfiguration) (computation : ICloud<'T>) =
             async {
                 let! result = runLocal 0 "" [] false [unWrapCloudExpr computation] config
                 match result with

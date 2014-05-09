@@ -32,7 +32,9 @@ namespace Nessos.MBrace.Client
 
                 Logger : ILogger
                 Vagrant : VagrantServer
+
                 StoreProvider : StoreProvider
+                CoreConfiguration : CoreConfiguration
             }
 
         and AppConfigParameter =
@@ -57,6 +59,8 @@ namespace Nessos.MBrace.Client
             IoC.RegisterValue (coreConfig,      behaviour = Override)
             IoC.RegisterValue (storeInfo,       behaviour = Override)
             IoC.RegisterValue (storeInfo.Store, behaviour = Override)
+
+            coreConfig
 
         let initConfiguration () =
             
@@ -114,7 +118,7 @@ namespace Nessos.MBrace.Client
             ThespianLogger.Register(logger)
 
             // activate store provider
-            do activateDefaultStore localCacheDir storeProvider
+            let coreConfig = activateDefaultStore localCacheDir storeProvider
 
             // initialize connection pool
             do ConnectionPool.TcpConnectionPool.Init()
@@ -131,7 +135,9 @@ namespace Nessos.MBrace.Client
 
                 Logger = logger
                 Vagrant = vagrant
+
                 StoreProvider = storeProvider
+                CoreConfiguration = coreConfig
             }
 
 
@@ -196,13 +202,15 @@ namespace Nessos.MBrace.Client
             with get () = config.Value.EnableClientSideStaticChecking
             and set p = config.Swap(fun c -> { c with EnableClientSideStaticChecking = p })
 
+        static member internal DefaultCoreConfiguration = config.Value.CoreConfiguration
+
         static member StoreProvider
             with get () = config.Value.StoreProvider
             and set p = 
                 // store activation has side-effects ; use lock instead of swap
                 lock config (fun () ->
-                    do activateDefaultStore config.Value.LocalCacheDirectory p
-                    config.Swap(fun c -> { c with StoreProvider = p })
+                    let coreConfig = activateDefaultStore config.Value.LocalCacheDirectory p
+                    config.Swap(fun c -> { c with StoreProvider = p ; CoreConfiguration = coreConfig })
                 )
 
         static member WorkingDirectory = config.Value.WorkingDirectory
