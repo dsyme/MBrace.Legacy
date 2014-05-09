@@ -25,7 +25,7 @@
                 let cseqStore  = new CloudSeqProvider(storeInfo, localCache)  :> ICloudSeqProvider
                 let mrefStore  = new MutableCloudRefProvider(storeInfo)       :> IMutableCloudRefProvider
                 let cfileStore = new CloudFileProvider(storeInfo, localCache) :> ICloudFileProvider
-                let clogsStore = new StoreLogger(store, batchCount = 50, batchTimespan = 500) 
+                let clogsStore = new CloudLogStore(store, batchCount = 50, batchTimespan = 500) 
 
                 let cloner = 
                     {

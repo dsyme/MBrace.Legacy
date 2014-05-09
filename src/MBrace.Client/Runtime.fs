@@ -156,6 +156,8 @@ namespace Nessos.MBrace.Client
         let configuration = 
             CacheAtom.Create(fun () -> postWithReply GetAllNodes |> NodeInfo.Create)
 
+        let coreConfig = IoC.Resolve<CoreConfiguration>()
+
         member internal __.ActorRef = runtime
         member internal __.PostWithReply m = postWithReply m
         member internal __.PostWithReplyAsync m = postWithReplyAsync m
@@ -285,7 +287,7 @@ namespace Nessos.MBrace.Client
                 mfailwith "incompatible store configuration."
 
             let clear = defaultArg clear false
-            let cloudLogStore = IoC.Resolve<StoreLogger>() 
+            let cloudLogStore = coreConfig.CloudLogger :?> CloudLogStore
             let logs = cloudLogStore.DumpLogs(pid)
                        |> Async.RunSynchronously
             match clear with
