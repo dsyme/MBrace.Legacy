@@ -48,7 +48,7 @@
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
 
 
-    and internal MutableCloudRefProvider(storeInfo : StoreInfo) =
+    and internal MutableCloudRefProvider(storeInfo : StoreInfo) as self =
 
         let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
 
@@ -88,7 +88,7 @@
 
         let defineUntyped (ty : Type, container : string, id : string, tag : string) =
             let cloudRefTy = typedefof<MutableCloudRef<_>>.MakeGenericType [| ty |]
-            let cloudRef = Activator.CreateInstance(cloudRefTy, [| id :> obj; container :> obj; tag :> obj ; storeInfo.Id :> obj |])
+            let cloudRef = Activator.CreateInstance(cloudRefTy, [| id :> obj; container :> obj; tag :> obj ; self :> obj |])
             cloudRef :?> IMutableCloudRef
 
         member self.StoreId = storeInfo.Id
