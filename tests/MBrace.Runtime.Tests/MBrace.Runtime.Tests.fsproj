@@ -61,7 +61,6 @@
     <None Include="packages.config" />
     <None Include="app.config" />
     <Compile Include="Helpers.fs" />
-    <Compile Include="PrimesTest.fs" />
     <Compile Include="RunLocalTest.fs" />
     <Compile Include="LocalMultiNodeTest.fs" />
   </ItemGroup>
