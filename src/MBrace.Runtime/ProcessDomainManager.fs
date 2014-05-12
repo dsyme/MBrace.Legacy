@@ -85,31 +85,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
         // protocol specific! should be changed
         let primaryAddr = IoC.Resolve<Address> "primaryAddress"
         //sprintf "%s%cmbrace.process.exe" AppDomain.CurrentDomain.BaseDirectory Path.DirectorySeparatorChar
-
-#if APPDOMAIN_ISOLATION
-        let command = processExecutable
-
-        let args =
-            [
-                yield Parent_Pid ospid
-                yield Process_Domain_Id processDomainId
-                yield Assembly_Cache <| IoC.Resolve<Nessos.Vagrant.VagrantCache>().CacheDirectory
-                yield Parent_Address <| primaryAddr.ToString ()
-                yield Store_EndPoint storeEndpoint
-                yield Store_Provider storeProvider
-                yield Debug debugMode
-                match portOpt with
-                | Some selectedPort ->
-                    yield HostName TcpListenerPool.DefaultHostname
-                    yield Port selectedPort
-                | None -> ()
-
-                if cacheStoreEndpoint <> null then
-                    yield Cache_Store_Endpoint cacheStoreEndpoint
-            ] 
-            |> workerConfig.Print
-
-#else                                
+             
         let args =
             [
                 yield Parent_Pid ospid
@@ -134,7 +110,6 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                 "mono", sprintf' "%s %s" processExecutable <| workerConfig.PrintCommandLineFlat args
             else
                 processExecutable, workerConfig.PrintCommandLineFlat args
-#endif
 
         use nodeManagerReceiver = Receiver.create()
                                   |> Receiver.rename "activatorReceiver"
@@ -151,9 +126,21 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
         let killF () = AppDomain.Unload appDomain
 #else
         let startInfo = new ProcessStartInfo(command, args)
+
         startInfo.UseShellExecute <- false
         startInfo.CreateNoWindow <- true
+        startInfo.RedirectStandardOutput <- true
+        startInfo.RedirectStandardError <- true
+
         let osProcess = Process.Start(startInfo)
+
+        // TODO : register IDisposables for later disposal
+        let d1 = osProcess.OutputDataReceived.Subscribe(fun (args : DataReceivedEventArgs) -> Console.WriteLine args.Data)
+        let d2 = osProcess.ErrorDataReceived.Subscribe(fun (args : DataReceivedEventArgs) -> Console.Error.WriteLine args.Data)
+
+        osProcess.EnableRaisingEvents <- true
+        osProcess.BeginOutputReadLine()
+        osProcess.BeginErrorReadLine()
 
         let killF () = osProcess.Kill()
 #endif

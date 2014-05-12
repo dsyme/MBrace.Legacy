@@ -7,7 +7,7 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
-MBraceSettings.MBracedExecutablePath <- __SOURCE_DIRECTORY__ + "/../MBrace.Daemon/bin/Debug/mbraced.exe"
+MBraceSettings.MBracedExecutablePath <- __SOURCE_DIRECTORY__ + "/../../bin/mbraced.exe"
 
 let hello =
     cloud {
@@ -20,3 +20,9 @@ t.Value
 
 let nodes = MBraceNode.SpawnMultiple(3)
 let r = MBrace.Boot nodes
+
+r.Ping()
+
+r.Nodes
+
+r.Run <@ cloud { return 42 } @>
