@@ -520,9 +520,10 @@ namespace Nessos.MBrace.Core
               
         and runLocalWrapper (config : CoreConfiguration) (computation : ICloud<'T>) =
             async {
-                let! result = runLocal 0 "" [] false [unWrapCloudExpr computation] config
+                let! result = runLocal 0 (Guid.Empty.ToString()) [] false [unWrapCloudExpr computation] config
                 match result with
                 | Obj (ObjValue value, t) -> return value :?> 'T
-                | Exc (ex, ctx) -> return raise ex
+                | Exc (ex, ctx) when (ex :? MBraceException) -> return raise ex
+                | Exc (ex, ctx) -> return raise <| new CloudException(ex, 0, ?context = ctx)
                 | _ -> return raise <| new InvalidOperationException(sprintf "Invalid result %A" result)
             }

@@ -61,10 +61,8 @@
     <None Include="packages.config" />
     <None Include="app.config" />
     <Compile Include="Helpers.fs" />
-    <Compile Include="PrimesTest.fs" />
-    <Compile Include="Test.fs" />
+    <Compile Include="RunLocalTest.fs" />
     <Compile Include="LocalMultiNodeTest.fs" />
-    <Compile Include="RunLocalTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\MBrace.Core\MBrace.Core.fsproj">
