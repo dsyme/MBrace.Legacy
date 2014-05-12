@@ -434,13 +434,13 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Test Cloud GetProcessId``() = 
             <@ cloud { 
                 return! Cloud.GetProcessId() 
-               } @> |> test.ExecuteExpression |> shouldMatch (fun pid -> pid > 0)
+               } @> |> test.ExecuteExpression |> shouldMatch (fun pid -> if test.Name = "RunLocal" then pid = 0 else pid > 0)
 
         [<Test>]
         member test.``Test Cloud GetTaskId``() = 
             <@ cloud { 
                 return! Cloud.GetTaskId()
-               } @> |> test.ExecuteExpression |> shouldMatch (fun taskId -> Microsoft.FSharp.Core.Operators.not <| String.IsNullOrEmpty(taskId))
+               } @> |> test.ExecuteExpression |> shouldMatch (fun taskId ->  if test.Name = "RunLocal" then taskId = Guid.Empty.ToString() else Microsoft.FSharp.Core.Operators.not <| String.IsNullOrEmpty(taskId))
 
         [<Test>] 
         member test.``Test Choice `` () =
