@@ -1,8 +1,12 @@
-﻿#I "bin/Debug"
-
-#r "bin/debug/MBrace.Core.dll"
-#r "bin/debug/MBrace.Runtime.Base.dll"
-#r "bin/debug/MBrace.Client.dll"
+﻿#r "../../bin/FsPickler.dll"
+#r "../../bin/Mono.Cecil.dll"
+#r "../../bin/Vagrant.Cecil.dll"
+#r "../../bin/Vagrant.dll"
+#r "../../bin/Thespian.dll"
+#r "../../bin/MBrace.Core.dll"
+#r "../../bin/MBrace.Utils.dll"
+#r "../../bin/MBrace.Runtime.Base.dll"
+#r "../../bin/MBrace.Client.dll"
 
 open Nessos.MBrace
 open Nessos.MBrace.Client
@@ -18,11 +22,10 @@ let t = MBrace.RunLocal hello
 t.Value
 
 
-let nodes = MBraceNode.SpawnMultiple(3)
-let r = MBrace.Boot nodes
+let runtime = MBrace.InitLocal 3
 
-r.Ping()
+runtime.Ping()
 
-r.Nodes
+runtime.Nodes
 
-r.Run <@ cloud { return 42 } @>
+runtime.Run <@ cloud { return 42 } @>
