@@ -150,7 +150,7 @@ namespace Nessos.MBrace.Runtime.Tests
             <@ testTryFinallyWithOutException 0 @> |> test.ExecuteExpression |> should equal (ref 2)
 
         [<Test>] 
-        [<ExpectedException(typeof<CloudException>)>]
+        [<ExpectedException(typeof<ParallelCloudException>)>]
         member test.
          ``Test Parallel computations with exceptions`` () =
             <@ testParallelWithExceptions() @> |> test.ExecuteExpression |> should equal -1
@@ -316,7 +316,7 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Test parallel random sum for GZipStream behavior`` () =
             <@ randomSumParallel() @> |> test.ExecuteExpression |> ignore
 
-        [<Test>][<ExpectedException(typeof<CloudException>)>]
+        [<Test>][<ExpectedException(typeof<ParallelCloudException>)>]
         member test.``Test ambiguous match exception in parallel cloud exception construction`` () =
             <@ testAmbiguousParallelException () @> |> test.ExecuteExpression |> ignore
 
@@ -332,7 +332,7 @@ namespace Nessos.MBrace.Runtime.Tests
                 let! cloudRef = CloudRef.Get<int>(container, r.Name) 
                 return cloudRef.Value } @> |> test.ExecuteExpression |> should equal 42
 
-        [<Test>][<ExpectedException(typeof<CloudException>)>]
+        [<Test>][<ExpectedException(typeof<MBraceException>)>]
         member test.``Test CloudRef Get by name - type mismatch`` () = 
             <@ cloud { 
                 let container = Guid.NewGuid().ToString()
