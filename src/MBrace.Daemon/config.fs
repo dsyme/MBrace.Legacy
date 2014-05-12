@@ -11,6 +11,8 @@
         open System.Threading
 
         open Nessos.FsPickler
+
+        open Nessos.Vagrant
         
         open Nessos.Thespian
         open Nessos.Thespian.AsyncExtensions
@@ -136,7 +138,14 @@
                 with e ->
                     exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s'." path)
 
-            do create "AssemblyCache" AssemblyCache.SetCacheDir
+            // temporary solution; revise later
+            do create "AssemblyCache" <| 
+                fun cacheDir -> 
+                    let vcache = new VagrantCache(cacheDir)
+                    let vclient = new VagrantClient()
+                    IoC.RegisterValue vcache
+                    IoC.RegisterValue vclient
+
             do create "LocalCaches" <| 
                     fun cachePath ->          
                         IoC.RegisterValue(cachePath, "cacheStoreEndpoint")

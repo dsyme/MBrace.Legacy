@@ -8,6 +8,8 @@
         open Nessos.FsPickler
         open Nessos.UnionArgParser
 
+        open Nessos.Vagrant
+
         open Nessos.Thespian
         open Nessos.Thespian.Serialization
         open Nessos.Thespian.PowerPack
@@ -81,7 +83,10 @@
             // Register Things
             //
 
-            AssemblyCache.SetCacheDir assemblyPath
+            let vagrantCache = new VagrantCache(assemblyPath)
+            let vagrantClient = new VagrantClient()
+            do IoC.RegisterValue(vagrantCache)
+            do IoC.RegisterValue(vagrantClient)
 
             // Register Serialization
             do Nessos.MBrace.Runtime.Serializer.Register(new FsPickler())

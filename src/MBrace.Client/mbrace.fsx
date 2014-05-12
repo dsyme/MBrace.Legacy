@@ -18,4 +18,5 @@ let t = MBrace.RunLocal hello
 t.Value
 
 
-//let nodes = MBraceNode.SpawnMultiple(3)
+let nodes = MBraceNode.SpawnMultiple(3)
+let r = MBrace.Boot nodes

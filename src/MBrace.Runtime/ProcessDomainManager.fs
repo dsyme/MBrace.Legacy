@@ -93,7 +93,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
             [
                 yield Parent_Pid ospid
                 yield Process_Domain_Id processDomainId
-                yield Assembly_Cache AssemblyCache.CachePath
+                yield Assembly_Cache <| IoC.Resolve<Nessos.Vagrant.VagrantCache>().CacheDirectory
                 yield Parent_Address <| primaryAddr.ToString ()
                 yield Store_EndPoint storeEndpoint
                 yield Store_Provider storeProvider
@@ -114,8 +114,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
             [
                 yield Parent_Pid ospid
                 yield Process_Domain_Id processDomainId
-                failwith "fix cache path"
-//                yield Assembly_Cache AssemblyCache.CachePath
+                yield Assembly_Cache <| IoC.Resolve<Nessos.Vagrant.VagrantCache>().CacheDirectory
                 yield Parent_Address <| primaryAddr.ToString ()
                 yield Store_EndPoint storeEndpoint
                 yield Store_Provider storeProvider
