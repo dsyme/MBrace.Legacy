@@ -24,6 +24,7 @@ namespace Nessos.MBrace.Runtime.Tests
         abstract Name : string
         default this.Name with get () = "RunLocal"
 
+
         [<Test>] member test.
          ``Test simple values`` () =
             <@ cloud { return 1 } @> |> test.ExecuteExpression |> should equal 1
@@ -594,6 +595,7 @@ namespace Nessos.MBrace.Runtime.Tests
                 |> test.ExecuteExpression
             should equal folder f.Container
 
+        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``Test MutableCloudRef - Simple For Loop`` () =
             <@ cloud {
@@ -602,7 +604,8 @@ namespace Nessos.MBrace.Runtime.Tests
                     do! MutableCloudRef.SpinSet(x, fun _ -> i)
                 return! MutableCloudRef.Read(x)
             } @> |> test.ExecuteExpression |> should equal 10
-            
+          
+        [<Category("MutableCloudRef")>]  
         [<Test; Repeat 100>]
         member test.``Test MutableCloudRef - Set`` () = 
             let run () = 
@@ -616,6 +619,7 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal true
 
+        [<Category("MutableCloudRef")>]
         [<Test; Repeat 100>]
         member test.``Test MutableCloudRef - Set multiple`` () = 
             let run () =
@@ -633,6 +637,7 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal (true,true)
 
+        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``Test MutableCloudRef - Force`` () = 
             let run () = 
@@ -646,6 +651,7 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal 2
 
+        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``Test MutableCloudRef - Free`` () =
             <@ cloud {
@@ -654,7 +660,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 return! MutableCloudRef.TryRead(x)
             } @> |> test.ExecuteExpression |> should equal None
 
-        [<Test; Repeat 100>]
+        [<Category("MutableCloudRef")>]
+        [<Test; Repeat 10>]
         member test.``Test MutableCloudRef - High contention`` () = 
             let run () =
                 cloud {
@@ -675,7 +682,8 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal true
 
-        [<Test; Repeat 100>]
+        [<Category("MutableCloudRef")>]
+        [<Test; Repeat 10>]
         member test.``Test MutableCloudRef - High contention - Large obj`` () = 
             let run () = 
                 cloud {
@@ -697,6 +705,7 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal true
 
+        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``Test MutableCloudRef - Token passing`` () = 
             let run () = 
@@ -729,6 +738,7 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal true
 
+        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``Test MutableCloudRef - Get all in container`` () = 
             <@ cloud { 
