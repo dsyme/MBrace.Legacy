@@ -1,27 +1,9 @@
-﻿#r "../../bin/FsPickler.dll"
-#r "../../bin/UnionArgParser.dll"
-#r "../../bin/Mono.Cecil.dll"
-#r "../../bin/Vagrant.Cecil.dll"
-#r "../../bin/Vagrant.dll"
-#r "../../bin/Thespian.dll"
-#r "../../bin/MBrace.Core.dll"
-#r "../../bin/MBrace.Utils.dll"
-#r "../../bin/MBrace.Runtime.Base.dll"
-#r "../../bin/MBrace.Client.dll"
+﻿#I "../../bin/"
+#r "MBrace.Core.dll"
+#r "MBrace.Client.dll"
 
 open Nessos.MBrace
 open Nessos.MBrace.Client
-
-//MBraceSettings.MBracedExecutablePath <- __SOURCE_DIRECTORY__ + "/../../bin/mbraced.exe"
-
-let hello =
-    cloud {
-        return! CloudRef.New 42
-    }
-
-let t = MBrace.RunLocal hello
-t.Value
-
 
 let runtime = MBrace.InitLocal 3
 
@@ -29,4 +11,31 @@ runtime.Ping()
 
 runtime.Nodes
 
-let c = runtime.Run <@ cloud { return! CloudSeq.New([1..10]) } @>
+type CloudList<'T> = Nil | Cons of 'T * ICloudRef<CloudList<'T>>
+
+[<Cloud>]
+let rec testBuildCloudList a = 
+    cloud {
+        if a = 0 then 
+            return! newRef Nil
+        else
+            let! tail = testBuildCloudList (a - 1)
+            return! newRef <| Cons (1, tail)
+    }
+
+[<Cloud>]
+let rec testReduceCloudList (cloudRefList : ICloudRef<CloudList<_>>) = 
+    cloud {
+        let cloudList = cloudRefList.Value
+        match cloudList with
+        | Cons (v, cloudRefList') ->
+            let! result = testReduceCloudList cloudRefList'
+            return 1 + result
+        | Nil -> return 0
+    }
+
+let c = runtime.Run <@ cloud { return! testBuildCloudList 2 } @>
+
+c.Value
+
+runtime.Run <@ cloud { return! testReduceCloudList c } @>
