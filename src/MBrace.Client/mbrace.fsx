@@ -1,4 +1,5 @@
 ﻿#r "../../bin/FsPickler.dll"
+#r "../../bin/UnionArgParser.dll"
 #r "../../bin/Mono.Cecil.dll"
 #r "../../bin/Vagrant.Cecil.dll"
 #r "../../bin/Vagrant.dll"
@@ -11,7 +12,7 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
-MBraceSettings.MBracedExecutablePath <- __SOURCE_DIRECTORY__ + "/../../bin/mbraced.exe"
+//MBraceSettings.MBracedExecutablePath <- __SOURCE_DIRECTORY__ + "/../../bin/mbraced.exe"
 
 let hello =
     cloud {
