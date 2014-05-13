@@ -115,7 +115,7 @@
                     do! store.Create(container, postfix id, 
                             fun stream -> async {
                                 Serialization.DefaultPickler.Serialize(stream, typeof<'T>)
-                                Serialization.DefaultPickler.Serialize(stream, value) })
+                                Serialization.DefaultPickler.Serialize<obj>(stream, value) })
 
                     return new CloudRef<'T>(id, container, self) :> _
             }
