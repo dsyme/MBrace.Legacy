@@ -16,11 +16,13 @@ namespace Nessos.MBrace.Runtime.Tests
     [<TestFixture>]
     type ``RunLocal tests`` () =
 
-        member test.ExecuteExpression(expr : Expr<ICloud<'T>>) : 'T =
+        abstract ExecuteExpression : Expr<ICloud<'T>> -> 'T
+        default test.ExecuteExpression(expr : Expr<ICloud<'T>>) : 'T =
             let cexpr = Swensen.Unquote.Operators.eval expr
             MBrace.RunLocal cexpr
 
-        member this.Name with get () = "RunLocal"
+        abstract Name : string
+        default this.Name with get () = "RunLocal"
 
         [<Test>] member test.
          ``Test simple values`` () =

@@ -31,9 +31,9 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<DefaultValue>] val mutable internal runtimeInfo : MBraceRuntime option
         
-        member this.Name with get () = "MultiNode"
+        override this.Name with get () = "MultiNode"
 
-        member test.ExecuteExpression<'T>(expr: Expr<ICloud<'T>>): 'T =
+        override test.ExecuteExpression<'T>(expr: Expr<ICloud<'T>>): 'T =
             let runtime = test.runtimeInfo.Value
             MBrace.RunRemote runtime expr
         
@@ -46,7 +46,8 @@ namespace Nessos.MBrace.Runtime.Tests
             match test.runtimeInfo with
             | Some runtime -> runtime.Kill(); ConnectionPool.TcpConnectionPool.Fini()
             | _ -> ConnectionPool.TcpConnectionPool.Init()
-
+            
+            MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "../../../../bin/mbraced.exe")
             let runtime = MBraceRuntime.InitLocal(3, debug = true)
 
             test.runtimeInfo <- Some runtime

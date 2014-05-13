@@ -29,4 +29,4 @@ runtime.Ping()
 
 runtime.Nodes
 
-runtime.Run <@ cloud { return 42 } @>
+let c = runtime.Run <@ cloud { return! CloudSeq.New([1..10]) } @>
