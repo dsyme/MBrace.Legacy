@@ -33,7 +33,7 @@
 
         interface ICloudSeq<'T>
 
-        override this.ToString () = sprintf "%s - %s" container id
+        override this.ToString() = sprintf' "cloudseq:%s/%s" container id
 
         member private this.StructuredFormatDisplay = this.ToString()
 

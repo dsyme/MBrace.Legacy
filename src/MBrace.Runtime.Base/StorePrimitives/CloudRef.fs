@@ -35,8 +35,7 @@
             
             new CloudRef<'T>(id, container, provider)
 
-        override self.ToString() = 
-            sprintf' "%s - %s" container id
+        override self.ToString() = sprintf' "cloudref:%s/%s" container id
 
         interface ICloudRef with
             member self.Name = id
@@ -102,9 +101,6 @@
             cloudRef :?> ICloudRef
 
         member __.StoreId = storeInfo.Id
-
-        member self.GetRefType (container : string, id : string) : Async<Type> =
-            readType container (postfix id)
 
         member self.Exists(container : string) : Async<bool> = 
             store.Exists(container)

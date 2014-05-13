@@ -47,7 +47,7 @@
 
         let provider = (file :?> CloudFile).Provider
 
-        override this.ToString () = sprintf' "%s - %s" file.Container file.Name
+        override this.ToString () = sprintf' "cloudfile:%s/%s" file.Container file.Name
 
         member private this.StructuredFormatDisplay = this.ToString()
 

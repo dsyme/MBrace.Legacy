@@ -26,13 +26,13 @@
         interface IMutableCloudRefTagged with
             member val Tag = tag with get, set
 
-        override self.ToString() =  sprintf' "%s - %s" container id
+        override self.ToString() =  sprintf' "mutablecloudref:%s/%s" container id
 
         new (info : SerializationInfo, context : StreamingContext) = 
-            let id = info.GetString("id")
-            let container = info.GetString("container")
-            let tag = info.GetString("tag")
-            let storeId = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
+            let id          = info.GetString("id")
+            let container   = info.GetString("container")
+            let tag         = info.GetString("tag")
+            let storeId     = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
             let config =
                 match StoreRegistry.TryGetCoreConfiguration storeId with
                 | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
