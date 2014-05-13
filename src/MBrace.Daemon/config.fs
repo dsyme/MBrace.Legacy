@@ -192,7 +192,7 @@
             )
 
         let registerSerializers () =
-            Nessos.MBrace.Runtime.Serializer.Register(new FsPickler())
+            Nessos.MBrace.Runtime.Serialization.Register(new FsPickler())
 
 
         let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =

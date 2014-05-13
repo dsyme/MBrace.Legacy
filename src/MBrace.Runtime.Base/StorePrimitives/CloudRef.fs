@@ -6,6 +6,7 @@
 
     open Nessos.MBrace
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Runtime
     open Nessos.MBrace.Core
 
     type internal CloudRef<'T> (id : string, container : string, provider : CloudRefProvider) as this = 
@@ -67,7 +68,6 @@
     
 
     and CloudRefProvider(storeInfo : StoreInfo, cache : Cache) as self =
-        let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
         let store = storeInfo.Store
         let storeId = storeInfo.Id
 
@@ -76,14 +76,14 @@
 
         let read container id : Async<Type * obj> = async {
                 use! stream = store.Read(container, id)
-                let t = pickler.Deserialize<Type> stream
-                let o = pickler.Deserialize<obj> stream
+                let t = Serialization.DefaultPickler.Deserialize<Type> stream
+                let o = Serialization.DefaultPickler.Deserialize<obj> stream
                 return t, o
             }
 
         let readType container id  = async {
                 use! stream = store.Read(container, id)
-                let t = pickler.Deserialize<Type> stream
+                let t = Serialization.DefaultPickler.Deserialize<Type> stream
                 return t
             }
 
@@ -114,8 +114,8 @@
                 async {
                     do! store.Create(container, postfix id, 
                             fun stream -> async {
-                                pickler.Serialize(stream, typeof<'T>)
-                                pickler.Serialize(stream, value) })
+                                Serialization.DefaultPickler.Serialize(stream, typeof<'T>)
+                                Serialization.DefaultPickler.Serialize(stream, value) })
 
                     return new CloudRef<'T>(id, container, self) :> _
             }
@@ -124,8 +124,8 @@
                 async {
                     do! store.Create(container, postfix id, 
                             fun stream -> async {
-                                pickler.Serialize(stream, t)
-                                pickler.Serialize(stream, value) })
+                                Serialization.DefaultPickler.Serialize(stream, t)
+                                Serialization.DefaultPickler.Serialize(stream, value) })
 
                     // construct & return
                     return defineUntyped(t, container, id)

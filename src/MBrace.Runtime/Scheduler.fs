@@ -42,7 +42,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
 
                 let compilerResult = 
                     try
-                        let pkg = Serializer.Deserialize<CloudPackage> exprImage
+                        let pkg = Serialization.Deserialize<CloudPackage> exprImage
                         Choice1Of2 <| Compiler.compile pkg
                     with
                     | ex -> Choice2Of2 ex
@@ -173,7 +173,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                                 
                             if resultType = valueType || resultType.IsInstanceOfType(value) then
                                 ctx.LogInfo "Completing process with value result..."
-                                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ValueResult(box value) |> Serializer.Serialize |> ProcessSuccess))
+                                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ValueResult(box value) |> Serialization.Serialize |> ProcessSuccess))
                             else
                                 ctx.LogInfo "Completing process with invalid result type..."
                                 let e = new SystemException("Failed to recognise result. Severe system error. Contact M-Brace support.")
@@ -181,7 +181,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
 
                         | ProcessBody(_, [_], _, Dump([(ValueExpr (Exc (exn, context)))])) ->
                             ctx.LogInfo "Completing process with exception result..."
-                            do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ExceptionResult (CloudException (exn, processId, ?context = context) :> exn, None) |> Serializer.Serialize |> ProcessSuccess))
+                            do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ExceptionResult (CloudException (exn, processId, ?context = context) :> exn, None) |> Serialization.Serialize |> ProcessSuccess))
                         | _ ->
                                 
                             let msg = "Failed to recognise result. Severe system error. Contact M-Brace support."

@@ -11,6 +11,7 @@
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Runtime
 
     type internal CloudSeqInfo = { Size : int64; Count : int; Type : Type }
 
@@ -67,7 +68,6 @@
     
     and internal CloudSeqProvider (storeInfo : StoreInfo, cacheStore : LocalCacheStore) as this = 
 
-        let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
         let store = storeInfo.Store
         let extension = "seq"
         let postfix = fun s -> sprintf' "%s.%s" s extension
@@ -80,7 +80,7 @@
             stream.Seek(int64 -sizeof<int> - int64 headerSize, SeekOrigin.End) |> ignore
             
             let count = br.ReadInt32()
-            let ty = pickler.Deserialize<Type> stream
+            let ty = Serialization.DefaultPickler.Deserialize<Type> stream
             let size = br.ReadInt64()
 
             stream.Position <- pos
@@ -91,7 +91,7 @@
             let headerStart = stream.Position
             
             bw.Write(info.Count)
-            pickler.Serialize(stream, info.Type)
+            Serialization.DefaultPickler.Serialize(stream, info.Type)
             bw.Write(stream.Position + 2L * int64 sizeof<int>)
             
             let headerEnd = stream.Position
@@ -125,7 +125,7 @@
                     let msg = sprintf' "CloudSeq type mismatch. Internal type %s, got %s" info.Type.AssemblyQualifiedName ty.AssemblyQualifiedName
                     return raise <| MBraceException(msg)
 
-                return pickler.DeserializeSequence<'T>(stream, info.Count)
+                return Serialization.DefaultPickler.DeserializeSequence<'T>(stream, info.Count)
             }
 
             member this.GetIds (container : string) : Async<string []> =
@@ -141,7 +141,7 @@
 
             member this.CreateNew<'T>(container, id, values : seq<'T>) = async {
                 let serializeTo stream = async {
-                    let length = pickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
+                    let length = Serialization.DefaultPickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
                     return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
                 }
                 do! cacheStore.Create(container, postfix id, serializeTo)
@@ -153,7 +153,7 @@
             member this.CreateNewUntyped (container : string, id : string, values : IEnumerable, ty : Type) : Async<ICloudSeq> =
                 async {
                     let serializeTo stream = async {
-                        let length = pickler.SerializeSequence(ty, stream, values, leaveOpen = true)
+                        let length = Serialization.DefaultPickler.SerializeSequence(ty, stream, values, leaveOpen = true)
                         return setInfo stream { Size = -1L; Count = length; Type = ty }
                     }
                     do! cacheStore.Create(container, postfix id, serializeTo)

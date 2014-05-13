@@ -287,7 +287,7 @@ namespace Nessos.MBrace.Client
                     | CloudBuilderExpr body ->
                         let bindings = gatherTopLevelCloudBindings body
                         for binding in bindings do
-                            if not <| Serializer.Pickler.IsSerializableType binding.Type then
+                            if not <| Serialization.DefaultPickler.IsSerializableType binding.Type then
                                 errorf "%s has binding '%s' of type '%s' that is not serializable." qname binding.Name binding.Type.Name
                     | MethodOrProperty mop ->
                         let mname = sprintf' "%s '%s'" (if mop.IsMethod then "function" else "value") mop.Name

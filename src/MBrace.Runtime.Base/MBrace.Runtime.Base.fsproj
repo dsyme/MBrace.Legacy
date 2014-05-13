@@ -59,7 +59,7 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Serializer.fs" />
+    <Compile Include="Serialization.fs" />
     <Compile Include="Store\IStore.fs" />
     <Compile Include="Store\Cache.fs" />
     <Compile Include="Store\CacheStore.fs" />

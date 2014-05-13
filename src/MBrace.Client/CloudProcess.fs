@@ -42,14 +42,14 @@
             match info.Result with
             | None -> Pending
             | Some(ProcessSuccess bytes) ->
-                match Serializer.Deserialize<Result<'T>> bytes with
+                match Serialization.Deserialize<Result<'T>> bytes with
                 | ValueResult v -> Value v
                 | ExceptionResult (e, ctx) -> Exception e
             | Some(ProcessFault e) -> Fault e
             | Some(ProcessInitError e) -> CompilerError e
             | Some(ProcessKilled) -> Killed
 
-        let getReturnType (info : ProcessInfo) = Serializer.Deserialize<Type> info.Type
+        let getReturnType (info : ProcessInfo) = Serialization.Deserialize<Type> info.Type
 
         let prettyPrint =
 

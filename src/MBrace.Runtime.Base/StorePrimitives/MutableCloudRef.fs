@@ -7,6 +7,7 @@
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Runtime
 
     type internal IMutableCloudRefTagged =
         inherit IMutableCloudRef
@@ -50,8 +51,6 @@
 
     and internal MutableCloudRefProvider(storeInfo : StoreInfo) as self =
 
-        let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
-
         let extension = "mref"
         let postfix = fun s -> sprintf' "%s.%s" s extension
 
@@ -59,21 +58,21 @@
                 let id = postfix id
                 let! s, tag = storeInfo.Store.ReadMutable(container, id)
                 use stream = s
-                let t = pickler.Deserialize<Type> stream
-                let o = pickler.Deserialize<obj> stream
+                let t = Serialization.DefaultPickler.Deserialize<Type> stream
+                let o = Serialization.DefaultPickler.Deserialize<obj> stream
                 return t, o, tag
             }
 
         let readType container id = async {
                 let! stream, _ = storeInfo.Store.ReadMutable(container, id)
-                let t = pickler.Deserialize<Type> stream
+                let t = Serialization.DefaultPickler.Deserialize<Type> stream
                 stream.Dispose()
                 return t
             }
 
         let readInfo container id = async {
             let! stream, tag = storeInfo.Store.ReadMutable(container, id)        
-            let t = pickler.Deserialize<Type> stream
+            let t = Serialization.DefaultPickler.Deserialize<Type> stream
             stream.Dispose()
             return t, tag
         }
@@ -108,8 +107,8 @@
                 async {
                     let! tag = storeInfo.Store.CreateMutable(container, postfix id, 
                                 fun stream -> async {
-                                    pickler.Serialize(stream, typeof<'T>)
-                                    pickler.Serialize(stream, value) })
+                                    Serialization.DefaultPickler.Serialize(stream, typeof<'T>)
+                                    Serialization.DefaultPickler.Serialize(stream, value) })
 
                     return new MutableCloudRef<'T>(id, container, tag, self) :> _
                 }
@@ -118,8 +117,8 @@
                 async {
                     let! tag = storeInfo.Store.CreateMutable(container, postfix id, 
                                 fun stream -> async {
-                                    pickler.Serialize(stream, t)
-                                    pickler.Serialize(stream, value) })
+                                    Serialization.DefaultPickler.Serialize(stream, t)
+                                    Serialization.DefaultPickler.Serialize(stream, value) })
 
                     return defineUntyped(t, container, id, tag)
                 }
@@ -144,8 +143,8 @@
                     let t = cloudRef.Type
                     let! ok, tag = storeInfo.Store.UpdateMutable(cloudRef.Container, postfix cloudRef.Name, 
                                             (fun stream -> async {
-                                                pickler.Serialize(stream, t)
-                                                pickler.Serialize(stream, value) }),
+                                                Serialization.DefaultPickler.Serialize(stream, t)
+                                                Serialization.DefaultPickler.Serialize(stream, value) }),
                                             cloudRef.Tag)
                     if ok then cloudRef.Tag <- tag
                     return ok
@@ -157,8 +156,8 @@
                     let t = cloudRef.Type
                     let! tag = storeInfo.Store.ForceUpdateMutable(cloudRef.Container, postfix cloudRef.Name,
                                             (fun stream -> async {
-                                                pickler.Serialize(stream, t)
-                                                pickler.Serialize(stream, value)}))
+                                                Serialization.DefaultPickler.Serialize(stream, t)
+                                                Serialization.DefaultPickler.Serialize(stream, value)}))
                     cloudRef.Tag <- tag
                 }
 
