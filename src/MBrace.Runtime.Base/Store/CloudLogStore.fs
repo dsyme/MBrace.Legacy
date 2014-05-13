@@ -18,8 +18,6 @@
         let batchCount = defaultArg batchCount 50
         let batchTimespan = defaultArg batchTimespan 500
 
-        let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
-
         let container = string >> sprintf "log%s"
         let postfix = sprintf "%s.log"
         let isLogFile (f : string) = f.EndsWith(".log")
@@ -32,7 +30,7 @@
         let flush (entries : (ProcessId * LogEntry) seq) =
             let flushToStream (entries : LogEntry []) (stream : Stream) =
                 async { 
-                    do pickler.Serialize(stream, entries)
+                    do Serialization.DefaultPickler.Serialize(stream, entries)
                 }
 
 
@@ -58,7 +56,7 @@
                         |> Array.map (fun file -> async {
                             try
                                 use! stream = store.Read(folder, file)
-                                return pickler.Deserialize<LogEntry []>(stream)
+                                return Serialization.DefaultPickler.Deserialize<LogEntry []>(stream)
                             with _ -> 
                                 return Array.empty })
                         |> Async.Parallel

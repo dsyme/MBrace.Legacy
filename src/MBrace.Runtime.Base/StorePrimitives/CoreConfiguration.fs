@@ -18,7 +18,7 @@
                 // inMemCache used by cref store
                 // localCache used by cseq/cfile store
                 let fsStore = new FileSystemStore(cacheStoreEndpoint)
-                let inMemCache = new Cache(fsStore, Serializer.Pickler)
+                let inMemCache = new Cache(fsStore) // TODO : cache path?
                 let localCache = new LocalCacheStore(fsStore, store)
 
                 let crefStore  = new CloudRefProvider(storeInfo, inMemCache)  :> ICloudRefProvider
@@ -30,11 +30,7 @@
                 let cloner = 
                     {
                         new IObjectCloner with
-                            member __.Clone(t : 'T) =
-                                use m = new System.IO.MemoryStream()
-                                Serializer.Pickler.Serialize(m, t)
-                                m.Position <- 0L
-                                Serializer.Pickler.Deserialize<'T>(m)
+                            member __.Clone(t : 'T) = Serialization.Clone t
                     }
 
                 let coreConfig =

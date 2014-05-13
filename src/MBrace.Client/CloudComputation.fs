@@ -37,11 +37,12 @@
         member internal __.Dependencies = dependencies
 
         member internal __.Image =
+            let pkg = CloudPackage.Create expr
             {
                 ClientId = MBraceSettings.ClientId
                 Name = name
-                Computation = Serializer.Pickler.Pickle expr
-                Type = Serializer.Pickler.Pickle expr.Type
+                Computation = Serialization.Serialize pkg
+                Type = Serialization.Serialize expr.Type
                 TypeName = Reflection.prettyPrint typeof<'T>
                 Dependencies = dependencies |> List.map VagrantUtils.ComputeAssemblyId
             }

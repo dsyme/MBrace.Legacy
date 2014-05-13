@@ -111,7 +111,7 @@ namespace Nessos.MBrace.Client
             let vagrant = new VagrantServer(vagrantDir)
 
             // register serializer
-            Serializer.Register vagrant.Pickler
+            Serialization.Register vagrant.Pickler
 
             // register logger
             let logger = Logger.createNullLogger()

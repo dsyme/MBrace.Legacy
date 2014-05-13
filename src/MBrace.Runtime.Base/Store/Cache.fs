@@ -10,11 +10,9 @@
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
+    open Nessos.MBrace.Runtime
 
-    type Cache(cacheStore : IStore, pickler : FsPickler, ?id : string, ?physicalMemoryLimitPercentage : int, ?location : string) = 
-//        let pickler = Nessos.MBrace.Runtime.Serializer.Pickler
-        // temporary dependency injection hack
-//        let pickler = IoC.Resolve<FsPickler>()
+    type Cache(cacheStore : IStore, ?id : string, ?physicalMemoryLimitPercentage : int, ?location : string) = 
 
         // arg parsing
         let id = match id with Some i -> i | None -> Guid.NewGuid().ToString()
@@ -45,8 +43,8 @@
 //#endif
         
         // Serialize/Deserialize helpers
-        let serialize (stream : Stream, value : obj) : unit = pickler.Serialize(stream, value)
-        let deserialize (stream : Stream) : obj = pickler.Deserialize(stream)
+        let serialize (stream : Stream, value : obj) : unit = Serialization.DefaultPickler.Serialize(stream, value)
+        let deserialize (stream : Stream) : obj = Serialization.DefaultPickler.Deserialize(stream)
 
         // temporary solution before making cache async
         let run = Async.RunSynchronously
