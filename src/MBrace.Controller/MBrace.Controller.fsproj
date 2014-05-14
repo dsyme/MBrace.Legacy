@@ -5,13 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>e1458b3d-b72a-441c-b18e-0574b33b1269</ProjectGuid>
+    <ProjectGuid>56508ffd-64fc-4eb6-a336-709d0da0497d</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>MBrace.Worker</RootNamespace>
-    <AssemblyName>mbrace.worker</AssemblyName>
+    <RootNamespace>MBrace.Controller</RootNamespace>
+    <AssemblyName>mbracectl</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
-    <Name>MBrace.Worker</Name>
+    <Name>MBrace.Controller</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <Win32Resource>C:\Development\VS 2013\MBrace\resource\Mgrey.res</Win32Resource>
@@ -24,16 +25,20 @@
     <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\mbrace.worker.XML</DocumentationFile>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DocumentationFile>..\..\bin\mbracectl.XML</DocumentationFile>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\mbrace.worker.XML</DocumentationFile>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DocumentationFile>..\..\bin\mbracectl.XML</DocumentationFile>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -59,9 +64,9 @@
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
   </Target>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Config.fs" />
+    <Compile Include="Program.fs" />
     <None Include="packages.config" />
-    <Compile Include="ProcessDomain.fs" />
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
@@ -92,26 +97,8 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\MBrace.Core\MBrace.Core.fsproj">
-      <Name>MBrace.Core</Name>
-      <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\MBrace.Runtime.Base\MBrace.Runtime.Base.fsproj">
-      <Name>MBrace.Runtime.Base</Name>
-      <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\MBrace.Runtime\MBrace.Runtime.fsproj">
-      <Name>MBrace.Runtime</Name>
-      <Project>{17b6679b-ab3e-42ee-aeb3-86e4fb4ab29b}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
-      <Name>MBrace.Utils</Name>
-      <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
-      <Private>True</Private>
-    </ProjectReference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="Thespian">
       <HintPath>..\..\packages\Thespian.0.0.2-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>
@@ -124,6 +111,26 @@
       <HintPath>..\..\packages\UnionArgParser.0.6.3\lib\net40\UnionArgParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <ProjectReference Include="..\MBrace.Client\MBrace.Client.fsproj">
+      <Name>MBrace.Client</Name>
+      <Project>{a303fe2d-ebac-42af-aad3-3700bdd996bd}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Core\MBrace.Core.fsproj">
+      <Name>MBrace.Core</Name>
+      <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Runtime.Base\MBrace.Runtime.Base.fsproj">
+      <Name>MBrace.Runtime.Base</Name>
+      <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
+      <Name>MBrace.Utils</Name>
+      <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="Vagrant">
       <HintPath>..\..\packages\Vagrant.0.1.3\lib\net45\Vagrant.dll</HintPath>
       <Private>True</Private>
