@@ -33,6 +33,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4420A617
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Runtime.Base", "src\MBrace.Runtime.Base\MBrace.Runtime.Base.fsproj", "{C70CE00E-6850-4C14-8827-CF4C4F103263}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resource", "resource", "{5964890A-08B6-4D82-B558-8B1DB9FBF5B1}"
+	ProjectSection(SolutionItems) = preProject
+		resource\Mblue.res = resource\Mblue.res
+		resource\Mgrey.res = resource\Mgrey.res
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +82,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{5964890A-08B6-4D82-B558-8B1DB9FBF5B1} = {B6E824CD-AFA5-4F1A-96F8-3100300FE0AA}
 		{B0EDB59E-83C5-4C31-8F7B-8E78EBF8B59F} = {4420A617-86A3-47ED-9D71-3321D6B24045}
 	EndGlobalSection
 EndGlobal
