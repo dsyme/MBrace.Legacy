@@ -9,6 +9,8 @@ let runtime = MBrace.InitLocal 3
 
 runtime.Ping()
 
+runtime.GetLogs()
+
 runtime.Nodes
 
 let x = ref 0

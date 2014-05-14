@@ -61,8 +61,10 @@
     <None Include="packages.config" />
     <None Include="app.config" />
     <Compile Include="Helpers.fs" />
-    <Compile Include="RunLocalTest.fs" />
-    <Compile Include="LocalMultiNodeTest.fs" />
+    <Compile Include="CloudTestDefinitions.fs" />
+    <Compile Include="CloudTests.fs" />
+    <Compile Include="LocalCloudTests.fs" />
+    <Compile Include="ClusterCloudTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\MBrace.Core\MBrace.Core.fsproj">
