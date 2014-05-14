@@ -11,6 +11,14 @@ runtime.Ping()
 
 runtime.Nodes
 
+let x = 40
+
+let y = runtime.Run <@ cloud { return x + 1 } @>
+
+let z = runtime.Run <@ cloud { return y + 1 } @>
+
+
+
 type CloudList<'T> = Nil | Cons of 'T * ICloudRef<CloudList<'T>>
 
 [<Cloud>]

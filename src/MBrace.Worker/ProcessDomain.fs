@@ -83,7 +83,7 @@
             // Register Things
             //
 
-            let vagrantCache = new VagrantCache(assemblyPath)
+            let vagrantCache = new VagrantCache(assemblyPath, lookupAppDomain = true)
             let vagrantClient = new VagrantClient()
             do IoC.RegisterValue(vagrantCache)
             do IoC.RegisterValue(vagrantClient)

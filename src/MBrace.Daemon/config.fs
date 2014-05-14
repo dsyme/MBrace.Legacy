@@ -141,7 +141,7 @@
             // temporary solution; revise later
             do create "AssemblyCache" <| 
                 fun cacheDir -> 
-                    let vcache = new VagrantCache(cacheDir)
+                    let vcache = new VagrantCache(cacheDir, lookupAppDomain = true)
                     let vclient = new VagrantClient()
                     IoC.RegisterValue vcache
                     IoC.RegisterValue vclient
