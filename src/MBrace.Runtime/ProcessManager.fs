@@ -175,10 +175,15 @@ let processManagerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, 
                 reply (Exception e)
 
         | ProcessManager.GetProcessInfo(RR ctx reply, processId) ->
-            let! processInfo = processMonitor <!- fun ch -> Singular(Choice1Of2 <| TryGetProcessInfo(ch, processId))
-            match processInfo with
-            | None -> SystemException("Could not retrieve process info entry.") |> Reply.exn |> reply
-            | Some i -> i |> Value |> reply
+            try
+                let! processInfo = processMonitor <!- fun ch -> Singular(Choice1Of2 <| TryGetProcessInfo(ch, processId))
+                match processInfo with
+                | None -> SystemException("Could not retrieve process info entry.") |> Reply.exn |> reply
+                | Some i -> i |> Value |> reply
+
+            with e ->
+                ctx.LogError e
+                reply (Exception e)
 
         | ProcessManager.GetAllProcessInfo replyChan ->
             //TODO!!! If there is a repication failure, the client will see it?
