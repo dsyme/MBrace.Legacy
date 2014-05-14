@@ -32,7 +32,7 @@ namespace Nessos.MBrace.Runtime.Tests
                 | Some runtime -> runtime.Kill()
                 | None -> ()
             
-                MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "../../../../bin/mbraced.exe")
+                MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "mbraced.exe")
                 let runtime = MBraceRuntime.InitLocal(3, debug = true)
                 currentRuntime := Some runtime)
         
