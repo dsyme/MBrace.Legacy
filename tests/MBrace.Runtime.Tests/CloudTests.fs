@@ -616,7 +616,7 @@ namespace Nessos.MBrace.Runtime.Tests
             } @> |> test.ExecuteExpression |> should equal 10
           
         [<Category("MutableCloudRef")>]  
-        [<Test; Repeat 100>]
+        [<Test; Repeat 10>]
         member test.``MutableCloudRef - Set`` () = 
             let run () = 
                 cloud {
@@ -630,7 +630,7 @@ namespace Nessos.MBrace.Runtime.Tests
             |> test.ExecuteExpression |> should equal true
 
         [<Category("MutableCloudRef")>]
-        [<Test; Repeat 100>]
+        [<Test; Repeat 10>]
         member test.``MutableCloudRef - Set multiple`` () = 
             let run () =
                 cloud {
