@@ -180,4 +180,4 @@ namespace Nessos.MBrace.Client
 
         static member WorkingDirectory = config.Value.WorkingDirectory
 
-        static member Vagrant = config.Value.Vagrant
+        static member internal Vagrant = config.Value.Vagrant

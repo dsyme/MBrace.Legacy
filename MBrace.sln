@@ -39,6 +39,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resource", "resource", "{59
 		resource\Mgrey.res = resource\Mgrey.res
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Service", "src\MBrace.Service\MBrace.Service.fsproj", "{77F057E8-D09C-4149-8A56-FED7EFADE792}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{C70CE00E-6850-4C14-8827-CF4C4F103263}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C70CE00E-6850-4C14-8827-CF4C4F103263}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C70CE00E-6850-4C14-8827-CF4C4F103263}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77F057E8-D09C-4149-8A56-FED7EFADE792}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77F057E8-D09C-4149-8A56-FED7EFADE792}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77F057E8-D09C-4149-8A56-FED7EFADE792}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77F057E8-D09C-4149-8A56-FED7EFADE792}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
