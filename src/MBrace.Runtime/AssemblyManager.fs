@@ -20,12 +20,25 @@ let private loader = lazy IoC.Resolve<VagrantClient> ()
 let assemblyManagerBehavior (ctx: BehaviorContext<_>) (msg: AssemblyManager) = 
 
     let loadAssemblies (ids : AssemblyId list) =
-        for id in ids do
-            let pa = cache.Value.GetCachedAssembly(id, includeImage = true)
-            match loader.Value.LoadPortableAssembly pa with
+        let loadAssembly (id : AssemblyId) =
+            let info = loader.Value.GetAssemblyLoadInfo id
+            let loadResult =
+                match info with
+                | Loaded _ -> info
+                | LoadedWithStaticIntialization _ ->
+                    let pa = cache.Value.GetCachedAssembly(id, includeImage = false)
+                    loader.Value.LoadPortableAssembly pa
+                | LoadFault _ | NotLoaded _ ->
+                    let pa = cache.Value.GetCachedAssembly(id, includeImage = true)
+                    loader.Value.LoadPortableAssembly pa
+
+            match loadResult with
             | Loaded _ | LoadedWithStaticIntialization _ -> ()
             | LoadFault(_,e) -> raise e
             | NotLoaded(id) -> failwithf "Failed to load assembly '%s'." id.FullName
+
+        for id in ids do
+            loadAssembly id
 
     async {
         match msg with
