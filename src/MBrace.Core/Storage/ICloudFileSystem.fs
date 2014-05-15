@@ -74,7 +74,7 @@
         /// </summary>
         /// <param name="path">file path.</param>
         /// <param name="writer">writer function; asynchronously write to the target stream.</param>
-        /// <returns>if succesful, returns a tag identifier.</returns>
+        /// <returns>if successful, returns a tag identifier.</returns>
         abstract CreateMutable      : path:string * writer:(Stream -> Async<unit>) -> Async<Tag>
 
         /// <summary>
