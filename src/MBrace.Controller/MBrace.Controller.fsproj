@@ -15,7 +15,7 @@
     <Name>MBrace.Controller</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
-    <Win32Resource>C:\Development\VS 2013\MBrace\resource\Mgrey.res</Win32Resource>
+    <Win32Resource>..\..\resource\Mgrey.res</Win32Resource>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
