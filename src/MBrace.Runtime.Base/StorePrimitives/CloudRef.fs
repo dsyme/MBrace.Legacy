@@ -67,7 +67,7 @@
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
     
 
-    and CloudRefProvider(storeInfo : StoreInfo, cache : Cache) as self =
+    and CloudRefProvider(storeInfo : StoreInfo, cache : InMemoryCache) as self =
         let store = storeInfo.Store
         let storeId = storeInfo.Id
 

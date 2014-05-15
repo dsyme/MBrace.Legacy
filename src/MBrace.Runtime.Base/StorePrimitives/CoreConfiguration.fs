@@ -18,7 +18,7 @@
                 // inMemCache used by cref store
                 // localCache used by cseq/cfile store
                 let fsStore = new FileSystemStore(cacheStoreEndpoint)
-                let inMemCache = new Cache(fsStore) // TODO : cache path?
+                let inMemCache = new InMemoryCache(fsStore)
                 let localCache = new LocalCacheStore(fsStore, store)
 
                 let crefStore  = new CloudRefProvider(storeInfo, inMemCache)  :> ICloudRefProvider
