@@ -74,7 +74,7 @@
         /// </summary>
         /// <param name="path">file path.</param>
         /// <param name="writer">writer function; asynchronously write to the target stream.</param>
-        /// <returns>if succesful, returns a tag identifier.</returns>
+        /// <returns>if successful, returns a tag identifier.</returns>
         abstract CreateMutable  : path:string * writer:(Stream -> Async<unit>) -> Async<Tag>
 
         /// <summary>
@@ -82,7 +82,7 @@
         /// </summary>
         /// <param name="path">file path.</param>
         /// <param name="reader">reader function; asynchronously read from the source stream.</param>
-        /// <returns>if succesful, returns a tag identifier.</returns>
+        /// <returns>if successful, returns a tag identifier.</returns>
         abstract ReadMutable    : path:string * reader:(Stream -> Async<unit>) -> Async<Tag>
 
         /// <summary>
@@ -91,7 +91,7 @@
         /// <param name="path">file path.</param>
         /// <param name="writer">writer function; asynchronously write to the target stream.</param>
         /// <param name="tag">tag used to update the file.</param>
-        /// <returns>a boolean signifying that the update was succesful and an updated tag identifier.</returns>
+        /// <returns>a boolean signifying that the update was successful and an updated tag identifier.</returns>
         abstract TryUpdate      : path:string * writer:(Stream -> Async<unit>) * tag:Tag -> Async<bool * Tag>
 
         /// <summary>
