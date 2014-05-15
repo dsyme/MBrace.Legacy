@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Storage\ICloudFileSystem.fs" />
+    <Compile Include="Storage\Caching.fs" />
     <Compile Include="Storage\LocalFileSystem.fs" />
     <Compile Include="Cloud\Primitives.fs" />
     <Compile Include="Cloud\Cloud.fs" />
