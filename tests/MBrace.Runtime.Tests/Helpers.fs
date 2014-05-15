@@ -5,6 +5,8 @@
     [<AutoOpenAttribute>]
     module Helpers =
 
+        let wait (n : int) = System.Threading.Thread.Sleep n
+
         let shouldFailwith<'Exception when 'Exception :> exn>(f : unit -> unit) =
             let result =
                 try f () ; Choice1Of3 ()

@@ -160,3 +160,69 @@ namespace Nessos.MBrace.Runtime.Tests
         member __.``Fetch logs`` () =
             __.Runtime.GetLogs() |> Seq.isEmpty |> should equal false
             __.Runtime.Nodes.Head.GetLogs() |> Seq.isEmpty |> should equal false
+
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Ping the Runtime``() =
+            should greaterThan 0 (__.Runtime.Ping())
+            
+        [<Test; Category("Runtime Administration")>]
+        member __.``Get Runtime Status`` () =
+            __.Runtime.Active |> should equal true
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Get Runtime Information`` () =
+            __.Runtime.ShowInfo ()
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Get Runtime Performance Information`` () =
+            __.Runtime.ShowInfo (true)
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Get Runtime Deployment Id`` () =
+            __.Runtime.Id |> ignore
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Get Runtime Nodes`` () =
+            __.Runtime.Nodes |> Seq.length |> should greaterThan 0
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Get Master Node`` () =
+            __.Runtime.Master |> ignore
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Get Alt Nodes`` () =
+            __.Runtime.Alts |> ignore
+
+        [<Test; Category("Runtime Administration"); ExpectedException(typeof<Nessos.MBrace.NonExistentObjectStoreException>)>]
+        member __.``Delete container`` () =
+            let s = __.Runtime.Run <@ CloudSeq.New([1..10]) @> 
+            __.Runtime.DeleteContainer(s.Container) 
+            Seq.toList s |> ignore
+
+        [<Test; Repeat 4; Category("Runtime Administration")>]
+        member __.``Reboot runtime`` () =
+            __.Runtime.Reboot()
+            __.Runtime.Run <@ cloud { return 1 + 1 } @> |> should equal 2
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Attach Node`` () =
+            let n = __.Runtime.Nodes |> List.length
+            __.Runtime.AttachLocal 1 
+
+            do wait 1000
+
+            let n' = __.Runtime.Nodes |> List.length 
+            n' - n |> should equal 1
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Detach Node`` () =
+            let nodes = __.Runtime.Nodes 
+            let n = nodes.Length
+            let node2 = nodes.[1] 
+            __.Runtime.Detach node2 
+            
+            do wait 1000
+
+            let n' =__.Runtime.Nodes |> List.length
+            n - n' |> should equal 1
