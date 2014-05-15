@@ -56,9 +56,9 @@
                                 (this.Read(folder, file, checkCoherence))
                 | true, false -> 
                     if checkCoherence then 
-                        return raise <| Exception(sprintf' "Incoherent cache : Item %s - %s found in cache but not in the main store" folder file)
+                        return raise <| Nessos.MBrace.MBraceException(sprintf' "Incoherent cache : Item %s - %s found in cache but not in the main store" folder file)
                     else 
                         return! localCacheStore.Read(folder, file)
                 | false, false -> 
-                    return raise <| Exception(sprintf' "Item %s - %s not found" folder file)
+                    return raise <| Nessos.MBrace.NonExistentObjectStoreException(folder,file)
             }
