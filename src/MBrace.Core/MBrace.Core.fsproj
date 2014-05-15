@@ -78,6 +78,7 @@
     <Compile Include="Core\Data.fs" />
     <Compile Include="Core\PrimitiveProviders.fs" />
     <Compile Include="Core\Interpreter.fs" />
+    <Compile Include="Storage\ICloudFileSystem.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
