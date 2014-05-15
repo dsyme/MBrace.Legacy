@@ -1,6 +1,5 @@
-﻿#I "../../bin/"
-#r "MBrace.Core.dll"
-#r "MBrace.Client.dll"
+﻿
+#load "preamble.fsx"
 
 open Nessos.MBrace
 open Nessos.MBrace.Client

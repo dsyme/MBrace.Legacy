@@ -64,6 +64,7 @@
     <Compile Include="Runtime.fsi" />
     <Compile Include="Runtime.fs" />
     <Compile Include="ClientExtensions.fs" />
+    <None Include="preamble.fsx" />
     <None Include="mbrace.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
@@ -91,7 +92,7 @@
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
