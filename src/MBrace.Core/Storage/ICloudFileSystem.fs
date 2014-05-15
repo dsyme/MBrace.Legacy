@@ -21,7 +21,7 @@
         /// Gets all files that exist in given container
         abstract GetAllFiles        : container:string -> Async<string []>
         /// Get all container paths that exist in file system
-        abstract GetAllContainer    : unit -> Async<string []>
+        abstract GetAllContainers   : unit -> Async<string []>
         /// Checks if file exists in given path
         abstract FileExists         : path:string -> Async<bool>
         /// Checks if container exists in given path
@@ -48,7 +48,7 @@
         /// </summary>
         /// <param name="path">file path.</param>
         /// <param name="target">local stream to copy data to.</param>
-        abstract ReadImmutable      : path:string * target:Stream -> Async<Tag>
+        abstract ReadImmutable      : path:string * target:Stream -> Async<unit>
 
         /// <summary>
         ///     Creates a new immutable file in store.
@@ -63,7 +63,7 @@
         /// </summary>
         /// <param name="path">file path.</param>
         /// <param name="reader">reader function; asynchronously read from the source stream.</param>
-        abstract ReadImmutable      : path:string * reader:(Stream -> Async<unit>) -> Async<unit>
+        abstract ReadImmutable      : path:string * reader:(Stream -> Async<'T>) -> Async<'T>
 
         //
         //  Mutable file section
@@ -75,7 +75,7 @@
         /// <param name="path">file path.</param>
         /// <param name="writer">writer function; asynchronously write to the target stream.</param>
         /// <returns>if succesful, returns a tag identifier.</returns>
-        abstract CreateMutable  : path:string * writer:(Stream -> Async<unit>) -> Async<Tag>
+        abstract CreateMutable      : path:string * writer:(Stream -> Async<unit>) -> Async<Tag>
 
         /// <summary>
         ///     Reads a mutable file from store
@@ -83,7 +83,7 @@
         /// <param name="path">file path.</param>
         /// <param name="reader">reader function; asynchronously read from the source stream.</param>
         /// <returns>if succesful, returns a tag identifier.</returns>
-        abstract ReadMutable    : path:string * reader:(Stream -> Async<unit>) -> Async<Tag>
+        abstract ReadMutable        : path:string * reader:(Stream -> Async<'T>) -> Async<Tag * 'T>
 
         /// <summary>
         ///     Attempt to update mutable file in store.
@@ -92,25 +92,16 @@
         /// <param name="writer">writer function; asynchronously write to the target stream.</param>
         /// <param name="tag">tag used to update the file.</param>
         /// <returns>a boolean signifying that the update was succesful and an updated tag identifier.</returns>
-        abstract TryUpdate      : path:string * writer:(Stream -> Async<unit>) * tag:Tag -> Async<bool * Tag>
+        abstract TryUpdateMutable   : path:string * writer:(Stream -> Async<unit>) * tag:Tag -> Async<bool * Tag>
 
         /// <summary>
         ///     Force update a mutable file in store.
         /// </summary>
         /// <param name="path">file path.</param>
         /// <param name="writer">writer function; asynchronously write to the target stream.</param>
-        abstract ForceUpdate    : path:string * writer:(Stream -> Async<unit>) -> Async<Tag>
+        abstract ForceUpdateMutable : path:string * writer:(Stream -> Async<unit>) -> Async<Tag>
 
 
     and ICloudFileSystemFactory =
         /// Constructs a file system instance from given connection string
-        abstract CreateStoreFromConnectionString: connectionString : string -> ICloudFileSystem
-
-
-//    and [<StructuralEquality ; StructuralComparison>] StoreId = 
-//        internal {
-//            AssemblyQualifiedName : string
-//            UUID                  : byte []
-//        }
-//    with 
-//        override id.ToString () = id.AssemblyQualifiedName
+        abstract CreateFromConnectionString: connectionString : string -> ICloudFileSystem

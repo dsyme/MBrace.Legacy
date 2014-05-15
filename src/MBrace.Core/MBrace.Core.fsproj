@@ -59,6 +59,8 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Storage\ICloudFileSystem.fs" />
+    <Compile Include="Storage\LocalFileSystem.fs" />
     <Compile Include="Cloud\Primitives.fs" />
     <Compile Include="Cloud\Cloud.fs" />
     <Compile Include="Cloud\CloudBuilder.fsi" />
@@ -78,7 +80,6 @@
     <Compile Include="Core\Data.fs" />
     <Compile Include="Core\PrimitiveProviders.fs" />
     <Compile Include="Core\Interpreter.fs" />
-    <Compile Include="Storage\ICloudFileSystem.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
