@@ -56,7 +56,7 @@
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -69,6 +69,11 @@
     <ProjectReference Include="..\MBrace.Runtime.Base\MBrace.Runtime.Base.fsproj">
       <Name>MBrace.Runtime.Base</Name>
       <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
+      <Name>MBrace.Utils</Name>
+      <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
