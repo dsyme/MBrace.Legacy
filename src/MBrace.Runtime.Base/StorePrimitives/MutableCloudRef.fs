@@ -17,7 +17,7 @@
 
         abstract member Type : Type
 
-        member __.StoreId = provider.StoreId
+        member internal __.StoreId = provider.StoreId
 
         interface IMutableCloudRef with
             member self.Name = id
