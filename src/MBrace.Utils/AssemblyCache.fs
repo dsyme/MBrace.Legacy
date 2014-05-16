@@ -60,7 +60,7 @@
             (!algorithm).ComputeHash(assembly) |> Array.append length
 
         static let uniqueFilename (hash : AssemblyHash) =
-            let fileName = String.Convert.toBase32String(hash)
+            let fileName = String.Convert.BytesToBase32(hash)
             Path.Combine(!cacheDir, fileName)
 
         static let (|CacheContains|_|) hash =

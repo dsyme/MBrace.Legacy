@@ -1,6 +1,8 @@
 ﻿module Nessos.MBrace.Utils.String
 
     open System
+    open System.Collections.Generic
+    open System.IO
     open System.Text
     open System.Text.RegularExpressions
 
@@ -58,16 +60,13 @@
     //
 
     [<RequireQualifiedAccess>]
-    module Convert =
-        
-        open System.IO
-        open System.Collections.Generic
+    type Convert private () =
 
         // taken from : http://www.atrevido.net/blog/PermaLink.aspx?guid=debdd47c-9d15-4a2f-a796-99b0449aa8af
-        let private encodingIndex = "qaz2wsx3edc4rfv5tgb6yhn7ujm8k9lp"
-        let private inverseIndex = encodingIndex |> Seq.mapi (fun i c -> c,i) |> Map.ofSeq
+        static let encodingIndex = "qaz2wsx3edc4rfv5tgb6yhn7ujm8k9lp"
+        static let inverseIndex = encodingIndex |> Seq.mapi (fun i c -> c,i) |> dict
 
-        let toBase32String(bytes : byte []) =
+        static member BytesToBase32(bytes : byte []) =
             let b = new StringBuilder()
             let mutable hi = 5
             let mutable idx = 0uy
@@ -99,7 +98,7 @@
 
             b.ToString ()
 
-        let ofBase32String(encoded : string) =
+        static member Base32ToBytes(encoded : string) =
             let encoded = encoded.ToLower ()
             let numBytes = encoded.Length * 5 / 8
             let bytes = Array.zeroCreate<byte> numBytes
@@ -125,6 +124,16 @@
                         currentCharIndex <- currentCharIndex + 1
 
             bytes
+
+        static member StringToBase32(text : string, ?encoding : Encoding) =
+            let encoding = match encoding with None -> Encoding.UTF8 | Some e -> e
+            let bytes = encoding.GetBytes text
+            Convert.BytesToBase32 bytes
+
+        static member Base32ToString(encoded : string, ?encoding : Encoding) =
+            let encoding = match encoding with None -> Encoding.UTF8 | Some e -> e
+            let bytes = Convert.Base32ToBytes encoded
+            encoding.GetString bytes
 
 
     //

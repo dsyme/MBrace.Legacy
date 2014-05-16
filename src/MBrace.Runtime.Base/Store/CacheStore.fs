@@ -14,8 +14,7 @@
         //let underlyingLazy = lazy StoreRegistry.DefaultStore.Store
 
         let base32 (s : string) =
-            let bytes = System.Text.Encoding.UTF8.GetBytes s
-            let s' = String.Convert.toBase32String(bytes)
+            let s' = String.Convert.StringToBase32 s
             if Path.HasExtension(s) then s' + Path.GetExtension(s) else s'
             
         member this.Name = localCacheStore.Name
