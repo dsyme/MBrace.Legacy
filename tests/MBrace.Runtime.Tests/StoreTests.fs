@@ -246,3 +246,13 @@ type ``FileSystem tests`` () =
     let store = factory.CreateStoreFromConnectionString(testDir)
 
     override test.Store = store
+
+[<TestFixture>]
+type ``WindowsAzure tests`` () =
+    inherit ``Store tests`` ()
+
+    let conn = "DefaultEndpointsProtocol=https;AccountName=mbraceunittests;AccountKey=QpDxFgGDhjWzw1eFiXm6nDA5F6mbmkbPHVtPYPO3kTfhKDMWF9rgVcsBBq+VnvcmH+1phURoBgCDZVX2/FfQHg=="
+    let factory = new Nessos.MBrace.Azure.AzureStoreFactory() :> ICloudStoreFactory
+    let store = factory.CreateStoreFromConnectionString(conn)
+
+    override test.Store = store
