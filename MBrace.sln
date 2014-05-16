@@ -45,7 +45,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{79
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Controller", "src\MBrace.Controller\MBrace.Controller.fsproj", "{56508FFD-64FC-4EB6-A336-709D0DA0497D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "custom", "custom", "{EEAEC377-38CD-4229-977B-8E5F7CC7E1BB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "storeproviders", "storeproviders", "{EEAEC377-38CD-4229-977B-8E5F7CC7E1BB}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Azure", "src\MBrace.Azure\MBrace.Azure.fsproj", "{1FF00F82-1102-44C4-B73F-39AEE6BC1635}"
 EndProject
