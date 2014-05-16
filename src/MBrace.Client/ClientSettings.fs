@@ -88,7 +88,7 @@ namespace Nessos.MBrace.Client
             // parse store provider
             let storeProvider =
                 match parseResults.TryGetResult <@ Store_Provider @> with
-                | None -> LocalFS
+                | None -> StoreProvider.LocalFS
                 | Some sp ->
                     let endpoint = defaultArg (parseResults.TryGetResult <@ Store_Endpoint @>) ""
                     StoreProvider.Parse(sp, endpoint)

@@ -239,8 +239,8 @@ type MBraceNode private (nodeRef: ActorRef<Runtime>, uri: Uri) as self =
                     match workingDirectory with Some w -> yield Working_Directory w | _ -> ()
                     match logLevel with Some l -> yield Log_Level l.Value | _ -> ()
 
-                    yield Store_Provider storeProvider.Name
-                    yield Store_EndPoint storeProvider.EndPoint
+                    yield Store_Provider storeProvider.StoreFactoryQualifiedName
+                    yield Store_EndPoint storeProvider.ConnectionString
                 ]
         
             return! MBraceNode.SpawnAsync(args, ?background = background)

@@ -9,15 +9,6 @@
     type File = string
     type Tag = string
 
-    [<StructuralEquality ; StructuralComparison>]
-    type StoreId = 
-        internal {
-            AssemblyQualifiedName : string
-            UUID                  : byte []
-        }
-
-        with override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
-
     type IStore =
 
         abstract Name : string
@@ -44,5 +35,5 @@
         abstract UpdateMutable      : Folder * File * (Stream -> Async<unit>) * Tag -> Async<bool * Tag>
         abstract ForceUpdateMutable : Folder * File * (Stream -> Async<unit>) -> Async<Tag>
 
-    type IStoreFactory =
+    type ICloudStoreFactory =
         abstract CreateStoreFromConnectionString: connectionString : string -> IStore

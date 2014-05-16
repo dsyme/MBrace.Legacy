@@ -241,7 +241,8 @@ type ``Store tests`` () =
 type ``FileSystem tests`` () =
     inherit ``Store tests`` ()
 
-    override test.Store = 
-        Path.GetTempPath()
-        |> (FileSystemStoreFactory() :> IStoreFactory)
-           .CreateStoreFromConnectionString
+    let testDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString())
+    let factory = new FileSystemStoreFactory() :> ICloudStoreFactory
+    let store = factory.CreateStoreFromConnectionString(testDir)
+
+    override test.Store = store

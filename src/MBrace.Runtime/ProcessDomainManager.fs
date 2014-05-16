@@ -75,8 +75,8 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
         let processExecutable = IoC.Resolve<string> "MBraceProcessExe"
         let debugMode = defaultArg (IoC.TryResolve<bool> "debugMode") false
 
-        let storeEndpoint = IoC.Resolve<string> "storeEndpoint"
-        let storeProvider = IoC.Resolve<string> "storeProvider"
+        // TODO : store registry
+        let storeProvider = IoC.Resolve<Nessos.MBrace.Client.StoreProvider>()
                     
         let cacheStoreEndpoint = IoC.Resolve<string> "cacheStoreEndpoint"
 
@@ -92,8 +92,8 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                 yield Process_Domain_Id processDomainId
                 yield Assembly_Cache <| IoC.Resolve<Nessos.Vagrant.VagrantCache>().CacheDirectory
                 yield Parent_Address <| primaryAddr.ToString ()
-                yield Store_EndPoint storeEndpoint
-                yield Store_Provider storeProvider
+                yield Store_Provider storeProvider.StoreFactoryQualifiedName
+                yield Store_EndPoint storeProvider.ConnectionString
                 yield Debug debugMode
                 match portOpt with
                 | Some selectedPort ->

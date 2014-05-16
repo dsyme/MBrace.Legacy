@@ -119,7 +119,7 @@
             IoC.RegisterValue<IExiter>(exiter)
 
             // Register Store
-            registerStore storeProvider storeEndpoint workingDirectory
+            let storeName = registerStore storeProvider storeEndpoint workingDirectory
 
             //IoC.RegisterValue(clProcPorts, "mbrace.process.portPool")
             //TODO!!!! THIS IS WRONG
@@ -136,7 +136,7 @@
             logger.Logf Info "Process Id = %d" selfProc.Id
             logger.Logf Info "Default Serializer = %s" Serialization.SerializerRegistry.DefaultName
             logger.Logf Info "Working Directory = %s" workingDirectory
-            logger.Logf Info "StoreProvider = %s" storeProvider
+            logger.Logf Info "StoreProvider = %s" storeName
 
             if debugMode then logger.LogInfo "Running in DEBUG mode."
             if isWindowed then registerFancyConsoleEvent debugMode address

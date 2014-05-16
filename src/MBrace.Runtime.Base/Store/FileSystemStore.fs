@@ -181,13 +181,6 @@
                 }
 
     type FileSystemStoreFactory () =
-        interface IStoreFactory with
+        interface ICloudStoreFactory with
             member this.CreateStoreFromConnectionString (path : string) = 
                 FileSystemStore(path) :> IStore
-
-
-    type LocalFileSystemStoreFactory () =
-        interface IStoreFactory with
-            member this.CreateStoreFromConnectionString _ =
-                let path = Path.Combine(Path.GetTempPath(), "tempStoreFolder")
-                new FileSystemStore(path, "LocalFS") :> IStore
