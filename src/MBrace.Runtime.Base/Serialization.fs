@@ -24,7 +24,6 @@
 
                 SerializerRegistry.Register(actorSerializer)
                 SerializerRegistry.SetDefault actorSerializer.Name
-                IoC.RegisterValue(pickler, behaviour = OverrideBehaviour.Override)
 
                 picklerSingleton <- Some pickler)
 

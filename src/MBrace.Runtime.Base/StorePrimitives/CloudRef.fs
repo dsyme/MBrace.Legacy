@@ -30,6 +30,7 @@
         abstract Type : Type
 
         member internal __.Value = valueLazy ()
+        member internal __.StoreProvider = provider
 
         interface ICloudRef with
             member self.Name = id
@@ -83,7 +84,16 @@
         let storeId = storeInfo.Id
 
         let extension = "ref"
-        let postfix = fun s -> sprintf' "%s.%s" s extension
+        let postfix s = sprintf' "%s.%s" s extension
+
+        let checkIsValid(cref : ICloudRef) =
+            match cref with
+            | :? CloudRef as c ->
+                if obj.ReferenceEquals(c.StoreProvider, self) || c.StoreProvider.StoreId = storeId then ()
+                else
+                    raise <| new StoreException("Cloud ref belongs to invalid store.")
+            | _ -> 
+                raise <| new StoreException("Invalid cloud ref.")
 
         let read container id : Async<Type * obj> = async {
                 use! stream = store.ReadImmutable(container, id)
@@ -163,8 +173,9 @@
                             |> Seq.toArray
                 }
 
-            member self.Delete(cloudRef : ICloudRef) : Async<unit> = 
+            member self.Delete(cloudRef : ICloudRef) : Async<unit> =
                 async {
+                    checkIsValid cloudRef
                     let id = postfix cloudRef.Name
                     let! containsKey = cache.ContainsKey id
                     if containsKey then
@@ -175,6 +186,7 @@
 
             member self.Dereference (cref : ICloudRef) = 
                 async {
+                    checkIsValid cref
                     let id, container, t = cref.Name, cref.Container, cref.Type
                     let id = postfix id
 

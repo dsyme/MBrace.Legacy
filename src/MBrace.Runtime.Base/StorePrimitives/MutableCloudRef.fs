@@ -17,7 +17,7 @@
 
         abstract member Type : Type
 
-        member internal __.StoreId = provider.StoreId
+        member internal __.StoreProvider = provider
 
         interface IMutableCloudRef with
             member self.Name = id
@@ -61,7 +61,7 @@
         let checkIsValid (mref : IMutableCloudRef) =
             match mref with
             | :? MutableCloudRef as m ->
-                if m.StoreId = storeInfo.Id then m
+                if obj.ReferenceEquals(self, m.StoreProvider) || m.StoreProvider.StoreId = storeInfo.Id then m
                 else
                     raise <| new StoreException("Mutable cloud ref belongs to invalid store.")
             | _ -> 

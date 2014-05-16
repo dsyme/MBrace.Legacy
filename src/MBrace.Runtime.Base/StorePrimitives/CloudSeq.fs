@@ -23,8 +23,6 @@
         
         let info = lazy (Async.RunSynchronously <| provider.GetCloudSeqInfo(this))
 
-        abstract Type : Type
-
         interface ICloudSeq with
             member this.Name = id
             member this.Container = container
@@ -44,7 +42,6 @@
 
         interface ICloudSeq<'T>
 
-        override this.Type = typeof<'T>
         override this.ToString() = sprintf' "cloudseq:%s/%s" container id
 
         member private this.StructuredFormatDisplay = this.ToString()

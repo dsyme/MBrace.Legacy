@@ -70,9 +70,18 @@
             CloudFileSeq(info.GetValue("file", typeof<ICloudFile> ) :?> ICloudFile, 
                          info.GetValue ("reader", typeof<Stream -> Async<obj>>) :?> Stream -> Async<obj>)
     
-    and internal CloudFileProvider (storeInfo : StoreInfo, cache : LocalCacheStore) =
+    and internal CloudFileProvider (storeInfo : StoreInfo, cache : LocalCacheStore) as self =
 
         let store = storeInfo.Store
+
+        let checkIsValid (mref : ICloudFile) =
+            match mref with
+            | :? CloudFile as f ->
+                if obj.ReferenceEquals(self, f.Provider) || f.Provider.StoreId = storeInfo.Id then ()
+                else
+                    raise <| new StoreException("Cloud file belongs to invalid store.")
+            | _ -> 
+                raise <| new StoreException("Invalid cloud file.")
 
         member this.Exists(container) : Async<bool> =
             store.Exists(container)
@@ -102,12 +111,14 @@
 
             override this.Read(file : ICloudFile, deserializer) : Async<'T> =
                 async {
+                    do checkIsValid file
                     let! stream = cache.Read(file.Container, file.Name)
                     return! deserializer stream
                 }
 
             override this.ReadAsSequence(file : ICloudFile, deserializer, ty) : Async<IEnumerable> =
                 async {
+                    do checkIsValid file
                     let cloudFileSeqTy = typedefof<CloudFileSeq<_>>.MakeGenericType [| ty |]
                     let cloudFileSeq = Activator.CreateInstance(cloudFileSeqTy, [| file :> obj; deserializer :> obj |])
                     return cloudFileSeq :?> _
@@ -121,6 +132,7 @@
                 
             
             override this.Delete(cfile : ICloudFile) : Async<unit> =
+                do checkIsValid cfile
                 store.Delete(cfile.Container, cfile.Name)
 
     and private CloudFileReader =
