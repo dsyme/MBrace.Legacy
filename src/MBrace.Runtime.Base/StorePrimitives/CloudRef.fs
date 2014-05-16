@@ -2,6 +2,7 @@
 
     open System
     open System.IO
+    open System.Reflection
     open System.Runtime.Serialization
 
     open Nessos.MBrace
@@ -9,7 +10,8 @@
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Core
 
-    type internal CloudRef<'T> (id : string, container : string, provider : CloudRefProvider) as this = 
+    [<AbstractClass>]
+    type CloudRef internal (id : string, container : string, provider : CloudRefProvider) as this =
 
         let valueLazy () = 
             async {
@@ -25,6 +27,31 @@
                         return raise <| StoreException(sprintf' "Cannot locate Container: %s, Name: %s" container id, exc)
             } |> Async.RunSynchronously
 
+        abstract Type : Type
+
+        member internal __.Value = valueLazy ()
+
+        interface ICloudRef with
+            member self.Name = id
+            member self.Container = container
+            member self.Type = self.Type
+            member self.Value = self.Value
+            member self.TryValue = 
+                try 
+                    Some (valueLazy ())
+                with _ -> None
+    
+        interface ISerializable with
+            member self.GetObjectData(_,_) = raise <| new NotSupportedException("implemented by the inheriting class")
+
+        interface ICloudDisposable with
+            member self.Dispose () = (provider :> ICloudRefProvider).Delete(self)
+
+    and CloudRef<'T> internal (id : string, container : string, provider : CloudRefProvider) =
+        inherit CloudRef(id, container, provider)
+
+        override __.Type = typeof<'T>
+
         new (info : SerializationInfo, _ : StreamingContext) = 
             let id = info.GetString("id")
             let container = info.GetString("container")
@@ -38,36 +65,20 @@
 
         override self.ToString() = sprintf' "cloudref:%s/%s" container id
 
-        interface ICloudRef with
-            member self.Name = id
-            member self.Container = container
-            member self.Type = typeof<'T>
-            member self.Value = valueLazy() 
-            member self.TryValue = 
-                try 
-                    Some (valueLazy ())
-                with _ -> None
-
-        interface ICloudDisposable with
-            member self.Dispose () = 
-                let self = self :> ICloudRef
-                (provider :> ICloudRefProvider).Delete(self)
-
         interface ICloudRef<'T> with
-            member self.Value = valueLazy () :?> 'T
+            member self.Value = base.Value :?> 'T
             member self.TryValue = 
-                try 
-                    Some (self :> ICloudRef<'T>).Value
+                try Some (base.Value :?> 'T)
                 with _ -> None
                     
         interface ISerializable with
-            member self.GetObjectData(info : SerializationInfo, _ : StreamingContext) =
+            override self.GetObjectData(info : SerializationInfo, _ : StreamingContext) =
                 info.AddValue("id", id)
                 info.AddValue("container", container)
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
     
 
-    and CloudRefProvider(storeInfo : StoreInfo, cache : InMemoryCache) as self =
+    and internal CloudRefProvider(storeInfo : StoreInfo, cache : LocalObjectCache) as self =
         let store = storeInfo.Store
         let storeId = storeInfo.Id
 
@@ -75,20 +86,20 @@
         let postfix = fun s -> sprintf' "%s.%s" s extension
 
         let read container id : Async<Type * obj> = async {
-                use! stream = store.Read(container, id)
+                use! stream = store.ReadImmutable(container, id)
                 let t = Serialization.DefaultPickler.Deserialize<Type> stream
                 let o = Serialization.DefaultPickler.Deserialize<obj> stream
                 return t, o
             }
 
         let readType container id  = async {
-                use! stream = store.Read(container, id)
+                use! stream = store.ReadImmutable(container, id)
                 let t = Serialization.DefaultPickler.Deserialize<Type> stream
                 return t
             }
 
         let getIds (container : string) : Async<string []> = async {
-                let! files = store.GetFiles(container)
+                let! files = store.GetAllFiles(container)
                 return files
                     |> Seq.filter (fun w -> w.EndsWith <| sprintf' ".%s" extension)
                     |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
@@ -96,14 +107,20 @@
             }
 
         let defineUntyped(ty : Type, container : string, id : string) =
-            let cloudRefType = typedefof<CloudRef<_>>.MakeGenericType [| ty |]
-            let cloudRef = Activator.CreateInstance(cloudRefType, [| id :> obj; container :> obj; self :> obj |])
-            cloudRef :?> ICloudRef
+            typeof<CloudRefProvider>
+                .GetMethod("CreateCloudRef", BindingFlags.Static ||| BindingFlags.NonPublic)
+                .MakeGenericMethod([| ty |])
+                .Invoke(null, [| id :> obj ; container :> obj ; self :> obj |])
+                :?> ICloudRef
+
+        // WARNING : method called by reflection from 'defineUntyped' function above
+        static member CreateCloudRef<'T>(container, id, provider) =
+            new CloudRef<'T>(container, id, provider)
 
         member __.StoreId = storeInfo.Id
 
         member self.Exists(container : string) : Async<bool> = 
-            store.Exists(container)
+            store.ContainerExists(container)
 
         member self.Exists(container : string, id : string) : Async<bool> = 
             store.Exists(container, postfix id)
@@ -112,20 +129,20 @@
 
             member self.CreateNew (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
                 async {
-                    do! store.Create(container, postfix id, 
-                            fun stream -> async {
+                    do! store.CreateImmutable(container, postfix id, 
+                            (fun stream -> async {
                                 Serialization.DefaultPickler.Serialize(stream, typeof<'T>)
-                                Serialization.DefaultPickler.Serialize<obj>(stream, value) })
+                                Serialization.DefaultPickler.Serialize<obj>(stream, value) }), false)
 
                     return new CloudRef<'T>(id, container, self) :> _
             }
 
             member self.CreateNewUntyped (container : string, id : string, value : obj, t : Type) : Async<ICloudRef> = 
                 async {
-                    do! store.Create(container, postfix id, 
-                            fun stream -> async {
+                    do! store.CreateImmutable(container, postfix id, 
+                            (fun stream -> async {
                                 Serialization.DefaultPickler.Serialize(stream, t)
-                                Serialization.DefaultPickler.Serialize(stream, value) })
+                                Serialization.DefaultPickler.Serialize(stream, value) }), false)
 
                     // construct & return
                     return defineUntyped(t, container, id)
@@ -149,8 +166,10 @@
             member self.Delete(cloudRef : ICloudRef) : Async<unit> = 
                 async {
                     let id = postfix cloudRef.Name
-                    if cache.ContainsKey(id) then
-                        cache.Delete(id)
+                    let! containsKey = cache.ContainsKey id
+                    if containsKey then
+                        do! cache.Delete(id)
+
                     return! store.Delete(cloudRef.Container, id)
                 }
 
@@ -160,7 +179,8 @@
                     let id = postfix id
 
                     // get value
-                    match cache.TryFind <| sprintf' "%s" id with
+                    let! cacheResult = cache.TryFind <| sprintf' "%s" id
+                    match cacheResult with
                     | Some value -> 
                         return value :?> Type * obj |> snd
                     | None -> 

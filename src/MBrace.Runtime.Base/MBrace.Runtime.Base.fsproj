@@ -60,11 +60,11 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Serialization.fs" />
-    <Compile Include="Store\IStore.fs" />
-    <Compile Include="Store\Cache.fs" />
-    <Compile Include="Store\CacheStore.fs" />
-    <Compile Include="Store\FileSystemStore.fs" />
+    <Compile Include="Store\ICloudStore.fs" />
+    <Compile Include="Store\LocalObjectCache.fs" />
+    <Compile Include="Store\LocalCacheStore.fs" />
     <Compile Include="Store\CloudLogStore.fs" />
+    <Compile Include="Store\FileSystemStore.fs" />
     <Compile Include="Store\StoreRegistry.fs" />
     <Compile Include="StorePrimitives\CloudRef.fs" />
     <Compile Include="StorePrimitives\MutableCloudRef.fs" />

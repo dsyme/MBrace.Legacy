@@ -2,6 +2,7 @@
 
     open System
     open System.IO
+    open System.Reflection
     open System.Collections
     open System.Collections.Generic
     open System.Runtime.Serialization
@@ -17,11 +18,12 @@
 
     // TODO: CLOUDSEQINFO CTOR
 
-    [<Serializable>]
-    [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
-    type internal CloudSeq<'T> (id : string, container : string, provider : CloudSeqProvider) as this =
-
+    [<AbstractClass>]
+    type CloudSeq internal (id : string, container : string, provider : CloudSeqProvider) as this =
+        
         let info = lazy (Async.RunSynchronously <| provider.GetCloudSeqInfo(this))
+
+        abstract Type : Type
 
         interface ICloudSeq with
             member this.Name = id
@@ -29,11 +31,20 @@
             member this.Type = info.Value.Type
             member this.Count = info.Value.Count
             member this.Size = info.Value.Size
-            member this.Dispose () =
-                (provider :> ICloudSeqProvider).Delete(this)
+            member this.Dispose () = (provider :> ICloudSeqProvider).Delete(this)
+
+        interface ISerializable with
+            member this.GetObjectData (_,_) = raise <| new NotSupportedException("implemented by the inheriting class")
+
+    and 
+     [<StructuredFormatDisplay("{StructuredFormatDisplay}")>]
+     CloudSeq<'T> internal (id : string, container : string, provider : CloudSeqProvider) =
+     
+        inherit CloudSeq(id, container, provider)   
 
         interface ICloudSeq<'T>
 
+        override this.Type = typeof<'T>
         override this.ToString() = sprintf' "cloudseq:%s/%s" container id
 
         member private this.StructuredFormatDisplay = this.ToString()
@@ -42,7 +53,7 @@
             member this.GetEnumerator () = 
                 provider.GetEnumerator(this)
                 |> Async.RunSynchronously :> IEnumerator
-        
+
         interface IEnumerable<'T> with
             member this.GetEnumerator () = 
                 provider.GetEnumerator(this)  
@@ -105,9 +116,15 @@
             }
 
         let defineUntyped(ty : Type, container : string, id : string) =
-            let cloudSeqTy = typedefof<CloudSeq<_>>.MakeGenericType [| ty |]
-            let cloudSeq = Activator.CreateInstance(cloudSeqTy,[| id :> obj ; container :> obj; this :> obj |])
-            cloudSeq :?> ICloudSeq
+            typeof<CloudSeqProvider>
+                .GetMethod("CreateCloudSeq", BindingFlags.Static ||| BindingFlags.NonPublic)
+                .MakeGenericMethod([| ty |])
+                .Invoke(null, [| id :> obj ; container :> obj ; this :> obj |])
+                :?> ICloudSeq
+
+        // WARNING : method called by reflection from 'defineUntyped' function above
+        static member CreateCloudSeq<'T>(id, container, provider) =
+            new CloudSeq<'T>(id , container, provider)
 
         member __.StoreId = storeInfo.Id
 
@@ -130,7 +147,7 @@
 
             member this.GetIds (container : string) : Async<string []> =
                 async {
-                    let! files = store.GetFiles(container)
+                    let! files = store.GetAllFiles(container)
                     return files
                         |> Seq.filter (fun w -> w.EndsWith <| sprintf' ".%s" extension)
                         |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
@@ -144,8 +161,8 @@
                     let length = Serialization.DefaultPickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
                     return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
                 }
-                do! cacheStore.Create(container, postfix id, serializeTo)
-                do! cacheStore.Commit(container, postfix id)
+                do! cacheStore.Create(container, postfix id, serializeTo, false)
+                do! cacheStore.Commit(container, postfix id, false)
 
                 return CloudSeq<'T>(id, container, this) :> ICloudSeq<'T>
             }
@@ -156,8 +173,8 @@
                         let length = Serialization.DefaultPickler.SerializeSequence(ty, stream, values, leaveOpen = true)
                         return setInfo stream { Size = -1L; Count = length; Type = ty }
                     }
-                    do! cacheStore.Create(container, postfix id, serializeTo)
-                    do! cacheStore.Commit(container, postfix id)
+                    do! cacheStore.Create(container, postfix id, serializeTo, false)
+                    do! cacheStore.Commit(container, postfix id, false)
 
                     return defineUntyped(ty, container, id)
                 }

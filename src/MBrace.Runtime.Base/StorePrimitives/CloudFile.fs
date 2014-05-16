@@ -10,7 +10,7 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
 
-    type internal CloudFile(id : string, container : string, provider : CloudFileProvider) =
+    type CloudFile internal (id : string, container : string, provider : CloudFileProvider) =
 
         interface ICloudFile with
             member self.Name = id
@@ -20,7 +20,7 @@
 
         override self.ToString() = sprintf' "%s - %s" container id
 
-        member __.Provider with get () = provider
+        member internal __.Provider = provider
 
         new (info : SerializationInfo, context : StreamingContext) = 
             let id = info.GetString("id")
@@ -85,7 +85,7 @@
         interface ICloudFileProvider with
             override this.CreateNew(container : Container, id : Id, writer : (Stream -> Async<unit>)) : Async<ICloudFile> =
                 async {
-                    do! cache.Create(container, id, writer)
+                    do! cache.Create(container, id, writer, asFile = true)
                     do! cache.Commit(container, id, asFile = true)
 
                     return CloudFile(id, container, this) :> _
@@ -115,7 +115,7 @@
 
             override this.GetContainedFiles(container) : Async<ICloudFile []> =
                 async {
-                    let! files = store.GetFiles(container)
+                    let! files = store.GetAllFiles(container)
                     return files |> Array.map (fun name -> CloudFile(name, container, this) :> _)
                 }
                 

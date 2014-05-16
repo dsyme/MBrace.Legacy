@@ -5,13 +5,13 @@
 
     open Nessos.MBrace.Runtime.Store
     
-    type IStore = Nessos.MBrace.Runtime.Store.IStore
+    type ICloudStore = Nessos.MBrace.Runtime.Store.ICloudStore
     type ICloudStoreFactory = Nessos.MBrace.Runtime.Store.ICloudStoreFactory
 
     /// Represents the storage provider used by CloudRefs etc.
     /// This can be the the local filesystem (for local usage),
     /// a shared filesystem (like a UNC path)
-    /// or any custom provider that implements the IStore interface.
+    /// or any custom provider that implements the ICloudStore interface.
     type StoreProvider private (factoryType : Type, connectionString : string) =
 
         member __.StoreFactoryQualifiedName = factoryType.FullName
@@ -38,42 +38,6 @@
         /// Any endpoint given will be ignored.
         static member LocalFS = StoreProvider.DefineFileSystem(Path.Combine(Path.GetTempPath(), "mbrace-localfs"))
 
-////        static member LocalFS =
-////            let path = 
-////            StoreProvider.Define<FileSystemStoreFactory>()
-//
-//
-//    type StoreProvider =
-//
-//        | LocalFS
-//
-//        | FileSystem of string
-//        /// A custom store provider and its endpoint (connection string).
-//        | Plugin of System.Type * string
-//    with
-//        
-//        static member Parse (storeProvider : string, storeEndpoint : string) =
-//            match storeProvider with
-//            | "LocalFS" -> LocalFS
-//            | "FileSystem" -> FileSystem storeEndpoint
-//            | _ ->
-//                let t = System.Type.GetType(storeProvider, throwOnError = true)
-//                Plugin(t, storeEndpoint)
-//
-//        /// The provider's endpoint (path, connection string, etc).
-//        member sp.EndPoint =
-//            match sp with
-//            | LocalFS -> " "
-//            | FileSystem uri -> uri
-//            | Plugin (_,cs) -> cs
-//
-//        /// The provider's name. This is the Assembly Qualified Name for custom providers.
-//        member sp.Name =
-//            match sp with
-//            | LocalFS -> "LocalFS"
-//            | FileSystem _ -> "FileSystem"
-//            | Plugin(t,_) -> t.AssemblyQualifiedName
-
 namespace Nessos.MBrace.Runtime.Store
     
     open System
@@ -85,13 +49,6 @@ namespace Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Core
     open Nessos.MBrace.Client
     open Nessos.MBrace.Utils
-//    open Nessos.MBrace.Utils.String
-//    open Nessos.MBrace.Utils.AssemblyCache
-
-
-//    module internal Crypto =        
-
-
 
     [<StructuralEquality ; StructuralComparison>]
     type StoreId = 
@@ -103,23 +60,12 @@ namespace Nessos.MBrace.Runtime.Store
     with override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
 
 
-//    type StoreActivator = 
-//        internal {
-//            Packet : AssemblyPacket
-//            FactoryAQN : string
-//            ConnectionString : string
-//        }
-
     and StoreInfo =
         {
             Id : StoreId
             Provider : StoreProvider
-//            FactoryType : Type
-//            ConnectionString : string
-            Store : IStore
+            Store : ICloudStore
         }
-//    with
-//        member s.Assembly = s.FactoryType.Assembly
 
     // TODO : handle all dependent assemblies
     and StoreRegistry private () =
@@ -160,34 +106,9 @@ namespace Nessos.MBrace.Runtime.Store
             | Some store -> store
             | None -> invalidOp "Store: missing instance with id '%O'." id
 
-//        static member Activate<'StoreFactory when 'StoreFactory :> ICloudStoreFactory> (connectionString, ?makeDefault) =
-//            activate makeDefault typeof<'StoreFactory> connectionString
-//
-//        static member Activate(factoryType : Type, connectionString, ?makeDefault) =
-//            activate makeDefault factoryType connectionString
-
-//        
-//            activate makeDefault provider
-//            let factoryType, connectionString =
-//                match provider with
-//                | LocalFS -> typeof<FileSystemStoreFactory>, Path.Com
-//                | FileSystem path -> typeof<FileSystemStoreFactory>, path
-//                | Plugin (ft, cs) -> ft, cs
-
-//            activate makeDefault factoryType connectionString
-
-//        static member TryActivate (activator : StoreActivator, ?makeDefault) =
-//            match AssemblyPacket.TryLoad activator.Packet with
-//            | None -> None
-//            | Some _ ->
-//                let factoryType = Type.GetType(activator.FactoryAQN, throwOnError = true)
-//                Some <| activate makeDefault factoryType activator.ConnectionString
-
         static member GetProvider(id : StoreId, ?includeImage) =
             let storeInfo = StoreRegistry.GetInstance id
             storeInfo.Provider
-//            let packet = AssemblyPacket.OfAssembly(storeInfo.Assembly, ?includeImage = includeImage)
-//            { Packet = packet; FactoryAQN =  storeInfo.FactoryType.AssemblyQualifiedName; ConnectionString = storeInfo.ConnectionString }
 
         static member DefaultStore 
                 with get () =

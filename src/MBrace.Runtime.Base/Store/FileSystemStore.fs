@@ -41,13 +41,12 @@
             | None -> return! trap path mode access share
         }
 
-        interface IStore with
+        interface ICloudStore with
             override self.Name = name
             override self.UUID = uuid
 
-            override self.Create(folder : string, file : string, serialize : Stream -> Async<unit>, ?asFile : bool) = 
+            override self.CreateImmutable(folder : string, file : string, serialize : Stream -> Async<unit>, asFile : bool) =
                 async {
-                    ignore asFile
                     let path = Path.Combine(path, folder)
                     if not <| Directory.Exists(path) then
                         Directory.CreateDirectory(path) |> ignore
@@ -59,7 +58,7 @@
                                 return! serialize s })
                 }
              
-            override self.Read(folder : string, file : string) : Async<Stream> = 
+            override self.ReadImmutable(folder : string, file : string) : Async<Stream> = 
                 async {
                     let path = Path.Combine(path, folder, file)
                     return
@@ -69,17 +68,15 @@
                                 fs :> _)
                 }
                   
-            override self.GetFiles(folder : string) : Async<File []> =
+            override self.GetAllFiles(folder : string) : Async<string []> =
                 async {
                     let path = Path.Combine(path, folder)
-                    return Directory.GetFiles(path)
-                           |> Array.map Path.GetFileName
+                    return Directory.GetFiles(path) |> Array.map Path.GetFileName
                 }
 
-            override self.GetFolders () : Async<Folder []> =
+            override self.GetAllContainers () : Async<string []> =
                 async {
-                    return Directory.GetDirectories(path)
-                           |> Array.map Path.GetFileName
+                    return Directory.GetDirectories(path) |> Array.map Path.GetFileName
                 }
 
             override self.Exists(folder : string, file : string) : Async<bool> = 
@@ -88,7 +85,7 @@
                     return File.Exists(path)
                 }
 
-            override self.Exists(folder : string) : Async<bool> = 
+            override self.ContainerExists(folder : string) : Async<bool> = 
                 async {
                     let path = Path.Combine(path, folder)
                     return Directory.Exists(path)
@@ -96,13 +93,12 @@
 
             override self.CopyTo(folder : string, file : string, target : Stream) = 
                 async {
-                    use! source = (self :> IStore).Read(folder,file)
+                    use! source = (self :> ICloudStore).ReadImmutable(folder,file)
                     do! Async.AwaitTask(source.CopyToAsync(target))
                 }
 
-            override self.CopyFrom(folder : string, file : string, source : Stream, ?asFile : bool) =
+            override self.CopyFrom(folder : string, file : string, source : Stream, asFile : bool) =
                 async {
-                    ignore asFile
                     let path = Path.Combine(path, folder)
                     if not <| Directory.Exists(path) then
                         Directory.CreateDirectory(path) |> ignore
@@ -116,13 +112,13 @@
                     File.Delete(path)
                 }
 
-            override self.Delete(folder : string) =
+            override self.DeleteContainer(folder : string) =
                 async {
                     let path = Path.Combine(path, folder)
                     Directory.Delete(path, true)
                 }
 
-            override self.UpdateMutable(folder, file, serialize, oldTag) =
+            override self.TryUpdateMutable(folder, file, serialize, oldTag) =
                 async {
                     let path = Path.Combine(path, folder, file)
                 
@@ -183,4 +179,4 @@
     type FileSystemStoreFactory () =
         interface ICloudStoreFactory with
             member this.CreateStoreFromConnectionString (path : string) = 
-                FileSystemStore(path) :> IStore
+                FileSystemStore(path) :> ICloudStore
