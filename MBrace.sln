@@ -49,6 +49,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "custom", "custom", "{EEAEC3
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Azure", "src\MBrace.Azure\MBrace.Azure.fsproj", "{1FF00F82-1102-44C4-B73F-39AEE6BC1635}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.SqlServer", "src\MBrace.SqlServer\MBrace.SqlServer.fsproj", "{90842977-D9DF-405F-9965-C43D6D56F0B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +101,10 @@ Global
 		{1FF00F82-1102-44C4-B73F-39AEE6BC1635}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FF00F82-1102-44C4-B73F-39AEE6BC1635}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FF00F82-1102-44C4-B73F-39AEE6BC1635}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90842977-D9DF-405F-9965-C43D6D56F0B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90842977-D9DF-405F-9965-C43D6D56F0B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90842977-D9DF-405F-9965-C43D6D56F0B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90842977-D9DF-405F-9965-C43D6D56F0B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -111,5 +117,6 @@ Global
 		{77F057E8-D09C-4149-8A56-FED7EFADE792} = {79DC9AD3-0FB6-4B1A-B183-BF165D2E7B95}
 		{56508FFD-64FC-4EB6-A336-709D0DA0497D} = {79DC9AD3-0FB6-4B1A-B183-BF165D2E7B95}
 		{1FF00F82-1102-44C4-B73F-39AEE6BC1635} = {EEAEC377-38CD-4229-977B-8E5F7CC7E1BB}
+		{90842977-D9DF-405F-9965-C43D6D56F0B9} = {EEAEC377-38CD-4229-977B-8E5F7CC7E1BB}
 	EndGlobalSection
 EndGlobal
