@@ -32,9 +32,6 @@
         let serialize (value : obj) (stream : Stream) = async.Return <| Serialization.DefaultPickler.Serialize<obj>(stream, value)
         let deserialize (stream : Stream) = Serialization.DefaultPickler.Deserialize<obj>(stream)
 
-//        // temporary solution before making cache async
-//        let run = Async.RunSynchronously
-
         // In-Memory Cache Policy
         let policy = new CacheItemPolicy()
         let syncRoot = new obj()
@@ -47,7 +44,7 @@
                             if not existsInCache then
                                 return!
                                     cacheStore.CreateImmutable(id, args.CacheItem.Key, serialize args.CacheItem.Value, false)
-                                    |> retryAsync (RetryPolicy.Retry(10, 0.1<sec>))
+                                    |> retryAsync (RetryPolicy.Retry(10, 1.0<sec>))
                         } |> Async.RunSynchronously))
 //                        if not <| (run <| cacheStore.Exists(id, args.CacheItem.Key)) then
 //                            retryAsync (RetryPolicy.Retry(10, 1.0<sec>))
