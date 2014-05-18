@@ -7,6 +7,13 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
 
+
+    // TODO : CloudSeq & ClouFile only delete from target store and not cache
+    // this might lead to confusing exception messages if attempting to read from
+    // explicitly disposed items (cf: checkCoherence parameter in Read)
+    // probably need a __.Delete implementation here too.
+    // Better still, implement a full ICloudStore interface wrap
+
     type LocalCacheStore(id : string, localCacheStore : ICloudStore, targetStore : ICloudStore) = 
         
         //do if Directory.Exists path then try Directory.Delete(path, true) with _ -> ()

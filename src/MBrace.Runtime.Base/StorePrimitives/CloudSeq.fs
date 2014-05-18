@@ -16,35 +16,32 @@
 
     type internal CloudSeqInfo = { Size : int64; Count : int; Type : Type }
 
-    // TODO: CLOUDSEQINFO CTOR
+    [<StructuredFormatDisplay("{StructuredFormatDisplay}")>]
+    type CloudSeq<'T> internal (id : string, container : string, provider : CloudSeqProvider) as self =
 
-    [<AbstractClass>]
-    type CloudSeq internal (id : string, container : string, provider : CloudSeqProvider) as this =
-        
-        let info = lazy (Async.RunSynchronously <| provider.GetCloudSeqInfo(this))
+        let mutable info = None
+        let getInfoLazy () =
+            match info with
+            | Some i -> i
+            | None ->
+                let i = provider.GetCloudSeqInfo self |> Async.RunSynchronously
+                info <- Some i
+                i
 
-        interface ICloudSeq with
-            member this.Name = id
-            member this.Container = container
-            member this.Type = info.Value.Type
-            member this.Count = info.Value.Count
-            member this.Size = info.Value.Size
-            member this.Dispose () = (provider :> ICloudSeqProvider).Delete(this)
-
-        interface ISerializable with
-            member this.GetObjectData (_,_) = raise <| new NotSupportedException("implemented by the inheriting class")
-
-    and 
-     [<StructuredFormatDisplay("{StructuredFormatDisplay}")>]
-     CloudSeq<'T> internal (id : string, container : string, provider : CloudSeqProvider) =
-     
-        inherit CloudSeq(id, container, provider)   
-
-        interface ICloudSeq<'T>
+        member __.Name = id
+        member __.Container = container
 
         override this.ToString() = sprintf' "cloudseq:%s/%s" container id
 
         member private this.StructuredFormatDisplay = this.ToString()
+
+        interface ICloudSeq<'T> with
+            member this.Name = id
+            member this.Container = container
+            member this.Type = typeof<'T>
+            member this.Count = getInfoLazy().Count
+            member this.Size = getInfoLazy().Size
+            member this.Dispose () = provider.Delete this
 
         interface IEnumerable with
             member this.GetEnumerator () = 
@@ -58,14 +55,14 @@
             
         interface ISerializable with
             member this.GetObjectData (info : SerializationInfo , context : StreamingContext) =
-                info.AddValue ("id", (this :> ICloudSeq<'T>).Name)
-                info.AddValue ("container", (this :> ICloudSeq<'T>).Container)
+                info.AddValue("id", (this :> ICloudSeq<'T>).Name)
+                info.AddValue("container", (this :> ICloudSeq<'T>).Container)
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
 
         new (info : SerializationInfo , context : StreamingContext) =
             let id        = info.GetString "id"
             let container = info.GetString "container"
-            let storeId   = info.GetValue( "storeId", typeof<StoreId>) :?> StoreId
+            let storeId   = info.GetValue ("storeId", typeof<StoreId>) :?> StoreId
 
             let provider =
                 match StoreRegistry.TryGetCoreConfiguration storeId with
@@ -125,35 +122,30 @@
 
         member __.StoreId = storeInfo.Id
 
-        member this.GetCloudSeqInfo (cseq : ICloudSeq) : Async<CloudSeqInfo> =
+        member __.GetCloudSeqInfo<'T> (cseq : CloudSeq<'T>) : Async<CloudSeqInfo> =
             getCloudSeqInfo cseq.Container cseq.Name
 
-        member this.GetEnumerator<'T> (cseq : ICloudSeq<'T>) : Async<IEnumerator<'T>> =
+        member __.GetEnumerator<'T> (cseq : CloudSeq<'T>) : Async<IEnumerator<'T>> =
             async {
-                let cont, id, ty = cseq.Container, postfix cseq.Name, cseq.Type
+                let cont, id = cseq.Container, postfix cseq.Name
                 let! stream = cacheStore.Read(cont, id)
 
                 let info = getInfo stream
 
-                if info.Type <> ty then
-                    let msg = sprintf' "CloudSeq type mismatch. Internal type %s, got %s" info.Type.AssemblyQualifiedName ty.AssemblyQualifiedName
+                if info.Type <> typeof<'T> then
+                    // TODO : include CloudSeq url in message
+                    let msg = sprintf' "CloudSeq type mismatch. Internal type '%s', expected '%s'." info.Type.FullName typeof<'T>.FullName
                     return raise <| MBraceException(msg)
 
                 return Serialization.DefaultPickler.DeserializeSequence<'T>(stream, info.Count)
             }
 
-            member this.GetIds (container : string) : Async<string []> =
-                async {
-                    let! files = store.GetAllFiles(container)
-                    return files
-                        |> Seq.filter (fun w -> w.EndsWith <| sprintf' ".%s" extension)
-                        |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
-                        |> Seq.toArray
-                }
+        member __.Delete<'T> (cseq : CloudSeq<'T>) : Async<unit> = 
+            store.Delete(cseq.Container, postfix cseq.Name)
 
         interface ICloudSeqProvider with
 
-            member this.CreateNew<'T>(container, id, values : seq<'T>) = async {
+            member this.Create<'T>(container, id, values : seq<'T>) = async {
                 let serializeTo stream = async {
                     let length = Serialization.DefaultPickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
                     return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
@@ -164,7 +156,7 @@
                 return CloudSeq<'T>(id, container, this) :> ICloudSeq<'T>
             }
 
-            member this.CreateNewUntyped (container : string, id : string, values : IEnumerable, ty : Type) : Async<ICloudSeq> =
+            member this.Create (container : string, id : string, ty : Type, values : IEnumerable) : Async<ICloudSeq> =
                 async {
                     let serializeTo stream = async {
                         let length = Serialization.DefaultPickler.SerializeSequence(ty, stream, values, leaveOpen = true)
@@ -176,19 +168,26 @@
                     return defineUntyped(ty, container, id)
                 }
 
-            member this.CreateExisting (container, id) = async {
+            member this.GetExisting (container, id) = async {
                 let! cseqInfo = getCloudSeqInfo container id
                 return defineUntyped(cseqInfo.Type, container, id)
             }
 
             member this.GetContainedSeqs(container : string) : Async<ICloudSeq []> =
                 async {
-                    let! ids = this.GetIds(container)
-                    return 
-                        ids |> Seq.map (fun id -> (Async.RunSynchronously(getCloudSeqInfo container id)).Type, container, id)
-                            |> Seq.map defineUntyped
-                            |> Seq.toArray
-                }
+                    let! files = store.GetAllFiles(container)
+                    
+                    // TODO : find a better heuristic?
+                    let cseqIds =
+                        files
+                        |> Array.choose (fun f ->
+                            if f.EndsWith <| sprintf' ".%s" extension then 
+                                Some <| f.Substring(0, f.Length - extension.Length - 1)
+                            else
+                                None)
 
-            member self.Delete(cseq : ICloudSeq) : Async<unit> = 
-                store.Delete(cseq.Container, postfix cseq.Name)
+                    return!
+                        cseqIds 
+                        |> Array.map (fun id -> (this :> ICloudSeqProvider).GetExisting(container, id))
+                        |> Async.Parallel
+                }

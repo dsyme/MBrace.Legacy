@@ -62,7 +62,7 @@
                         }
                         return s
                     }
-                    return! CloudFile.ReadSeq(file, reader)
+                    return! CloudFile.ReadAsSeq(file, reader)
                 }
 
             [<Cloud>]
@@ -113,7 +113,7 @@
                         do! Async.AwaitTask(stream.CopyToAsync(ms).ContinueWith(ignore))
                         return ms.ToArray() :> seq<byte>
                     }
-                    return! CloudFile.ReadSeq(file, reader)
+                    return! CloudFile.Read(file, reader)
                 }
 
             [<Cloud>]

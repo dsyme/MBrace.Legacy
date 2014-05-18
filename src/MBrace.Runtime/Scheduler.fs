@@ -26,7 +26,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                       (msg: Scheduler) = 
     let coreConfig = IoC.Resolve<CoreConfiguration>()
     let newRef (processId : int) (value : 'T) = 
-        coreConfig.CloudRefProvider.CreateNew<'T>("temp" + (string processId), Guid.NewGuid().ToString(), value)
+        coreConfig.CloudRefProvider.Create<'T>("temp" + (string processId), Guid.NewGuid().ToString(), value)
 
     let taskManager = state.TaskManager
     let continuationMap = state.ContinuationMap

@@ -24,19 +24,23 @@
 
         /// Create a StoreProvider object from the storeProvider, storeEndpoint configuration.
         static member Parse(storeFactoryQualifiedName : string, connectionString : string) =
-            let factoryType = Type.GetType(storeFactoryQualifiedName, throwOnError = true)
-            if typeof<ICloudStoreFactory>.IsAssignableFrom factoryType then
-                new StoreProvider(factoryType, connectionString)
-            else
-                invalidArg "storeFactoryQualifiedName" "Type is not a store factory"
+            match storeFactoryQualifiedName with
+            | "LocalFS" -> StoreProvider.LocalFS
+            | "FileSystem" -> StoreProvider.FileSystem connectionString
+            | _ ->
+                let factoryType = Type.GetType(storeFactoryQualifiedName, throwOnError = true)
+                if typeof<ICloudStoreFactory>.IsAssignableFrom factoryType then
+                    new StoreProvider(factoryType, connectionString)
+                else
+                    invalidArg "storeFactoryQualifiedName" "Type is not a store factory"
 
         /// A store provider using the file system with an endpoint being either a
         /// path in the local file system, or a UNC path.
-        static member DefineFileSystem (path : string) = StoreProvider.Define<FileSystemStoreFactory>(path)
+        static member FileSystem (path : string) = StoreProvider.Define<FileSystemStoreFactory>(path)
 
         /// A store provider using the local file system (and a folder in the users temp path).
         /// Any endpoint given will be ignored.
-        static member LocalFS = StoreProvider.DefineFileSystem(Path.Combine(Path.GetTempPath(), "mbrace-localfs"))
+        static member LocalFS = StoreProvider.FileSystem(Path.Combine(Path.GetTempPath(), "mbrace-localfs"))
 
 namespace Nessos.MBrace.Runtime.Store
     

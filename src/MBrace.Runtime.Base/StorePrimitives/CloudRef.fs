@@ -10,48 +10,35 @@
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Core
 
-    [<AbstractClass>]
-    type CloudRef internal (id : string, container : string, provider : CloudRefProvider) as this =
+    type CloudRef<'T> internal (id : string, container : string, provider : CloudRefProvider) as self =
 
-        let valueLazy () = 
-            async {
-                let! value = Async.Catch <| (provider :> ICloudRefProvider).Dereference this
-                match value with
-                | Choice1Of2 value -> return value
-                | Choice2Of2 exc ->
-                    let! exists = Async.Catch <| provider.Exists(container, id)
-                    match exists with
-                    | Choice1Of2 false -> 
-                        return raise <| NonExistentObjectStoreException(container, id)
-                    | _ -> 
-                        return raise <| StoreException(sprintf' "Cannot locate Container: %s, Name: %s" container id, exc)
-            } |> Async.RunSynchronously
+        let mutable value : 'T option = None
+        let valueLazy () =
+            match value with
+            | Some v -> v
+            | None ->                
+                let v = provider.Dereference self |> Async.RunSynchronously
+                value <- Some v
+                v
 
-        abstract Type : Type
+        member __.Name = id
+        member __.Container = container
 
-        member internal __.Value = valueLazy ()
-        member internal __.StoreProvider = provider
-
-        interface ICloudRef with
-            member self.Name = id
-            member self.Container = container
-            member self.Type = self.Type
-            member self.Value = self.Value
-            member self.TryValue = 
-                try 
-                    Some (valueLazy ())
-                with _ -> None
-    
-        interface ISerializable with
-            member self.GetObjectData(_,_) = raise <| new NotSupportedException("implemented by the inheriting class")
+        override self.ToString() = sprintf' "cloudref:%s/%s" container id
 
         interface ICloudDisposable with
-            member self.Dispose () = (provider :> ICloudRefProvider).Delete(self)
+            member self.Dispose () = async {
+                do! provider.Delete self
+                do value <- None // remove cached value to force exceptions for current ref instance
+            }
 
-    and CloudRef<'T> internal (id : string, container : string, provider : CloudRefProvider) =
-        inherit CloudRef(id, container, provider)
-
-        override __.Type = typeof<'T>
+        interface ICloudRef<'T> with
+            member __.Name = id
+            member __.Container = container
+            member __.Type = typeof<'T>
+            member __.Value : obj = valueLazy () :> obj
+            member __.Value : 'T = valueLazy ()
+            member __.TryValue = try Some (valueLazy ()) with _ -> None
 
         new (info : SerializationInfo, _ : StreamingContext) = 
             let id = info.GetString("id")
@@ -63,14 +50,6 @@
                 | Some config -> config.CloudRefProvider :?> CloudRefProvider
             
             new CloudRef<'T>(id, container, provider)
-
-        override self.ToString() = sprintf' "cloudref:%s/%s" container id
-
-        interface ICloudRef<'T> with
-            member self.Value = base.Value :?> 'T
-            member self.TryValue = 
-                try Some (base.Value :?> 'T)
-                with _ -> None
                     
         interface ISerializable with
             override self.GetObjectData(info : SerializationInfo, _ : StreamingContext) =
@@ -80,20 +59,20 @@
     
 
     and internal CloudRefProvider(storeInfo : StoreInfo, cache : LocalObjectCache) as self =
+
         let store = storeInfo.Store
         let storeId = storeInfo.Id
 
-        let extension = "ref"
-        let postfix s = sprintf' "%s.%s" s extension
+        static let extension = "ref"
+        static let postfix s = sprintf' "%s.%s" s extension
 
-        let checkIsValid(cref : ICloudRef) =
-            match cref with
-            | :? CloudRef as c ->
-                if obj.ReferenceEquals(c.StoreProvider, self) || c.StoreProvider.StoreId = storeId then ()
-                else
-                    raise <| new StoreException("Cloud ref belongs to invalid store.")
-            | _ -> 
-                raise <| new StoreException("Invalid cloud ref.")
+        // TODO 1 : refine exception handling for reads
+        // TODO 2 : decide if file is cloud ref by reading header, not file extension.
+
+        static let serialize (value:obj) (t:Type) (stream:Stream) = async {
+            Serialization.DefaultPickler.Serialize<Type>(stream, t)
+            Serialization.DefaultPickler.Serialize<obj>(stream, value)
+        }
 
         let read container id : Async<Type * obj> = async {
                 use! stream = store.ReadImmutable(container, id)
@@ -110,7 +89,8 @@
 
         let getIds (container : string) : Async<string []> = async {
                 let! files = store.GetAllFiles(container)
-                return files
+                return 
+                    files
                     |> Seq.filter (fun w -> w.EndsWith <| sprintf' ".%s" extension)
                     |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
                     |> Seq.toArray
@@ -129,36 +109,54 @@
 
         member __.StoreId = storeInfo.Id
 
-        member self.Exists(container : string) : Async<bool> = 
-            store.ContainerExists(container)
+        member self.Delete<'T> (cloudRef : CloudRef<'T>) : Async<unit> =
+            async {
+                let id = postfix cloudRef.Name
+                let! containsKey = cache.ContainsKey id
+                if containsKey then
+                    do! cache.Delete(id)
 
-        member self.Exists(container : string, id : string) : Async<bool> = 
-            store.Exists(container, postfix id)
+                return! store.Delete(cloudRef.Container, id)
+            }
+
+        member self.Dereference<'T> (cref : CloudRef<'T>) : Async<'T> = 
+            async {
+                let cacheId = sprintf' "%s/%s" cref.Container cref.Name
+
+                // get value
+                let! cacheResult = cache.TryFind cacheId
+                match cacheResult with
+                | Some result ->
+                    let _,value = result :?> Type * obj
+                    return value :?> 'T
+                | None ->
+                    let! ty, value = read cref.Container <| postfix cref.Name
+                    if typeof<'T> <> ty then 
+                        let msg = sprintf' "CloudRef type mismatch. Internal type %s, expected %s." ty.FullName typeof<'T>.FullName
+                        raise <| StoreException(msg)
+                    // update cache
+                    cache.Set(cacheId, (ty, value))
+                    return value :?> 'T
+            }
 
         interface ICloudRefProvider with
 
-            member self.CreateNew (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
+            member self.Create (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
                 async {
-                    do! store.CreateImmutable(container, postfix id, 
-                            (fun stream -> async {
-                                Serialization.DefaultPickler.Serialize(stream, typeof<'T>)
-                                Serialization.DefaultPickler.Serialize<obj>(stream, value) }), false)
+                    do! store.CreateImmutable(container, postfix id, serialize value typeof<'T>, false)
 
                     return new CloudRef<'T>(id, container, self) :> _
             }
 
-            member self.CreateNewUntyped (container : string, id : string, value : obj, t : Type) : Async<ICloudRef> = 
+            member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 
                 async {
-                    do! store.CreateImmutable(container, postfix id, 
-                            (fun stream -> async {
-                                Serialization.DefaultPickler.Serialize(stream, t)
-                                Serialization.DefaultPickler.Serialize(stream, value) }), false)
+                    do! store.CreateImmutable(container, postfix id, serialize value t, false)
 
                     // construct & return
                     return defineUntyped(t, container, id)
             }
 
-            member self.CreateExisting(container, id) : Async<ICloudRef> =
+            member self.GetExisting(container, id) : Async<ICloudRef> =
                 async {
                     let! t = readType container (postfix id)
                     return defineUntyped(t, container, id)
@@ -167,40 +165,9 @@
             member self.GetContainedRefs(container : string) : Async<ICloudRef []> =
                 async {
                     let! ids = getIds container
-                    return
-                        ids |> Seq.map (fun id -> Async.RunSynchronously(readType container (postfix id)), container, id)
-                            |> Seq.map defineUntyped
-                            |> Seq.toArray
-                }
 
-            member self.Delete(cloudRef : ICloudRef) : Async<unit> =
-                async {
-                    checkIsValid cloudRef
-                    let id = postfix cloudRef.Name
-                    let! containsKey = cache.ContainsKey id
-                    if containsKey then
-                        do! cache.Delete(id)
-
-                    return! store.Delete(cloudRef.Container, id)
-                }
-
-            member self.Dereference (cref : ICloudRef) = 
-                async {
-                    checkIsValid cref
-                    let id, container, t = cref.Name, cref.Container, cref.Type
-                    let id = postfix id
-
-                    // get value
-                    let! cacheResult = cache.TryFind <| sprintf' "%s" id
-                    match cacheResult with
-                    | Some value -> 
-                        return value :?> Type * obj |> snd
-                    | None -> 
-                        let! ty, value = read container id
-                        if t <> ty then 
-                            let msg = sprintf' "CloudRef type mismatch. Internal type %s, got %s" ty.AssemblyQualifiedName t.AssemblyQualifiedName
-                            raise <| MBraceException(msg)
-                        // update cache
-                        cache.Set(id, (ty, value))
-                        return value
+                    return!
+                        ids 
+                        |> Array.map (fun id -> (self :> ICloudRefProvider).GetExisting(container,id))
+                        |> Async.Parallel
                 }

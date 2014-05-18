@@ -8,8 +8,8 @@
     module CloudModule = 
 
         // Wrap/UnWrap functions
-        let internal wrapCloudExpr (cloudExpr : CloudExpr) = new ICloud<'T>(cloudExpr)
-        let internal unWrapCloudExpr (cloudValue : ICloud<'T>) : CloudExpr = cloudValue.CloudExpr
+        let inline internal wrapCloudExpr (cloudExpr : CloudExpr) = new ICloud<'T>(cloudExpr)
+        let inline internal unWrapCloudExpr (cloudValue : ICloud<'T>) : CloudExpr = cloudValue.CloudExpr
 
         type Cloud =
 
