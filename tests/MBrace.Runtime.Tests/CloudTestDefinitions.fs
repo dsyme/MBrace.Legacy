@@ -1,6 +1,7 @@
 ﻿namespace Nessos.MBrace.Runtime.Tests
 
     open System
+    open System.Runtime.Serialization
     open System.Collections.Generic
 
     open Nessos.MBrace
@@ -528,27 +529,27 @@
                     return f >> prev
             }
 
-//        let disposable (flagRef : bool ref) = 
-//            
-//            { new ICloudDisposable with
-//                member self.Dispose() =
-//                    async { 
-//                        if flagRef.Value then
-//                            return raise <| new ObjectDisposedException("Object Disposed!")
-//                        else
-//                            flagRef := true
-//                            return () 
-//                    } }
+        type DummyDisposable private (isDisposed : IMutableCloudRef<bool>) =
+            member __.IsDisposed = isDisposed.Value
+            interface ICloudDisposable with
+                member __.Dispose () = isDisposed.ForceUpdate true
+                member __.GetObjectData(si,_) = si.AddValue("isDisposed", isDisposed)
+
+            internal new (si : SerializationInfo, _ : StreamingContext) =
+                new DummyDisposable(si.GetValue("isDisposed", typeof<IMutableCloudRef<bool>>) :?> IMutableCloudRef<bool>)
+            
+            static member Create () = cloud { let! ref = MutableCloudRef.New false in return new DummyDisposable(ref) }
 
         [<Cloud>]
-        let testUseWithCloudDisposable () = 
-            cloud {
-                try
-                    use! value = CloudRef.New(false)
-                    do! Cloud.OfAsync <| value.Dispose()
-                    return! CloudRef.Read(value)
-                with :? NonExistentObjectStoreException -> return true
-            }
+        let testUseWithCloudDisposable () = cloud {
+            let! d, wasDisposed =
+                cloud {
+                    use! d = DummyDisposable.Create ()
+                    return d, d.IsDisposed
+                }
+
+            return not wasDisposed && d.IsDisposed // should be true
+        }
 
         [<Cloud>] 
         let testUseWithException () =
@@ -558,7 +559,7 @@
                     use x = cr
                     return raise <| new DivideByZeroException()
                 with 
-                    | :? DivideByZeroException as exn -> return cr.TryValue.IsNone
+                | :? DivideByZeroException as exn -> return cr.TryValue.IsNone
             }
 
 

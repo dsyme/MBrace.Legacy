@@ -75,26 +75,26 @@
         }
 
         let read container id : Async<Type * obj> = async {
-                use! stream = store.ReadImmutable(container, id)
-                let t = Serialization.DefaultPickler.Deserialize<Type> stream
-                let o = Serialization.DefaultPickler.Deserialize<obj> stream
-                return t, o
-            }
+            use! stream = store.ReadImmutable(container, id)
+            let t = Serialization.DefaultPickler.Deserialize<Type> stream
+            let o = Serialization.DefaultPickler.Deserialize<obj> stream
+            return t, o
+        }
 
         let readType container id  = async {
-                use! stream = store.ReadImmutable(container, id)
-                let t = Serialization.DefaultPickler.Deserialize<Type> stream
-                return t
-            }
+            use! stream = store.ReadImmutable(container, id)
+            let t = Serialization.DefaultPickler.Deserialize<Type> stream
+            return t
+        }
 
         let getIds (container : string) : Async<string []> = async {
-                let! files = store.GetAllFiles(container)
-                return 
-                    files
-                    |> Seq.filter (fun w -> w.EndsWith <| sprintf' ".%s" extension)
-                    |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
-                    |> Seq.toArray
-            }
+            let! files = store.GetAllFiles(container)
+            return 
+                files
+                |> Seq.filter (fun w -> w.EndsWith <| sprintf' ".%s" extension)
+                |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
+                |> Seq.toArray
+        }
 
         let defineUntyped(ty : Type, container : string, id : string) =
             typeof<CloudRefProvider>
@@ -123,20 +123,25 @@
             async {
                 let cacheId = sprintf' "%s/%s" cref.Container cref.Name
 
-                // get value
-                let! cacheResult = cache.TryFind cacheId
-                match cacheResult with
-                | Some result ->
-                    let _,value = result :?> Type * obj
-                    return value :?> 'T
-                | None ->
-                    let! ty, value = read cref.Container <| postfix cref.Name
-                    if typeof<'T> <> ty then 
-                        let msg = sprintf' "CloudRef type mismatch. Internal type %s, expected %s." ty.FullName typeof<'T>.FullName
-                        raise <| StoreException(msg)
-                    // update cache
-                    cache.Set(cacheId, (ty, value))
-                    return value :?> 'T
+                try
+                    // get value
+                    let! cacheResult = cache.TryFind cacheId
+                    match cacheResult with
+                    | Some result ->
+                        let _,value = result :?> Type * obj
+                        return value :?> 'T
+                    | None ->
+                        let! ty, value = read cref.Container <| postfix cref.Name
+                        if typeof<'T> <> ty then 
+                            let msg = sprintf' "CloudRef type mismatch. Internal type %s, expected %s." ty.FullName typeof<'T>.FullName
+                            return! Async.Raise <| StoreException(msg)
+                        // update cache
+                        cache.Set(cacheId, (ty, value))
+                        return value :?> 'T
+
+                with 
+                | :? StoreException as e -> return! Async.Raise e
+                | e -> return! Async.Raise <| new StoreException(sprintf "error reading container '%s'." cacheId, e)
             }
 
         interface ICloudRefProvider with
@@ -146,7 +151,7 @@
                     do! store.CreateImmutable(container, postfix id, serialize value typeof<'T>, false)
 
                     return new CloudRef<'T>(id, container, self) :> _
-            }
+                }
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 
                 async {
@@ -154,7 +159,7 @@
 
                     // construct & return
                     return defineUntyped(t, container, id)
-            }
+                }
 
             member self.GetExisting(container, id) : Async<ICloudRef> =
                 async {
