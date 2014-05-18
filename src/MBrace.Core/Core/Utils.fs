@@ -7,16 +7,6 @@
 
     module internal Utils =
 
-        type TagObj = TagObj of obj * System.Type
-
-        let inline safeBox<'T> (value : 'T) = TagObj(value, typeof<'T>)
-        let inline safeUnbox<'T> (TagObj (o, t)) = 
-            if typeof<'T>.IsAssignableFrom t then o :?> 'T
-            else
-                let msg = sprintf "Unable to case object of type '%O' to type '%O'." t typeof<'T>
-                raise <| new InvalidCastException()
-
-
         /// thread safe counter implementation
         type UniqueIdGenerator (?start : int64) =
             let mutable count = 0L
