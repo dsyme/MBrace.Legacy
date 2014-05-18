@@ -112,8 +112,8 @@
             // register mbrace.process executable
             registerProcessDomainExecutable mbraceProc
             
-            // TODO : move to app.config ? --naah
-            IoC.RegisterValue(true, "IsolateProcesses")
+//            // TODO : move to app.config ?
+//            IoC.RegisterValue(true, "IsolateProcesses")
 
             // Register Exiter
             IoC.RegisterValue<IExiter>(exiter)

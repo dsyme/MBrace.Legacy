@@ -538,6 +538,7 @@
             internal new (si : SerializationInfo, _ : StreamingContext) =
                 new DummyDisposable(si.GetValue("isDisposed", typeof<IMutableCloudRef<bool>>) :?> IMutableCloudRef<bool>)
             
+            [<Cloud>]
             static member Create () = cloud { let! ref = MutableCloudRef.New false in return new DummyDisposable(ref) }
 
         [<Cloud>]
