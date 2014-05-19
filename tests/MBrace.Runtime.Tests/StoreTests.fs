@@ -235,6 +235,15 @@ type ``Store tests`` () =
         |> Seq.iter   (test.Store.DeleteContainer >> Async.RunSynchronously)
 
 
+module ConnectionsConfig =
+    open System.Xml.Linq
+
+    let get (provider : string) = 
+        let doc = XDocument.Load("connections.config")
+        let X s =  XName.Get(s)
+        let conn = doc.Element(X "connections").Elements()
+                   |> Seq.find(fun xe -> xe.Attribute(X "id").Value = provider)
+        conn.Attribute(X "connectionString").Value
 
 
 [<TestFixture>]
@@ -251,7 +260,7 @@ type ``FileSystem tests`` () =
 type ``WindowsAzure tests`` () =
     inherit ``Store tests`` ()
 
-    let conn = "DefaultEndpointsProtocol=https;AccountName=mbraceunittests;AccountKey=QpDxFgGDhjWzw1eFiXm6nDA5F6mbmkbPHVtPYPO3kTfhKDMWF9rgVcsBBq+VnvcmH+1phURoBgCDZVX2/FfQHg=="
+    let conn = ConnectionsConfig.get "Azure" 
     let factory = new Nessos.MBrace.Azure.AzureStoreFactory() :> ICloudStoreFactory
     let store = factory.CreateStoreFromConnectionString(conn)
 
@@ -261,7 +270,7 @@ type ``WindowsAzure tests`` () =
 type ``LocalDb tests`` () =
     inherit ``Store tests`` ()
 
-    let conn = "Data Source=(localdb)\Projects;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False"
+    let conn = ConnectionsConfig.get "SqlServer" 
     let factory = new Nessos.MBrace.SqlServer.SqlServerStoreFactory() :> ICloudStoreFactory
     let store = factory.CreateStoreFromConnectionString(conn)
 
