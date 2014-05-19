@@ -256,3 +256,13 @@ type ``WindowsAzure tests`` () =
     let store = factory.CreateStoreFromConnectionString(conn)
 
     override test.Store = store
+
+[<TestFixture>]
+type ``LocalDb tests`` () =
+    inherit ``Store tests`` ()
+
+    let conn = "Data Source=(localdb)\Projects;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False"
+    let factory = new Nessos.MBrace.SqlServer.SqlServerStoreFactory() :> ICloudStoreFactory
+    let store = factory.CreateStoreFromConnectionString(conn)
+
+    override test.Store = store

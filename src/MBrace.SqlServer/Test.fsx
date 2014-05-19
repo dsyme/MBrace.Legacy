@@ -34,8 +34,12 @@ sqlstore.Read("theFolder", "theFile").Run().ReadByte()
 sqlstore.GetFolders().Run()
 sqlstore.GetFiles("theFolder").Run()
 
+sqlstore.Create("theFolder", "mfile", (fun x -> async { x.WriteByte(88uy) })).Run()
+let a,b = sqlstore.ReadMutable("theFolder", "mfile").Run()
 
+//sqlstore.UpdateMutable("theFolder", "mfile")
 
+sqlstore.Delete("theFolder").Run()
 
 
 #r "System.Transactions"
