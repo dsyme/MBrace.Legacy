@@ -16,7 +16,7 @@ namespace Nessos.MBrace.Runtime.Tests
 
         abstract Name : string
         abstract IsLocalTesting : bool
-        abstract ExecuteExpression : Expr<ICloud<'T>> -> 'T
+        abstract ExecuteExpression : Expr<Cloud<'T>> -> 'T
 
 
         [<Test>] 
@@ -185,8 +185,8 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test>]
         member test.``valid return type Cloud<_> from Cloud<_> `` () = 
-            let expectedValue : ICloud<int> = <@ cloud { return cloud { return 1 } } @> |> test.ExecuteExpression 
-            let expectedValue : ICloud<int> = <@ cloud { let! x = cloud { return cloud { return 1 } } in return x } @> |> test.ExecuteExpression 
+            let expectedValue : Cloud<int> = <@ cloud { return cloud { return 1 } } @> |> test.ExecuteExpression 
+            let expectedValue : Cloud<int> = <@ cloud { let! x = cloud { return cloud { return 1 } } in return x } @> |> test.ExecuteExpression 
             ()
 
         [<Test>] 
@@ -731,7 +731,7 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``MutableCloudRef - Token passing`` () = 
             let run () = 
                 cloud {
-                    let rec run (id : int) (locks : MVar<unit> []) (token : IMutableCloudRef<int>) : ICloud<int option> = 
+                    let rec run (id : int) (locks : MVar<unit> []) (token : IMutableCloudRef<int>) : Cloud<int option> = 
                       cloud {
                         do! MVar.take(locks.[id])
                         let! tok = MutableCloudRef.Read(token)

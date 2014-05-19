@@ -7,25 +7,25 @@ open Nessos.MBrace
 [<AutoOpen>]
 module ClientExtensions =
     type MBrace =
-        static member internal Compile (expr : Expr<ICloud<'R>>, ?name) = CloudComputation<_>(expr, ?name = name)
-//        static member internal Compile (f : Expr<'I -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
-//        static member internal Compile (f : Expr<'I1 -> 'I2 -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
-//        static member internal Compile (f : Expr<'I1 -> 'I2 -> 'I3 -> ICloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
+        static member internal Compile (expr : Expr<Cloud<'R>>, ?name) = CloudComputation<_>(expr, ?name = name)
+//        static member internal Compile (f : Expr<'I -> Cloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
+//        static member internal Compile (f : Expr<'I1 -> 'I2 -> Cloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
+//        static member internal Compile (f : Expr<'I1 -> 'I2 -> 'I3 -> Cloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
 
-        static member internal RunRemoteTask (runtime: MBraceRuntime) (expr : Expr<ICloud<'T>>) =
+        static member internal RunRemoteTask (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) =
             let computation = MBrace.Compile expr
             Async.StartAsTask (runtime.RunAsync computation)
 
         /// Runs a computation at the given runtime.
-        static member RunRemote (runtime: MBraceRuntime) (expr : Expr<ICloud<'T>>) : 'T =
+        static member RunRemote (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) : 'T =
             runtime.Run expr
 
         /// Creates a new process at the given runtime.
-        static member CreateProcess (runtime : MBraceRuntime) (expr : Expr<ICloud<'T>>) : Process<'T> =
+        static member CreateProcess (runtime : MBraceRuntime) (expr : Expr<Cloud<'T>>) : Process<'T> =
             runtime.CreateProcess expr
 
         /// Runs the given computation locally without the need of a runtime.
-        static member RunLocalAsync (computation : ICloud<'T>) : Async<'T> =
+        static member RunLocalAsync (computation : Cloud<'T>) : Async<'T> =
             // force exception to be raised if no store provider has been set
             MBraceSettings.StoreProvider |> ignore
 
@@ -39,7 +39,7 @@ module ClientExtensions =
             Nessos.MBrace.Core.Interpreter.evaluateLocalWrapped MBraceSettings.DefaultCoreConfiguration logger false computation
 
         /// Runs the given computation locally without the need of a runtime.
-        static member RunLocal (computation : ICloud<'T>) : 'T = 
+        static member RunLocal (computation : Cloud<'T>) : 'T = 
             computation |> MBrace.RunLocalAsync |> Async.RunSynchronously 
 
 

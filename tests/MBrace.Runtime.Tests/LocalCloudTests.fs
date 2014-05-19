@@ -9,6 +9,6 @@
         override __.Name = "Local Cloud Tests"
         override __.IsLocalTesting = true
 
-        override __.ExecuteExpression(expr : Quotations.Expr<ICloud<'T>>) : 'T =
+        override __.ExecuteExpression(expr : Quotations.Expr<Cloud<'T>>) : 'T =
             let cexpr = Swensen.Unquote.Operators.eval expr
             MBrace.RunLocal cexpr

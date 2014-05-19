@@ -348,7 +348,7 @@ namespace Nessos.MBrace.Client
 //            member __.HashPacket = { Header = header ; Image = None }
 //            member __.ImagePacket = { Header = header ; Image = Some <| AssemblyImage.Create assembly.Location }
 
-        let clientSideCompile throwOnError (expr : Expr<ICloud<'T>>) =
+        let clientSideCompile throwOnError (expr : Expr<Cloud<'T>>) =
             let warnings, errors = checkForErrors expr
 
             if throwOnError && not errors.IsEmpty then

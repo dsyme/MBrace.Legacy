@@ -17,7 +17,7 @@ namespace Nessos.MBrace.Runtime.Tests
         
         override __.Name = "Cluster Cloud Tests"
         override __.IsLocalTesting = false
-        override __.ExecuteExpression<'T>(expr: Quotations.Expr<ICloud<'T>>): 'T =
+        override __.ExecuteExpression<'T>(expr: Quotations.Expr<Cloud<'T>>): 'T =
             MBrace.RunRemote __.Runtime expr
 
         member __.Runtime =
@@ -143,7 +143,7 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test; Repeat 10>]
         member test.``Z4 Test Kill Process - Fork bomb`` () =
             let m = MutableCloudRef.New 0 |> MBrace.RunLocal
-            let rec fork () : ICloud<unit> = 
+            let rec fork () : Cloud<unit> = 
                 cloud { do! MutableCloudRef.Force(m,1)
                         let! _ = fork() <||> fork() in return () }
             let ps = test.Runtime.CreateProcess <@ fork () @>

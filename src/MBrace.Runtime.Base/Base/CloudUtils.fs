@@ -14,7 +14,7 @@
         open Nessos.MBrace.Utils.Quotations
 
         let rec yieldsICloud (t : Type) =
-            if typeof<ICloud>.IsAssignableFrom(t) then true else
+            if typeof<Cloud>.IsAssignableFrom(t) then true else
             
             match t with
             | FSharpFunc(_,resultT) -> yieldsICloud resultT
@@ -23,7 +23,7 @@
             | Array(t,_) -> yieldsICloud t
             | Ptr(_,t) -> yieldsICloud t
             
-        let isCloudPrimitive (t : Type) = t.Assembly = typeof<ICloud>.Assembly
+        let isCloudPrimitive (t : Type) = t.Assembly = typeof<Cloud>.Assembly
 
         /// matches against a property whose return type contains cloud blocks
         let (|CloudProperty|_|) (propInfo : PropertyInfo) =
@@ -39,7 +39,7 @@
                 Some methodInfo
             else None
 
-        /// matches against a method or property that yields ICloud
+        /// matches against a method or property that yields Cloud
         let (|CloudMoP|_|) (m : MethodOrProperty) =
             match m with
             | PropertyGetter(CloudProperty _)

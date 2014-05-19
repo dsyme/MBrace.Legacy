@@ -43,7 +43,7 @@ namespace Nessos.MBrace.Runtime
             let rec checkForCloud (t : Type) =
                 match t with
                 | Named (typeDef, typeArgs) 
-                    when typeDef = typedefof<ICloud<_>> -> [t]
+                    when typeDef = typedefof<Cloud<_>> -> [t]
                 | Named (typeDef, typeArgs) -> 
                     typeArgs |> Array.map checkForCloud |> Seq.concat |> Seq.toList
                 | Param (_) -> []
@@ -81,7 +81,7 @@ namespace Nessos.MBrace.Runtime
                          typeDef = typedefof<Tuple<_, _, _, _, _, _, _, _>> -> [Expr.NewTuple args]
             | _ -> args
 
-        let rec compile (pkg : CloudPackage) : (Type * Expr * ICloud * FunctionInfo list) = 
+        let rec compile (pkg : CloudPackage) : (Type * Expr * Cloud * FunctionInfo list) = 
 
             let rec compile (expr : Expr) : CompilerState = 
 

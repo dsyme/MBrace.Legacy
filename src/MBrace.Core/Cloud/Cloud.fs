@@ -14,95 +14,97 @@
             member self.Name = "NoTraceInfo"
 
     [<AbstractClass>]
-    type ICloud internal (cloudExpr : CloudExpr) =
+    type Cloud internal (cloudExpr : CloudExpr) =
         abstract Type : Type
         member internal __.CloudExpr = cloudExpr
 
     [<Sealed>]
-    type ICloud<'T> internal (cloudExpr : CloudExpr) =
-        inherit ICloud(cloudExpr)
+    type Cloud<'T> internal (cloudExpr : CloudExpr) =
+        inherit Cloud(cloudExpr)
         override __.Type = typeof<'T>
 
-    module internal CloudExpr =
-        let inline internal wrap (cloudExpr : CloudExpr) = new ICloud<'T>(cloudExpr)
-        let inline internal unwrap (cloudBlock : ICloud<'T>) = cloudBlock.CloudExpr
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    [<RequireQualifiedAccess>]
+    module Cloud =
 
-    type Cloud =
+        let inline internal wrapExpr (cloudExpr : CloudExpr) = new Cloud<'T>(cloudExpr)
+        let inline internal unwrapExpr (cloudBlock : Cloud<'T>) = cloudBlock.CloudExpr
 
-        static member Trace (cloudComputation : ICloud<'T>) : ICloud<'T> = 
-            CloudExpr.wrap <| TraceExpr (CloudExpr.unwrap cloudComputation)
+        let Trace (cloudComputation : Cloud<'T>) : Cloud<'T> = 
+            wrapExpr <| TraceExpr (unwrapExpr cloudComputation)
 
-        static member Log (msg : string) : ICloud<unit> = 
-            CloudExpr.wrap <| LogExpr msg
+        let Log (msg : string) : Cloud<unit> = 
+            wrapExpr <| LogExpr msg
 
-        static member Logf (fmt : Printf.StringFormat<_, ICloud<unit>>) =
-            Printf.ksprintf (LogExpr >> CloudExpr.wrap) fmt
+        let Logf (fmt : Printf.StringFormat<_, Cloud<unit>>) =
+            Printf.ksprintf (LogExpr >> wrapExpr) fmt
 
-        static member OfAsync<'T>(asyncComputation : Async<'T>) : ICloud<'T> =
+        let OfAsync<'T>(asyncComputation : Async<'T>) : Cloud<'T> =
             let cloudAsync = 
                 { new ICloudAsync with
                     member self.UnPack (polyMorpInvoker : IPolyMorphicMethodAsync) =
                         polyMorpInvoker.Invoke<'T>(asyncComputation) }
-            CloudExpr.wrap <| OfAsyncExpr cloudAsync
+            wrapExpr <| OfAsyncExpr cloudAsync
                     
-        static member ToLocal<'T>(cloudComputation : ICloud<'T>) : ICloud<'T> =
-            CloudExpr.wrap <| LocalExpr (CloudExpr.unwrap cloudComputation)
+        let ToLocal<'T>(cloudComputation : Cloud<'T>) : Cloud<'T> =
+            wrapExpr <| LocalExpr (unwrapExpr cloudComputation)
 
-        static member GetWorkerCount() : ICloud<int> =
-            CloudExpr.wrap GetWorkerCountExpr
+        let GetWorkerCount() : Cloud<int> =
+            wrapExpr GetWorkerCountExpr
 
-        static member GetProcessId() : ICloud<ProcessId> =
-            CloudExpr.wrap GetProcessIdExpr
+        let GetProcessId() : Cloud<ProcessId> =
+            wrapExpr GetProcessIdExpr
 
-        static member GetTaskId() : ICloud<string> =
-            CloudExpr.wrap GetTaskIdExpr
+        let GetTaskId() : Cloud<string> =
+            wrapExpr GetTaskIdExpr
     
-        static member Parallel<'T>(computations : ICloud<'T> []) : ICloud<'T []> =
-            CloudExpr.wrap <| ParallelExpr (computations |> Array.map CloudExpr.unwrap, typeof<'T>)
+        let Parallel<'T>(computations : Cloud<'T> []) : Cloud<'T []> =
+            wrapExpr <| ParallelExpr (computations |> Array.map unwrapExpr, typeof<'T>)
 
-        static member Choice<'T>(computations : ICloud<'T option> []) : ICloud<'T option> =
-            CloudExpr.wrap <| ChoiceExpr (computations |> Array.map CloudExpr.unwrap, typeof<'T option>)
+        let Choice<'T>(computations : Cloud<'T option> []) : Cloud<'T option> =
+            wrapExpr <| ChoiceExpr (computations |> Array.map unwrapExpr, typeof<'T option>)
 
     // The Monadic Builder - Computation Expressions
     type CloudBuilder() =
 
-        member self.Return (value : 'T) : ICloud<'T> = CloudExpr.wrap <| ReturnExpr (value, typeof<'T>)
+        member self.Return (value : 'T) : Cloud<'T> = Cloud.wrapExpr <| ReturnExpr (value, typeof<'T>)
 
-        member self.ReturnFrom (computation : ICloud<'T>) : ICloud<'T> = computation
+        member self.ReturnFrom (computation : Cloud<'T>) : Cloud<'T> = computation
 
-        member self.Bind(computation : ICloud<'T>, bindF : ('T -> ICloud<'U>)) : ICloud<'U> = 
-            CloudExpr.wrap <| BindExpr (CloudExpr.unwrap computation, (fun value -> CloudExpr.unwrap <| bindF (value :?> 'T)), bindF :> obj)
+        member self.Bind(computation : Cloud<'T>, bindF : ('T -> Cloud<'U>)) : Cloud<'U> = 
+            Cloud.wrapExpr <| BindExpr (Cloud.unwrapExpr computation, (fun value -> Cloud.unwrapExpr <| bindF (value :?> 'T)), bindF :> obj)
 
-        member self.Delay (f : unit -> ICloud<'T>) : ICloud<'T> = 
-            CloudExpr.wrap <| DelayExpr ((fun () -> CloudExpr.unwrap <| f () ), f)
+        member self.Delay (f : unit -> Cloud<'T>) : Cloud<'T> = 
+            Cloud.wrapExpr <| DelayExpr ((fun () -> Cloud.unwrapExpr <| f () ), f)
 
-        member self.Zero() : ICloud<unit> = CloudExpr.wrap <| ReturnExpr ((), typeof<unit>)
+        member self.Zero() : Cloud<unit> = Cloud.wrapExpr <| ReturnExpr ((), typeof<unit>)
 
-        member self.TryWith (computation : ICloud<'T>, exceptionF : (exn -> ICloud<'T>)) : ICloud<'T> = 
-            CloudExpr.wrap <| TryWithExpr (CloudExpr.unwrap computation, (fun ex -> CloudExpr.unwrap <| exceptionF ex), exceptionF)
+        member self.TryWith (computation : Cloud<'T>, exceptionF : (exn -> Cloud<'T>)) : Cloud<'T> = 
+            Cloud.wrapExpr <| TryWithExpr (Cloud.unwrapExpr computation, (fun ex -> Cloud.unwrapExpr <| exceptionF ex), exceptionF)
 
-        member self.TryFinally (computation :  ICloud<'T>, compensation : (unit -> unit)) : ICloud<'T> = 
-            CloudExpr.wrap <| TryFinallyExpr (CloudExpr.unwrap computation, compensation)
+        member self.TryFinally (computation :  Cloud<'T>, compensation : (unit -> unit)) : Cloud<'T> = 
+            Cloud.wrapExpr <| TryFinallyExpr (Cloud.unwrapExpr computation, compensation)
 
-        member self.For(values : 'T [], bindF : ('T -> ICloud<unit>)) : ICloud<unit> = 
-            CloudExpr.wrap <| ForExpr (values |> Array.map (fun value -> value :> obj), (fun value -> CloudExpr.unwrap <| bindF (value :?> 'T)), bindF)
+        member self.For(values : 'T [], bindF : ('T -> Cloud<unit>)) : Cloud<unit> = 
+            Cloud.wrapExpr <| ForExpr (values |> Array.map (fun value -> value :> obj), (fun value -> Cloud.unwrapExpr <| bindF (value :?> 'T)), bindF)
 
-        member self.While (guardF : (unit -> bool), body : ICloud<unit>) : ICloud<unit> = 
-            CloudExpr.wrap <| WhileExpr (guardF, CloudExpr.unwrap body)
+        member self.While (guardF : (unit -> bool), body : Cloud<unit>) : Cloud<unit> = 
+            Cloud.wrapExpr <| WhileExpr (guardF, Cloud.unwrapExpr body)
 
-        member self.Combine (first : ICloud<unit>, second : ICloud<'T>) : ICloud<'T> = 
-            CloudExpr.wrap <| CombineExpr (CloudExpr.unwrap first, CloudExpr.unwrap second)
+        member self.Combine (first : Cloud<unit>, second : Cloud<'T>) : Cloud<'T> = 
+            Cloud.wrapExpr <| CombineExpr (Cloud.unwrapExpr first, Cloud.unwrapExpr second)
 
-        member self.Using<'T, 'U when 'T :> ICloudDisposable>(value : 'T, bindF : 'T -> ICloud<'U>) : ICloud<'U> =
-            CloudExpr.wrap <| DisposableBindExpr (value :> ICloudDisposable, typeof<'T>, (fun value -> CloudExpr.unwrap <| bindF (value :?> 'T)), bindF :> obj)
+        member self.Using<'T, 'U when 'T :> ICloudDisposable>(value : 'T, bindF : 'T -> Cloud<'U>) : Cloud<'U> =
+            Cloud.wrapExpr <| DisposableBindExpr (value :> ICloudDisposable, typeof<'T>, (fun value -> Cloud.unwrapExpr <| bindF (value :?> 'T)), bindF :> obj)
 
 
     [<AutoOpen>]
-    module CloudModule =
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module CloudBuilder =
         
         let cloud = new CloudBuilder()
 
-        let internal mkTry<'Exc, 'T when 'Exc :> exn > (expr : ICloud<'T>) : ICloud<'T option> =
+        let internal mkTry<'Exc, 'T when 'Exc :> exn > (expr : Cloud<'T>) : Cloud<'T option> =
             cloud { 
                 try 
                     let! r = expr

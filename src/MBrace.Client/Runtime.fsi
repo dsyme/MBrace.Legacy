@@ -46,7 +46,7 @@
             ///<summary>Creates a new process to run the given cloud computation. This method does not wait for the process to complete.</summary>
             ///<param name="expr">The computation to run.</param>
             ///<param name="name">Use a custom name for the process.</param>
-            member CreateProcess : expr:Quotations.Expr<ICloud<'T>> * ?name:string -> Process<'T>
+            member CreateProcess : expr:Quotations.Expr<Cloud<'T>> * ?name:string -> Process<'T>
             
             ///<summary>Deletes a container (folder) from the underlying store.</summary>
             ///<param name="container">The container to delete.</param>
@@ -126,14 +126,14 @@
 
             ///<summary>Run the given cloud computation. This method blocks until the process has completed.</summary>
             ///<param name="name">Use a custom name for the process.</param>
-            member Run : expr:Quotations.Expr<ICloud<'T>> * ?name:string -> 'T
+            member Run : expr:Quotations.Expr<Cloud<'T>> * ?name:string -> 'T
             
             ///Run the given cloud computation. This method blocks until the process has completed.
             member internal RunAsync : computation:CloudComputation<'T> -> Async<'T>
             
             ///<summary>Run the given cloud computation. This method blocks until the process has completed.</summary>
             ///<param name="name">Use a custom name for the process.</param>
-            member RunAsync : expr:Quotations.Expr<ICloud<'T>> * ?name:string -> Async<'T>
+            member RunAsync : expr:Quotations.Expr<Cloud<'T>> * ?name:string -> Async<'T>
             
             member internal RunFunc : f:System.Func<'T> -> System.Threading.Tasks.Task<'T>
             

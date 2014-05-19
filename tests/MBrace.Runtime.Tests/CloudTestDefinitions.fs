@@ -11,8 +11,8 @@
 
     [<Cloud>]
     module MVar =
-        let newEmpty<'T> : ICloud<MVar<'T>> = MutableCloudRef.New(None)
-        let newValue<'T> value : ICloud<MVar<'T>> = MutableCloudRef.New(Some value)
+        let newEmpty<'T> : Cloud<MVar<'T>> = MutableCloudRef.New(None)
+        let newValue<'T> value : Cloud<MVar<'T>> = MutableCloudRef.New(Some value)
         let rec put (mvar : MVar<'T>) value = 
             cloud {
                 let! v = MutableCloudRef.Read(mvar)
@@ -407,7 +407,7 @@
         [<Cloud>]
         let testAmbiguousParallelException () =
             cloud {
-                let! (first, second) = (cloud { failwith "Wrong"; return 1 :> obj } : ICloud<obj>) <||> (cloud { failwith "Wrong"; return 2 :> obj } : ICloud<obj>)
+                let! (first, second) = (cloud { failwith "Wrong"; return 1 :> obj } : Cloud<obj>) <||> (cloud { failwith "Wrong"; return 2 :> obj } : Cloud<obj>)
 
                 return 0
             }
@@ -469,9 +469,9 @@
             }
 
         [<Cloud>]
-        let rec mapReduce   (mapF : 'T -> ICloud<'R>) 
-                            (reduceF : 'R -> 'R -> ICloud<'R>) (identity : 'R) 
-                            (values : 'T list) : ICloud<'R> =
+        let rec mapReduce   (mapF : 'T -> Cloud<'R>) 
+                            (reduceF : 'R -> 'R -> Cloud<'R>) (identity : 'R) 
+                            (values : 'T list) : Cloud<'R> =
             cloud {
                 match values with
                 | [] -> return identity
