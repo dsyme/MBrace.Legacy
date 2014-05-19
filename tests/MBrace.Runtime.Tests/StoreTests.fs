@@ -267,7 +267,7 @@ type ``WindowsAzure tests`` () =
     override test.Store = store
 
 [<TestFixture>]
-type ``LocalDb tests`` () =
+type ``SqlServer tests`` () =
     inherit ``Store tests`` ()
 
     let conn = ConnectionsConfig.get "SqlServer" 

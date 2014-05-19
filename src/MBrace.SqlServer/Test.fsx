@@ -22,7 +22,7 @@ type Async<'T> with
     member this.Run () = Async.RunSynchronously this
     
 
-let conn = @"Data Source=(localdb)\ProjectsV12;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False"
+let conn = @""
 
 let sqlstore = new SqlServerStore(conn) :> ICloudStore
 
