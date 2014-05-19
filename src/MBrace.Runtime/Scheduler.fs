@@ -55,7 +55,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
 
                     //the task manager will confirm the creation of the root task
                     let! cref = newRef processId functions
-                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (resultType, [Guid.NewGuid().ToString()], cref, Dump [cloud.CloudExpr]))
+                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (resultType, [Guid.NewGuid().ToString()], cref, Dump [Interpreter.extractCloudExpr cloud]))
                 | Choice2Of2 e -> 
                     reply nothing
                          

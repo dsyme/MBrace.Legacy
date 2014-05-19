@@ -281,27 +281,29 @@ namespace Nessos.MBrace.Client
             |> Array.toSeq
         member r.ShowLogs(?clear) = r.GetLogs(?clear = clear) |> Logs.show
 
-        member r.GetUserLogs(pid, ?clear) =
+        member r.GetUserLogs(pid : ProcessId, ?clear : bool) : seq<LogEntry> =
             // interim store sanity check
             if not <| runtimeUsesCompatibleStore runtime then
                 mfailwith "incompatible store configuration."
 
-            let clear = defaultArg clear false
-            let cloudLogStore = coreConfig.CloudLogger :?> CloudLogStore
-            let logs = cloudLogStore.DumpLogs(pid)
-                       |> Async.RunSynchronously
-            match clear with
-            | true  -> cloudLogStore.DeleteLogs(pid)
-                       |> Async.RunSynchronously
-            | false -> ()
-            logs :> seq<_>
+            raise <| new NotImplementedException()
 
-        member r.ShowUserLogs(pid, ?clear) : unit = 
-            r.GetUserLogs(pid, ?clear = clear)
-            |> Seq.sortBy (function | Trace info -> info.DateTime, info.Id 
-                                    | UserLog info -> info.DateTime, info.Id
-                                    | SystemLog (m,l,t) -> t, 0L )
-            |> (raise <| new NotImplementedException())
+//            let clear = defaultArg clear false
+//            let cloudLogStore = coreConfig.CloudLogger :?> CloudLogStore
+//            let logs = cloudLogStore.DumpLogs(pid)
+//                       |> Async.RunSynchronously
+//            match clear with
+//            | true  -> cloudLogStore.DeleteLogs(pid)
+//                       |> Async.RunSynchronously
+//            | false -> ()
+//            logs :> seq<_>
+
+        member r.ShowUserLogs(pid : ProcessId, ?clear : bool) : unit = raise <| new NotImplementedException()
+//            r.GetUserLogs(pid, ?clear = clear)
+//            |> Seq.sortBy (function | Trace info -> info.DateTime, info.Id 
+//                                    | UserLog info -> info.DateTime, info.Id
+//                                    | SystemLog (m,l,t) -> t, 0L )
+//            |> (raise <| new NotImplementedException())
 
         /// Deletes a container from the underlying store
         member r.DeleteContainer(container : string) =

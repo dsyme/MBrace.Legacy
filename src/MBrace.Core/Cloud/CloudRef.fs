@@ -1,17 +1,19 @@
 ﻿namespace Nessos.MBrace
 
+    open Nessos.MBrace.Core
+
     [<AutoOpen>]
     module CloudRefModule =
 
         type CloudRef = 
             static member New<'T>(container : string, value : 'T) : ICloud<ICloudRef<'T>> = 
-                wrapCloudExpr <| NewRefByNameExpr (container, value, typeof<'T>)
+                CloudExpr.wrap <| NewRefByNameExpr (container, value, typeof<'T>)
 
             static member Get(container : string) : ICloud<ICloudRef []> = 
-                wrapCloudExpr <| GetRefsByNameExpr (container)
+                CloudExpr.wrap <| GetRefsByNameExpr (container)
 
             static member Get<'T>(container : string, id : string) : ICloud<ICloudRef<'T>> = 
-                wrapCloudExpr <| GetRefByNameExpr (container, id, typeof<'T>)
+                CloudExpr.wrap <| GetRefByNameExpr (container, id, typeof<'T>)
 
             static member New<'T>( value : 'T) : ICloud<ICloudRef<'T>> = 
                 cloud {

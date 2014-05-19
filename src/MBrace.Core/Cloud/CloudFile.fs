@@ -6,10 +6,12 @@
     open System.Collections.Generic
     open System.Runtime.Serialization
 
+    open Nessos.MBrace.Core
+
     type CloudFile = 
 
         static member Create(container : string, name : string, serialize : (Stream -> Async<unit>)) : ICloud<ICloudFile> =
-            wrapCloudExpr <| NewCloudFile(container, name, serialize)
+            CloudExpr.wrap <| NewCloudFile(container, name, serialize)
 
         static member Create(container : string, serialize : (Stream -> Async<unit>)) : ICloud<ICloudFile> =
             cloud {
@@ -24,7 +26,7 @@
 
         static member Read(cloudFile : ICloudFile, deserialize : (Stream -> Async<'Result>)) : ICloud<'Result> =
             let deserialize stream = async { let! o = deserialize stream in return o :> obj }
-            wrapCloudExpr <| ReadCloudFile(cloudFile, deserialize, typeof<'Result>)
+            CloudExpr.wrap <| ReadCloudFile(cloudFile, deserialize, typeof<'Result>)
 
         // this should probably move to MBrace.Lib
 
@@ -32,10 +34,10 @@
             cloud { return new CloudFileSequence<'T>(cloudFile, deserializer) :> ICloudSeq<'T> }
 
         static member Get(container : string, name : string) : ICloud<ICloudFile> =
-            wrapCloudExpr <| GetCloudFile(container, name)
+            CloudExpr.wrap <| GetCloudFile(container, name)
 
         static member Get(container : string) : ICloud<ICloudFile []> =
-            wrapCloudExpr <| GetCloudFiles(container)
+            CloudExpr.wrap <| GetCloudFiles(container)
 
         static member TryCreate(container : string, name : string, serialize : (Stream -> Async<unit>)) : ICloud<ICloudFile option> =
             mkTry<StoreException,_> <| CloudFile.Create(container, name, serialize)

@@ -1,10 +1,12 @@
 ﻿namespace Nessos.MBrace
     
     open System
+    
+    open Nessos.MBrace.Core
 
     type CloudSeq =
         static member New<'T>(container : string, values : seq<'T>) : ICloud<ICloudSeq<'T>> =
-            wrapCloudExpr <| NewCloudSeqByNameExpr (container, values :> System.Collections.IEnumerable, typeof<'T>)
+            CloudExpr.wrap <| NewCloudSeqByNameExpr (container, values :> System.Collections.IEnumerable, typeof<'T>)
 
         static member New<'T>(values : seq<'T>) : ICloud<ICloudSeq<'T>> = 
             cloud {
@@ -16,10 +18,10 @@
             cloud { return sequence :> _ }
 
         static member Get(container : string) : ICloud<ICloudSeq []> =
-            wrapCloudExpr <| GetCloudSeqsByNameExpr (container)
+            CloudExpr.wrap <| GetCloudSeqsByNameExpr (container)
 
         static member Get<'T>(container : string, id : string) : ICloud<ICloudSeq<'T>> =
-            wrapCloudExpr <| GetCloudSeqByNameExpr (container, id, typeof<'T>)
+            CloudExpr.wrap <| GetCloudSeqByNameExpr (container, id, typeof<'T>)
 
         static member TryNew<'T>(container : string, values : seq<'T>) : ICloud<ICloudSeq<'T> option> =
             mkTry<StoreException, _> <| CloudSeq.New(container, values)

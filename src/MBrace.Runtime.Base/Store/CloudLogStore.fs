@@ -144,8 +144,8 @@
 
         interface ICloudLogger with
             
-            override this.LogTraceInfo(pid, entry) =
-                this.LogEntry(pid, Trace entry)
+            override this.LogTraceInfo(entry) =
+                this.LogEntry(0, Trace entry)
 
-            override this.LogUserInfo(pid, entry) =
-                this.LogEntry(pid, UserLog entry)
+            override this.LogUserInfo(entry) =
+                this.LogEntry(0, UserLog entry)

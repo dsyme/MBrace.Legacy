@@ -16,9 +16,10 @@ open Nessos.MBrace.Utils
 
 type ProcessDomainId = Guid
 type ResultType = Type
+type ThunkId = string
 type ThunksIdsStack = ThunkId list
 type JobId = System.Guid
-type ProcessBody = ProcessBody of (ResultType * ThunksIdsStack * ICloudRef<Function list> * Dump)
+type ProcessBody = ProcessBody of (ResultType * ThunksIdsStack * ICloudRef<FunctionInfo list> * Dump)
 type ExprImage = byte[] //The binary image of an Expr
 type TaskId = Guid
 type TaskHeader = ProcessId * TaskId

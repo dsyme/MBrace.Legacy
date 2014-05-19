@@ -2,6 +2,8 @@
     
     open System
 
+    open Nessos.MBrace.Core
+
     type MutableCloudRef = 
         // loop (possibly forever) 
         static member private spin (expr : ICloud<'T option>, ?interval : int) : ICloud<'T> =
@@ -17,7 +19,7 @@
             }
 
         static member New<'T>(container : string, id : string, value : 'T) : ICloud<IMutableCloudRef<'T>> = 
-            wrapCloudExpr <| NewMutableRefByNameExpr (container, id, value, typeof<'T>)
+            CloudExpr.wrap <| NewMutableRefByNameExpr (container, id, value, typeof<'T>)
 
         static member New<'T>(value : 'T) : ICloud<IMutableCloudRef<'T>> = 
             cloud {
@@ -33,22 +35,22 @@
             }
 
         static member Read<'T>(mref : IMutableCloudRef<'T>) : ICloud<'T> =
-            wrapCloudExpr <| ReadMutableRefExpr(mref, typeof<'T>)
+            CloudExpr.wrap <| ReadMutableRefExpr(mref, typeof<'T>)
 
         static member Set<'T>(mref : IMutableCloudRef<'T>, value : 'T) : ICloud<bool> =
-            wrapCloudExpr <| SetMutableRefExpr(mref, value)
+            CloudExpr.wrap <| SetMutableRefExpr(mref, value)
 
         static member Force<'T>(mref : IMutableCloudRef<'T>, value : 'T) : ICloud<unit> =
-            wrapCloudExpr <| ForceSetMutableRefExpr(mref, value)
+            CloudExpr.wrap <| ForceSetMutableRefExpr(mref, value)
 
         static member Get(container : string) : ICloud<IMutableCloudRef []> =
-            wrapCloudExpr <| GetMutableRefsByNameExpr(container)
+            CloudExpr.wrap <| GetMutableRefsByNameExpr(container)
 
         static member Get<'T>(container : string, id : string) : ICloud<IMutableCloudRef<'T>> =
-            wrapCloudExpr <| GetMutableRefByNameExpr(container, id, typeof<'T>)
+            CloudExpr.wrap <| GetMutableRefByNameExpr(container, id, typeof<'T>)
 
         static member Free(mref : IMutableCloudRef<'T>) : ICloud<unit> =
-            wrapCloudExpr <| FreeMutableRefExpr(mref)
+            CloudExpr.wrap <| FreeMutableRefExpr(mref)
 
         static member SpinSet<'T>(mref : IMutableCloudRef<'T>, update : 'T -> 'T, ?interval : int) : ICloud<unit> =
             cloud {

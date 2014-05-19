@@ -59,11 +59,12 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Cloud\Primitives.fs" />
+    <Compile Include="Core\Primitives.fs" />
+    <Compile Include="Core\CloudExpr.fs" />
+    <Compile Include="Core\Exception.fs" />
+    <Compile Include="Core\PrimitiveProviders.fs" />
+    <Compile Include="Cloud\Cloud.fsi" />
     <Compile Include="Cloud\Cloud.fs" />
-    <Compile Include="Cloud\CloudBuilder.fsi" />
-    <Compile Include="Cloud\CloudBuilder.fs" />
-    <Compile Include="Cloud\Exception.fs" />
     <Compile Include="Cloud\CloudRef.fsi" />
     <Compile Include="Cloud\CloudRef.fs" />
     <Compile Include="Cloud\MutableCloudRef.fsi" />
@@ -73,11 +74,11 @@
     <Compile Include="Cloud\CloudFile.fsi" />
     <Compile Include="Cloud\CloudFile.fs" />
     <Compile Include="Cloud\CloudExtensions.fs" />
-    <Compile Include="Core\Utils.fs" />
-    <Compile Include="Core\Logging.fs" />
-    <Compile Include="Core\Data.fs" />
-    <Compile Include="Core\PrimitiveProviders.fs" />
-    <Compile Include="Core\Interpreter.fs" />
+    <Compile Include="Interpreter\Utils.fs" />
+    <Compile Include="Interpreter\Types.fs" />
+    <Compile Include="Interpreter\Utils.fs" />
+    <Compile Include="Interpreter\Dump.fs" />
+    <Compile Include="Interpreter\Interpreter.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

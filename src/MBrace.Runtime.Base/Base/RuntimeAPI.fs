@@ -11,7 +11,7 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime.Store
 
-    type ProcessId = Nessos.MBrace.ProcessId
+    type ProcessId = Nessos.MBrace.Core.ProcessId
     type RequestId = System.Guid
     type DeploymentId = System.Guid
     type PackageId = System.Guid
@@ -34,7 +34,7 @@
             Dependencies : AssemblyId list
         }
 
-    type ExecuteResult = Result<obj>
+    type ExecuteResult = Nessos.MBrace.Core.Result<obj>
 
     exception SchedulerDeserializationException of exn
 

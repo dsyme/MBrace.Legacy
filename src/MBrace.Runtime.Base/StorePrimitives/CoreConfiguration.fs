@@ -27,19 +27,21 @@
                 let cfileStore = new CloudFileProvider(storeInfo, localCache) :> ICloudFileProvider
                 let clogsStore = new CloudLogStore(store, batchCount = 50, batchTimespan = 500) 
 
+                IoC.RegisterValue<ICloudLogger>(clogsStore)
+
                 let cloner = 
                     {
                         new IObjectCloner with
                             member __.Clone(t : 'T) = Serialization.Clone t
                     }
 
-                let coreConfig =
+                let coreConfig : CoreConfiguration =
                     {
                         CloudRefProvider        = crefStore
                         CloudSeqProvider        = cseqStore
                         CloudFileProvider       = cfileStore
                         MutableCloudRefProvider = mrefStore
-                        CloudLogger             = clogsStore
+//                        CloudLogger             = clogsStore
                         Cloner                  = cloner
                     }
 

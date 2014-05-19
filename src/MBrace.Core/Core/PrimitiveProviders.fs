@@ -62,18 +62,3 @@
 
         /// Get all cloud files that exist in specified container
         abstract GetContainedFiles : container:string -> Async<ICloudFile []>
-
-    /// Defines an object cloning abstraction
-    type IObjectCloner =
-        abstract Clone : 'T -> 'T
-
-    /// configuration used by the interpreter
-    type CoreConfiguration =
-        {
-            CloudSeqProvider        : ICloudSeqProvider
-            CloudRefProvider        : ICloudRefProvider
-            CloudFileProvider       : ICloudFileProvider
-            MutableCloudRefProvider : IMutableCloudRefProvider
-            CloudLogger             : ICloudLogger
-            Cloner                  : IObjectCloner
-        }

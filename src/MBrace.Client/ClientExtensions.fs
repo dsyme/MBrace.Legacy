@@ -29,7 +29,14 @@ module ClientExtensions =
             // force exception to be raised if no store provider has been set
             MBraceSettings.StoreProvider |> ignore
 
-            Nessos.MBrace.Core.Interpreter.runLocalWrapper MBraceSettings.DefaultCoreConfiguration computation
+            let logger =
+                {
+                    new Nessos.MBrace.Core.ICloudLogger with
+                        member __.LogTraceInfo _ = ()
+                        member __.LogUserInfo _ = ()
+                }
+
+            Nessos.MBrace.Core.Interpreter.evaluateLocalWrapped MBraceSettings.DefaultCoreConfiguration logger false computation
 
         /// Runs the given computation locally without the need of a runtime.
         static member RunLocal (computation : ICloud<'T>) : 'T = 

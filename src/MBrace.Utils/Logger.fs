@@ -22,7 +22,7 @@ namespace Nessos.MBrace.Utils
 
     and LogEntry = 
         | SystemLog of string * LogLevel * DateTime
-        | UserLog of UserLogInfo
+        | UserLog of string
         | Trace of TraceInfo
 
     with
@@ -33,20 +33,20 @@ namespace Nessos.MBrace.Utils
                 if showDate then
                     sprintf' "[%s] %s : %s" <| date.ToString("yyyy-MM-dd H:mm:ss") <| lvl.ToString() <| txt
                 else sprintf' "%s : %s" <| lvl.ToString() <| txt
-            | UserLog info ->
-                Nessos.MBrace.Utils.String.string {
-                    if showDate 
-                    then yield sprintf' "[%s] " <| info.DateTime.ToString("yyyy-MM-dd H:mm:ss")
-                    yield sprintf' "Pid %A " info.ProcessId
-                    yield sprintf' "TaskId %A " info.TaskId
-                    yield sprintf' "%s\n" info.Message 
-                } |> Nessos.MBrace.Utils.String.String.build 
+            | UserLog info -> info
+//                Nessos.MBrace.Utils.String.string {
+////                    if showDate 
+////                    then yield sprintf' "[%s] " <| info.DateTime.ToString("yyyy-MM-dd H:mm:ss")
+////                    yield sprintf' "Pid %A " info.ProcessId
+////                    yield sprintf' "TaskId %A " info.TaskId
+////                    yield sprintf' "%s\n" info.Message 
+//                } |> Nessos.MBrace.Utils.String.String.build 
             | Trace info ->
                 Nessos.MBrace.Utils.String.string {
-                    if showDate 
-                    then yield sprintf' "[%s] " <| info.DateTime.ToString("yyyy-MM-dd H:mm:ss")
-                    if info.File.IsSome then yield sprintf' "File %A " info.File.Value
-                    if info.Line.IsSome then yield sprintf' "Line %A " info.Line.Value
+//                    if showDate 
+//                    then yield sprintf' "[%s] " <| info.DateTime.ToString("yyyy-MM-dd H:mm:ss")
+//                    if info.File.IsSome then yield sprintf' "File %A " info.File.Value
+//                    if info.Line.IsSome then yield sprintf' "Line %A " info.Line.Value
                     if info.Function.IsSome then yield sprintf' "Function %A" info.Function.Value
                     yield "\n"
                     yield sprintf' "%s\n" info.Message
