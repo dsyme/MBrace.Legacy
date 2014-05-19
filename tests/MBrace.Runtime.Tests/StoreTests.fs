@@ -15,7 +15,7 @@ open FsUnit
 [<AbstractClass>]
 type ``Store tests`` () =
 
-    abstract Store : IStore
+    abstract Store : ICloudStore
     
     member val private UsedContainers = ResizeArray<string>()
     
@@ -43,13 +43,13 @@ type ``Store tests`` () =
 
     [<Test>]
     member test.``A.1 Delete container if exists.`` () = 
-        if (test.Store.Exists >> Async.RunSynchronously) test.Temp 
-        then (test.Store.Delete >> Async.RunSynchronously) test.Temp
+        if (test.Store.ContainerExists >> Async.RunSynchronously) test.Temp 
+        then (test.Store.DeleteContainer >> Async.RunSynchronously) test.Temp
         |> should equal ()
 
     [<Test>]
     member test.``A.2 Check with GetFolders.`` () = 
-        test.Store.GetFolders()
+        test.Store.GetAllContainers()
         |> Async.RunSynchronously
         |> Seq.exists ((=) test.Temp)
         |> should equal false
@@ -58,14 +58,14 @@ type ``Store tests`` () =
     member test.``B.0 Create a file and Check if exists.`` () = 
         let c, f = test.Temp, test.GetTempFilename()
         
-        test.Store.Create(c, f, 
-            fun stream -> async {
+        test.Store.CreateImmutable(c, f, 
+            (fun stream -> async {
                 let data = Array.init 100 byte
-                stream.Write(data, 0, data.Length) })
+                stream.Write(data, 0, data.Length) }), asFile = false)
         |> Async.RunSynchronously 
         |> should equal ()
         
-        test.Store.Exists c 
+        test.Store.ContainerExists c 
         |> Async.RunSynchronously    
         |> should equal true
 
@@ -73,12 +73,12 @@ type ``Store tests`` () =
         |> Async.RunSynchronously    
         |> should equal true
 
-        test.Store.GetFolders ()   
+        test.Store.GetAllContainers ()   
         |> Async.RunSynchronously    
         |> Seq.exists ((=) c)
         |> should equal true
 
-        test.Store.GetFiles c
+        test.Store.GetAllFiles c
         |> Async.RunSynchronously
         |> Seq.exists ((=) f)
         |> should equal true
@@ -87,12 +87,12 @@ type ``Store tests`` () =
     member test.``B.1 Create and Read a file.`` () = 
         let data = Array.init 100 byte
         let c, f = test.Temp, test.GetTempFilename()
-        test.Store.Create(c,f, fun s -> async { s.Write(data, 0, data.Length) }) 
+        test.Store.CreateImmutable(c,f, (fun s -> async { s.Write(data, 0, data.Length) }), asFile = false) 
         |> Async.RunSynchronously        
         |> should equal ()
         
         use ms = new MemoryStream()
-        use s = test.Store.Read(c,f) |> Async.RunSynchronously
+        use s = test.Store.ReadImmutable(c,f) |> Async.RunSynchronously
         s.CopyTo(ms)
         ms.ToArray() |> should equal data
 
@@ -100,7 +100,7 @@ type ``Store tests`` () =
     member test.``B.2 Create and Delete a file.`` () = 
         let data = Array.init 100 byte
         let c, f = test.Temp, test.GetTempFilename()
-        test.Store.Create(c,f, fun s -> async { s.Write(data, 0, data.Length) }) 
+        test.Store.CreateImmutable(c,f, (fun s -> async { s.Write(data, 0, data.Length) }), asFile = false) 
         |> Async.RunSynchronously
         |> should equal ()
         test.Store.Delete(c,f) 
@@ -111,12 +111,12 @@ type ``Store tests`` () =
     member test.``B.3 Create and Read a larger file.`` () =
         let data = Array.init (1024 * 1024 * 4) byte
         let c, f = test.GetTempContainer(), test.GetTempFilename()
-        test.Store.Create(c,f, fun s -> async { s.Write(data, 0, data.Length) }) 
+        test.Store.CreateImmutable(c,f, (fun s -> async { s.Write(data, 0, data.Length) }), asFile = false) 
         |> Async.RunSynchronously
         |> should equal ()
         
         use ms = new MemoryStream()
-        use s = test.Store.Read(c,f) |> Async.RunSynchronously
+        use s = test.Store.ReadImmutable(c,f) |> Async.RunSynchronously
         s.CopyTo(ms)
         ms.ToArray() |> should equal data
 
@@ -124,7 +124,7 @@ type ``Store tests`` () =
     member test.``B.4 Create and CopyTo.`` () =
         let data = Array.init (1024 * 1024) byte
         let c, f = test.GetTempContainer(), test.GetTempFilename()
-        test.Store.Create(c,f, fun s -> async { s.Write(data, 0, data.Length) }) 
+        test.Store.CreateImmutable(c,f, (fun s -> async { s.Write(data, 0, data.Length) }), asFile = false) 
         |> Async.RunSynchronously
         |> should equal ()
 
@@ -138,11 +138,11 @@ type ``Store tests`` () =
         let data = Array.init (1024 * 1024) byte
         use ms = new MemoryStream(data)
         let c, f = test.GetTempContainer(), test.GetTempFilename()
-        test.Store.CopyFrom(c,f,ms)
+        test.Store.CopyFrom(c,f,ms, asFile = false)
         |> Async.RunSynchronously
 
         use target = new MemoryStream()
-        use s = test.Store.Read(c,f) |> Async.RunSynchronously
+        use s = test.Store.ReadImmutable(c,f) |> Async.RunSynchronously
         s.CopyTo(target)
         target.ToArray() |> should equal data
 
@@ -156,7 +156,7 @@ type ``Store tests`` () =
                           |> Async.RunSynchronously
         for i = 1 to niter do
             let data = Array.create size (byte i)
-            let ok, t = test.Store.UpdateMutable(c, f, (fun s -> async { s.Write(data, 0, data.Length) }), tag)
+            let ok, t = test.Store.TryUpdateMutable(c, f, (fun s -> async { s.Write(data, 0, data.Length) }), tag)
                         |> Async.RunSynchronously
             tag <- t
             ok |> should equal true
@@ -180,12 +180,12 @@ type ``Store tests`` () =
         s.Dispose()
         t1 |> should equal t0
 
-        let ok, t2 = test.Store.UpdateMutable(c,f, (fun s -> async { s.WriteByte 1uy }), t')
+        let ok, t2 = test.Store.TryUpdateMutable(c,f, (fun s -> async { s.WriteByte 1uy }), t')
                      |> Async.RunSynchronously
         ok |> should equal false
         t2 |> should equal t'
 
-        let ok, t3 = test.Store.UpdateMutable(c,f, (fun s -> async { s.WriteByte 2uy }), t1)
+        let ok, t3 = test.Store.TryUpdateMutable(c,f, (fun s -> async { s.WriteByte 2uy }), t1)
                      |> Async.RunSynchronously
         ok |> should equal true
 
@@ -210,7 +210,7 @@ type ``Store tests`` () =
         let oks, ts =
             [0..n-1]
             |> List.map (fun i -> 
-                async { return! test.Store.UpdateMutable(c, f, (fun s -> async {s.WriteByte (byte i) }), t0) })
+                async { return! test.Store.TryUpdateMutable(c, f, (fun s -> async {s.WriteByte (byte i) }), t0) })
             |> Async.Parallel
             |> Async.RunSynchronously
             |> Array.unzip
@@ -231,8 +231,8 @@ type ``Store tests`` () =
     [<Test>]
     member test.``Z.0 Cleanup`` () =
         test.UsedContainers
-        |> Seq.filter (test.Store.Exists >> Async.RunSynchronously)
-        |> Seq.iter   (test.Store.Delete >> Async.RunSynchronously)
+        |> Seq.filter (test.Store.ContainerExists >> Async.RunSynchronously)
+        |> Seq.iter   (test.Store.DeleteContainer >> Async.RunSynchronously)
 
 
 

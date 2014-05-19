@@ -464,6 +464,17 @@ namespace Nessos.MBrace.Runtime.Tests
                     @>     
                 |> ignore
             |> shouldFailwith<CloudException>
+
+        [<Test>]
+        member test.``Choice Exception handling`` () =
+            <@
+                cloud { 
+                    try
+                        let! r = Cloud.Choice [|cloud { return None }; cloud { return raise <| new InvalidOperationException() }|] 
+                        return false
+                    with :? InvalidOperationException -> return true
+                } 
+            @> |> test.ExecuteExpression |> should equal true
         
         [<Test; Repeat 80>]
         member test.``Choice Recursive`` () =

@@ -22,24 +22,16 @@ type Async<'T> with
     member this.Run () = Async.RunSynchronously this
     
 
-let conn = "Data Source=(localdb)\Projects;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False"
+let conn = @"Data Source=(localdb)\ProjectsV12;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False"
 
-let sqlstore = new SqlServerStore(conn) :> IStore
+let sqlstore = new SqlServerStore(conn) :> ICloudStore
 
+sqlstore.CreateImmutable("theFolder", "theFile", (fun x -> async { x.WriteByte(88uy) }), asFile = false).Run()
 
-sqlstore.Create("theFolder", "theFile", (fun x -> async { x.WriteByte(88uy) })).Run()
+sqlstore.ReadImmutable("theFolder", "theFile").Run().ReadByte()
 
-sqlstore.Read("theFolder", "theFile").Run().ReadByte()
-
-sqlstore.GetFolders().Run()
-sqlstore.GetFiles("theFolder").Run()
-
-sqlstore.Create("theFolder", "mfile", (fun x -> async { x.WriteByte(88uy) })).Run()
-let a,b = sqlstore.ReadMutable("theFolder", "mfile").Run()
-
-//sqlstore.UpdateMutable("theFolder", "mfile")
-
-sqlstore.Delete("theFolder").Run()
+sqlstore.GetAllContainers().Run()
+sqlstore.GetAllFiles("theFolder").Run()
 
 
 #r "System.Transactions"

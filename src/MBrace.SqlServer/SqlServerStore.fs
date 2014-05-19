@@ -11,7 +11,7 @@
     type SqlServerStore(connectionString: string, ?name : string) as this =
         let name = defaultArg name "SqlServer"
 
-        let is = this :> IStore
+        let is = this :> ICloudStore
 
         let helper = new SqlHelper(connectionString)
 
@@ -27,11 +27,11 @@
         """ [||]
         |> Async.RunSynchronously
 
-        interface IStore with
+        interface ICloudStore with
             override this.Name = name
             override this.UUID = connectionString
 
-            override this.Create (folder, file, serialize, ?asFile) = async {
+            override this.CreateImmutable (folder, file, serialize, _) = async {
                     let ms = new MemoryStream()
                     do! serialize ms
                     let bytes = ms.ToArray()
@@ -40,33 +40,33 @@
                            [| new SqlParameter("@folder", folder); new SqlParameter("@file", file); new SqlParameter("@value", bytes) |]
                 }
 
-            override this.Read(folder : string, file : string) : Async<Stream> =
+            override this.ReadImmutable(folder : string, file : string) : Async<Stream> =
                 async {
                     return! helper.getStream "select Value from Blobs where Folder = @folder and [File] = @file"
                                 [| new SqlParameter("@folder", folder); new SqlParameter("@file", file) |]
                 }
                 
             override this.CopyTo(folder, file, target) = async {             
-                    use! source = is.Read(folder,file)
+                    use! source = is.ReadImmutable(folder,file)
                     do! source.CopyToAsync(target).ContinueWith(ignore)
                         |> Async.AwaitTask
                 }
 
-            override this.CopyFrom(folder, file, stream, ?asFile) =
-                is.Create(folder, file, (fun target -> async { return! stream.CopyToAsync(stream).ContinueWith(ignore) |> Async.AwaitTask }), ?asFile = asFile)
+            override this.CopyFrom(folder, file, stream, asFile) =
+                is.CreateImmutable(folder, file, (fun target -> async { return! stream.CopyToAsync(stream).ContinueWith(ignore) |> Async.AwaitTask }), asFile = asFile)
                 
-            override this.GetFiles folder =
+            override this.GetAllFiles folder =
                 async {
                     return! helper.collect "select [File] from Blobs where Folder = @folder"
                                 [| new SqlParameter("@folder", folder) |]
                 }
                 
-            override this.GetFolders () =
+            override this.GetAllContainers () =
                 async {
                     return! helper.collect "select distinct Folder from Blobs" [||]
                 }
                         
-            override this.Exists folder =
+            override this.ContainerExists folder =
                 async {
                     return! helper.test "select Folder from Blobs where Folder = @folder"
                                 [| new SqlParameter("@folder", folder) |]
@@ -78,7 +78,7 @@
                                 [| new SqlParameter("@folder", folder); new SqlParameter("@file", file) |]
                 }
 
-            override this.Delete folder =
+            override this.DeleteContainer folder =
                 async {
                     return! helper.exec "delete from Blobs where Folder = @folder"
                                 [| new SqlParameter("@folder", folder) |]                    
@@ -106,7 +106,7 @@
                             [| new SqlParameter("@folder", folder); new SqlParameter("@file", file) |]
                 }
 
-            override this.UpdateMutable(folder, file, serialize, tag) = async {
+            override this.TryUpdateMutable(folder, file, serialize, tag) = async {
                 return!
                     helper.execTransaction (fun trans -> async {
                         let ms = new MemoryStream()
@@ -141,7 +141,7 @@
     type SqlServerStoreFactory () =
         interface ICloudStoreFactory with
             member this.CreateStoreFromConnectionString (connectionString : string) = 
-                SqlServerStore(connectionString) :> IStore
+                SqlServerStore(connectionString) :> ICloudStore
 
     [<AutoOpen>]
     module StoreProvider =

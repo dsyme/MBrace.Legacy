@@ -2,6 +2,7 @@
 
     open System
     open System.IO
+    open System.Reflection
     open System.Runtime.Serialization
 
     open Nessos.MBrace
@@ -9,25 +10,38 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime
 
-    type internal IMutableCloudRefTagged =
-        inherit IMutableCloudRef
 
-        abstract Tag : string with get, set
+    type MutableCloudRef<'T> internal (id : string, container : string, tag : Tag, provider : MutableCloudRefProvider) =
 
-    type internal MutableCloudRef<'T> (id : string, container : string, tag : Tag, provider : MutableCloudRefProvider) =
+        member val internal Tag = tag with get, set
 
-        interface IMutableCloudRef with
+        member __.Name = id
+        member __.Container = container
+
+        interface IMutableCloudRef<'T> with
             member self.Name = id
             member self.Container = container
             member self.Type = typeof<'T>
-            member self.Dispose () = (provider :> IMutableCloudRefProvider).Delete(self)
 
-        interface IMutableCloudRef<'T>
+            member self.ReadValue () = provider.Dereference self
+            member self.ReadValue () = async { let! t = provider.Dereference self in return t :> obj }
 
-        interface IMutableCloudRefTagged with
-            member val Tag = tag with get, set
+            member self.TryUpdate (value : 'T) = provider.TryUpdate(self, value)
+            member self.TryUpdate (value : obj) = async {
+                match value with
+                | :? 'T as t -> return! provider.TryUpdate(self, t)
+                | _ -> return invalidArg "value" <| sprintf "update value not of type '%O'" typeof<'T>
+            }
 
-        override self.ToString() =  sprintf' "mutablecloudref:%s/%s" container id
+            member self.ForceUpdate (value : 'T) = provider.ForceUpdate(self, value)
+            member self.ForceUpdate (value : obj) = async {
+                match value with
+                | :? 'T as t -> return! provider.ForceUpdate(self, t)
+                | _ -> return invalidArg "value" <| sprintf "update value not of type '%O'" typeof<'T>
+            }
+
+            member self.Dispose () = provider.Delete self
+            member self.Value = provider.Dereference self |> Async.RunSynchronously
 
         new (info : SerializationInfo, context : StreamingContext) = 
             let id          = info.GetString("id")
@@ -36,39 +50,37 @@
             let storeId     = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
             let config =
                 match StoreRegistry.TryGetCoreConfiguration storeId with
-                | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
+                | None -> raise <| new StoreException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
                 | Some config -> config.MutableCloudRefProvider :?> MutableCloudRefProvider
 
             new MutableCloudRef<'T>(id, container, tag, config)
         
         interface ISerializable with 
-            member self.GetObjectData(info : SerializationInfo, context : StreamingContext) =
+            member self.GetObjectData(info : SerializationInfo, _ : StreamingContext) =
                 info.AddValue("id", id)
                 info.AddValue("container", container)
-                info.AddValue("tag", (self :> IMutableCloudRefTagged).Tag)
+                info.AddValue("tag", tag)
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
 
 
     and internal MutableCloudRefProvider(storeInfo : StoreInfo) as self =
 
-        let extension = "mref"
-        let postfix = fun s -> sprintf' "%s.%s" s extension
+        static let extension = "mref"
+        static let postfix s = sprintf' "%s.%s" s extension
+
+        static let serialize (value : obj) (ty : Type) (stream : Stream) = async {
+            Serialization.DefaultPickler.Serialize<Type>(stream, ty)
+            Serialization.DefaultPickler.Serialize<obj>(stream, value)
+        }
 
         let read container id : Async<Type * obj * Tag> = async {
-                let id = postfix id
-                let! s, tag = storeInfo.Store.ReadMutable(container, id)
-                use stream = s
-                let t = Serialization.DefaultPickler.Deserialize<Type> stream
-                let o = Serialization.DefaultPickler.Deserialize<obj> stream
-                return t, o, tag
-            }
-
-        let readType container id = async {
-                let! stream, _ = storeInfo.Store.ReadMutable(container, id)
-                let t = Serialization.DefaultPickler.Deserialize<Type> stream
-                stream.Dispose()
-                return t
-            }
+            let id = postfix id
+            let! stream, tag = storeInfo.Store.ReadMutable(container, id)
+            let t = Serialization.DefaultPickler.Deserialize<Type> stream
+            let o = Serialization.DefaultPickler.Deserialize<obj> stream
+            stream.Dispose()
+            return t, o, tag
+        }
 
         let readInfo container id = async {
             let! stream, tag = storeInfo.Store.ReadMutable(container, id)        
@@ -78,97 +90,77 @@
         }
 
         let getIds (container : string) : Async<string []> = async {
-                let! files = storeInfo.Store.GetFiles(container)
-                return files 
-                        |> Seq.filter (fun w -> w.EndsWith extension)
-                        |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
-                        |> Seq.toArray
-            }
+            let! files = storeInfo.Store.GetAllFiles(container)
+            return files 
+                    |> Seq.filter (fun w -> w.EndsWith extension)
+                    |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
+                    |> Seq.toArray
+        }
 
-        let defineUntyped (ty : Type, container : string, id : string, tag : string) =
-            let cloudRefTy = typedefof<MutableCloudRef<_>>.MakeGenericType [| ty |]
-            let cloudRef = Activator.CreateInstance(cloudRefTy, [| id :> obj; container :> obj; tag :> obj ; self :> obj |])
-            cloudRef :?> IMutableCloudRef
+        let defineUntyped(ty : Type, container : string, id : string, tag : string) =
+            typeof<MutableCloudRefProvider>
+                .GetMethod("CreateCloudRef", BindingFlags.Static ||| BindingFlags.NonPublic)
+                .MakeGenericMethod([| ty |])
+                .Invoke(null, [| id :> obj ; container :> obj ; tag :> obj ; self :> obj |])
+                :?> IMutableCloudRef
+
+        // WARNING : method called by reflection from 'defineUntyped' function above
+        static member CreateCloudRef<'T>(id, container, tag, provider) =
+            new MutableCloudRef<'T>(id , container, tag, provider)
 
         member self.StoreId = storeInfo.Id
 
-        member self.GetRefType (container : string, id : string) : Async<Type> =
-            readType container (postfix id)
+        member self.Delete(mref : MutableCloudRef<'T>) : Async<unit> = 
+            storeInfo.Store.Delete(mref.Container, postfix mref.Name)
 
-        member self.Exists(container : string) : Async<bool> = 
-            storeInfo.Store.Exists(container)
+        member self.Dereference(mref : MutableCloudRef<'T>) : Async<'T> =
+            async {
+                let! _, value, tag = read mref.Container mref.Name
+                mref.Tag <- tag
+                return value :?> 'T
+            }
 
-        member self.Exists(container : string, id : string) : Async<bool> = 
-            storeInfo.Store.Exists(container, postfix id)
+        member this.TryUpdate(mref : MutableCloudRef<'T>, value : 'T) : Async<bool>  =
+            async {
+                let! ok, tag = storeInfo.Store.TryUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>, mref.Tag)
+
+                if ok then mref.Tag <- tag
+                return ok
+            }
+
+        member this.ForceUpdate(mref : MutableCloudRef<'T>, value : 'T) : Async<unit> =
+            async {
+                let! tag = storeInfo.Store.ForceUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>)
+                mref.Tag <- tag
+            }
 
         interface IMutableCloudRefProvider with
 
-            member self.CreateNew (container : string, id : string, value : 'T) : Async<IMutableCloudRef<'T>> = 
+            member self.Create (container : string, id : string, value : 'T) : Async<IMutableCloudRef<'T>> = 
                 async {
-                    let! tag = storeInfo.Store.CreateMutable(container, postfix id, 
-                                fun stream -> async {
-                                    Serialization.DefaultPickler.Serialize(stream, typeof<'T>)
-                                    Serialization.DefaultPickler.Serialize(stream, value) })
+                    let! tag = storeInfo.Store.CreateMutable(container, postfix id, serialize value typeof<'T>)
 
                     return new MutableCloudRef<'T>(id, container, tag, self) :> _
                 }
 
-            member self.CreateNewUntyped (container : string, id : string, value : obj, t : Type) : Async<IMutableCloudRef> = 
+            member self.Create (container : string, id : string, t : Type, value : obj) : Async<IMutableCloudRef> = 
                 async {
-                    let! tag = storeInfo.Store.CreateMutable(container, postfix id, 
-                                fun stream -> async {
-                                    Serialization.DefaultPickler.Serialize(stream, t)
-                                    Serialization.DefaultPickler.Serialize(stream, value) })
+                    let! tag = storeInfo.Store.CreateMutable(container, postfix id, serialize value t)
 
                     return defineUntyped(t, container, id, tag)
                 }
 
-            member self.CreateExisting(container , id) : Async<IMutableCloudRef> =
+            member self.GetExisting (container , id) : Async<IMutableCloudRef> =
                 async {
                     let! t, tag = readInfo container (postfix id)
                     return defineUntyped(t, container, id, tag)
                 }
 
-            member self.Dereference(cloudRef : IMutableCloudRef) : Async<obj> = 
-                async {
-                    let cloudRef = cloudRef :?> IMutableCloudRefTagged
-                    let! ty, value, tag = read cloudRef.Container cloudRef.Name
-                    cloudRef.Tag <- tag
-                    return value
-                }
-
-            member this.TryUpdate(cloudRef : IMutableCloudRef, value : obj) : Async<bool>  =
-                async {
-                    let cloudRef = cloudRef :?> IMutableCloudRefTagged
-                    let t = cloudRef.Type
-                    let! ok, tag = storeInfo.Store.UpdateMutable(cloudRef.Container, postfix cloudRef.Name, 
-                                            (fun stream -> async {
-                                                Serialization.DefaultPickler.Serialize(stream, t)
-                                                Serialization.DefaultPickler.Serialize(stream, value) }),
-                                            cloudRef.Tag)
-                    if ok then cloudRef.Tag <- tag
-                    return ok
-                }
-
-            member this.ForceUpdate(cloudRef : IMutableCloudRef, value : obj) =
-                async {
-                    let cloudRef = cloudRef :?> IMutableCloudRefTagged
-                    let t = cloudRef.Type
-                    let! tag = storeInfo.Store.ForceUpdateMutable(cloudRef.Container, postfix cloudRef.Name,
-                                            (fun stream -> async {
-                                                Serialization.DefaultPickler.Serialize(stream, t)
-                                                Serialization.DefaultPickler.Serialize(stream, value)}))
-                    cloudRef.Tag <- tag
-                }
-
             member self.GetContainedRefs(container : string) : Async<IMutableCloudRef []> =
                 async {
                     let! ids = getIds container
-                    return 
-                        ids |> Seq.map (fun id -> Async.RunSynchronously(readType container (postfix id)), container, id, "")
-                            |> Seq.map defineUntyped
-                            |> Seq.toArray
+                    return! 
+                        ids 
+                        |> Array.map (fun id -> (self :> IMutableCloudRefProvider).GetExisting(container, id))
+                        |> Async.Parallel
                 }
-
-            member self.Delete(mref : IMutableCloudRef) : Async<unit> = 
-                storeInfo.Store.Delete(mref.Container, postfix mref.Name)

@@ -220,7 +220,7 @@
 //            /// when using the {m}brace shell.</summary>
 //            static member ClientInit : ?MBracedPath:string *
 //                                       ?ILoggerFactory:(unit -> Utils.ILogger) *
-//                                       ?IStoreFactory:(unit -> Store.IStore) *
+//                                       ?IStoreFactory:(unit -> Store.ICloudStore) *
 //                                       ?InitSocketListenerPool:bool * 
 //                                       ?ClientSideExprCheck:bool *
 //                                       ?CompressSerialization:bool * 

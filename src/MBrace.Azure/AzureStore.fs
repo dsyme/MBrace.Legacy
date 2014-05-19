@@ -11,27 +11,25 @@
         let mutableStore = MutableStore(conn)
         let generalStore = GeneralPurpose(conn)
 
-        interface IStore with
+        interface ICloudStore with
             member this.Name = immutableStore.Name
             member this.UUID = conn
 
             // Immutable
-            member this.Create(folder, file, serialize, ?asFile) =
+            member this.CreateImmutable(folder, file, serialize, asFile) =
                 //let folder = Helpers.prefix folder
                 Validation.checkFolder folder
                 Validation.checkFile file
-                let asFile = defaultArg asFile false
                 immutableStore.Create(folder, file, serialize, asFile)
 
-            member this.Read(folder, file) : Async<Stream> =
+            member this.ReadImmutable(folder, file) : Async<Stream> =
                 //let folder = Helpers.prefix folder
                 immutableStore.Read(folder, file)
 
-            member this.CopyFrom(folder, file, source, ?asFile) =
+            member this.CopyFrom(folder, file, source, asFile) =
                 //let folder = Helpers.prefix folder
                 Validation.checkFolder folder
                 Validation.checkFile file
-                let asFile = defaultArg asFile false
                 immutableStore.CopyFrom(folder, file, source, asFile)
 
             member this.CopyTo(folder, file, target) =
@@ -49,7 +47,7 @@
                 //let folder = Helpers.prefix folder
                 mutableStore.Read(folder, file)
 
-            member this.UpdateMutable(folder, file, serialize, etag) : Async<bool * Tag> =
+            member this.TryUpdateMutable(folder, file, serialize, etag) : Async<bool * Tag> =
                 //let folder = Helpers.prefix folder
                 mutableStore.Update(folder, file, serialize, etag)
 
@@ -66,19 +64,19 @@
                 //let folder = Helpers.prefix folder
                 generalStore.Exists(folder, file)
 
-            member this.Exists(folder) =
+            member this.ContainerExists(folder) =
                 //let folder = Helpers.prefix folder
                 generalStore.Exists(folder)
 
-            member this.GetFiles(folder) =
+            member this.GetAllFiles(folder) =
                 //let folder = Helpers.prefix folder
                 generalStore.GetFiles(folder)
 
-            member this.GetFolders () =
+            member this.GetAllContainers () =
                 generalStore.GetFolders ()
                 //|> Array.map Helpers.removePrefix
 
-            member this.Delete(folder) =
+            member this.DeleteContainer(folder) =
                 //let folder = Helpers.prefix folder
                 generalStore.Delete(folder)
 
@@ -90,7 +88,7 @@
     type AzureStoreFactory () =
         interface ICloudStoreFactory with
             member this.CreateStoreFromConnectionString (objectStore : string) = 
-                AzureStore(objectStore) :> IStore
+                AzureStore(objectStore) :> ICloudStore
 
 
     [<AutoOpen>]

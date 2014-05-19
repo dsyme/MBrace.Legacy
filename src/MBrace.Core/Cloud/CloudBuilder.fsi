@@ -4,8 +4,8 @@ namespace Nessos.MBrace
     /// The module containing all the primitive operations directly supported by
     /// the MBrace runtime.
     module CloudModule = begin
-        val internal wrapCloudExpr : cloudExpr:CloudExpr -> ICloud<'T>
-        val internal unWrapCloudExpr : cloudValue:ICloud<'T> -> CloudExpr
+        val inline internal wrapCloudExpr : cloudExpr:CloudExpr -> ICloud<'T>
+        val inline internal unWrapCloudExpr : cloudValue:ICloud<'T> -> CloudExpr
         
         /// Contains the methods (combinators) to express the primitive computations directly supported by
         /// the MBrace runtime.

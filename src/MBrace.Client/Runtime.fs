@@ -315,9 +315,9 @@ namespace Nessos.MBrace.Client
                     mfailwith "incompatible store configuration."
 
                 try
-                    match IoC.TryResolve<IStore>() with
-                    | None -> raise <| MBraceException("No instance of IStore is registered")
-                    | Some store -> return! store.Delete(container)
+                    match IoC.TryResolve<ICloudStore>() with
+                    | None -> raise <| MBraceException("No instance of ICloudStore is registered")
+                    | Some store -> return! store.DeleteContainer(container)
                 with e -> 
                     Error.handle (MBraceException(sprintf' "Error deleting container %s" container,e))
             }

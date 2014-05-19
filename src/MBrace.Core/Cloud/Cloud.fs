@@ -67,7 +67,7 @@
         | GetCloudFile          of Container  * Id
         | GetCloudFiles         of Container
         | ReadCloudFile         of ICloudFile * (Stream -> Async<obj>) * Type
-        | ReadCloudFileAsSeq    of ICloudFile * (System.IO.Stream -> Async<obj>) * System.Type
+//        | ReadCloudFileAsSeq    of ICloudFile * (System.IO.Stream -> Async<obj>) * System.Type
 
         // Commands
         | DoEndDelayExpr of ObjFunc

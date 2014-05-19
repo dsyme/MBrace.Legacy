@@ -111,7 +111,7 @@
                 
                 let coreConfig = CoreConfiguration.activate(IoC.Resolve<ILogger>(), storeInfo, cacheStoreEndpoint)
                 IoC.RegisterValue<CoreConfiguration>(coreConfig)
-                IoC.RegisterValue<IStore>(storeInfo.Store)
+                IoC.RegisterValue<ICloudStore>(storeInfo.Store)
                 IoC.RegisterValue<StoreInfo>(storeInfo)
 
 
