@@ -59,10 +59,8 @@
   </Target>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="connections.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="app.config" />
+    <None Include="connections.config" />
     <Compile Include="Helpers.fs" />
     <Compile Include="CloudTestDefinitions.fs" />
     <Compile Include="StoreTests.fs" />
