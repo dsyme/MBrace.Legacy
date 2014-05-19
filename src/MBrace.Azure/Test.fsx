@@ -13,8 +13,8 @@ open Nessos.MBrace.Store
 open Nessos.MBrace.Store.Azure
 open System.IO
 
-let name = @"mbracestorage"
-let key  = @"lbHKwLm0geMNv3qpif+h54pWhCf+PWuBv72fZbZJKeZ8DK5e4s6uf9Ln98E7OYWffbFmbX2I3tA9JgkaVDg/8g=="
+let name = @""
+let key  = @""
 let config = sprintf "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s" name key
 
 let serialize length payload =

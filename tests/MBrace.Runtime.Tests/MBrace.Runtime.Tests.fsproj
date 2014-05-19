@@ -60,6 +60,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="app.config" />
+    <None Include="connections.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="Helpers.fs" />
     <Compile Include="CloudTestDefinitions.fs" />
     <Compile Include="StoreTests.fs" />
@@ -86,6 +89,11 @@
     <ProjectReference Include="..\..\src\MBrace.Runtime\MBrace.Runtime.fsproj">
       <Name>MBrace.Runtime</Name>
       <Project>{17b6679b-ab3e-42ee-aeb3-86e4fb4ab29b}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\MBrace.SqlServer\MBrace.SqlServer.fsproj">
+      <Name>MBrace.SqlServer</Name>
+      <Project>{90842977-d9df-405f-9965-c43d6d56f0b9}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\src\MBrace.Utils\MBrace.Utils.fsproj">
@@ -138,6 +146,8 @@
       <Project>{c737f3e4-0d61-49d2-8d80-48d062e1dcdc}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="Thespian">
       <HintPath>..\..\packages\Thespian.0.0.2-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>
