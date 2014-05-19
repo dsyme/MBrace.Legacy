@@ -6,8 +6,6 @@ open Nessos.MBrace.Client
 
 let runtime = MBrace.InitLocal 3
 
-let n = MBraceNode.SpawnMultiple 3
-
 runtime.Ping()
 
 runtime.GetLogs()

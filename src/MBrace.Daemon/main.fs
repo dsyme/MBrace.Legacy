@@ -159,7 +159,7 @@
                             | None -> ()
                             | Some m -> logger.LogInfo m
                         with e ->
-                            logger.LogError e "Error communicating with parent process."
+                            logger.Log "Error communicating with parent process." LogLevel.Warning
                             
                         flushConsole () )
 
