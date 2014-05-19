@@ -60,7 +60,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="app.config" />
-    <None Include="connections.config" />
+    <None Include="connections.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="Helpers.fs" />
     <Compile Include="CloudTestDefinitions.fs" />
     <Compile Include="StoreTests.fs" />
