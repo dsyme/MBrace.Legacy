@@ -64,7 +64,7 @@
     <Compile Include="Store\LocalObjectCache.fs" />
     <Compile Include="Store\LocalCacheStore.fs" />
     <Compile Include="Store\FileSystemStore.fs" />
-    <Compile Include="Store\CloudStoreLogger.fs" />
+    <Compile Include="Store\StoreLogger.fs" />
     <Compile Include="Store\StoreRegistry.fs" />
     <Compile Include="StorePrimitives\CloudRef.fs" />
     <Compile Include="StorePrimitives\MutableCloudRef.fs" />

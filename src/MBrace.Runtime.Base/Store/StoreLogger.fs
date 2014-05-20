@@ -12,20 +12,14 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
 
-    type private Message<'LogEntry> = 
-        | EnQueue of 'LogEntry
-        | Flush of AsyncReplyChannel<exn option>
+    [<AutoOpen>]
+    module private StoreLogUtils =
 
-    type JsonStoreLogger<'LogEntry>(store : ICloudStore, container : string, logPrefix : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
+        type Message<'LogEntry> = 
+            | EnQueue of 'LogEntry
+            | Flush of AsyncReplyChannel<exn option>
 
-        let minInterval = defaultArg minInterval 500
-        let maxInterval = defaultArg maxInterval 10000
-        let minEntries  = defaultArg minEntries 20
-
-        do if maxInterval < minInterval then invalidArg "interval" "invalid intervals."
-
-        let getNewLogfileName () = sprintf "%s-%s.log" logPrefix <| DateTime.Now.ToString("yyyyMMddHmmss")
-
+        let getNewLogfileName logPrefix = sprintf "%s-%s.log" logPrefix <| DateTime.Now.ToString("yyyyMMddHmmss")
         let isLogFile (f : string) = f.EndsWith(".log")
 
         let serializeLogs (entries : seq<'LogEntry>) (stream : Stream) = async { 
@@ -40,27 +34,17 @@
         }
 
 
+    type StoreLogger<'LogEntry>(store : ICloudStore, container : string, logPrefix : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
+
+        let minInterval = defaultArg minInterval 500
+        let maxInterval = defaultArg maxInterval 10000
+        let minEntries  = defaultArg minEntries 20
+
+        do if maxInterval < minInterval then invalidArg "interval" "invalid intervals."
+
         let flush (entries : seq<'LogEntry>) = async {
-            let file = getNewLogfileName()
+            let file = getNewLogfileName logPrefix
             do! store.CreateImmutable(container, file, serializeLogs entries, asFile = true)
-        }
-
-        let fetch () = async {
-            let! files = store.GetAllFiles(container)
-
-            let readEntries (f : string) = async {
-                use! stream = store.ReadImmutable(container, f)
-                return! deserializeLogs stream
-            }
-
-            let! entries =
-                files
-                |> Array.filter isLogFile
-                |> Array.sort
-                |> Array.map readEntries
-                |> Async.Parallel
-
-            return Array.concat entries
         }
 
         let cts = new CancellationTokenSource()
@@ -105,9 +89,9 @@
                 return! sleepAndRecurseWith (interval + minInterval)
         }
 
-        member __.Start() =
+        do
             batch.Start()
-            do Async.Start(flusher 0, cts.Token)
+            Async.Start(flusher 0, cts.Token)
 
         member self.LogEntry (entry : 'LogEntry) =
             batch.Post(EnQueue entry)
@@ -117,26 +101,57 @@
             | None -> ()
             | Some e -> raise e
 
-        member self.FetchLogs () : Async<'LogEntry []> = 
-            fetch ()
-
-        member self.DeleteLogs () : Async<unit> =
-            store.DeleteContainer(container)
-
         interface IDisposable with
             member __.Dispose () = cts.Cancel()
 
 
-    type JsonStoreLogger(store : ICloudStore, container, logPrefix) =
-        inherit JsonStoreLogger<LogEntry>(store, container, logPrefix)
+
+    type StoreLogReader<'LogEntry>(store : ICloudStore, container) =
+
+        member self.FetchLogs (?filterF : string -> bool) = async {
+
+            let filterF = defaultArg filterF (fun _ -> true)
+            let! files = store.GetAllFiles(container)
+
+            let readEntries (f : string) = async {
+                use! stream = store.ReadImmutable(container, f)
+                return! deserializeLogs stream
+            }
+
+            let! entries =
+                files
+                |> Array.filter (fun f -> isLogFile f && filterF f)
+                |> Array.sort
+                |> Array.map readEntries
+                |> Async.Parallel
+
+            return Array.concat entries
+        }
+
+        member self.DeleteLogs () : Async<unit> =
+            store.DeleteContainer(container)
+
+
+    type StoreSystemLogger(store : ICloudStore, container, logPrefix) =
+        inherit StoreLogger<LogEntry>(store, container, logPrefix)
+
+        static member GetReader(store : ICloudStore, container) =
+            new StoreLogReader<LogEntry>(store, container)
 
         interface ILogger with
             member __.LogEntry (e : LogEntry) = __.LogEntry e
-
 
     type CloudLogEntry =
         | UserMessage of string
         | Trace of TraceInfo
 
-    type JsonCloudProcessStoreLogger(store : ICloudStore, processId : ProcessId, taskId : string)
-        inherit JsonStoreLogger<CloudLogEntry>(store, sprintf "cloudProc-%d" processId, sprintf "task-%s" taskId)
+
+    type StoreCloudLogger(store : ICloudStore, processId : ProcessId, taskId : string) =
+        inherit StoreLogger<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = sprintf "task%s" taskId)
+
+        static member GetReader(store : ICloudStore, processId : ProcessId) =
+            new StoreLogReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId )
+
+        interface ICloudLogger with
+            member __.LogTraceInfo tI = base.LogEntry (Trace tI)
+            member __.LogUserInfo msg = base.LogEntry (UserMessage msg)
