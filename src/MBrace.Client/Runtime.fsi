@@ -216,16 +216,6 @@
             
             static member internal BootAsync : conf:Runtime.Configuration -> Async<MBraceRuntime>
             
-//            ///<summary>Initializes a MBrace.Client. This method should not be called directly 
-//            /// when using the {m}brace shell.</summary>
-//            static member ClientInit : ?MBracedPath:string *
-//                                       ?ILoggerFactory:(unit -> Utils.ILogger) *
-//                                       ?IStoreFactory:(unit -> Store.ICloudStore) *
-//                                       ?InitSocketListenerPool:bool * 
-//                                       ?ClientSideExprCheck:bool *
-//                                       ?CompressSerialization:bool * 
-//                                       ?DefaultSerializer:string -> unit
-            
             ///<summary>Connect to an existing runtime.</summary>
             ///<param name="uri">The Uri of a node that belongs to the runtime.</param>
             static member Connect : uri:System.Uri -> MBraceRuntime

@@ -7,7 +7,6 @@
         open Nessos.MBrace.Core
         open Nessos.MBrace.Utils
         open Nessos.MBrace.Runtime
-        open Nessos.FsPickler
 
         let activate (storeInfo : StoreInfo, cacheStoreEndpoint) : CoreConfiguration =
             match StoreRegistry.TryGetCoreConfiguration storeInfo.Id with
@@ -25,9 +24,6 @@
                 let cseqStore  = new CloudSeqProvider(storeInfo, localCache)  :> ICloudSeqProvider
                 let mrefStore  = new MutableCloudRefProvider(storeInfo)       :> IMutableCloudRefProvider
                 let cfileStore = new CloudFileProvider(storeInfo, localCache) :> ICloudFileProvider
-//                let clogsStore = new CloudLogStore(store, batchCount = 50, batchTimespan = 500) 
-//
-//                IoC.RegisterValue<ICloudLogger>(clogsStore)
 
                 let cloner = 
                     {
@@ -41,7 +37,6 @@
                         CloudSeqProvider        = cseqStore
                         CloudFileProvider       = cfileStore
                         MutableCloudRefProvider = mrefStore
-//                        CloudLogger             = clogsStore
                         Cloner                  = cloner
                     }
 

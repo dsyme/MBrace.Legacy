@@ -129,10 +129,10 @@
     /// A logger that serializes to store
 
     type StoreSystemLogger(store : ICloudStore, container, logPrefix) =
-        inherit StoreLogger<SystemLogEntry>(store, container, logPrefix)
+        inherit LogStore<SystemLogEntry>(store, container, logPrefix)
 
         static member GetReader(store : ICloudStore, container) =
-            new StoreLogReader<SystemLogEntry>(store, container)
+            new LogStoreReader<SystemLogEntry>(store, container)
 
         interface ISystemLogger with
             member __.LogEntry (e : SystemLogEntry) = base.LogEntry e

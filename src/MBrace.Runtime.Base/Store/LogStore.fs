@@ -33,11 +33,11 @@
         }
 
 
-    type StoreLogger<'LogEntry>(store : ICloudStore, container : string, logPrefix : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
+    type LogStore<'LogEntry>(store : ICloudStore, container : string, logPrefix : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
 
-        let minInterval = defaultArg minInterval 500
-        let maxInterval = defaultArg maxInterval 10000
-        let minEntries  = defaultArg minEntries 20
+        let minInterval = defaultArg minInterval 100
+        let maxInterval = defaultArg maxInterval 1000
+        let minEntries  = defaultArg minEntries 5
 
         do if maxInterval < minInterval then invalidArg "interval" "invalid intervals."
 
@@ -105,7 +105,7 @@
 
 
 
-    type StoreLogReader<'LogEntry>(store : ICloudStore, container) =
+    type LogStoreReader<'LogEntry>(store : ICloudStore, container) =
 
         member self.FetchLogs (?filterF : string -> bool) : Async<'LogEntry []> = 
             async {

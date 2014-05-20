@@ -55,10 +55,10 @@
     /// Store interface for cloud process logs
 
     type StoreCloudLogger(store : ICloudStore, processId : ProcessId, taskId : string) =
-        inherit StoreLogger<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = sprintf "task%s" taskId)
+        inherit LogStore<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = sprintf "task%s" taskId)
 
         static member GetReader(store : ICloudStore, processId : ProcessId) =
-            new StoreLogReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId )
+            new LogStoreReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId )
 
     /// The runtime ICloudLogger implementation
 
@@ -72,6 +72,9 @@
         interface ICloudLogger with
             member __.LogTraceInfo (msg, traceInfo) = logEntry <| CloudLogEntry.Trace taskId msg traceInfo
             member __.LogUserInfo msg = logEntry <| CloudLogEntry.UserInfo taskId msg
+
+        interface IDisposable with
+            member __.Dispose () = storeLogger |> Option.iter (fun s -> (s :> IDisposable).Dispose())
 
 
     type InMemoryCloudProcessLogger(sysLog : ISystemLogger, processId : ProcessId) =

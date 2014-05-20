@@ -24,7 +24,10 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                       (ctx: BehaviorContext<Scheduler>)
                       (state: State)
                       (msg: Scheduler) = 
+
+    /// dependency injection! fix this!
     let coreConfig = IoC.Resolve<CoreConfiguration>()
+
     let newRef (processId : int) (value : 'T) = 
         coreConfig.CloudRefProvider.Create<'T>("temp" + (string processId), Guid.NewGuid().ToString(), value)
 
