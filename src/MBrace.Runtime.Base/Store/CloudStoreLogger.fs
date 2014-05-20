@@ -4,49 +4,43 @@
     open System.IO
     open System.Threading
 
-    open Newtonsoft.Json
-
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Utils.Json
     open Nessos.MBrace.Utils.Logging
-    open Nessos.MBrace.Utils.Retry
 
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
 
-    type private Message = 
-        | EnQueue of LogEntry
+    type private Message<'LogEntry> = 
+        | EnQueue of 'LogEntry
         | Flush of AsyncReplyChannel<exn option>
 
-    type CloudStoreLogger (store : ICloudStore, container : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
+    type JsonStoreLogger<'LogEntry>(store : ICloudStore, container : string, logPrefix : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
+
         let minInterval = defaultArg minInterval 500
-        let maxInterval = defaultArg maxInterval 5000
+        let maxInterval = defaultArg maxInterval 10000
         let minEntries  = defaultArg minEntries 20
 
         do if maxInterval < minInterval then invalidArg "interval" "invalid intervals."
 
-        static let getNewLogfileName () = 
-            let id = Guid.NewGuid()
-            sprintf "%O.log" id
+        let getNewLogfileName () = sprintf "%s-%s.log" logPrefix <| DateTime.Now.ToString("yyyyMMddHmmss")
 
-        static let isLogFile (f : string) = f.EndsWith(".log")
+        let isLogFile (f : string) = f.EndsWith(".log")
 
-        let jsonSerializer = Newtonsoft.Json.JsonSerializer.Create()
-
-        let serializeLogs (entries : LogEntry []) (stream : Stream) = async { 
-            use sw = new StreamWriter(stream)
-            use jw = new JsonTextWriter(sw)
-            do jsonSerializer.Serialize(jw, entries)
+        let serializeLogs (entries : seq<'LogEntry>) (stream : Stream) = async { 
+            do
+                let jss = JsonSequence.CreateSerializer<'LogEntry>(stream, newLine = true)
+                for e in entries do jss.WriteNext e
         }
 
         let deserializeLogs (stream : Stream) = async {
-            use sr = new StreamReader(stream)
-            use jr = new JsonTextReader(sr)
-            return jsonSerializer.Deserialize<LogEntry []>(jr)
+            let jsd = JsonSequence.CreateDeserializer<'LogEntry>(stream)
+            return Seq.toArray jsd
         }
 
 
-        let flush (entries : LogEntry []) = async {
+        let flush (entries : seq<'LogEntry>) = async {
             let file = getNewLogfileName()
             do! store.CreateImmutable(container, file, serializeLogs entries, asFile = true)
         }
@@ -62,19 +56,17 @@
             let! entries =
                 files
                 |> Array.filter isLogFile
+                |> Array.sort
                 |> Array.map readEntries
                 |> Async.Parallel
 
-            return
-                entries
-                |> Array.concat
-                |> Array.sortBy(fun e -> e.Date)
+            return Array.concat entries
         }
 
         let cts = new CancellationTokenSource()
-        let gatheredLogs = new ResizeArray<LogEntry> ()
+        let gatheredLogs = new ResizeArray<'LogEntry> ()
 
-        let rec loop (mbox : MailboxProcessor<Message>) = async {
+        let rec loop (mbox : MailboxProcessor<Message<'LogEntry>>) = async {
             let! msg = mbox.Receive()
 
             match msg with
@@ -113,11 +105,11 @@
                 return! sleepAndRecurseWith (interval + minInterval)
         }
 
-        member __.Start () =
+        member __.Start() =
             batch.Start()
             do Async.Start(flusher 0, cts.Token)
 
-        member self.LogEntry (entry : LogEntry) =
+        member self.LogEntry (entry : 'LogEntry) =
             batch.Post(EnQueue entry)
 
         member self.Flush () =
@@ -125,14 +117,26 @@
             | None -> ()
             | Some e -> raise e
 
-        member self.FetchLogs () : Async<LogEntry []> = 
+        member self.FetchLogs () : Async<'LogEntry []> = 
             fetch ()
 
         member self.DeleteLogs () : Async<unit> =
             store.DeleteContainer(container)
 
-        interface ILogger with
-            member this.LogEntry e = this.LogEntry e
-
         interface IDisposable with
             member __.Dispose () = cts.Cancel()
+
+
+    type JsonStoreLogger(store : ICloudStore, container, logPrefix) =
+        inherit JsonStoreLogger<LogEntry>(store, container, logPrefix)
+
+        interface ILogger with
+            member __.LogEntry (e : LogEntry) = __.LogEntry e
+
+
+    type CloudLogEntry =
+        | UserMessage of string
+        | Trace of TraceInfo
+
+    type JsonCloudProcessStoreLogger(store : ICloudStore, processId : ProcessId, taskId : string)
+        inherit JsonStoreLogger<CloudLogEntry>(store, sprintf "cloudProc-%d" processId, sprintf "task-%s" taskId)

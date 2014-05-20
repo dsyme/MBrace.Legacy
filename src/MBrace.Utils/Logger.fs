@@ -4,6 +4,8 @@ namespace Nessos.MBrace.Utils.Logging
     open System.IO
     open System.Threading
 
+    open Nessos.MBrace.Utils.Json
+
     open Microsoft.FSharp.Control
 
     type ILogger =
@@ -114,23 +116,38 @@ namespace Nessos.MBrace.Utils.Logging
         let showDate = defaultArg showDate false
 
         interface ILogger with
-            member __.LogEntry e =
-                Console.WriteLine (e.Print(showDate))
+            member __.LogEntry e = Console.WriteLine (e.Print(showDate))
 
-    type FileLogger (path : string, ?initMsg : string, ?showDate, ?append) =
+    /// NOT thread safe
+    type FileLogger (path : string, ?showDate, ?append) =
 
         let showDate = defaultArg showDate true
-        let writer = TextWriter.Synchronized(new StreamWriter(path, defaultArg append true))
-
-        do initMsg |> Option.iter writer.WriteLine
+        let fileMode = if defaultArg append true then FileMode.OpenOrCreate else FileMode.Create
+        let fs = new FileStream(path, fileMode, FileAccess.Write, FileShare.Read)
+        let writer = new StreamWriter(fs)
 
         interface ILogger with
-            member __.LogEntry e =
-                writer.WriteLine (e.Print(showDate))
-                writer.Flush ()
+            member __.LogEntry e = writer.WriteLine (e.Print(showDate))
              
         interface IDisposable with
-            member __.Dispose () = writer.Close ()
+            member __.Dispose () = writer.Flush () ; writer.Close () ; fs.Close()
+
+    /// A logger that serializes to JSON ; NOT thread safe
+    type JsonLogger (stream : Stream) =
+        let writer = JsonSequence.CreateSerializer<LogEntry>(stream, newLine = true)
+
+        interface ILogger with
+            member __.LogEntry e = writer.WriteNext e
+
+        interface IDisposable with  
+            member __.Dispose () = (writer :> IDisposable).Dispose()
+
+    type JsonFileLogger (path : string, ?append) =
+        inherit JsonLogger(
+            let fileMode = if defaultArg append true then FileMode.OpenOrCreate else FileMode.Create in
+            let fs = new FileStream(path, fileMode, FileAccess.Write, FileShare.Read) in
+            fs
+        )
         
     type AsyncLogger (underlying : ILogger) =
 
