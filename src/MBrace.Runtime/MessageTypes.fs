@@ -26,8 +26,6 @@ type TaskHeader = ProcessId * TaskId
 
 type TaskResult = TaskSuccess of ProcessBody | TaskFailure of exn
 
-type LoggerMsg = LogEntry
-
 type Scheduler = 
     //Throws
     //BroadcastFailureException => no replication at all

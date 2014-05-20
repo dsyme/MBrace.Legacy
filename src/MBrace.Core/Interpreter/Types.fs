@@ -8,12 +8,10 @@
 
     type ICloudLogger = 
         abstract LogUserInfo  : message:string -> unit
-        abstract LogTraceInfo : info:TraceInfo -> unit
+        abstract LogTraceInfo : message:string * info:TraceInfo -> unit
 
     and TraceInfo = 
         { 
-            Message     : string
-
             Line        : int option
             File        : string option
             Function    : string option

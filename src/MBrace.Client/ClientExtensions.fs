@@ -3,6 +3,8 @@
 open Microsoft.FSharp.Quotations
 
 open Nessos.MBrace
+open Nessos.MBrace.Core
+open Nessos.MBrace.Runtime.Logging
 
 [<AutoOpen>]
 module ClientExtensions =
@@ -25,45 +27,20 @@ module ClientExtensions =
             runtime.CreateProcess expr
 
         /// Runs the given computation locally without the need of a runtime.
-        static member RunLocalAsync (computation : Cloud<'T>) : Async<'T> =
+        static member RunLocalAsync (computation : Cloud<'T>, ?showLogs) : Async<'T> =
+
             // force exception to be raised if no store provider has been set
             MBraceSettings.StoreProvider |> ignore
 
             let logger =
-                {
-                    new Nessos.MBrace.Core.ICloudLogger with
-                        member __.LogTraceInfo _ = ()
-                        member __.LogUserInfo _ = ()
-                }
+                if defaultArg showLogs false then
+                    let console = Logger.createConsoleLogger()
+                    new InMemoryCloudProcessLogger(console, 0) :> ICloudLogger
+                else
+                    new NullCloudProcessLogger() :> ICloudLogger
 
-            Nessos.MBrace.Core.Interpreter.evaluateLocalWrapped MBraceSettings.DefaultCoreConfiguration logger false computation
+            Interpreter.evaluateLocalWrapped MBraceSettings.DefaultCoreConfiguration logger false computation
 
         /// Runs the given computation locally without the need of a runtime.
-        static member RunLocal (computation : Cloud<'T>) : 'T = 
-            computation |> MBrace.RunLocalAsync |> Async.RunSynchronously 
-
-
-//#if DEBUG
-//module Debugging =
-//
-//    open Nessos.MBrace.Utils
-//
-//    let RequestCompilation() = Shell.Compile ()
-//
-//    let serialize (x : 'T) = Nessos.MBrace.Runtime.Serializer.Serialize x
-//    let deserialize<'T> (data : byte []) = Nessos.MBrace.Runtime.Serializer.Deserialize<'T> data
-//
-//    let showDependencies() =
-//        match Shell.Settings with
-//        | Some conf ->
-//            let (!) (d : DeclarationId) = d.Path + "+" + d.Name
-//            let deps = conf.DeclarationIndex.Value |> Map.toList |> List.sortBy (fun (_,d) -> d.Id.Name)
-//            deps |> List.map (fun (_,d) -> ! d.Id, d.Dependencies |> List.map (fun i -> i.Id))
-//        | None -> []
-//
-//    let dependsOnClient (expr : Expr) =
-//        match expr with
-//        | Quotations.MethodOrProperty r -> QuotationAnalysis.declarationDependsOnClientMethod r
-//        | _ -> failwith "not proper expr"
-//
-//#endif
+        static member RunLocal (computation : Cloud<'T>, ?showLogs) : 'T = 
+            MBrace.RunLocalAsync(computation, ?showLogs = showLogs) |> Async.RunSynchronously 

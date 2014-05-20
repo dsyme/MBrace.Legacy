@@ -18,7 +18,7 @@
             | Working_Directory of string
             | [<NoAppSettings>] Use_Temp_WorkDir
             | [<Mandatory>] Log_Level of int
-            | Log_File of string
+            | [<Mandatory>] Log_File of string
             | [<Hidden>][<NoAppSettings>] Parent_Receiver_Id of int * string // pid * name
             | Debug
             | [<NoAppSettings>] Detach

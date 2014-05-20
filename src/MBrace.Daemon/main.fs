@@ -13,6 +13,7 @@
         open Nessos.Thespian.Remote.PipeProtocol
 
         open Nessos.MBrace.Utils
+        open Nessos.MBrace.Runtime.Logging
         open Nessos.MBrace.Runtime.Store
         open Nessos.MBrace.Client
 
@@ -107,7 +108,7 @@
             do registerWorkingDirectory useTempWD workingDirectory
 
             // Register logging
-            let logger = registerLogger logFiles logLevel
+            let logger = registerLogger logFiles.Head logFiles.Tail logLevel
 
             // register mbrace.process executable
             registerProcessDomainExecutable mbraceProc
@@ -126,7 +127,7 @@
             IoC.RegisterValue(evalPorts workerPorts, "mbrace.process.portPool")
 
             // resolve primary address
-            let address = resolveAddress logger hostname primaryPort
+            let address = resolveAddress hostname primaryPort
 
             //
             // begin boot

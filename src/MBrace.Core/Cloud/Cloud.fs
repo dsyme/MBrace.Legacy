@@ -88,6 +88,9 @@
         member self.For(values : 'T [], bindF : ('T -> Cloud<unit>)) : Cloud<unit> = 
             Cloud.wrapExpr <| ForExpr (values |> Array.map (fun value -> value :> obj), (fun value -> Cloud.unwrapExpr <| bindF (value :?> 'T)), bindF)
 
+        member self.For(values : 'T list, bindF : ('T -> Cloud<unit>)) : Cloud<unit> = 
+            self.For(List.toArray values, bindF)
+
         member self.While (guardF : (unit -> bool), body : Cloud<unit>) : Cloud<unit> = 
             Cloud.wrapExpr <| WhileExpr (guardF, Cloud.unwrapExpr body)
 

@@ -91,11 +91,10 @@
                         // continue
                         let dumpContext = extractInfo functions value objF
                         let opt f x = if f x then None else Some x
-                        let entry = { 
+                        let traceInfo = { 
                                 File = opt String.IsNullOrEmpty dumpContext.File
                                 Function = opt String.IsNullOrEmpty dumpContext.FunctionName
                                 Line = Some <| (fst dumpContext.Start)
-                                Message = msg
 //                                DateTime = DateTime.Now
                                 Environment = dumpContext.Vars
                                                 |> Seq.map (fun (a,b) -> (a, sprintf "%A" b))
@@ -104,7 +103,8 @@
 //                                TaskId = taskId
 //                                Id = logIdCounter.Next()
                             }
-                        logger.LogTraceInfo entry
+
+                        logger.LogTraceInfo (msg, traceInfo)
 //                        config.CloudLogger.LogTraceInfo(processId, entry)
                     else ()
                 | None -> ()

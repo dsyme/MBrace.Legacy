@@ -40,11 +40,15 @@
                     member __.Current : obj = box current.Value
                     member __.Dispose () = ()
                     member __.MoveNext () =
-                        match jreader.TokenType with
-                        | JsonToken.EndObject when not <| jreader.Read() -> false
-                        | _ ->
-                            current := jsonSerializer.Deserialize<'T>(jreader)
-                            true
+                        try
+                            match jreader.TokenType with
+                            | JsonToken.EndObject when not <| jreader.Read() -> false
+                            | _ ->
+                                current := jsonSerializer.Deserialize<'T>(jreader)
+                                true
+
+                        // protect from partially written log files
+                        with _ -> false
                             
                     member __.Reset () = raise <| new NotSupportedException()
             }

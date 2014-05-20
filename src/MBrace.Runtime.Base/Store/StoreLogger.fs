@@ -6,7 +6,6 @@
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Json
-    open Nessos.MBrace.Utils.Logging
 
     open Nessos.MBrace
     open Nessos.MBrace.Core
@@ -19,7 +18,7 @@
             | EnQueue of 'LogEntry
             | Flush of AsyncReplyChannel<exn option>
 
-        let getNewLogfileName logPrefix = sprintf "%s-%s.log" logPrefix <| DateTime.Now.ToString("yyyyMMddHmmss")
+        let getNewLogfileName logPrefix = sprintf "%s_%s.log" logPrefix <| DateTime.Now.ToString("yyyyMMddHmmss")
         let isLogFile (f : string) = f.EndsWith(".log")
 
         let serializeLogs (entries : seq<'LogEntry>) (stream : Stream) = async { 
@@ -108,50 +107,26 @@
 
     type StoreLogReader<'LogEntry>(store : ICloudStore, container) =
 
-        member self.FetchLogs (?filterF : string -> bool) = async {
+        member self.FetchLogs (?filterF : string -> bool) : Async<'LogEntry []> = 
+            async {
 
-            let filterF = defaultArg filterF (fun _ -> true)
-            let! files = store.GetAllFiles(container)
+                let filterF = defaultArg filterF (fun _ -> true)
+                let! files = store.GetAllFiles(container)
 
-            let readEntries (f : string) = async {
-                use! stream = store.ReadImmutable(container, f)
-                return! deserializeLogs stream
+                let readEntries (f : string) : Async<'LogEntry []> = async {
+                    use! stream = store.ReadImmutable(container, f)
+                    return! deserializeLogs stream
+                }
+
+                let! entries =
+                    files
+                    |> Array.filter (fun f -> isLogFile f && filterF f)
+                    |> Array.sort
+                    |> Array.map readEntries
+                    |> Async.Parallel
+
+                return Array.concat entries
             }
-
-            let! entries =
-                files
-                |> Array.filter (fun f -> isLogFile f && filterF f)
-                |> Array.sort
-                |> Array.map readEntries
-                |> Async.Parallel
-
-            return Array.concat entries
-        }
 
         member self.DeleteLogs () : Async<unit> =
             store.DeleteContainer(container)
-
-
-    type StoreSystemLogger(store : ICloudStore, container, logPrefix) =
-        inherit StoreLogger<LogEntry>(store, container, logPrefix)
-
-        static member GetReader(store : ICloudStore, container) =
-            new StoreLogReader<LogEntry>(store, container)
-
-        interface ILogger with
-            member __.LogEntry (e : LogEntry) = __.LogEntry e
-
-    type CloudLogEntry =
-        | UserMessage of string
-        | Trace of TraceInfo
-
-
-    type StoreCloudLogger(store : ICloudStore, processId : ProcessId, taskId : string) =
-        inherit StoreLogger<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = sprintf "task%s" taskId)
-
-        static member GetReader(store : ICloudStore, processId : ProcessId) =
-            new StoreLogReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId )
-
-        interface ICloudLogger with
-            member __.LogTraceInfo tI = base.LogEntry (Trace tI)
-            member __.LogUserInfo msg = base.LogEntry (UserMessage msg)

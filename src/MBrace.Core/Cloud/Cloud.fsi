@@ -96,6 +96,7 @@ namespace Nessos.MBrace
             member Combine : first:Cloud<unit> * second:Cloud<'T> -> Cloud<'T>
             member Delay : f:(unit -> Cloud<'T>) -> Cloud<'T>
             member For : values:'T [] * bindF:('T -> Cloud<unit>) -> Cloud<unit>
+            member For : values:'T list * bindF:('T -> Cloud<unit>) -> Cloud<unit>
             member Return : value:'T -> Cloud<'T>
             member ReturnFrom : computation:Cloud<'T> -> Cloud<'T>
             member TryFinally : computation:Cloud<'T> * compensation:(unit -> unit) -> Cloud<'T>

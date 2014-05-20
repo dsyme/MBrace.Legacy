@@ -4,11 +4,19 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
+let hello = cloud {
+    for i in [| 1 .. 100 |] do
+        do! Cloud.Logf "message %d" i
+}
+
+MBrace.RunLocal(hello, showLogs = true)
+
 let runtime = MBrace.InitLocal 3
 
 runtime.Ping()
 
-runtime.GetLogs()
+runtime.GetSystemLogs()
+runtime.ShowSystemLogs()
 
 runtime.Nodes
 

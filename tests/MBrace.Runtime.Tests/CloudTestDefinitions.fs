@@ -6,6 +6,7 @@
 
     open Nessos.MBrace
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Runtime.Logging
 
     type MVar<'T> = IMutableCloudRef<'T option>
 
@@ -148,14 +149,13 @@
 
         let delay = 5*1024
 
-        let traceHasValue dumps name value =
+        let traceHasValue (dumps : seq<CloudLogEntry>) name value =
             dumps 
-            |> Seq.exists(
-                function 
-                | Trace info -> 
-                    info.Environment.ContainsKey(name) && info.Environment.[name].Contains value
-                | _ -> false)
-            
+            |> Seq.exists(fun e ->
+                match e.TraceInfo with
+                | None -> false
+                | Some t ->
+                    t.Environment.ContainsKey(name) && t.Environment.[name].Contains value)
 
         [<Cloud>]
         let testPropGet = cloud { return 42 }

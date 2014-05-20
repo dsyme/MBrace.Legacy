@@ -11,6 +11,7 @@ open Nessos.Vagrant
 
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Runtime
+open Nessos.MBrace.Runtime.Logging
 
 //type aliases to resolve conficts with non-cluster types
 type private ProcessMonitorDb = PublicTypes.ProcessMonitorDb
@@ -107,14 +108,15 @@ type internal ProcessDomainManagerDefinition(parent: DefinitionPath, inMemory: b
         }
 
 type LoggerActorDefinition(parent: DefinitionPath) =
-    inherit ActorDefinition<LogEntry>(parent)
+    inherit ActorDefinition<SystemLogEntry>(parent)
 
     override __.Name = "loggerActor"
 
     override __.Dependencies = []
 
     override __.Behavior(configuration: ActivationConfiguration, instanceId: int) = async {
-        let logger = IoC.Resolve<Nessos.MBrace.Utils.ILogger>()
+        /// TODO : remove dependency injections
+        let logger = IoC.Resolve<ISystemLogger>()
         return Behavior.stateless (Logger.loggerActorBehaviour logger)
     }
 
