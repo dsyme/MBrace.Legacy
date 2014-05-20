@@ -256,7 +256,7 @@ type ``FileSystem tests`` () =
 
     override test.Store = store
 
-[<TestFixture>]
+[<TestFixture; Category("CustomStores")>]
 type ``WindowsAzure tests`` () =
     inherit ``Store tests`` ()
 
@@ -266,7 +266,7 @@ type ``WindowsAzure tests`` () =
 
     override test.Store = store
 
-[<TestFixture>]
+[<TestFixture; Category("CustomStores")>]
 type ``SqlServer tests`` () =
     inherit ``Store tests`` ()
 
