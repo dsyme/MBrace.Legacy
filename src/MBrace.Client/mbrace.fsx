@@ -5,18 +5,30 @@ open Nessos.MBrace
 open Nessos.MBrace.Client
 
 [<Cloud>]
-let hello = cloud {
-    for i in [ 1 .. 100 ] do
-        do! Cloud.Logf "message %d" i
+let test = cloud {
+    let! count = Cloud.GetWorkerCount()
+
+    let worker (i : int) = cloud {
+        for i in [ 1 .. 100 ] do
+            do! Cloud.Logf "message %d" i
+    }
+
+    return! 
+        [|1..count|] 
+        |> Array.map worker 
+        |> Cloud.Parallel
+        |> Cloud.Ignore
 }
 
-MBrace.RunLocal(hello, showLogs = true)
+MBrace.RunLocal(test, showLogs = true)
 
 let runtime = MBrace.InitLocal 3
 
-let proc = runtime.CreateProcess <@ hello @>
+let proc = runtime.CreateProcess <@ test @>
 
-proc.GetLogs()
+proc.ShowLogs()
+
+proc.ProcessId
 
 runtime.Ping()
 

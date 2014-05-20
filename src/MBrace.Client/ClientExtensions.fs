@@ -28,9 +28,10 @@ module ClientExtensions =
 
         /// Runs the given computation locally without the need of a runtime.
         static member RunLocalAsync (computation : Cloud<'T>, ?showLogs) : Async<'T> =
-
-            // force exception to be raised if no store provider has been set
-            MBraceSettings.StoreProvider |> ignore
+            // force vagrant compilation if dependencies require it ;
+            // this is since the local interpreter uses FsPickler internally
+            // for deep object cloning
+            MBraceSettings.Vagrant.ComputeObjectDependencies(computation, permitCompilation = true) |> ignore
 
             let logger =
                 if defaultArg showLogs false then
