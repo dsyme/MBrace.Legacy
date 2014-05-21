@@ -768,3 +768,23 @@ namespace Nessos.MBrace.Runtime.Tests
                          | _ -> return -2
                } 
             @> |> test.ExecuteExpression |> should equal -1
+
+        [<Test>]
+        member test.``Concurrent cache writes (Parallel CloudSeq read after cleaning cache)`` () =
+            wait 500
+            
+            let cs = <@ cloud { return! CloudSeq.New(Array.init (10 * 1024 * 1024) id) } @> |> test.ExecuteExpression
+            
+            // Clear client cache
+            let cacheDir = Path.Combine(MBraceSettings.WorkingDirectory, @"LocalCache\localCacheStore") 
+            Directory.Delete(cacheDir, true)
+
+            let read () = async { return cs |> Seq.toArray }
+
+            let r = Async.Parallel [read (); read () ]
+                    |> Async.RunSynchronously
+
+            should equal r.[0] r.[1]
+
+
+
