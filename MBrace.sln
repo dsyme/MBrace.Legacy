@@ -23,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{B6E8
 		build.fsx = build.fsx
 		build.sh = build.sh
 		LICENSE.md = LICENSE.md
+		RELEASE_NOTES.md = RELEASE_NOTES.md
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Runtime", "src\MBrace.Runtime\MBrace.Runtime.fsproj", "{17B6679B-AB3E-42EE-AEB3-86E4FB4AB29B}"

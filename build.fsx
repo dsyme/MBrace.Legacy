@@ -1,6 +1,9 @@
 ﻿// include Fake lib
 #r @"packages/FAKE/tools/FakeLib.dll"
 open Fake
+open Fake.AssemblyInfoFile
+open Fake.ReleaseNotesHelper
+
 open System
 open System.IO
 
@@ -11,6 +14,30 @@ let testAssemblies = ["bin/MBrace.Runtime.Tests.dll"]
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 let excludedStoresCategory = "CustomStores"
+
+
+
+// --------------------------------------------------------------------------------------
+// Read release notes & version info from RELEASE_NOTES.md
+let release = parseReleaseNotes (IO.File.ReadAllLines "RELEASE_NOTES.md") 
+
+// Generate assembly info files with the right version & up-to-date information
+Target "AssemblyInfo" (fun _ ->
+    let attributes =
+        [ 
+            Attribute.Title project
+            Attribute.Product project
+            Attribute.Company "Nessos Information Technologies"
+            Attribute.Copyright "\169 Nessos Information Technologies."
+            Attribute.Trademark "{m}brace"
+            Attribute.Version release.AssemblyVersion
+            Attribute.FileVersion release.AssemblyVersion
+        ]
+
+    !! "./src/**/AssemblyInfo.fs"
+    |> Seq.iter (fun info -> CreateFSharpAssemblyInfo info attributes)
+)
+
 
 // --------------------------------------------------------------------------------------
 // Clean and restore packages
@@ -87,12 +114,14 @@ Target "DefaultWithStores" DoNothing
 
 "Clean"
   ==> "RestorePackages"
+  ==> "AssemblyInfo"
   ==> "Build"
   ==> "RunTestsExcludingCustomStores"
   ==> "Default"
 
 "Clean"
   ==> "RestorePackages"
+  ==> "AssemblyInfo"
   ==> "Build"
   ==> "RunTests"
   ==> "DefaultWithStores"

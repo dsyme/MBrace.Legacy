@@ -1,9 +1,14 @@
-﻿namespace Nessos.MBrace.Client
-
+﻿namespace System
 open System.Reflection
 
-[<assembly:AssemblyTitle("{m}brace worker node")>]
-[<assembly:AssemblyDescription("mbrace.worker.exe")>]
-[<assembly:AssemblyName("mbrace.worker.exe")>]
-
+[<assembly: AssemblyTitleAttribute("MBrace")>]
+[<assembly: AssemblyProductAttribute("MBrace")>]
+[<assembly: AssemblyCompanyAttribute("Nessos Information Technologies")>]
+[<assembly: AssemblyCopyrightAttribute("© Nessos Information Technologies.")>]
+[<assembly: AssemblyTrademarkAttribute("{m}brace")>]
+[<assembly: AssemblyVersionAttribute("0.5.0")>]
+[<assembly: AssemblyFileVersionAttribute("0.5.0")>]
 do ()
+
+module internal AssemblyVersionInformation =
+    let [<Literal>] Version = "0.5.0"

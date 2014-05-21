@@ -51,6 +51,7 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="FixedStream.fs" />
     <Compile Include="Common.fs" />
     <Compile Include="Exceptions.fs" />
