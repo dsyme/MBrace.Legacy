@@ -3,6 +3,8 @@
     open Nessos.MBrace
     open Nessos.MBrace.Client
 
+    open System.IO
+
     open NUnit.Framework
     
     [<Category("LocalTests")>]
@@ -21,5 +23,6 @@
     type ``AppVeyor Tests`` () =
         [<TestAttribute>]
         member test.Foo () = 
+            MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "mbraced.exe")
             let node = MBraceNode.SpawnMultiple(1)
             node.Head.Ping() |> ignore
