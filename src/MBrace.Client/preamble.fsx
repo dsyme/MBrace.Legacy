@@ -1,8 +1,10 @@
-﻿#I "../../bin/"
+﻿//  Loads the minimal set of assemblies required to initialize an MBrace session
+#I "../../bin/"
+
 #r "Thespian.dll"
 #r "Vagrant.dll"
 #r "MBrace.Core.dll"
-#r "MBrace.Utils.dll"
+#r "MBrace.Lib.dll"
 #r "MBrace.Runtime.Base.dll"
 #r "MBrace.Client.dll"
 
