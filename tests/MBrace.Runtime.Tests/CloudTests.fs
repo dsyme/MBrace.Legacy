@@ -161,24 +161,6 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Primes example `` () = 
             <@ PrimesTest.parallelPrimes 20 2 @> |> test.ExecuteExpression |> should equal (Seq.ofArray [| 2; 3; 5; 7; 11; 13; 17; 19 |])
 
-//        [<Test>]
-//        [<ExpectedException(typeof<MBrace.Exception>)>]
-//        member test.
-//         ``Compiler exception, invalid return type Cloud<_> from arbitary-non quoted function `` () = 
-//            <@ cloud { let! x = nonQuotedCloud() in return x } @> |> test.ExecuteExpression |> ignore
-//
-//        [<Test>]
-//        [<ExpectedException(typeof<MBrace.Exception>)>]
-//        member test.
-//         ``Compiler exception, invalid return type Array Cloud<_> from arbitary-non quoted function `` () = 
-//            <@ cloud { let x = nonQuotedArrayCloud() in return x } @> |> test.ExecuteExpression |> ignore
-//
-//        [<Test>]
-//        [<ExpectedException(typeof<MBrace.Exception>)>]
-//        member test.
-//         ``Compiler exception, invalid return type Option Cloud<_> from arbitary-non quoted function `` () = 
-//            <@ cloud { let x = nonQuotedOptionCloud() in return x } @> |> test.ExecuteExpression |> ignore
-
         [<Test>]
         member test.``valid return type Cloud<_> from quoted function call (general example '<|') `` () = 
             <@ cloud { let! x = (fun x -> cloud { return x }) <| 1 in return x } @> |> test.ExecuteExpression |> should equal 1
@@ -476,18 +458,19 @@ namespace Nessos.MBrace.Runtime.Tests
                 } 
             @> |> test.ExecuteExpression |> should equal true
         
-        [<Test; Repeat 80>]
+        [<Test; Repeat 5>]
         member test.``Choice Recursive`` () =
-            <@  let rec test maxDepth depth id = cloud {
-                    if depth >= maxDepth then
-                        if id = 4 then return Some () else return None
+            <@  let rec test depth id = cloud {
+                    if depth = 0 then
+                        if id = 4 then return Some 4 else return None
                     else
-                        return! Cloud.Choice [| test maxDepth (depth+1) (id + 1)
-                                                test maxDepth (depth+1) (id + 2) |]
+                        return! Cloud.Choice [| test (depth-1) (2 * id)
+                                                test (depth-1) (2 * id + 1) |]
                 }
-                test 3 0 0
+
+                test 5 0
             @>
-            |> test.ExecuteExpression |> should equal (Some ())
+            |> test.ExecuteExpression |> should equal (Some 4)
 
         [<Test>] 
         member test.``Cloud Parallel Log`` () = 
@@ -776,7 +759,7 @@ namespace Nessos.MBrace.Runtime.Tests
                } @> |> test.ExecuteExpression |> should equal 42
 
 
-        [<Test; Repeat 10>]
+        [<Test>]
         member test.``UnQuote Exception`` () =
             <@ cloud { 
                     try

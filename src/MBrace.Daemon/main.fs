@@ -108,7 +108,7 @@
             do registerWorkingDirectory useTempWD workingDirectory
 
             // Register logging
-            let logger = registerLogger logFiles.Head logFiles.Tail logLevel
+            let logger = registerLogger workingDirectory logFiles logLevel
 
             // register mbrace.process executable
             registerProcessDomainExecutable mbraceProc

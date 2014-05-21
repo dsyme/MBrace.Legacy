@@ -51,17 +51,17 @@
 
         let flushConsole () = Console.Error.Flush() ; Console.Out.Flush()
 
-        let registerLogger masterLogFile logFiles logLevel =
+        let registerLogger workingDirectory logFiles logLevel =
             // gather constituent loggers
             let loggers =
 
                 let createFileLogger (file: string) =
-                    let logger = new JsonFileLogger(file, append = true)
+                    let logger = new FileLogger(file, showDate = true, append = true)
                     logger.LogInfo ">>> M-BRACE DAEMON STARTUP <<<"
                     logger :> ISystemLogger
 
                 let fileLoggers =
-                    masterLogFile :: logFiles
+                    logFiles
                     |> Seq.distinct
                     |> Seq.choose 
                         (fun file ->
@@ -69,10 +69,13 @@
                             with e -> exiter.Exit(sprintf "ERROR: cannot initialize logger: %s" e.Message, id = 5)) 
                     |> Seq.toList
 
-                // Dependency injection : TODO remove
-                IoC.RegisterValue<string>(masterLogFile, parameter = "masterLogFile")
+                let jsonLogPath = Path.Combine(workingDirectory, "jsonLog.txt")
+                let jsonLogger = new JsonFileLogger(Path.Combine(workingDirectory, "jsonLog.txt"), append = false) :> ISystemLogger
 
-                Logger.createConsoleLogger () :: fileLoggers
+                // Dependency injection : TODO remove
+                IoC.RegisterValue<string>(jsonLogPath, parameter = "jsonLogFile")
+
+                Logger.createConsoleLogger () :: jsonLogger :: fileLoggers
 
             let logger = 
                 loggers 
@@ -105,9 +108,10 @@
         let registerWorkingDirectory cleanup (wd : string) =
             if cleanup then
                 try
-                    retry (RetryPolicy.Retry(2, 0.5<sec>)) (fun () ->
-                        if Directory.Exists wd then Directory.Delete(wd, true)
-                        Directory.CreateDirectory wd |> ignore)
+                    retry (RetryPolicy.Retry(2, 0.5<sec>)) 
+                        (fun () ->
+                            if Directory.Exists wd then Directory.Delete(wd, true)
+                            Directory.CreateDirectory wd |> ignore)
                 with e ->
                     exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s'." wd, 1)
             else
@@ -139,7 +143,7 @@
                     IoC.RegisterValue vcache
                     IoC.RegisterValue vclient
 
-            do create "LocalCaches" <| 
+            do create "LocalCache" <| 
                     fun cachePath ->          
                         IoC.RegisterValue(cachePath, "cacheStoreEndpoint")
 
@@ -192,8 +196,9 @@
             try
                 let provider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-                let localCacheDir = Path.Combine(workingDirectory, "LocalCache")
-                let coreConfig = CoreConfiguration.activate(storeInfo, localCacheDir)
+                // dependency injection: TODO fix
+                let cacheLocation = IoC.Resolve<string>("cacheStoreEndpoint")
+                let coreConfig = CoreConfiguration.activate(storeInfo, cacheLocation)
                 
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue(provider)
