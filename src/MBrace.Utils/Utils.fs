@@ -139,43 +139,6 @@ namespace Nessos.MBrace.Utils
             |> List.map getListener 
             |> List.map (fun (listener,port) -> listener.Stop() ; port)
 
-
-        /// an incrementing id generator that begins at given id
-        let getIdGenerator (init : int) =
-            let current = ref init
-            fun () -> incr current ; current.Value
-
-        /// try Choice1Of2 <| f () with e -> Choice2Of2 e
-        let contain (f : unit -> 'T) : Choice<'T, exn> =
-            try Choice1Of2 <| f () with e -> Choice2Of2 e
-
-        let containAsync (f : Async<'T>) : Async<Choice<'T, exn>> =
-            async {
-                try
-                    let! value = f
-                    return Choice1Of2 value
-                with e ->
-                    return Choice2Of2 e
-            }
-
-        /// try Some <| f () with ex -> None
-        let tryMe (f : unit -> 'T) : 'T option =
-            try Some <| f () with ex -> None
-
-        // option monad
-
-        type OptionBuilder () =
-            member __.Zero () = Some ()
-            member __.Return x = Some x
-            member __.Bind(x,f) = Option.bind f x
-            member __.Using<'T, 'U when 'T :> IDisposable>(x : 'T, f : 'T -> 'U option) : 'U option =
-                let r = f x in x.Dispose () ; r
-            member __.Combine(x : unit option, y : 'T option) = y
-            member __.ReturnFrom (x : 'T option) = x
-
-        /// optional monad
-        let maybe = new OptionBuilder ()
-
         /// mutable hashset combinator
         let hset (xs : seq<'T>) = new HashSet<'T>(xs)
 
@@ -209,38 +172,3 @@ namespace Nessos.MBrace.Utils
                 if m.Success 
                 then Some (List.tail [ for g in m.Groups -> g.Value ])
                 else None
-
-
-        //
-        // a "generic" parser for basic types
-        //
-
-        let private parsers =
-            let inline dc x = x :> obj
-            [
-                typeof<bool>, System.Boolean.Parse >> dc
-                typeof<byte>, byte >> dc
-                typeof<sbyte>, sbyte >> dc
-                typeof<int32>, int32 >> dc
-                typeof<int64>, int64 >> dc
-                typeof<int16>, int16 >> dc
-                typeof<uint16>, uint16 >> dc
-                typeof<uint32>, uint32 >> dc
-                typeof<uint64>, uint64 >> dc
-                typeof<float32>, float32 >> dc
-                typeof<float>, float >> dc
-                typeof<nativeint>, int64 >> dc
-                typeof<unativeint>, uint64 >> dc
-                typeof<decimal>, decimal >> dc
-                typeof<System.DateTime>, System.DateTime.Parse >> dc
-                typeof<System.Decimal>, System.Decimal.Parse >> dc
-                typeof<System.Guid>, System.Guid.Parse >> dc
-                typeof<string>, dc
-            ] 
-            |> Seq.map(fun (t,p) -> t.AssemblyQualifiedName, p)
-            |> Map.ofSeq
-
-        let tryGetParser<'T> = 
-            let inline uc (x : obj) = x :?> 'T
-            parsers.TryFind typeof<'T>.AssemblyQualifiedName
-            |> Option.map (fun p -> p >> uc)

@@ -19,7 +19,6 @@
         open Nessos.MBrace
         open Nessos.MBrace.Core
         open Nessos.MBrace.Utils
-        open Nessos.MBrace.Utils.AssemblyCache
         open Nessos.MBrace.Runtime
         open Nessos.MBrace.Runtime.Logging
         open Nessos.MBrace.Runtime.Store
@@ -77,8 +76,6 @@
             let storeEndpoint = results.GetResult <@ Store_EndPoint @>
             let storeProvider = results.GetResult <@ Store_Provider @>
             let cacheStoreEndpoint = results.GetResult <@ Cache_Store_Endpoint @>
-           
-            do Assembly.RegisterAssemblyResolutionHandler()
 
             //
             // Register Things

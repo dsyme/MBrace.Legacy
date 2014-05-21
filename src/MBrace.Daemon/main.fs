@@ -28,8 +28,6 @@
             //
 
             if runsOnMono then exiter.Exit("mono not supported... yet!", 1)
-
-            do Assembly.RegisterAssemblyResolutionHandler()
             
             // register serialization
             do registerSerializers ()
