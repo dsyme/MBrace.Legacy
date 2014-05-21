@@ -1,0 +1,4 @@
+configuration: Release
+test:
+  assemblies:
+    - MBrace.Runtime.Tests.dll
