@@ -94,10 +94,11 @@
 
             // Register Logger
             let logger =
+                let pid = System.Diagnostics.Process.GetCurrentProcess().Id
                 lazy(getParentLogger Serialization.SerializerRegistry.DefaultName parentAddress)
                 |> Logger.lazyWrap
                 // prepend "ProcessDomain" prefix to all log entries
-                |> Logger.map (fun e -> {e with Message = sprintf "ProcessDomain(%A):: %s" processDomainId e.Message})
+                |> Logger.map (fun e -> {e with Message = sprintf "[worker %d] %s" pid e.Message})
 
 
             IoC.RegisterValue<ISystemLogger>(logger)

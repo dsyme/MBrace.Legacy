@@ -9,8 +9,8 @@ let test = cloud {
     let! count = Cloud.GetWorkerCount()
 
     let worker (i : int) = cloud {
-        for i in [ 1 .. 100 ] do
-            do! Cloud.Logf "message %d" i
+        for j in [ 1 .. 100 ] do
+            do! Cloud.Logf "worker %d message %d" i j
     }
 
     return! 
@@ -32,7 +32,7 @@ proc.ProcessId
 
 runtime.Ping()
 
-runtime.GetSystemLogs()
+let logs = runtime.GetSystemLogs()
 runtime.ShowSystemLogs()
 
 runtime.Nodes

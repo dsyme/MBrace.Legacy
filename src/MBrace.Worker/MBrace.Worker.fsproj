@@ -61,7 +61,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <None Include="packages.config" />
-    <Compile Include="ProcessDomain.fs" />
+    <Compile Include="Worker.fs" />
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>

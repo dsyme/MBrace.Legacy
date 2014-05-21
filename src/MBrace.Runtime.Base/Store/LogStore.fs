@@ -12,7 +12,7 @@
     open Nessos.MBrace.Runtime
 
     [<AutoOpen>]
-    module private StoreLogUtils =
+    module private LogStoreUtils =
 
         type Message<'LogEntry> = 
             | EnQueue of 'LogEntry
@@ -101,7 +101,7 @@
             | Some e -> raise e
 
         interface IDisposable with
-            member __.Dispose () = cts.Cancel()
+            member self.Dispose () = self.Flush () ; cts.Cancel()
 
 
 
@@ -109,23 +109,27 @@
 
         member self.FetchLogs (?filterF : string -> bool) : Async<'LogEntry []> = 
             async {
-
                 let filterF = defaultArg filterF (fun _ -> true)
-                let! files = store.GetAllFiles(container)
+                let! containerExists = store.ContainerExists container
 
-                let readEntries (f : string) : Async<'LogEntry []> = async {
-                    use! stream = store.ReadImmutable(container, f)
-                    return! deserializeLogs stream
-                }
+                if not containerExists then
+                    return [||]
+                else   
+                    let! files = store.GetAllFiles container
 
-                let! entries =
-                    files
-                    |> Array.filter (fun f -> isLogFile f && filterF f)
-                    |> Array.sort
-                    |> Array.map readEntries
-                    |> Async.Parallel
+                    let readEntries (f : string) : Async<'LogEntry []> = async {
+                        use! stream = store.ReadImmutable(container, f)
+                        return! deserializeLogs stream
+                    }
 
-                return Array.concat entries
+                    let! entries =
+                        files
+                        |> Array.filter (fun f -> isLogFile f && filterF f)
+                        |> Array.sort
+                        |> Array.map readEntries
+                        |> Async.Parallel
+
+                    return Array.concat entries
             }
 
         member self.DeleteLogs () : Async<unit> =
