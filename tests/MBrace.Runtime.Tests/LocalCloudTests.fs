@@ -17,7 +17,7 @@
             MBrace.RunLocal cexpr
 
 
-    [<TestFixtureAttribute;Category("LocalTests")>]
+    [<TestFixtureAttribute;Category("AppVeyor")>]
     type ``AppVeyor Tests`` () =
         member test.Foo () = 
             let node = MBraceNode.SpawnMultiple(1)

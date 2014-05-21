@@ -68,7 +68,7 @@
     <Compile Include="StoreTests.fs" />
     <Compile Include="CloudTests.fs" />
     <Compile Include="LocalCloudTests.fs" />
-    <None Include="ClusterCloudTests.fs" />
+    <Compile Include="ClusterCloudTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\MBrace.Azure\MBrace.Azure.fsproj">

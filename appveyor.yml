@@ -10,6 +10,7 @@ test:
   assemblies:
     - MBrace.Runtime.Tests.dll
   categories:
-    - FileSystemStore
-    - LocalTests
-    - ClusterTests
+#    - FileSystemStore
+    - AppVeyor
+#    - LocalTests
+#    - ClusterTests
