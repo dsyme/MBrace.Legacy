@@ -80,8 +80,6 @@
     <Compile Include="Worker.fs" />
     <Compile Include="MBraceNode.fs" />
     <Compile Include="Definitions.fs" />
-    <None Include="Experiments.fsx" />
-    <None Include="IMem.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
