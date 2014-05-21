@@ -15,3 +15,10 @@
         override __.ExecuteExpression(expr : Quotations.Expr<Cloud<'T>>) : 'T =
             let cexpr = Swensen.Unquote.Operators.eval expr
             MBrace.RunLocal cexpr
+
+
+    [<TestFixtureAttribute;Category("LocalTests")>]
+    type ``AppVeyor Tests`` () =
+        member test.Foo () = 
+            let node = MBraceNode.SpawnMultiple(1)
+            node.Head.Ping() |> ignore
