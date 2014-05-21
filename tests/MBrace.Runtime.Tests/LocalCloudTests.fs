@@ -19,6 +19,7 @@
 
     [<TestFixtureAttribute;Category("AppVeyor")>]
     type ``AppVeyor Tests`` () =
+        [<TestAttribute>]
         member test.Foo () = 
             let node = MBraceNode.SpawnMultiple(1)
             node.Head.Ping() |> ignore
