@@ -5,6 +5,8 @@
     open System.Reflection
     open System.Runtime.Serialization
 
+    open Nessos.Thespian.ConcurrencyTools
+
     open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime

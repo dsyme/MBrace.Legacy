@@ -4,6 +4,7 @@ module internal Nessos.MBrace.Runtime.Definitions.CommonTypes
 open System
 
 open Nessos.Thespian
+open Nessos.Thespian.ConcurrencyTools
 open Nessos.Thespian.Cluster
 
 open Nessos.Vagrant
@@ -157,7 +158,7 @@ and ProcessDomainManager =
     | ClearProcessDomains of IReplyChannel<unit>
     //Allocate process domain for process
     //nodeManagerOfProcessDomain, clusterProxyManager, clusterProxyMap = AllocateProcessDomainForProcess(processId, requiredAssemblies)
-    | AllocateProcessDomainForProcess of IReplyChannel<ActorRef<NodeManager> * ActorRef<ClusterProxyManager> option * Nessos.Thespian.Atom<Map<ActivationReference, ReliableActorRef<RawProxy>>> option> * ProcessId * AssemblyId list
+    | AllocateProcessDomainForProcess of IReplyChannel<ActorRef<NodeManager> * ActorRef<ClusterProxyManager> option * Atom<Map<ActivationReference, ReliableActorRef<RawProxy>>> option> * ProcessId * AssemblyId list
 //    | AllocateProcessDomainForProcess of IReplyChannel<ReliableActorRef<NodeManager> * ActorRef<ClusterProxyManager> option> * ProcessId * AssemblyId[]
     //Deallocate the process domain for a process
     | DeallocateProcessDomainForProcess of ProcessId

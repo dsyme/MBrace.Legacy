@@ -4,6 +4,8 @@
     open System.IO
     open System.Security.AccessControl
 
+    open Nessos.Thespian.ConcurrencyTools
+
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils

@@ -1,6 +1,7 @@
 ﻿namespace Nessos.MBrace.Client
 
     open Nessos.Thespian
+    open Nessos.Thespian.ConcurrencyTools
 
     open Nessos.Vagrant
 

@@ -15,7 +15,7 @@
         open Nessos.Vagrant
         
         open Nessos.Thespian
-        open Nessos.Thespian.AsyncExtensions
+        open Nessos.Thespian.ConcurrencyTools
         open Nessos.Thespian.Remote.TcpProtocol
         open Nessos.Thespian.Remote.PipeProtocol
         open Nessos.Thespian.Serialization

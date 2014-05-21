@@ -7,7 +7,7 @@ open System.Diagnostics
 open Nessos.Vagrant
 
 open Nessos.Thespian
-open Nessos.Thespian.AsyncExtensions
+open Nessos.Thespian.ConcurrencyTools
 open Nessos.Thespian.Remote.TcpProtocol
 open Nessos.Thespian.Cluster
 open Nessos.Thespian.ImemDb
@@ -25,7 +25,7 @@ type ProcessDomain = {
     Port: int option
     ClusterProxyManager: Actor<ClusterProxyManager> option
     // Atom generated as part of Thespian.Cluster's public API ; should be fixed
-    ClusterProxyMap: Nessos.Thespian.Atom<Map<ActivationReference, ReliableActorRef<RawProxy>>> option
+    ClusterProxyMap: Atom<Map<ActivationReference, ReliableActorRef<RawProxy>>> option
     KillF: unit -> unit
 } with
     override x.Equals yobj =

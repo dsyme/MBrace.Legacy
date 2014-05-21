@@ -6,6 +6,7 @@
     open System.Text
 
     open Nessos.Thespian
+    open Nessos.Thespian.ConcurrencyTools
 
     open Nessos.Vagrant
 

@@ -1,6 +1,6 @@
 ﻿namespace Nessos.MBrace.Utils
 
-    open Nessos.MBrace.Utils.Atom
+    open Nessos.Thespian.ConcurrencyTools
 
     type RegistrationMode = Singleton | Factory
     type OverrideBehaviour = 
@@ -34,10 +34,10 @@
                 | None -> failwithf "IoC : type %s has already been registered" t.Name
                 | Some param -> failwithf "IoC : type %s with parameter \"%s\" has already been registered" t.Name param
 
-        static member IsRegistered param = (!container).ContainsKey param
+        static member IsRegistered param = container.Value.ContainsKey param
 
         static member TryResolve param = 
-            match (!container).TryFind param with
+            match container.Value.TryFind param with
             | None -> None
             | Some f ->
                 try Some (f ())

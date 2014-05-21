@@ -3,6 +3,7 @@
 open System
 
 open Nessos.Thespian
+open Nessos.Thespian.ConcurrencyTools
 open Nessos.Thespian.Remote.TcpProtocol
 open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.BehaviorExtensions

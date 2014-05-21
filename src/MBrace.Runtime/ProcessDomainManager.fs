@@ -9,7 +9,7 @@ open System
 open System.Diagnostics
 
 open Nessos.Thespian
-open Nessos.Thespian.AsyncExtensions
+open Nessos.Thespian.ConcurrencyTools
 open Nessos.Thespian.Remote.TcpProtocol
 open Nessos.Thespian.Cluster
 open Nessos.Thespian.ImemDb
@@ -51,8 +51,6 @@ let private extendPriority = 50
 let private createPriority = 0
 
 type OsProcess = System.Diagnostics.Process
-
-module Atom = Nessos.MBrace.Utils.Atom
 
 type State = {
     Db: ProcessDomainDb
@@ -218,7 +216,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
                     if portOpt.IsNone then
                         ctx.LogInfo "Starting cluster proxy manager..."
 
-                        let proxyMap = Nessos.Thespian.Atom.atom Map.empty<ActivationReference, ReliableActorRef<RawProxy>>
+                        let proxyMap = Atom.atom Map.empty<ActivationReference, ReliableActorRef<RawProxy>>
 
                         let name = sprintf' "clusterProxyManager.%A" processDomainId
                         Actor.bind <| Behavior.stateless (ClusterProxy.clusterProxyBehavior proxyMap)
@@ -447,7 +445,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
 
                         let clusterProxyManager, proxyMap =
                             if portOpt.IsNone then
-                                let proxyMap = Nessos.Thespian.Atom.atom Map.empty
+                                let proxyMap = Atom.atom Map.empty
                                 let name = sprintf' "clusterProxyManager.%A" newProcessDomainId
                                 Actor.bind <| Behavior.stateless (ClusterProxy.clusterProxyBehavior proxyMap)
                                 |> Actor.subscribeLog (Default.actorEventHandler Default.fatalActorFailure name)

@@ -5,6 +5,7 @@ open System.Threading
 open System.Runtime.Serialization
 
 open Nessos.Thespian
+open Nessos.Thespian.ConcurrencyTools
 open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.BehaviorExtensions
 

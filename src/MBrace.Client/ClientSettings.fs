@@ -4,6 +4,8 @@ namespace Nessos.MBrace.Client
     open System.Reflection
     open System.IO
 
+    open Nessos.Thespian.ConcurrencyTools
+
     open Nessos.FsPickler
     open Nessos.UnionArgParser
     open Nessos.Vagrant

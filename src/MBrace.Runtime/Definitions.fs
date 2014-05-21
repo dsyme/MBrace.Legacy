@@ -1,8 +1,9 @@
 ﻿namespace Nessos.MBrace.Runtime.Definitions
 
 open Nessos.Thespian
+open Nessos.Thespian.ConcurrencyTools
 open Nessos.Thespian.Reversible
-open Nessos.Thespian.PowerPack
+open Nessos.Thespian.ActorExtensions
 open Nessos.Thespian.Remote.TcpProtocol.Unidirectional
 open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.BehaviorExtensions
@@ -325,7 +326,7 @@ type internal SchedulerDefinition(parent: DefinitionPath) =
             Cluster.NodeRegistry.ResolveLocal<CombinedAsyncReplicated<ContinuationMap, ContinuationMapDump, TaskLog, TaskLogEntry[]>>
                                                 { Definition = replicatedStateLoggerPath; InstanceId = instanceId }
 
-        let continuationMap = replicatedStateLogger |> PowerPack.ActorRef.map FwdLeft
+        let continuationMap = replicatedStateLogger |> ActorExtensions.ActorRef.map FwdLeft
 
         let initState = Scheduler.State.New continuationMap
 
@@ -351,7 +352,7 @@ type internal TaskManagerDefinition(parent: DefinitionPath) =
         let replicatedStateLogger = 
             Cluster.NodeRegistry.ResolveLocal<CombinedAsyncReplicated<ContinuationMap, ContinuationMapDump, TaskLog, TaskLogEntry[]>>
                                                 { Definition = replicatedStateLoggerPath; InstanceId = instanceId }
-        let taskLog = replicatedStateLogger |> PowerPack.ActorRef.map FwdRight
+        let taskLog = replicatedStateLogger |> ActorExtensions.ActorRef.map FwdRight
         let initState = TaskManager.State.Empty
         return Behavior.stateful initState (TaskManager.taskManagerBehavior instanceId workerPool taskLog)
     }
@@ -907,7 +908,7 @@ module ActivationPatterns =
                                     
                                     //in memory
                                     //TODO!!! Make into a RevAsync with recovery
-                                    Nessos.Thespian.Atom.swap proxyMap.Value (Map.add clusterActivation.ActivationReference (ReliableActorRef.FromRef actorRef))
+                                    Atom.swap proxyMap.Value (Map.add clusterActivation.ActivationReference (ReliableActorRef.FromRef actorRef))
                                     //clusterProxyManager.Value <-- RegisterProxy(clusterActivation.ActivationReference, actorRef)
 
                                     let proxyRef =
@@ -936,7 +937,7 @@ module ActivationPatterns =
                                     proxyfiedActivations
                                     |> Seq.filter (fun activationResult -> activationResult.ActorRef.IsSome 
                                                                            && match activationResult.ActorRef.Value with :? ProxyActorRef -> true | _ -> false)
-                                    |> Seq.iter (fun activationResult -> Nessos.Thespian.Atom.swap proxyMap.Value (Map.remove activationResult.ActivationReference))
+                                    |> Seq.iter (fun activationResult -> Atom.swap proxyMap.Value (Map.remove activationResult.ActivationReference))
                                                                          //clusterProxyManager.Value <-- UnregisterProxy activationResult.ActivationReference) //in memory
 
                                 for localActivation in localActivations do

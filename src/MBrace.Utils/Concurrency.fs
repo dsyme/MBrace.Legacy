@@ -1,52 +1,10 @@
 namespace Nessos.MBrace.Utils
 
     open System
+    open System.Diagnostics
     open System.Threading
 
-    // read-only wrapper for ref cells
-    type Cell<'T> = abstract Value : 'T
-    and 'T cell = Cell<'T>
-    and ReadOnlyCell<'T>(r : 'T ref) =
-        interface Cell<'T> with member __.Value = r.contents
-
-    type Atom<'T when 'T : not struct>(value : 'T) =
-        let refCell = ref value
-    
-        let rec swap f = 
-            let currentValue = !refCell
-            let result = Interlocked.CompareExchange<'T>(refCell, f currentValue, currentValue)
-            if obj.ReferenceEquals(result, currentValue) then ()
-            else Thread.SpinWait 20; swap f
-
-        let transact f =
-            let output = ref Unchecked.defaultof<'S>
-            let f' x = let t,s = f x in output := s ; t
-            swap f' ; !output
-        
-        member self.Value with get() : 'T = !refCell
-        member self.Swap (f : 'T -> 'T) : unit = swap f
-        member self.Set (v : 'T) : unit = swap (fun _ -> v)
-        member self.Transact (f : 'T -> 'T * 'S) : 'S = transact f   
-        
-        member self.Publish = ReadOnlyCell refCell :> 'T cell
-
-
-    module Atom =
-
-        let atom<'T when 'T : not struct> value = new Atom<'T>(value)
-        let (!) (atom : Atom<_>) =  atom.Value
-
-        let swap (atom : Atom<_>) f = atom.Swap f
-        let transact (atom : Atom<_>) f = atom.Transact f
-        let publish (atom : Atom<_>) = atom.Publish
-
-
-    /// thread safe counter implementation
-    type AtomicCounter (?start : int64) =
-        let count = ref <| defaultArg start 0L
-
-        member __.Incr () = System.Threading.Interlocked.Increment count
-        member __.Value = count
+    open Nessos.Thespian.ConcurrencyTools
     
     /// thread safe cache with expiry semantics
     type CacheAtom<'T> (provider : 'T option -> 'T, ?interval : int, ?initial : 'T) =
@@ -130,3 +88,21 @@ namespace Nessos.MBrace.Utils
                 if !isCreatedNew then Some mtx
                 else mtx.Close () ; None
             with _ -> None
+
+
+    [<RequireQualifiedAccess>]
+    module Process =
+        let startAndAwaitTerminationAsync(psi : ProcessStartInfo) =
+            async {
+                let proc = new Process()
+                proc.StartInfo <- psi
+                proc.EnableRaisingEvents <- true
+                if proc.Start() then
+                    let! _ = Async.AwaitObservable proc.Exited
+                    return proc
+                else
+                    return failwith "error starting process"
+            }
+
+        let startAndAwaitTermination(psi : ProcessStartInfo) =
+            startAndAwaitTerminationAsync psi |> Async.RunSynchronously

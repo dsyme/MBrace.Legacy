@@ -12,7 +12,6 @@
 
         open Nessos.Thespian
         open Nessos.Thespian.Serialization
-        open Nessos.Thespian.PowerPack
         open Nessos.Thespian.Remote.ConnectionPool
         open Nessos.Thespian.Remote.TcpProtocol
 

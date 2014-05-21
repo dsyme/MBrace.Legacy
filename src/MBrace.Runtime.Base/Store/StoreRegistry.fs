@@ -42,6 +42,8 @@
         /// Any endpoint given will be ignored.
         static member LocalFS = StoreProvider.FileSystem(Path.Combine(Path.GetTempPath(), "mbrace-localfs"))
 
+
+
 namespace Nessos.MBrace.Runtime.Store
     
     open System
@@ -49,6 +51,8 @@ namespace Nessos.MBrace.Runtime.Store
     open System.Reflection
     open System.Security.Cryptography
     open System.Text
+
+    open Nessos.Thespian.ConcurrencyTools
 
     open Nessos.MBrace.Core
     open Nessos.MBrace.Client

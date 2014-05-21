@@ -61,7 +61,7 @@
 
     type ThespianLogger(logger : ISystemLogger) =
 
-        interface Nessos.Thespian.ILogger with
+        interface IActorLogger with
             member this.Log(msg:string, lvl:TLogLevel, time:DateTime) =
                 let lvl' = 
                     match lvl with
@@ -73,7 +73,7 @@
 
         static member Register(logger : ISystemLogger) =
             let tl = new ThespianLogger(logger)
-            Logger.Register(tl)
+            ActorLogRegistry.Register tl
 
     // Logger primitives
 

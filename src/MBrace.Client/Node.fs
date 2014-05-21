@@ -10,10 +10,10 @@ open System.Text
 open System.IO
 
 open Nessos.Thespian
-open Nessos.Thespian.AsyncExtensions
+open Nessos.Thespian.ConcurrencyTools
 open Nessos.Thespian.Remote.TcpProtocol
 open Nessos.Thespian.Remote.PipeProtocol
-open Nessos.Thespian.PowerPack.RetryExtensions
+open Nessos.Thespian.ActorExtensions.RetryExtensions
 
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Utils.String
@@ -336,10 +336,9 @@ and internal NodeInfo (nodes : seq<MBraceNode>) =
 
         let parMap (f : 'T -> 'S) (inputs : 'T list list) = 
             inputs 
-            |> Seq.map (Seq.map (Async.lift f) >> Async.Parallel >> Async.map Array.toList) 
-            |> Async.Parallel
-            |> Async.RunSynchronously
-            |> Array.toList
+            |> List.toArray
+            |> Array.Parallel.map (Array.ofList >> Array.Parallel.map f >> Array.toList)
+            |> List.ofArray
 
         if displayPerfCounter then
             // force lookup of nodes in parallel

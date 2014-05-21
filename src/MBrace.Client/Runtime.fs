@@ -6,8 +6,8 @@ namespace Nessos.MBrace.Client
     open System.Diagnostics
 
     open Nessos.Thespian
-    open Nessos.Thespian.PowerPack
-    open Nessos.Thespian.PowerPack.RetryExtensions
+    open Nessos.Thespian.ActorExtensions
+    open Nessos.Thespian.ActorExtensions.RetryExtensions
 
     open Nessos.MBrace
     open Nessos.MBrace.Utils
