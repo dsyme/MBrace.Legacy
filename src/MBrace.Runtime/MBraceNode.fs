@@ -21,7 +21,7 @@ let stateChangeObservable = StateChangeEvent.Publish
 
 // Dependency Injection : change
 let private readEntriesFromMasterLogFile () =
-    let file = IoC.Resolve<string>("masterLogFile")
+    let file = IoC.Resolve<string>("jsonLogFile")
     JsonFileLogger.ReadLogs file
 
 type internal MBraceNodeManager = Runtime
