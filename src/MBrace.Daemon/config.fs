@@ -143,7 +143,7 @@
                     IoC.RegisterValue vcache
                     IoC.RegisterValue vclient
 
-            do create "LocalCaches" <| 
+            do create "LocalCache" <| 
                     fun cachePath ->          
                         IoC.RegisterValue(cachePath, "cacheStoreEndpoint")
 
@@ -196,8 +196,9 @@
             try
                 let provider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-                let localCacheDir = Path.Combine(workingDirectory, "LocalCache")
-                let coreConfig = CoreConfiguration.activate(storeInfo, localCacheDir)
+                // dependency injection: TODO fix
+                let cacheLocation = IoC.Resolve<string>("cacheStoreEndpoint")
+                let coreConfig = CoreConfiguration.activate(storeInfo, cacheLocation)
                 
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue(provider)
