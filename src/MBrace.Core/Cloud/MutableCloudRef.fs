@@ -52,13 +52,13 @@
         static member Free(mref : IMutableCloudRef<'T>) : Cloud<unit> =
             Cloud.wrapExpr <| FreeMutableRefExpr(mref)
 
-        static member SpinSet<'T>(mref : IMutableCloudRef<'T>, update : 'T -> 'T, ?interval : int) : Cloud<unit> =
+        static member SpinSet<'T>(mref : IMutableCloudRef<'T>, update : 'T -> 'T, ?interval : int) : Cloud<unit> = 
             cloud {
-                let ok = ref false
-                while not !ok do
-                    let! old = MutableCloudRef.spin(MutableCloudRef.TryRead<'T>(mref), ?interval = interval)
-                    let! isOk = MutableCloudRef.spin(MutableCloudRef.TrySet(mref, update old), ?interval = interval)
-                    ok := isOk
+                let! old = MutableCloudRef.spin(MutableCloudRef.TryRead<'T>(mref), ?interval = interval)
+                let! isOk = MutableCloudRef.spin(MutableCloudRef.TrySet(mref, update old), ?interval = interval)
+                if isOk then return ()
+                else
+                    return! MutableCloudRef.SpinSet(mref, update, ?interval = interval)
             }
 
         static member TryNew<'T>(container : string, id : string, value : 'T) : Cloud<IMutableCloudRef<'T> option> = 

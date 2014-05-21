@@ -58,10 +58,12 @@
         let GetTaskId() : Cloud<string> =
             wrapExpr GetTaskIdExpr
     
-        let Parallel<'T>(computations : Cloud<'T> []) : Cloud<'T []> =
+        let Parallel<'T>(computations : seq<Cloud<'T>>) : Cloud<'T []> =
+            let computations = Seq.toArray computations
             wrapExpr <| ParallelExpr (computations |> Array.map unwrapExpr, typeof<'T>)
 
-        let Choice<'T>(computations : Cloud<'T option> []) : Cloud<'T option> =
+        let Choice<'T>(computations : seq<Cloud<'T option>>) : Cloud<'T option> =
+            let computations = Seq.toArray computations
             wrapExpr <| ChoiceExpr (computations |> Array.map unwrapExpr, typeof<'T option>)
 
     // The Monadic Builder - Computation Expressions
@@ -91,6 +93,7 @@
         member self.For(values : 'T list, bindF : ('T -> Cloud<unit>)) : Cloud<unit> = 
             self.For(List.toArray values, bindF)
 
+        [<Obsolete("While loops in distributed computation considered harmful; consider using an accumulator pattern instead.")>]
         member self.While (guardF : (unit -> bool), body : Cloud<unit>) : Cloud<unit> = 
             Cloud.wrapExpr <| WhileExpr (guardF, Cloud.unwrapExpr body)
 

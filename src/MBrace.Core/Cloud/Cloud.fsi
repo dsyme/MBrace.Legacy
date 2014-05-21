@@ -46,7 +46,7 @@ namespace Nessos.MBrace
         /// If a computation succeeds the rest of them are canceled.
         /// The success of a computation is encoded as an option type.
         /// This operator may create distribution.
-        val Choice : computations:Cloud<'T option> [] -> Cloud<'T option>
+        val Choice : computations:seq<Cloud<'T option>> -> Cloud<'T option>
                 
         /// Returns the ProcessId of the current process.
         val GetProcessId : unit -> Cloud<ProcessId>
@@ -73,7 +73,7 @@ namespace Nessos.MBrace
         /// This operator may create distribution.
         /// If any exceptions are thrown all the results will be aggregated in an exception.</summary>
         /// <param name="computations">The computations to be executed in parallel.</param>  
-        val Parallel : computations:Cloud<'T> [] -> Cloud<'T []>
+        val Parallel : computations:seq<Cloud<'T>> -> Cloud<'T []>
 
         /// <summary>Converts a cloud computation to a computation that will 
         /// be executed locally (on the same node).
@@ -101,9 +101,11 @@ namespace Nessos.MBrace
             member ReturnFrom : computation:Cloud<'T> -> Cloud<'T>
             member TryFinally : computation:Cloud<'T> * compensation:(unit -> unit) -> Cloud<'T>
             member TryWith : computation:Cloud<'T> * exceptionF:(exn -> Cloud<'T>) -> Cloud<'T>
-            member While : guardF:(unit -> bool) * body:Cloud<unit> -> Cloud<unit>
             member Zero : unit -> Cloud<unit>
             member Using<'T, 'U when 'T :> ICloudDisposable> : 'T * ('T -> Cloud<'U>) -> Cloud<'U> 
+
+            [<Obsolete("While loops in distributed computation considered harmful; consider using an accumulator pattern instead.")>]
+            member While : guardF:(unit -> bool) * body:Cloud<unit> -> Cloud<unit>
         end
 
     [<AutoOpen>]
