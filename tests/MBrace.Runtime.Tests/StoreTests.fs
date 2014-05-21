@@ -246,7 +246,7 @@ module ConnectionsConfig =
         conn.Attribute(X "connectionString").Value
 
 
-[<TestFixture>]
+[<TestFixture;Category("FileSystemStore")>]
 type ``FileSystem tests`` () =
     inherit ``Store tests`` ()
 

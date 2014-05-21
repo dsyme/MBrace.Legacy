@@ -2,7 +2,10 @@
 
     open Nessos.MBrace
     open Nessos.MBrace.Client
+
+    open NUnit.Framework
     
+    [<Category("LocalTests")>]
     type ``Local Cloud Tests`` () =
         inherit ``Cloud Tests`` ()
 

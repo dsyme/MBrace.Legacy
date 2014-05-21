@@ -10,6 +10,7 @@ namespace Nessos.MBrace.Runtime.Tests
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Client
 
+    [<Category("ClusterTests")>]
     type ``Cluster Cloud Tests``() =
         inherit ``Cloud Tests``()
 

@@ -1,4 +1,10 @@
+version: 0.5.0.{build}
+
 configuration: Release
 test:
   assemblies:
     - MBrace.Runtime.Tests.dll
+  categories:
+    - FileSystemStore
+    - LocalTests
+    - ClusterTests
