@@ -3,8 +3,6 @@
     open Nessos.MBrace
     open Nessos.MBrace.Client
 
-    open System.IO
-
     open NUnit.Framework
     
     [<Category("LocalTests")>]
@@ -17,12 +15,3 @@
         override __.ExecuteExpression(expr : Quotations.Expr<Cloud<'T>>) : 'T =
             let cexpr = Swensen.Unquote.Operators.eval expr
             MBrace.RunLocal cexpr
-
-
-    [<TestFixtureAttribute;Category("AppVeyor")>]
-    type ``AppVeyor Tests`` () =
-        [<TestAttribute>]
-        member test.Foo () = 
-            MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "mbraced.exe")
-            let node = MBraceNode.SpawnMultiple(1)
-            node.Head.Ping() |> ignore
