@@ -116,7 +116,7 @@ namespace Nessos.MBrace.Client
             do retry (RetryPolicy.Retry(2, 0.1<sec>)) populate
 
             // activate vagrant
-            let vagrant = new VagrantServer(vagrantDir)
+            let vagrant = new VagrantServer(outpath = vagrantDir)
 
             // register serializer
             Serialization.Register vagrant.Pickler
