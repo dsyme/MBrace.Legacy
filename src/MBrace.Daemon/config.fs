@@ -26,6 +26,7 @@
         open Nessos.MBrace.Utils.AssemblyCache
         open Nessos.MBrace.Utils.String
         open Nessos.MBrace.Runtime
+        open Nessos.MBrace.Runtime.Logging
         open Nessos.MBrace.Runtime.Store
         open Nessos.MBrace.Runtime.Daemon.Configuration
         open Nessos.MBrace.Client
@@ -50,20 +51,17 @@
 
         let flushConsole () = Console.Error.Flush() ; Console.Out.Flush()
 
-        let registerLogger logFiles logLevel =
+        let registerLogger masterLogFile logFiles logLevel =
             // gather constituent loggers
             let loggers =
-                // TODO : replace in-memory with cloudrefs
-                IoC.Register<Logger.InMemoryLogger>(fun () -> new Logger.InMemoryLogger ())
-                let imemLogger = IoC.Resolve<Logger.InMemoryLogger> () :> ILogger
 
                 let createFileLogger (file: string) =
-                    let initMsg = sprintf' ">>> M-BRACE DAEMON STARTED AT %s\n." <| DateTime.Now.ToString("yyyy-MM-dd H:mm:ss")
-                    //Debug.Listeners.Add(new TextWriterTraceListener(file)) |> ignore
-                    new Logger.FileLogger(file, initMsg = initMsg) :> ILogger
+                    let logger = new JsonFileLogger(file, append = true)
+                    logger.LogInfo ">>> M-BRACE DAEMON STARTUP <<<"
+                    logger :> ISystemLogger
 
                 let fileLoggers =
-                    logFiles
+                    masterLogFile :: logFiles
                     |> Seq.distinct
                     |> Seq.choose 
                         (fun file ->
@@ -71,28 +69,23 @@
                             with e -> exiter.Exit(sprintf "ERROR: cannot initialize logger: %s" e.Message, id = 5)) 
                     |> Seq.toList
 
-                //Debug.AutoFlush <- true
+                // Dependency injection : TODO remove
+                IoC.RegisterValue<string>(masterLogFile, parameter = "masterLogFile")
 
-                //Logger.createConsoleLogger () :: imemLogger :: fileLoggers
                 Logger.createConsoleLogger () :: fileLoggers
 
-            IoC.Register<ILogger>( 
-                fun () ->
-                    loggers 
-                    |> Logger.propagate 
-                    |> Logger.maxLogLevel logLevel
-                    |> Logger.wrapAsync
-            )
+            let logger = 
+                loggers 
+                |> Logger.broadcast 
+                |> Logger.maxLogLevel logLevel
+                |> Logger.wrapAsync
 
+            // Dependency injection : TODO remove
+            IoC.RegisterValue<ISystemLogger>(logger)
 
+            ThespianLogger.Register(logger)
 
-            //Debug.Listeners.Add(new Nessos.Thespian.Cluster.Log.LoggerTraceListener()) |> ignore
-
-            let l = IoC.Resolve<ILogger>()
-
-            ThespianLogger.Register(l)
-
-            l
+            logger
 
 
         let parseMBraceProc (id : int) =
@@ -165,7 +158,7 @@
             IoC.RegisterValue(path, "MBraceProcessExe")
 
         let registerFancyConsoleEvent debug (address : Address) =
-            Nessos.MBrace.Runtime.Definitions.MBraceNode.SubscribeToStateChange(
+            Nessos.MBrace.Runtime.Definitions.MBraceNode.stateChangeObservable.Subscribe(
                 fun state ->
                     if Environment.UserInteractive then
                         let consoleBgColor,role =
@@ -189,7 +182,7 @@
                         Console.Title <- title
                         if isWindowed then
                             Console.BackgroundColor <- consoleBgColor            
-            )
+            ) |> ignore
 
         let registerSerializers () =
             Nessos.MBrace.Runtime.Serialization.Register(new FsPickler())
@@ -200,7 +193,7 @@
                 let provider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
                 let localCacheDir = Path.Combine(workingDirectory, "LocalCache")
-                let coreConfig = CoreConfiguration.activate(IoC.Resolve<ILogger>(), storeInfo, localCacheDir)
+                let coreConfig = CoreConfiguration.activate(storeInfo, localCacheDir)
                 
                 IoC.Register<CoreConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue(provider)
@@ -301,7 +294,7 @@
                     exiter.Exit(sprintf "unable to parse ips: %A" parseFailed)
 
 
-        let resolveAddress (logger : ILogger) (hostname : string) (port : int) =
+        let resolveAddress (hostname : string) (port : int) =
             // check if valid local hostname
             try
                 if Dns.GetHostAddresses hostname |> Array.forall isLocalIpAddress then

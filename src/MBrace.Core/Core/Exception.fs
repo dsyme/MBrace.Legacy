@@ -3,6 +3,8 @@
     open System
     open System.Runtime.Serialization
 
+    open Nessos.MBrace.Core
+
     //
     // exceptions that are descendants of or contain MBrace.Exception are treated specially by the client.
     // for better readability, all descendants this exception type should be defined in the MBrace namespace.
@@ -85,14 +87,14 @@
         val private processId : ProcessId
         val private context : CloudDumpContext option
 
-        internal new(message : string, processId : ProcessId, ?inner : exn, ?context : CloudDumpContext) =
+        new(message : string, processId : ProcessId, ?inner : exn, ?context : CloudDumpContext) =
             {
                 inherit MBraceException(message, ?inner = inner)
                 processId = processId
                 context = context
             }
 
-        internal new (inner : exn, processId : ProcessId, ?context : CloudDumpContext) =
+        new (inner : exn, processId : ProcessId, ?context : CloudDumpContext) =
             let message = sprintf "%s: %s" (inner.GetType().FullName) inner.Message
             CloudException(message, processId, inner = inner, ?context = context)
 
@@ -155,7 +157,7 @@
         val private results : Result<ObjValue> []
 
 
-        internal new(processId, results : Result<ObjValue> []) =
+        new(processId, results : Result<ObjValue> []) =
             {
                 inherit CloudException("", processId)
                 results = results

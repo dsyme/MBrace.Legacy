@@ -11,28 +11,28 @@
             /// <returns>A cloud expression returning unit.</returns>
             [<Cloud>]
             [<NoTraceInfo>]
-            static member Ignore (computation : ICloud<'T>) : ICloud<unit> =
+            static member Ignore (computation : Cloud<'T>) : Cloud<unit> =
                 cloud { let! _ = computation in return () }
 
             /// <summary>Disposes a cloud resource.</summary>
             /// <param name="resource">The resource for disposal.</param>
             /// <returns>A cloud expression returning unit.</returns>
             [<Cloud; NoTraceInfo>]
-            static member Dispose<'T when 'T :> ICloudDisposable>(resource : 'T) : ICloud<unit> =
+            static member Dispose<'T when 'T :> ICloudDisposable>(resource : 'T) : Cloud<unit> =
                 Cloud.OfAsync (resource.Dispose())
 
         [<AutoOpen>]
         module CloudOperators =
 
             [<Cloud>]
-            /// Converts an ICloud computation to a computation that will
+            /// Converts an Cloud computation to a computation that will
             /// be executed locally.
-            let local (computation : ICloud<'T>) : ICloud<'T> =
+            let local (computation : Cloud<'T>) : Cloud<'T> =
                 Cloud.ToLocal computation
 
             [<Cloud>]
             [<NoTraceInfo>]
-            let (<||>) (left : ICloud<'a>) (right : ICloud<'b>) : ICloud<'a * 'b> = 
+            let (<||>) (left : Cloud<'a>) (right : Cloud<'b>) : Cloud<'a * 'b> = 
                 cloud { 
                     let! result = 
                             Cloud.Parallel<obj> [| cloud { let! value = left in return value :> obj }; 
@@ -42,7 +42,7 @@
 
             [<Cloud>]
             [<NoTraceInfo>]
-            let (<|>) (left : ICloud<'a>) (right : ICloud<'a>) : ICloud<'a> =
+            let (<|>) (left : Cloud<'a>) (right : Cloud<'a>) : Cloud<'a> =
                 cloud {
                     let! result = 
                         Cloud.Choice [| cloud { let! value = left  in return Some (value) }

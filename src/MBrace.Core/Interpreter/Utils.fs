@@ -7,12 +7,6 @@
 
     module internal Utils =
 
-        /// thread safe counter implementation
-        type UniqueIdGenerator (?start : int64) =
-            let mutable count = 0L
-
-            member __.Next () = System.Threading.Interlocked.Increment &count
-
         let memoize (f : 'T -> 'U) : 'T -> 'U =
             let cache = new ConcurrentDictionary<'T,'U>()
             fun x -> cache.GetOrAdd(x, f)
@@ -39,7 +33,6 @@
         let inline reraise' (e : #exn) =
             remoteStackTraceField.SetValue(e, e.StackTrace + System.Environment.NewLine)
             raise e
-
 
         type MethodInfo with
             member m.GuardedInvoke(instance : obj, parameters : obj []) =

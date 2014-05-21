@@ -25,7 +25,7 @@
             | LambdaMoP m -> m.Name |> Some
             | _ -> None
 
-    type CloudComputation<'T> (expr : Expr<ICloud<'T>>, ?name) =
+    type CloudComputation<'T> (expr : Expr<Cloud<'T>>, ?name) =
         let warnings, errors, dependencies = clientSideCompile MBraceSettings.ClientSideExpressionCheck expr
 
         let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda expr ; Some "" ]
@@ -57,7 +57,7 @@
 //                ClientId : Guid
 //                Dependencies : AssemblyId []
 //            }
-//    type internal CloudComputation<'T> (expr : Expr<ICloud<'T>>, dependencies : Assembly list, warnings : CloudWarning list, ?name : string) =
+//    type internal CloudComputation<'T> (expr : Expr<Cloud<'T>>, dependencies : Assembly list, warnings : CloudWarning list, ?name : string) =
 //        let name = defaultArg name ""
 //
 //        do CloudComputationUtils.report warnings
@@ -92,7 +92,7 @@
 //        member internal __.GetHashBundle () = buildPackets [||]
 //        member internal __.GetMissingImageBundle (missing : AssemblyId []) = buildPackets missing
 //
-//        static member Compile (expr : Expr<ICloud<'T>>, ?name : string) =
+//        static member Compile (expr : Expr<Cloud<'T>>, ?name : string) =
 //            try
 //                let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda expr ; Some "" ]
 //
@@ -101,13 +101,13 @@
 //                CloudComputation(expr, dependencies, warnings, name)
 //            with e -> Error.handle e
 //
-//        static member Compile (f : Expr<'I -> ICloud<'R>>, ?name) = try CloudFunc<'I,'R> (f, ?name = name) with e -> Error.handle e
-//        static member Compile (f : Expr<'I1 -> 'I2 -> ICloud<'R>>, ?name) = try CloudFunc<'I1,'I2,'R> (f, ?name = name) with e -> Error.handle e
-//        static member Compile (f : Expr<'I1 -> 'I2 -> 'I3 -> ICloud<'R>>, ?name) = try CloudFunc<'I1,'I2,'I3,'R>(f, ?name = name) with e -> Error.handle e
+//        static member Compile (f : Expr<'I -> Cloud<'R>>, ?name) = try CloudFunc<'I,'R> (f, ?name = name) with e -> Error.handle e
+//        static member Compile (f : Expr<'I1 -> 'I2 -> Cloud<'R>>, ?name) = try CloudFunc<'I1,'I2,'R> (f, ?name = name) with e -> Error.handle e
+//        static member Compile (f : Expr<'I1 -> 'I2 -> 'I3 -> Cloud<'R>>, ?name) = try CloudFunc<'I1,'I2,'I3,'R>(f, ?name = name) with e -> Error.handle e
 //
 //
-//    and internal CloudFunc<'I,'R>  (f : Expr<'I -> ICloud<'R>>, ?name : string) =
-//        let apply (x : 'I) = Expr.Application(f, <@ x @>) |> Expr.cast<ICloud<'R>>
+//    and internal CloudFunc<'I,'R>  (f : Expr<'I -> Cloud<'R>>, ?name : string) =
+//        let apply (x : 'I) = Expr.Application(f, <@ x @>) |> Expr.cast<Cloud<'R>>
 //
 //        let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda f ; Some "" ]
 //
@@ -119,8 +119,8 @@
 //        member __.Name = name
 //
 //
-//    and internal CloudFunc<'I1,'I2,'R> (f : Expr<'I1 -> 'I2 -> ICloud<'R>>, ?name : string) =
-//        let apply (x : 'I1) (y : 'I2) = Expr.Applications(f, [ [ <@ x @> ] ; [ <@ y @> ] ]) |> Expr.cast<ICloud<'R>>
+//    and internal CloudFunc<'I1,'I2,'R> (f : Expr<'I1 -> 'I2 -> Cloud<'R>>, ?name : string) =
+//        let apply (x : 'I1) (y : 'I2) = Expr.Applications(f, [ [ <@ x @> ] ; [ <@ y @> ] ]) |> Expr.cast<Cloud<'R>>
 //    
 //        let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda f ; Some "" ]
 //
@@ -132,9 +132,9 @@
 //        member __.ReturnType = typeof<'R>
 //        member __.Name = name
 //
-//    and internal CloudFunc<'I1,'I2,'I3,'R> (f : Expr<'I1 -> 'I2 -> 'I3 -> ICloud<'R>>, ?name : string) =
+//    and internal CloudFunc<'I1,'I2,'I3,'R> (f : Expr<'I1 -> 'I2 -> 'I3 -> Cloud<'R>>, ?name : string) =
 //        let apply (x : 'I1) (y : 'I2) (z : 'I3) = 
-//            Expr.Applications(f, [ [ <@ x @> ] ; [ <@ y @> ] ; [ <@ z @> ] ] ) |> Expr.cast<ICloud<'R>>
+//            Expr.Applications(f, [ [ <@ x @> ] ; [ <@ y @> ] ; [ <@ z @> ] ] ) |> Expr.cast<Cloud<'R>>
 //    
 //        let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda f ; Some "" ]
 //

@@ -17,7 +17,7 @@ namespace Nessos.MBrace.Runtime.Tests
         
         override __.Name = "Cluster Cloud Tests"
         override __.IsLocalTesting = false
-        override __.ExecuteExpression<'T>(expr: Quotations.Expr<ICloud<'T>>): 'T =
+        override __.ExecuteExpression<'T>(expr: Quotations.Expr<Cloud<'T>>): 'T =
             MBrace.RunRemote __.Runtime expr
 
         member __.Runtime =
@@ -52,7 +52,7 @@ namespace Nessos.MBrace.Runtime.Tests
         member t.``Cloud Log`` () = 
             let ps = <@ cloud { do! Cloud.Log "Cloud Log Test Msg" } @> |> t.Runtime.CreateProcess
             Threading.Thread.Sleep(delay) // storelogger flushes every 2 seconds
-            let dumps = t.Runtime.GetUserLogs(ps.ProcessId) 
+            let dumps = ps.GetLogs()
             ()
 //                dumps |> Seq.find(fun dump -> dump.Print().Contains("Cloud Log Test Msg")) |> ignore
             
@@ -60,7 +60,8 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Cloud Trace`` () = 
             let ps = <@ testTrace 1 @> |> test.Runtime.CreateProcess
             Threading.Thread.Sleep(delay)
-            let dumps = test.Runtime.GetUserLogs(ps.ProcessId) 
+            let dumps = ps.GetLogs()
+            ()
             should equal true (traceHasValue dumps "a" "1")
             should equal true (traceHasValue dumps "x" "2")
 
@@ -73,21 +74,21 @@ namespace Nessos.MBrace.Runtime.Tests
             let ps = <@ cloud { return 1 / 0 } |> Cloud.Trace @> |> test.Runtime.CreateProcess
             Threading.Thread.Sleep(delay)
             shouldFailwith<CloudException> (fun () -> ps.AwaitResult() |> ignore)
-            let dumps = test.Runtime.GetUserLogs(ps.ProcessId)
-            should equal true (dumps |> Seq.exists(function Trace info -> info.Message.Contains("DivideByZeroException") | _ -> false))
+            let dumps = ps.GetLogs()
+            should equal true (dumps |> Seq.exists(fun e -> e.Message.Contains("DivideByZeroException")))
                 
         [<Test>] 
         member test.``Cloud Trace handle Exception`` () = 
             let ps = <@ testTraceExc () @> |> test.Runtime.CreateProcess
             Threading.Thread.Sleep(delay)
-            let dumps = test.Runtime.GetUserLogs(ps.ProcessId) 
+            let dumps = ps.GetLogs()
             should equal true (traceHasValue dumps "ex" "error")
 
         [<Test>] 
         member test.``Cloud Trace For Loop`` () = 
             let ps = <@ testTraceForLoop () @> |> test.Runtime.CreateProcess
             Threading.Thread.Sleep(delay)
-            let dumps = test.Runtime.GetUserLogs(ps.ProcessId) 
+            let dumps = ps.GetLogs()
             should equal true (traceHasValue dumps "i" "1")
             should equal true (traceHasValue dumps "i" "2")
             should equal true (traceHasValue dumps "i" "3")
@@ -96,18 +97,22 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Quotation Cloud Trace`` () = 
             let ps = <@ cloud { let! x = cloud { return 1 } in return x } |> Cloud.Trace @> |> test.Runtime.CreateProcess
             Threading.Thread.Sleep(delay)
-            let dumps = test.Runtime.GetUserLogs(ps.ProcessId) 
+            let dumps = ps.GetLogs()
             should equal false (traceHasValue dumps "x" "1")
 
         [<Test>]
         member test.``Cloud NoTraceInfo Attribute`` () = 
             let ps = <@ cloud { return! cloud { return 1 } <||> cloud { return 2 } } |> Cloud.Trace @> |> test.Runtime.CreateProcess
             Threading.Thread.Sleep(delay)
-            let dumps = test.Runtime.GetUserLogs(ps.ProcessId)
+            let dumps = ps.GetLogs()
             let result = 
-                dumps |> Seq.exists (function 
-                                        | Trace info -> info.Function = Some ("op_LessBarBarGreater")
-                                        | _ -> false)  
+                dumps 
+                |> Seq.exists 
+                    (fun e -> 
+                        match e.TraceInfo with
+                        | Some i -> i.Function = Some ("op_LessBarBarGreater")
+                        | None -> false)
+
             should equal false result
 
         [<Test>]
@@ -115,7 +120,7 @@ namespace Nessos.MBrace.Runtime.Tests
             let proc = <@ testParallelTrace () @> |> test.Runtime.CreateProcess 
             proc.AwaitResult() |> ignore
             Threading.Thread.Sleep(delay) 
-            let dumps = test.Runtime.GetUserLogs(proc.ProcessId) 
+            let dumps = proc.GetLogs()
             should equal true (traceHasValue dumps "x" "2")
             should equal true (traceHasValue dumps "y" "3")
             should equal true (traceHasValue dumps "r" "5")
@@ -143,7 +148,7 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test; Repeat 10>]
         member test.``Z4 Test Kill Process - Fork bomb`` () =
             let m = MutableCloudRef.New 0 |> MBrace.RunLocal
-            let rec fork () : ICloud<unit> = 
+            let rec fork () : Cloud<unit> = 
                 cloud { do! MutableCloudRef.Force(m,1)
                         let! _ = fork() <||> fork() in return () }
             let ps = test.Runtime.CreateProcess <@ fork () @>
@@ -158,8 +163,8 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test>]
         member __.``Fetch logs`` () =
-            __.Runtime.GetLogs() |> Seq.isEmpty |> should equal false
-            __.Runtime.Nodes.Head.GetLogs() |> Seq.isEmpty |> should equal false
+            __.Runtime.GetSystemLogs() |> Seq.isEmpty |> should equal false
+            __.Runtime.Nodes.Head.GetSystemLogs() |> Seq.isEmpty |> should equal false
 
 
         [<Test; Category("Runtime Administration")>]

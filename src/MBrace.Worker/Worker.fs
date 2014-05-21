@@ -21,6 +21,7 @@
         open Nessos.MBrace.Utils
         open Nessos.MBrace.Utils.AssemblyCache
         open Nessos.MBrace.Runtime
+        open Nessos.MBrace.Runtime.Logging
         open Nessos.MBrace.Runtime.Store
         open Nessos.MBrace.Runtime.Definitions
         open Nessos.MBrace.Runtime.ProcessDomain.Configuration 
@@ -92,24 +93,23 @@
             do Nessos.MBrace.Runtime.Serialization.Register(new FsPickler())
 
             // Register Logger
-            IoC.Register<ILogger>(
-                fun () ->
-                    (fun () -> getParentLogger Serialization.SerializerRegistry.DefaultName parentAddress)
-                    |> Logger.lazyWrap
-                    // prepend "ProcessDomain" prefix to all log entries
-                    |> Logger.convert
-                        (function SystemLog (txt, lvl, date) -> 
-                                    SystemLog (sprintf' "ProcessDomain(%A):: %s" processDomainId txt, lvl, date))
-            )
+            let logger =
+                let pid = System.Diagnostics.Process.GetCurrentProcess().Id
+                lazy(getParentLogger Serialization.SerializerRegistry.DefaultName parentAddress)
+                |> Logger.lazyWrap
+                // prepend "ProcessDomain" prefix to all log entries
+                |> Logger.map (fun e -> {e with Message = sprintf "[worker %d] %s" pid e.Message})
 
-            ThespianLogger.Register(IoC.Resolve<ILogger>())
+
+            IoC.RegisterValue<ISystemLogger>(logger)
+            ThespianLogger.Register(logger)
 
             // Register Store
             try
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
                 
-                let coreConfig = CoreConfiguration.activate(IoC.Resolve<ILogger>(), storeInfo, cacheStoreEndpoint)
+                let coreConfig = CoreConfiguration.activate(storeInfo, cacheStoreEndpoint)
                 IoC.RegisterValue<CoreConfiguration>(coreConfig)
                 IoC.RegisterValue<ICloudStore>(storeInfo.Store)
                 IoC.RegisterValue<StoreInfo>(storeInfo)
@@ -123,19 +123,11 @@
             else TcpListenerPool.RegisterListener(IPEndPoint.anyIp port)
             TcpConnectionPool.Init()
 
-            //Debug.Listeners.Add(new TextWriterTraceListener("mbrace-process-log.txt")) |> ignore
-
-
             // Register exiter
             IoC.RegisterValue<IExiter>(exiter)
 
-            // Begin Boot
-
-            let logger = IoC.Resolve<ILogger>()
-
-            logger.LogInfo <| sprintf' "ALLOCATED PORT: %d" port
-
-            logger.LogInfo <| sprintf' "PROC ID: %d" (Process.GetCurrentProcess().Id)
+            logger.Logf Info "ALLOCATED PORT: %d" port
+            logger.Logf Info "PROC ID: %d" <| Process.GetCurrentProcess().Id
 
             let unloadF () = 
 #if APPDOMAIN_ISOLATION
@@ -155,12 +147,12 @@
                             try 
                                 nodeManagerReceiver <!= fun ch -> ch, nodeManager
                                 d.Value.Value.Dispose()
-                            with e -> logger.LogError e "PROCESS DOMAIN INIT FAULT"))
+                            with e -> logger.LogWithException e "PROCESS DOMAIN INIT FAULT" Error))
                      |> Some
 
                 let address = new Address(TcpListenerPool.DefaultHostname, TcpListenerPool.GetListener().LocalEndPoint.Port)
                 Definitions.Service.bootProcessDomain address
                 mainLoop <| System.Diagnostics.Process.GetProcessById(parentPid)
             with e ->
-                logger.LogError e "Failed to start process domain."
+                logger.LogWithException e "Failed to start process domain." Error
                 1

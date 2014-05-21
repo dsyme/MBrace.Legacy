@@ -6,13 +6,14 @@
 
     open Nessos.MBrace
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Runtime.Logging
 
     type MVar<'T> = IMutableCloudRef<'T option>
 
     [<Cloud>]
     module MVar =
-        let newEmpty<'T> : ICloud<MVar<'T>> = MutableCloudRef.New(None)
-        let newValue<'T> value : ICloud<MVar<'T>> = MutableCloudRef.New(Some value)
+        let newEmpty<'T> : Cloud<MVar<'T>> = MutableCloudRef.New(None)
+        let newValue<'T> value : Cloud<MVar<'T>> = MutableCloudRef.New(Some value)
         let rec put (mvar : MVar<'T>) value = 
             cloud {
                 let! v = MutableCloudRef.Read(mvar)
@@ -148,14 +149,13 @@
 
         let delay = 5*1024
 
-        let traceHasValue dumps name value =
+        let traceHasValue (dumps : seq<CloudLogEntry>) name value =
             dumps 
-            |> Seq.exists(
-                function 
-                | Trace info -> 
-                    info.Environment.ContainsKey(name) && info.Environment.[name].Contains value
-                | _ -> false)
-            
+            |> Seq.exists(fun e ->
+                match e.TraceInfo with
+                | None -> false
+                | Some t ->
+                    t.Environment.ContainsKey(name) && t.Environment.[name].Contains value)
 
         [<Cloud>]
         let testPropGet = cloud { return 42 }
@@ -407,7 +407,7 @@
         [<Cloud>]
         let testAmbiguousParallelException () =
             cloud {
-                let! (first, second) = (cloud { failwith "Wrong"; return 1 :> obj } : ICloud<obj>) <||> (cloud { failwith "Wrong"; return 2 :> obj } : ICloud<obj>)
+                let! (first, second) = (cloud { failwith "Wrong"; return 1 :> obj } : Cloud<obj>) <||> (cloud { failwith "Wrong"; return 2 :> obj } : Cloud<obj>)
 
                 return 0
             }
@@ -469,9 +469,9 @@
             }
 
         [<Cloud>]
-        let rec mapReduce   (mapF : 'T -> ICloud<'R>) 
-                            (reduceF : 'R -> 'R -> ICloud<'R>) (identity : 'R) 
-                            (values : 'T list) : ICloud<'R> =
+        let rec mapReduce   (mapF : 'T -> Cloud<'R>) 
+                            (reduceF : 'R -> 'R -> Cloud<'R>) (identity : 'R) 
+                            (values : 'T list) : Cloud<'R> =
             cloud {
                 match values with
                 | [] -> return identity

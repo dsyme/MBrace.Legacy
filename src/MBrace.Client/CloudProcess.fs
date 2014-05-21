@@ -14,6 +14,7 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.String
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Utils
     open Nessos.MBrace.Client.QuotationAnalysis
     
@@ -150,6 +151,22 @@
                 processManager <!- fun ch -> KillProcess(ch, processId)
                 |> Async.RunSynchronously
             with e -> Error.handle e
+
+
+        member p.GetLogsAsync (?clearLogs) = async {
+            let clearLogs = defaultArg clearLogs false
+            let reader = StoreCloudLogger.GetReader(MBraceSettings.StoreInfo.Store, processId)
+            let! logs = reader.FetchLogs()
+            if clearLogs then do! reader.DeleteLogs ()
+            return logs |> Array.sortBy (fun e -> e.Date)
+        }
+
+        member p.GetLogs (?clearLogs) = p.GetLogsAsync (?clearLogs = clearLogs) |> Async.RunSynchronously
+        member p.ShowLogs (?clearLogs) = 
+            p.GetLogs (?clearLogs = clearLogs) 
+            |> Array.map (fun l -> l.ToSystemLogEntry(processId).Print(showDate = false))
+            |> String.concat "\n"
+            |> printfn "%s"
 
         static member Cast<'T> (p : Process) = p.Cast<'T> ()
 

@@ -11,11 +11,18 @@ open Nessos.Thespian.Cluster.BehaviorExtensions.FSM
 open Nessos.MBrace
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Runtime
+open Nessos.MBrace.Runtime.Logging
 open Nessos.MBrace.Runtime.Store
 
-let private imemLogger = IoC.TryResolve<Logger.InMemoryLogger> ()
+// updated state event
 let internal StateChangeEvent = new Event<NodeType>()
-let SubscribeToStateChange f = StateChangeEvent.Publish.Add f
+/// node state observable
+let stateChangeObservable = StateChangeEvent.Publish
+
+// Dependency Injection : change
+let private readEntriesFromMasterLogFile () =
+    let file = IoC.Resolve<string>("masterLogFile")
+    JsonFileLogger.ReadLogs file
 
 type internal MBraceNodeManager = Runtime
 
@@ -88,7 +95,7 @@ let rec private triggerNodeFailure (innerException: exn) (ctx: BehaviorContext<_
         | GetDeploymentId(RR ctx r) -> reply r
         | GetStoreId(RR ctx r) -> reply r
         | GetAllNodes(RR ctx r) -> reply r
-        | GetLogDump(RR ctx r, clear) -> reply r
+        | GetLogDump(RR ctx r) -> reply r
         | Attach(RR ctx r, _) -> reply r
         | Detach(RR ctx r) -> reply r
 //        | GetNodeState(RR ctx r) -> reply r
@@ -117,15 +124,15 @@ let rec private triggerNodeFailure (innerException: exn) (ctx: BehaviorContext<_
         return goto mbraceNodeManagerBehaviorFailed state
     }
 
-and private getLogDump reply clear =
-    async {
-        match imemLogger with
-        | None -> SystemException("Log dumping not supported in this runtime.") :> exn |> Exception |> reply
-        | Some logger ->
-            logger.Dump() |> Value |> reply
-
-            if clear then logger.Clear()
-    } 
+//and private getLogDump reply clear =
+//    async {
+//        match imemLogger with
+//        | None -> SystemException("Log dumping not supported in this runtime.") :> exn |> Exception |> reply
+//        | Some logger ->
+//            logger.Dump() |> Value |> reply
+//
+//            if clear then logger.Clear()
+//    } 
 
 and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBraceNodeManager) =
     async {
@@ -280,9 +287,11 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
 
                 return stay state
 
-            | GetLogDump(RR ctx reply, clear) ->
+            | GetLogDump(RR ctx reply) ->
                 try
-                    do! getLogDump reply clear
+                    let entries = readEntriesFromMasterLogFile ()
+
+                    reply <| Value entries
 
                     return stay state
                 with e ->
@@ -429,9 +438,11 @@ and mbraceNodeManagerBehaviorFailed (ctx: BehaviorContext<_>) (state: State) (ms
         | GetDeploymentId(RR ctx r) -> reply r
         | GetStoreId(RR ctx r) -> reply r
         | GetAllNodes(RR ctx r) -> reply r
-        | GetLogDump(RR ctx r, clear) ->
+        | GetLogDump(RR ctx r) ->
             try
-                do! getLogDump r clear
+                let entries = readEntriesFromMasterLogFile ()
+                r <| Value entries
+
             with e -> ctx.LogError e
         | Attach(RR ctx r, _) -> reply r
         | Detach(RR ctx r) -> reply r

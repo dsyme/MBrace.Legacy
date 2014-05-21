@@ -61,7 +61,7 @@
     <Compile Include="CloudProcess.fs" />
     <Compile Include="Node.fsi" />
     <Compile Include="Node.fs" />
-    <Compile Include="Runtime.fsi" />
+    <None Include="Runtime.fsi" />
     <Compile Include="Runtime.fs" />
     <Compile Include="ClientExtensions.fs" />
     <None Include="preamble.fsx" />

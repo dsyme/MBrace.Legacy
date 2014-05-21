@@ -20,14 +20,13 @@ open Nessos.MBrace.Utils.String
 
 open Nessos.MBrace.Runtime
 open Nessos.MBrace.Runtime.Utils
+open Nessos.MBrace.Runtime.Logging
 open Nessos.MBrace.Runtime.Daemon.Configuration
 
 
 module Logs =
-    type LogEntry = Nessos.MBrace.Utils.LogEntry
-    type LogLevel = Nessos.MBrace.Utils.LogLevel
 
-    let show (log : seq<LogEntry>) =
+    let show (log : seq<SystemLogEntry>) =
         log
         |> Seq.map (fun e -> e.Print(showDate = true))
         |> String.concat "\n"
@@ -107,14 +106,12 @@ type MBraceNode private (nodeRef: ActorRef<Runtime>, uri: Uri) as self =
         try nodeRef <!= GetNodePerformanceCounters
         with e -> handleError e
 
-    member n.GetLogs (?clear) =
+    member n.GetSystemLogs () =
         try
-            let clear = defaultArg clear false
-            nodeRef <!= fun ch -> GetLogDump(ch, clear)
+            nodeRef <!= GetLogDump
         with e -> handleError e
 
-    member n.ShowLogs (?clear) =
-        n.GetLogs (?clear = clear) |> Logs.show
+    member n.ShowSystemLogs () = n.GetSystemLogs () |> Logs.show
 
     member n.IsLocal = n.Process.IsSome
 

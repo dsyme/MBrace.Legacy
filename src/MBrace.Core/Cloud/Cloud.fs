@@ -1,132 +1,121 @@
 ﻿namespace Nessos.MBrace
 
     open System
-    open System.IO
-    open System.Collections
-    open System.Collections.Generic
-    open System.Runtime.Serialization
-    open Microsoft.FSharp.Quotations
+
+    open Nessos.MBrace.Core
 
     type CloudAttribute = ReflectedDefinitionAttribute
+    type ProcessId = Nessos.MBrace.Core.ProcessId
 
-    // keep interface name for sake of compatibility; change later
+    [<Sealed>]
+    [<System.AttributeUsage(AttributeTargets.Class ||| AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Constructor, AllowMultiple = false)>]
+    type NoTraceInfoAttribute() = 
+            inherit System.Attribute()
+            member self.Name = "NoTraceInfo"
 
     [<AbstractClass>]
-    type ICloud internal (cloudExpr : CloudExpr) =
+    type Cloud internal (cloudExpr : CloudExpr) =
         abstract Type : Type
         member internal __.CloudExpr = cloudExpr
 
-    and ICloud<'T> internal (cloudExpr : CloudExpr) =
-        inherit ICloud(cloudExpr)
+    [<Sealed>]
+    type Cloud<'T> internal (cloudExpr : CloudExpr) =
+        inherit Cloud(cloudExpr)
         override __.Type = typeof<'T>
 
-    and internal CloudExpr = 
-        // Monadic Exprs
-        | DelayExpr of (unit -> CloudExpr) * ObjFunc
-        | BindExpr of CloudExpr * (obj -> CloudExpr) * ObjFunc
-        | ReturnExpr of obj * Type
-        | TryWithExpr of CloudExpr * (exn -> CloudExpr) * ObjFunc
-        | TryFinallyExpr of CloudExpr * (unit -> unit)
-        | ForExpr of obj [] * (obj -> CloudExpr) * ObjFunc
-        | WhileExpr of (unit -> bool) * CloudExpr 
-        | CombineExpr of CloudExpr * CloudExpr
-        | DisposableBindExpr of ICloudDisposable * System.Type * (obj -> CloudExpr) * ObjFunc
-        // Primitives
-        | GetWorkerCountExpr 
-        | GetProcessIdExpr 
-        | GetTaskIdExpr 
-        | LocalExpr of CloudExpr 
-        | OfAsyncExpr of ICloudAsync
-        | ParallelExpr of CloudExpr [] * Type
-        | ChoiceExpr of CloudExpr [] * Type
-//        | QuoteExpr of Expr
-        | LogExpr of string
-        | TraceExpr of CloudExpr 
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    [<RequireQualifiedAccess>]
+    module Cloud =
 
-        (* CLOUDREF *)
-        | NewRefByNameExpr  of Container * obj * Type
-        | GetRefsByNameExpr of Container
-        | GetRefByNameExpr  of Container * Id * Type
+        let inline internal wrapExpr (cloudExpr : CloudExpr) = new Cloud<'T>(cloudExpr)
+        let inline internal unwrapExpr (cloudBlock : Cloud<'T>) = cloudBlock.CloudExpr
 
-        (* MUTABLE CLOUDREF *)
-        | NewMutableRefByNameExpr  of Container        * Id * obj * Type
-        | ReadMutableRefExpr       of IMutableCloudRef * Type
-        | SetMutableRefExpr        of IMutableCloudRef * obj
-        | ForceSetMutableRefExpr   of IMutableCloudRef * obj
-        | GetMutableRefsByNameExpr of Container
-        | GetMutableRefByNameExpr  of Container        * Id * Type
-        | FreeMutableRefExpr       of IMutableCloudRef
+        let Trace (cloudComputation : Cloud<'T>) : Cloud<'T> = 
+            wrapExpr <| TraceExpr (unwrapExpr cloudComputation)
 
-        (* CLOUDSEQ *)
-        | NewCloudSeqByNameExpr  of Container * IEnumerable * Type
-        | GetCloudSeqByNameExpr  of Container * Id          * Type
-        | GetCloudSeqsByNameExpr of Container 
+        let Log (msg : string) : Cloud<unit> = 
+            wrapExpr <| LogExpr msg
 
-        (* CLOUDFILE *)
-        | NewCloudFile          of Container  * Id * (Stream -> Async<unit>)
-        | GetCloudFile          of Container  * Id
-        | GetCloudFiles         of Container
-        | ReadCloudFile         of ICloudFile * (Stream -> Async<obj>) * Type
-//        | ReadCloudFileAsSeq    of ICloudFile * (System.IO.Stream -> Async<obj>) * System.Type
+        let Logf (fmt : Printf.StringFormat<_, Cloud<unit>>) =
+            Printf.ksprintf (LogExpr >> wrapExpr) fmt
 
-        // Commands
-        | DoEndDelayExpr of ObjFunc
-        | DoEndBindExpr of obj * ObjFunc
-        | DoEndTryWithExpr of obj * ObjFunc
-        | DoBindExpr of (obj -> CloudExpr) * ObjFunc
-        | DoTryWithExpr of (exn -> CloudExpr) * ObjFunc
-        | DoTryFinallyExpr of (unit -> unit)
-        | DoForExpr of obj [] * int * (obj -> CloudExpr) * ObjFunc
-        | DoWhileExpr of (unit -> bool) * CloudExpr 
-        | DoCombineExpr of CloudExpr 
-        | DoEndTraceExpr
-        | DoDisposableBindExpr of ICloudDisposable
-        // Value
-        | ValueExpr of Value
+        let OfAsync<'T>(asyncComputation : Async<'T>) : Cloud<'T> =
+            let cloudAsync = 
+                { new ICloudAsync with
+                    member self.UnPack (polyMorpInvoker : IPolyMorphicMethodAsync) =
+                        polyMorpInvoker.Invoke<'T>(asyncComputation) }
+            wrapExpr <| OfAsyncExpr cloudAsync
+                    
+        let ToLocal<'T>(cloudComputation : Cloud<'T>) : Cloud<'T> =
+            wrapExpr <| LocalExpr (unwrapExpr cloudComputation)
 
-    and internal Value = 
-        | Obj of ObjValue * Type 
-        | Exc of exn * CloudDumpContext option
-        | ParallelValue of (CloudExpr [] * Type)
-        | ParallelThunks of (ThunkValue [] * Type)
-        | ChoiceValue of (CloudExpr [] * Type)
-        | ChoiceThunks of (ThunkValue [] * Type)
+        let GetWorkerCount() : Cloud<int> =
+            wrapExpr GetWorkerCountExpr
 
-    and ObjValue =
-        | ObjValue of obj
-        | CloudRefValue of ICloudRef<obj>
+        let GetProcessId() : Cloud<ProcessId> =
+            wrapExpr GetProcessIdExpr
 
-    and Result<'T> = 
-        | ValueResult of 'T 
-        | ExceptionResult of (exn * CloudDumpContext option) //ValueResult | ExceptionResult are valid process results
+        let GetTaskId() : Cloud<string> =
+            wrapExpr GetTaskIdExpr
+    
+        let Parallel<'T>(computations : seq<Cloud<'T>>) : Cloud<'T []> =
+            let computations = Seq.toArray computations
+            wrapExpr <| ParallelExpr (computations |> Array.map unwrapExpr, typeof<'T>)
 
-    and internal Container = string
-    and internal Id = string
-    and internal Tag = string
-    and internal ObjFunc = obj
-    // runtime artifact ; maybe move elsewhere?
-    and ProcessId = int
+        let Choice<'T>(computations : seq<Cloud<'T option>>) : Cloud<'T option> =
+            let computations = Seq.toArray computations
+            wrapExpr <| ChoiceExpr (computations |> Array.map unwrapExpr, typeof<'T option>)
 
-    and internal ThunkValue = Thunk of CloudExpr | ThunkId of string
+    // The Monadic Builder - Computation Expressions
+    type CloudBuilder() =
 
-    and internal ICloudAsync = 
-        abstract UnPack : IPolyMorphicMethodAsync -> unit
+        member self.Return (value : 'T) : Cloud<'T> = Cloud.wrapExpr <| ReturnExpr (value, typeof<'T>)
 
-    and internal IPolyMorphicMethodAsync = 
-        abstract Invoke<'T> : Async<'T> -> unit
+        member self.ReturnFrom (computation : Cloud<'T>) : Cloud<'T> = computation
 
-    and CloudDumpContext =
-        {
-            File : string
-            Start : int * int // row * col
-            End : int * int
-            CodeDump : string
-            FunctionName : string
-            Vars : (string * obj) []
-        }
+        member self.Bind(computation : Cloud<'T>, bindF : ('T -> Cloud<'U>)) : Cloud<'U> = 
+            Cloud.wrapExpr <| BindExpr (Cloud.unwrapExpr computation, (fun value -> Cloud.unwrapExpr <| bindF (value :?> 'T)), bindF :> obj)
 
-    and [<System.AttributeUsage(System.AttributeTargets.Class ||| System.AttributeTargets.Method ||| System.AttributeTargets.Property ||| System.AttributeTargets.Constructor, AllowMultiple = false)>]
-         [<Sealed>]
-         NoTraceInfoAttribute() = 
-            inherit System.Attribute()
-            member self.Name = "NoTraceInfo"
+        member self.Delay (f : unit -> Cloud<'T>) : Cloud<'T> = 
+            Cloud.wrapExpr <| DelayExpr ((fun () -> Cloud.unwrapExpr <| f () ), f)
+
+        member self.Zero() : Cloud<unit> = Cloud.wrapExpr <| ReturnExpr ((), typeof<unit>)
+
+        member self.TryWith (computation : Cloud<'T>, exceptionF : (exn -> Cloud<'T>)) : Cloud<'T> = 
+            Cloud.wrapExpr <| TryWithExpr (Cloud.unwrapExpr computation, (fun ex -> Cloud.unwrapExpr <| exceptionF ex), exceptionF)
+
+        member self.TryFinally (computation :  Cloud<'T>, compensation : (unit -> unit)) : Cloud<'T> = 
+            Cloud.wrapExpr <| TryFinallyExpr (Cloud.unwrapExpr computation, compensation)
+
+        member self.For(values : 'T [], bindF : ('T -> Cloud<unit>)) : Cloud<unit> = 
+            Cloud.wrapExpr <| ForExpr (values |> Array.map (fun value -> value :> obj), (fun value -> Cloud.unwrapExpr <| bindF (value :?> 'T)), bindF)
+
+        member self.For(values : 'T list, bindF : ('T -> Cloud<unit>)) : Cloud<unit> = 
+            self.For(List.toArray values, bindF)
+
+        [<Obsolete("While loops in distributed computation considered harmful; consider using an accumulator pattern instead.")>]
+        member self.While (guardF : (unit -> bool), body : Cloud<unit>) : Cloud<unit> = 
+            Cloud.wrapExpr <| WhileExpr (guardF, Cloud.unwrapExpr body)
+
+        member self.Combine (first : Cloud<unit>, second : Cloud<'T>) : Cloud<'T> = 
+            Cloud.wrapExpr <| CombineExpr (Cloud.unwrapExpr first, Cloud.unwrapExpr second)
+
+        member self.Using<'T, 'U when 'T :> ICloudDisposable>(value : 'T, bindF : 'T -> Cloud<'U>) : Cloud<'U> =
+            Cloud.wrapExpr <| DisposableBindExpr (value :> ICloudDisposable, typeof<'T>, (fun value -> Cloud.unwrapExpr <| bindF (value :?> 'T)), bindF :> obj)
+
+
+    [<AutoOpen>]
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module CloudBuilder =
+        
+        let cloud = new CloudBuilder()
+
+        let internal mkTry<'Exc, 'T when 'Exc :> exn > (expr : Cloud<'T>) : Cloud<'T option> =
+            cloud { 
+                try 
+                    let! r = expr
+                    return Some r
+                with 
+                | :? 'Exc -> return None
+                | ex -> return raise ex
+            }

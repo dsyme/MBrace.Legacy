@@ -12,6 +12,7 @@ open Nessos.MBrace
 open Nessos.MBrace.Core
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Runtime
+open Nessos.MBrace.Runtime.Logging
 open Nessos.MBrace.Runtime.Store
 
 //type alias to prevent conflicts with non-cluster types
@@ -28,19 +29,30 @@ let workerBehavior (processId: ProcessId)
                    (state: State)
                    (msg: Worker) =
     
+    /// Dependency injection point. Fix!
     let config = IoC.Resolve<CoreConfiguration> ()
+    let store = IoC.Resolve<ICloudStore> ()
+    let logger = IoC.Resolve<ISystemLogger> ()
+
     let toCloudRef cloudExpr = config.CloudRefProvider.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr.GetType(), cloudExpr)
     let taskManager = state.TaskManager
-    let processTask (processId : ProcessId, taskId : TaskId, functions : Function list, Dump (dump)) = 
-        let traceEnabled stack = stack |> List.exists (fun cloudExpr' -> match cloudExpr' with DoEndTraceExpr -> true | _ -> false)
+    let processTask (processId : ProcessId, taskId : TaskId, functions : FunctionInfo list, Dump (dump)) = 
+        let isTraceEnabled stack = stack |> List.exists (fun cloudExpr' -> match cloudExpr' with DoEndTraceExpr -> true | _ -> false)
         let rec processTask' stack = 
             async {
-                let! stack' = Interpreter.run processId (taskId.ToString()) functions (traceEnabled stack) stack config
+                // initialize the process logger
+                use procLogger = new RuntimeCloudProcessLogger(processId, taskId.ToString(), logger, store)
+
+                let! stack' = Interpreter.evaluateSequential config procLogger functions (isTraceEnabled stack) stack
                 match stack' with
+                | GetProcessIdExpr :: rest ->
+                    return! processTask' <| ValueExpr (Obj (ObjValue processId, typeof<int>)) :: rest
+                | GetTaskIdExpr :: rest ->
+                    return! processTask' <| ValueExpr (Obj (ObjValue (taskId.ToString()), typeof<string>)) :: rest
                 | GetWorkerCountExpr :: _ -> return stack'
                 | ParallelExpr (cloudExprs, t) :: rest ->
                     let cloudExprs' =
-                        if traceEnabled stack' then
+                        if isTraceEnabled stack' then
                             cloudExprs |> Array.map TraceExpr
                         else
                             cloudExprs 
@@ -50,7 +62,7 @@ let workerBehavior (processId: ProcessId)
                     let choiceValue = ChoiceValue (cloudExprs, t) 
                     return (ValueExpr choiceValue) :: rest
                 | LocalExpr cloudExpr :: rest -> 
-                    let! value = Interpreter.runLocal processId (taskId.ToString()) functions false [cloudExpr] config
+                    let! value = Interpreter.evaluateLocal config procLogger processId (fun () -> taskId.ToString()) functions false [cloudExpr]
                     return! processTask' <| (ValueExpr value) :: rest
                 | ValueExpr (Obj (ObjValue value, t)) :: rest when value <> null ->
                     let! cloudRefValue = config.CloudRefProvider.Create<obj>("temp" + (string processId), Guid.NewGuid().ToString(), box value)

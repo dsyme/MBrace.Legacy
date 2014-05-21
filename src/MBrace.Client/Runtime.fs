@@ -13,8 +13,11 @@ namespace Nessos.MBrace.Client
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Runtime.Utils
+
+    open Nessos.MBrace.Client
 
     open Microsoft.FSharp.Quotations
 
@@ -275,33 +278,19 @@ namespace Nessos.MBrace.Client
                 |> printfn "%s" 
             with e -> printfn "%s" e.Message
 
-        member r.GetLogs(?clear) =
-            let clear = defaultArg clear false
-            postWithReply <| fun ch -> GetLogDump(ch, clear)
-            |> Array.toSeq
-        member r.ShowLogs(?clear) = r.GetLogs(?clear = clear) |> Logs.show
+        member r.GetSystemLogs() = postWithReply GetLogDump
 
-        member r.GetUserLogs(pid, ?clear) =
+        member r.ShowSystemLogs() = r.GetSystemLogs() |> Logs.show
+
+        member r.GetProcessLogs(proc : Process, ?clearLogs : bool) : CloudLogEntry [] =
             // interim store sanity check
             if not <| runtimeUsesCompatibleStore runtime then
                 mfailwith "incompatible store configuration."
 
-            let clear = defaultArg clear false
-            let cloudLogStore = coreConfig.CloudLogger :?> CloudLogStore
-            let logs = cloudLogStore.DumpLogs(pid)
-                       |> Async.RunSynchronously
-            match clear with
-            | true  -> cloudLogStore.DeleteLogs(pid)
-                       |> Async.RunSynchronously
-            | false -> ()
-            logs :> seq<_>
+            proc.GetLogs(?clearLogs = clearLogs)
 
-        member r.ShowUserLogs(pid, ?clear) : unit = 
-            r.GetUserLogs(pid, ?clear = clear)
-            |> Seq.sortBy (function | Trace info -> info.DateTime, info.Id 
-                                    | UserLog info -> info.DateTime, info.Id
-                                    | SystemLog (m,l,t) -> t, 0L )
-            |> (raise <| new NotImplementedException())
+        member r.ShowProcessLogs(proc : Process, ?clearLogs : bool) : unit =
+            proc.ShowLogs(?clearLogs = clearLogs)
 
         /// Deletes a container from the underlying store
         member r.DeleteContainer(container : string) =
@@ -418,7 +407,7 @@ namespace Nessos.MBrace.Client
         //  Computation Section
         //
 
-        member __.CreateProcess (expr : Expr<ICloud<'T>>, ?name) =
+        member __.CreateProcess (expr : Expr<Cloud<'T>>, ?name) =
             try
                 let computation = CloudComputation<_>(expr, ?name = name)
                 processManager.CreateProcess computation
@@ -432,13 +421,13 @@ namespace Nessos.MBrace.Client
                 return! proc.AwaitResultAsync ()
             } |> Error.handleAsync
 
-        member __.RunAsync (expr : Expr<ICloud<'T>>, ?name) =
+        member __.RunAsync (expr : Expr<Cloud<'T>>, ?name) =
             let computation = CloudComputation<_>(expr, ?name = name)
             __.RunAsync computation
 
         member __.Run (computation : CloudComputation<'T>) = __.RunAsync computation |> Error.handleAsync2
             
-        member __.Run (expr : Expr<ICloud<'T>>, ?name) =
+        member __.Run (expr : Expr<Cloud<'T>>, ?name) =
             try
                 let computation = CloudComputation<_>(expr, ?name = name)
                 __.Run computation 

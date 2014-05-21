@@ -3,15 +3,13 @@
     open Nessos.Thespian
 
     open Nessos.MBrace
+    open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Daemon.Configuration
 
     ///The module responsible for the LogEntry type.
     module Logs = begin
-        type LogEntry = Utils.LogEntry
-        type LogLevel = Utils.LogLevel
-    
         ///Prints a sequence of LogEntry objects.
-        val show : log:seq<LogEntry> -> unit
+        val show : log:seq<SystemLogEntry> -> unit
     end
 
     open Logs
@@ -35,7 +33,7 @@
             member CompareTo : y:obj -> int
             
             ///Get all the system logs from this node.
-            member GetLogs : ?clear:bool -> Utils.LogEntry []
+            member GetSystemLogs : unit -> SystemLogEntry []
             
             override Equals : y:obj -> bool
             override GetHashCode : unit -> int
@@ -52,8 +50,7 @@
             member Ping : ?silent:bool * ?timeout:int -> int
             
             ///Prints the system logs for this node.
-            ///<param name="clear">Deletes the logs.</param>
-            member ShowLogs : ?clear:bool -> unit
+            member ShowSystemLogs : unit -> unit
             
             override ToString : unit -> string
             

@@ -8,9 +8,11 @@ open Nessos.Thespian.Cluster.BehaviorExtensions
 
 open Nessos.MBrace
 open Nessos.MBrace.Runtime
+open Nessos.MBrace.Runtime.Store
+open Nessos.MBrace.Runtime.Logging
 open Nessos.MBrace.Client
 open Nessos.MBrace.Utils
-open Nessos.MBrace.Utils.AssemblyCache
+
 
 let private triggerSytemFault (ctx: BehaviorContext<_>) reply (e: exn) =
     async {
@@ -50,18 +52,7 @@ let processManagerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, 
                 match processInfoOpt with
                 | Some entry -> entry (*|> Process*) |> Value |> reply
                 | None ->
-                    //FaultPoint ;; nothing
-//                    let! missingAssemblies = assemblyManager <!- fun ch -> CacheAssemblies(ch, processImage.Assemblies)
-//
-//                    if missingAssemblies.Length <> 0 then
-//                        ctx.LogInfo "Assemblies missing. Requesting transmission from client."
-//                        missingAssemblies |> MissingAssemblies 
-//                                          |> Value 
-//                                          |> reply
-//                    else
                     ctx.LogInfo <| sprintf' "Creating new process for (request = %A, client = %A)..."  requestId processImage.ClientId
-
-//                    let assemblyIds = processImage.Dependencies |> Array.map (function packet -> packet.Header)
 
                     let processInitializationRecord: ProcessCreationData = { 
                         ClientId = processImage.ClientId
@@ -76,6 +67,15 @@ let processManagerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, 
                     //SystemException => run out of pid slots ;; SYSTEM FAULT
                     //TODO!!! Maybe not treat this as a system fault
                     let! processRecord = processMonitor <!- fun ch -> Singular(Choice1Of2 <| InitializeProcess(ch, processInitializationRecord))
+
+
+                    // try cleaning up cloud process logs ; not sure if this is the best place to do it
+                    try
+                        let store = IoC.Resolve<ICloudStore>()
+                        let reader = StoreCloudLogger.GetReader(store, processRecord.ProcessId)
+                        do! reader.DeleteLogs()
+
+                    with e -> ctx.LogError e
 
                     //FaultPoint
                     //BroadcastFailureException => failed to do any kind of replication ;; SYSTEM FAULT

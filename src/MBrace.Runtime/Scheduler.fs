@@ -24,7 +24,10 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                       (ctx: BehaviorContext<Scheduler>)
                       (state: State)
                       (msg: Scheduler) = 
+
+    /// dependency injection! fix this!
     let coreConfig = IoC.Resolve<CoreConfiguration>()
+
     let newRef (processId : int) (value : 'T) = 
         coreConfig.CloudRefProvider.Create<'T>("temp" + (string processId), Guid.NewGuid().ToString(), value)
 
@@ -55,7 +58,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
 
                     //the task manager will confirm the creation of the root task
                     let! cref = newRef processId functions
-                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (resultType, [Guid.NewGuid().ToString()], cref, Dump [cloud.CloudExpr]))
+                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (resultType, [Guid.NewGuid().ToString()], cref, Dump [Interpreter.extractCloudExpr cloud]))
                 | Choice2Of2 e -> 
                     reply nothing
                          

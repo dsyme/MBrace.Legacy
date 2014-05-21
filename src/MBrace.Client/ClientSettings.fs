@@ -15,6 +15,7 @@ namespace Nessos.MBrace.Client
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Store
 
     module private ConfigUtils =
@@ -30,10 +31,10 @@ namespace Nessos.MBrace.Client
 
                 EnableClientSideStaticChecking : bool
 
-                Logger : ILogger
+                Logger : ISystemLogger
                 Vagrant : VagrantServer
 
-                StoreProvider : StoreProvider
+                StoreInfo : StoreInfo
                 CoreConfiguration : CoreConfiguration
             }
 
@@ -53,14 +54,21 @@ namespace Nessos.MBrace.Client
 
         let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
             let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-            let coreConfig = CoreConfiguration.activate(IoC.Resolve<ILogger>(), storeInfo, localCacheDir)
+            let coreConfig = CoreConfiguration.activate(storeInfo, localCacheDir)
                 
             // soonish
             IoC.RegisterValue (coreConfig,      behaviour = Override)
             IoC.RegisterValue (storeInfo,       behaviour = Override)
             IoC.RegisterValue (storeInfo.Store, behaviour = Override)
 
-            coreConfig
+            storeInfo, coreConfig
+
+        let registerLogger (logger : ISystemLogger) =
+            // register logger
+            let logger = Logger.createConsoleLogger()
+            IoC.RegisterValue<ISystemLogger>(logger, behaviour = Override)
+            ThespianLogger.Register(logger)
+            logger
 
         let initConfiguration () =
             
@@ -113,14 +121,10 @@ namespace Nessos.MBrace.Client
             // register serializer
             Serialization.Register vagrant.Pickler
 
-            // register logger
-            let logger = Logger.createNullLogger()
-            IoC.RegisterValue<ILogger>(logger, behaviour = Override)
-
-            ThespianLogger.Register(logger)
+            let logger = registerLogger <| Logger.createConsoleLogger()
 
             // activate store provider
-            let coreConfig = activateDefaultStore localCacheDir storeProvider
+            let storeInfo, coreConfig = activateDefaultStore localCacheDir storeProvider
 
             // initialize connection pool
             do ConnectionPool.TcpConnectionPool.Init()
@@ -138,7 +142,7 @@ namespace Nessos.MBrace.Client
                 Logger = logger
                 Vagrant = vagrant
 
-                StoreProvider = storeProvider
+                StoreInfo = storeInfo
                 CoreConfiguration = coreConfig
             }
 
@@ -168,16 +172,21 @@ namespace Nessos.MBrace.Client
 
         static member internal DefaultCoreConfiguration = config.Value.CoreConfiguration
 
+        static member Logger
+            with get () = config.Value.Logger
+            and set   l = config.Swap(fun c -> { c with Logger = l })
+
         static member StoreProvider
-            with get () = config.Value.StoreProvider
+            with get () = config.Value.StoreInfo.Provider
 
             and set p =
                 // store activation has side-effects ; use lock instead of swap
                 lock config (fun () ->
-                    let coreConfig = activateDefaultStore config.Value.LocalCacheDirectory p
-                    config.Swap(fun c -> { c with StoreProvider = p ; CoreConfiguration = coreConfig })
+                    let storeInfo, coreConfig = activateDefaultStore config.Value.LocalCacheDirectory p
+                    config.Swap(fun c -> { c with StoreInfo = storeInfo ; CoreConfiguration = coreConfig })
                 )
 
         static member WorkingDirectory = config.Value.WorkingDirectory
 
         static member internal Vagrant = config.Value.Vagrant
+        static member internal StoreInfo = config.Value.StoreInfo

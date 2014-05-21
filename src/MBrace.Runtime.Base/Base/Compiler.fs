@@ -25,7 +25,7 @@ namespace Nessos.MBrace.Runtime
         
 //        exception CompilerException of string
         type CompilerException = Nessos.MBrace.CompilerException
-        type CompilerState = CompilerState<Expr, Function list>
+        type CompilerState = CompilerState<Expr, FunctionInfo list>
 
 //
 //        let (|MethodInfoWithOutDeclaringTypeFix|_|) (methodInfo : MethodInfo) = 
@@ -43,7 +43,7 @@ namespace Nessos.MBrace.Runtime
             let rec checkForCloud (t : Type) =
                 match t with
                 | Named (typeDef, typeArgs) 
-                    when typeDef = typedefof<ICloud<_>> -> [t]
+                    when typeDef = typedefof<Cloud<_>> -> [t]
                 | Named (typeDef, typeArgs) -> 
                     typeArgs |> Array.map checkForCloud |> Seq.concat |> Seq.toList
                 | Param (_) -> []
@@ -81,7 +81,7 @@ namespace Nessos.MBrace.Runtime
                          typeDef = typedefof<Tuple<_, _, _, _, _, _, _, _>> -> [Expr.NewTuple args]
             | _ -> args
 
-        let rec compile (pkg : CloudPackage) : (Type * Expr * ICloud * Function list) = 
+        let rec compile (pkg : CloudPackage) : (Type * Expr * Cloud * FunctionInfo list) = 
 
             let rec compile (expr : Expr) : CompilerState = 
 

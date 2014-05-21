@@ -10,8 +10,9 @@
     open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime.Store
+    open Nessos.MBrace.Runtime.Logging
 
-    type ProcessId = Nessos.MBrace.ProcessId
+    type ProcessId = Nessos.MBrace.Core.ProcessId
     type RequestId = System.Guid
     type DeploymentId = System.Guid
     type PackageId = System.Guid
@@ -20,8 +21,8 @@
     type CloudPackage private (expr : Expr, t : Type) =
         member __.Expr = expr
         member __.ReturnType = t
-        member __.Eval () = Swensen.Unquote.Operators.evalRaw expr : ICloud
-        static member Create (expr : Expr<ICloud<'T>>) =
+        member __.Eval () = Swensen.Unquote.Operators.evalRaw expr : Cloud
+        static member Create (expr : Expr<Cloud<'T>>) =
             CloudPackage(expr, typeof<'T>)
 
     type ProcessImage = 
@@ -34,7 +35,7 @@
             Dependencies : AssemblyId list
         }
 
-    type ExecuteResult = Result<obj>
+    type ExecuteResult = Nessos.MBrace.Core.Result<obj>
 
     exception SchedulerDeserializationException of exn
 
@@ -152,8 +153,8 @@
         | GetAllNodes of IReplyChannel<NodeRef []>
         //Gets default store id: this is a temporary sanity check until the store propagation mechanism is put in place
         | GetStoreId of IReplyChannel<StoreId>
-        //Gets a Dump of all logs kept in node, boolean specifies if logs should be cleared from memory
-        | GetLogDump of IReplyChannel<LogEntry []> * bool
+        //Gets a Dump of all logs kept in node
+        | GetLogDump of IReplyChannel<SystemLogEntry []>
         //Attach(confirmationChannel, someRuntime)
         //Tell a node to attach itself to the runtime.
         | Attach of IReplyChannel<unit> * NodeRef
