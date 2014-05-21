@@ -23,7 +23,6 @@
         open Nessos.MBrace.Core
         open Nessos.MBrace.Utils
         open Nessos.MBrace.Utils.Retry
-        open Nessos.MBrace.Utils.AssemblyCache
         open Nessos.MBrace.Utils.String
         open Nessos.MBrace.Runtime
         open Nessos.MBrace.Runtime.Logging

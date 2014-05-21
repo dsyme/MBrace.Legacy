@@ -11,7 +11,6 @@
     open Nessos.MBrace.Runtime.MBraceException
 
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Utils.AssemblyCache
     open Nessos.MBrace.Utils.Quotations
 
     open Nessos.MBrace.Client.QuotationAnalysis

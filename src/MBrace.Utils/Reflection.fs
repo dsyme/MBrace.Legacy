@@ -1,28 +1,22 @@
 ﻿namespace Nessos.MBrace.Utils
 
+    open System
+    open System.Collections
+    open System.Collections.Generic
+    open System.Text.RegularExpressions
+    open System.Reflection
+    open System.Runtime.Serialization
+
+    open Microsoft.FSharp.Reflection
+    open Microsoft.FSharp.Core.OptimizedClosures
+
+    open Nessos.MBrace.Utils.String
+
 
     module Reflection =
-        
-        open System
-        open System.Reflection
-        open System.Collections
-        open System.Collections.Generic
-        open System.Text.RegularExpressions
-        open System.Runtime.Serialization
-
-        open Microsoft.FSharp.Quotations
-        open Microsoft.FSharp.Quotations.Patterns
-
-        open Microsoft.FSharp.Reflection
-        open Microsoft.FSharp.Core.OptimizedClosures
-
-        open Nessos.MBrace.Utils.String
-
-        type CompType(t : Type) =
-            inherit ProjectionComparison<CompType,string>(t.AssemblyQualifiedName)
-            member __.Value = t
 
         module internal Primitives =
+
             let tunit = typeof<unit>
             let tbool = typeof<bool>
             let tobj = typeof<obj>
@@ -125,7 +119,6 @@
                 Some(FSharpType.GetTupleElements t)
             else None
 
-
         let (|Named|Array|Ptr|Param|) (t : System.Type) =
             if t.IsGenericType
             then Named(t.GetGenericTypeDefinition(), t.GetGenericArguments())
@@ -140,53 +133,6 @@
             elif t.IsPointer
             then Ptr(false, t.GetElementType())
             else failwith "MSDN says this can’t happen"
-
-        /// this predicate recognizes type patterns whose components are sealed types
-        let rec isSealedPattern (t : Type) =
-            if t.IsSealed then true
-            elif t.IsArray then isSealedPattern (t.GetElementType())
-            elif FSharpType.IsTuple t then Array.forall isSealedPattern (FSharpType.GetTupleElements t)
-            elif t.IsGenericType then
-                let gt = t.GetGenericTypeDefinition()
-                if List.exists ((=) gt) Primitives.fsGenerics then
-                    Array.forall isSealedPattern (t.GetGenericArguments())
-                else false
-            else false            
-
-        /// gather all types within an object graph
-        let gatherTypes (graph : obj) =
-            let gathered = new System.Collections.Generic.HashSet<Type> ()
-
-            let rec traverse : obj list -> _ =
-                function
-                | [] -> ()
-                | null :: rest -> traverse rest
-                | o :: rest ->
-                    let t = o.GetType()
-                    if gathered.Contains t then traverse rest
-                    else
-                        gathered.Add t |> ignore
-
-                        let nested =
-                            match t with
-                            | _ when t.IsValueType -> []
-                            // handle standard IEnumerable F# types
-                            | FsEnumeration (t,ga) ->
-                                let es = o :?> IEnumerable
-                                if Array.forall isSealedPattern ga then
-                                    let enum = es.GetEnumerator()
-                                    if enum.MoveNext() then [enum.Current] else []
-                                else [ for e in es -> e ]
-                            | _ ->
-                                let fields = t.GetFields(BindingFlags.Instance ||| BindingFlags.Public ||| BindingFlags.NonPublic)
-                                [ for fInfo in fields -> fInfo.GetValue o ]
-
-                        traverse (nested @ rest)
-
-            do traverse [graph]
-
-            Seq.toList gathered
-
 
         let rec isParentType(p : Type, c : Type) =
             if p = c then true
@@ -304,56 +250,3 @@
                 }
 
             traverse Priority.Bottom t |> String.build
-
-
-        type UnionCaseAttributeReader(uci : UnionCaseInfo) =
-            member __.GetAttrs<'T when 'T :> Attribute> (?includeDeclaringTypeAttrs) =
-                let includeDeclaringTypeAttrs = defaultArg includeDeclaringTypeAttrs false
-
-                let attrs = uci.GetCustomAttributes(typeof<'T>) |> Seq.map (fun o -> o :?> 'T)
-
-                if includeDeclaringTypeAttrs then
-                    let parentAttrs = uci.DeclaringType.GetCustomAttributes<'T>()
-                    Seq.append parentAttrs attrs |> Seq.toList
-                else
-                    Seq.toList attrs
-
-            member __.ContainsAttr<'T when 'T :> Attribute> (?includeDeclaringTypeAttrs) =
-                let includeDeclaringTypeAttrs = defaultArg includeDeclaringTypeAttrs false
-
-                if includeDeclaringTypeAttrs then
-                    uci.DeclaringType.GetCustomAttributes<'T> () |> Seq.isEmpty |> not
-                        || uci.GetCustomAttributes(typeof<'T>) |> Seq.isEmpty |> not
-                else
-                    uci.GetCustomAttributes(typeof<'T>) |> Seq.isEmpty |> not
-
-        // an assortment of GAC tools
-        // mono not supported
-
-        [<RequireQualifiedAccess>]
-        module GacTools =
-            open System.IO
-
-            let internal gac_paths = lazy(
-                let windir = Environment.GetEnvironmentVariable("windir")
-                let gacRoot = Path.Combine(windir, @"Microsoft.NET\assembly")
-                let paths = [ "GAC_32" ; "GAC_64" ; "GAC_MSIL" ] |> List.map (fun p -> Path.Combine(gacRoot, p))
-                paths |> List.filter Directory.Exists)
-
-            /// looks up gac by partial assembly name
-            let lookupPartial(name : string) =
-                if runsOnMono then raise <| new NotSupportedException("mono not supported... yet")
-
-                let lookup path =
-                    let path0 = Path.Combine(path, name)
-                    if Directory.Exists path0 then
-                        Directory.EnumerateFiles(path0, name + ".dll", SearchOption.AllDirectories)
-                    else Seq.empty
-
-                gac_paths.Value
-                |> Seq.collect lookup 
-                |> Seq.map Assembly.ReflectionOnlyLoadFrom 
-                |> Seq.toArray
-                
-
-    

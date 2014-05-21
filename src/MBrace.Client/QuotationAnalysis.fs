@@ -16,7 +16,6 @@ namespace Nessos.MBrace.Client
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.CloudUtils
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Utils.AssemblyCache
     open Nessos.MBrace.Utils.String
     open Nessos.MBrace.Utils.Reflection
     open Nessos.MBrace.Utils.Quotations
