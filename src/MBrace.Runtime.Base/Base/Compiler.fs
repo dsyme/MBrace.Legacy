@@ -21,7 +21,7 @@ namespace Nessos.MBrace.Runtime
     open Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions
     open System.CodeDom.Compiler
 
-    module internal Compiler = 
+    module Compiler = 
         
 //        exception CompilerException of string
         type CompilerException = Nessos.MBrace.CompilerException
