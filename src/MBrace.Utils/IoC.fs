@@ -2,104 +2,70 @@
 
     open Nessos.Thespian.ConcurrencyTools
 
-    type RegistrationMode = Singleton | Factory
-    type OverrideBehaviour = 
-            | Override
-            | DoNothing
-            | Fail
+    type DependencyContainer (id : string) =
 
-    type private DependencyContainer<'T> () =
-        static let container : Atom<Map<string option, unit -> 'T>> = Atom.atom Map.empty
+        // map : type qualified name * optional parameter -> (unit -> obj) factory
+        let container = Atom.atom Map.empty<string * string option, unit -> obj>
 
-        static let t = typeof<'T>
+        static let lift memoize (f : unit -> 'T) =
+            if memoize then
+                let v = lazy (f () :> obj)
+                fun () -> v.Value
+            else
+                fun () -> f () :> obj
 
-        static let morph mode (f : unit -> 'T) =
-            match mode with
-            | Singleton ->
-                let singleton = lazy(f ())
-                fun () -> singleton.Value
-            | Factory -> f
+        static member private GetKey<'T> (param : string option) = 
+            typeof<'T>.AssemblyQualifiedName, param
 
-        static member Register (mode, behaviour, param, factory : unit -> 'T) =
-            let failure =
-                container.Transact(fun instance ->
-                    match instance.ContainsKey param, behaviour with
-                    | true, Fail -> instance, true
-                    | true, DoNothing -> instance, false
-                    | _, _ -> instance.Add(param, morph mode factory), false
-                )
-            
-            if failure then
-                match param with
-                | None -> failwithf "IoC : type %s has already been registered" t.Name
-                | Some param -> failwithf "IoC : type %s with parameter \"%s\" has already been registered" t.Name param
+        member __.ContainerId = id
 
-        static member IsRegistered param = container.Value.ContainsKey param
+        member __.Register(factory : unit -> 'T, ?parameter : string, ?memoize:bool, ?overwrite:bool) =
+            let overwrite = defaultArg overwrite false
+            let memoize = defaultArg memoize true
 
-        static member TryResolve param = 
-            match container.Value.TryFind param with
+            let key = DependencyContainer.GetKey<'T> parameter
+
+            let success =
+                container.Transact(fun instance -> 
+                    if not overwrite && instance.ContainsKey key then
+                        instance, false
+                    else
+                        instance.Add(key, lift memoize factory), true)
+
+            if success then ()
+            else
+                match parameter with
+                | None -> failwithf "IoC: dependency of type '%s' has already been registered." typeof<'T>.Name
+                | Some p -> failwithf "IoC: dependency of type '%s' and parameter '%s' has already been registered." typeof<'T>.Name p
+
+        member __.IsRegistered<'T> ?parameter = container.Value.ContainsKey <| DependencyContainer.GetKey<'T> parameter
+                
+        member __.TryResolve<'T> ?parameter =
+            match container.Value.TryFind <| DependencyContainer.GetKey<'T> parameter with
             | None -> None
-            | Some f ->
-                try Some (f ())
-                with e -> 
-                    match param with
-                    | None -> failwithf "IoC : factory method for type %s has thrown an exception:\n %s" t.Name <| e.ToString()
-                    | Some param -> 
-                        failwithf "IoC : factory method for type %s with parameter \"%s\" has thrown an exception:\n %s" t.Name param <| e.ToString()
+            | Some f -> Some (f () :?> 'T)
 
-        static member Resolve param =
-            match DependencyContainer<'T>.TryResolve param with
-            | Some v -> v
+        member __.Resolve<'T> ?parameter =
+            match __.TryResolve<'T> (?parameter = parameter) with
+            | Some t -> t
             | None ->
-                match param with
-                | None -> failwithf "IoC : no instace of type %s has been registered" t.Name
-                | Some param -> failwithf "IoC : no instance of type %s with parameter \"%s\" has been registered" t.Name param
+                match parameter with
+                | None -> failwithf "IoC: no dependency of type '%s' has been registered." typeof<'T>.Name
+                | Some p -> failwithf "IoC: no depoendency of type '%s' and parameter '%s' has been registered." typeof<'T>.Name p
 
-
-    // we use the dependency container mechanism itself to store IoC settings
-    // TODO : remove
-    type private IoCSettings = 
-        { 
-            Mode : RegistrationMode 
-            Behaviour : OverrideBehaviour 
-        }
-            
 
     type IoC private () =
 
-        static let setConfiguration (conf : IoCSettings) =
-            DependencyContainer<_>.Register (Factory, Override, None, fun () -> conf)
-        static let getConfiguration () =
-            DependencyContainer<IoCSettings>.Resolve None
+        static let container = new DependencyContainer("Default IoC Container")
 
-        // set defaults
-        static do setConfiguration { Mode = Singleton ; Behaviour = Fail }
+        static member TryResolve<'T> ?parameter = container.TryResolve<'T>(?parameter = parameter)
 
-        static member TryResolve<'T> ?param = DependencyContainer<'T>.TryResolve param
+        static member Resolve<'T> ?parameter = container.Resolve<'T>(?parameter = parameter)
 
-        static member Resolve<'T> ?param = DependencyContainer<'T>.Resolve param
+        static member IsRegistered<'T> ?parameter = container.IsRegistered<'T>(?parameter = parameter)
 
-        static member IsRegistered<'T> ?param = DependencyContainer<'T>.IsRegistered param
+        static member Register<'T>(factory : unit -> 'T, ?parameter : string, ?overwrite : bool, ?memoize : bool) =
+            container.Register<'T>(factory, ?parameter = parameter, ?overwrite = overwrite, ?memoize = memoize)
 
-        static member SetOverrideBehaviour (behaviour : OverrideBehaviour) =
-            let conf = getConfiguration ()
-            if conf.Behaviour <> behaviour then
-                setConfiguration { conf with Behaviour = behaviour }
-
-        static member SetRegistrationMode (mode : RegistrationMode) =
-            let conf = getConfiguration ()
-            if conf.Mode <> mode then
-                setConfiguration { conf with Mode = mode }
-
-        static member Register<'T> (factory : unit -> 'T, ?parameter : string, ?mode : RegistrationMode, ?behaviour : OverrideBehaviour) =
-            let conf = getConfiguration ()
-            let mode = defaultArg mode conf.Mode
-            let behaviour = defaultArg behaviour conf.Behaviour
-            DependencyContainer<'T>.Register (mode, behaviour, parameter, factory)
-
-        static member RegisterValue<'T> (value : 'T, ?parameter : string, ?behaviour : OverrideBehaviour) =
-            let behaviour = match behaviour with None -> getConfiguration().Behaviour | Some b -> b
-            DependencyContainer<'T>.Register (Factory, behaviour, parameter, fun () -> value)
-
-        static member UpdateValue<'T> (value : 'T, ?parameter : string) =
-            DependencyContainer<'T>.Register (Factory, Override, parameter, fun () -> value)
+        static member RegisterValue<'T>(value : 'T, ?parameter : string, ?overwrite : bool) =
+            container.Register<'T>((fun () -> value), ?parameter = parameter, ?overwrite = overwrite, memoize = false)

@@ -1003,7 +1003,7 @@ module Service =
             TcpListenerPool.RegisterListener(endpoint, concurrentAccepts = 10)
 
         // pass primary connection port to processDomainManager
-        IoC.RegisterValue(Address.LoopBack |> AddressUtils.changePort primaryPort, "primaryAddress", behaviour = Override)
+        IoC.RegisterValue(Address.LoopBack |> AddressUtils.changePort primaryPort, "primaryAddress", overwrite = true)
 
         Log.logInfo "Available endpoints registered."
 

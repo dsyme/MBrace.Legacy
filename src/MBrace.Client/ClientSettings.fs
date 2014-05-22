@@ -59,16 +59,16 @@ namespace Nessos.MBrace.Client
             let coreConfig = CoreConfiguration.activate(storeInfo, localCacheDir)
                 
             // soonish
-            IoC.RegisterValue (coreConfig,      behaviour = Override)
-            IoC.RegisterValue (storeInfo,       behaviour = Override)
-            IoC.RegisterValue (storeInfo.Store, behaviour = Override)
+            IoC.RegisterValue (coreConfig,      overwrite = true)
+            IoC.RegisterValue (storeInfo,       overwrite = true)
+            IoC.RegisterValue (storeInfo.Store, overwrite = true)
 
             storeInfo, coreConfig
 
         let registerLogger (logger : ISystemLogger) =
             // register logger
             let logger = Logger.createConsoleLogger()
-            IoC.RegisterValue<ISystemLogger>(logger, behaviour = Override)
+            IoC.RegisterValue<ISystemLogger>(logger, overwrite = true)
             ThespianLogger.Register(logger)
             logger
 
