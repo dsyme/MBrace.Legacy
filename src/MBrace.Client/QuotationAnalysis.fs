@@ -33,7 +33,7 @@ namespace Nessos.MBrace.Client
             match w with
             | Warning [] -> "Warning"
             | Warning (h :: tl) ->
-                string {
+                stringB {
                     yield "Warning: "
                     yield h
                     yield "\n"
