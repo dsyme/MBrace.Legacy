@@ -182,7 +182,7 @@
                 |> strip @"`[0-9]*$" 
                 
             let rec traverse parent (t : Type) =
-                string {
+                stringB {
                     if t.IsGenericType then
                         match t with
                         | FsTuple args ->

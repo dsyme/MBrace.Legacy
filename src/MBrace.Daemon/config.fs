@@ -172,7 +172,7 @@
                             | NodeType.Idle -> ConsoleColor.Black, "Idle"
 
                         let title =
-                            string {
+                            stringB {
                                 yield "mbraced"
                              
                                 if debug then yield "[debug]"
@@ -226,11 +226,11 @@
             ports |> List.collect(function Singular p -> [p] | Range (l,u) -> [l..u])
 
         let printWorkerPorts (ports : WorkerPorts list) =
-            string {
+            stringB {
                 yield "Worker port pool: "
 
                 let printPort (p : WorkerPorts) =
-                    string {
+                    stringB {
                         match p with
                         | Singular p -> yield sprintf' "%d" p
                         | Range (l,u) -> yield sprintf' "[%d..%d]" l u

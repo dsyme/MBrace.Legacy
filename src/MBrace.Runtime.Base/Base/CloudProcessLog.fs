@@ -5,17 +5,8 @@
 
     open Nessos.MBrace
     open Nessos.MBrace.Core
+    open Nessos.MBrace.Utils.String
     open Nessos.MBrace.Runtime.Store
-
-    // TODO : move string to utils
-
-    module String =
-        let inline build (f : StringBuilder -> unit) =
-            let sb = new StringBuilder()
-            do f sb
-            sb.ToString()
-
-        let inline append (sb : StringBuilder) (x : string) = sb.Append x |> ignore
 
     type CloudLogEntry =
         {

@@ -12,11 +12,11 @@
 
     type StringBuilderM = StringBuilder -> unit
 
-    type StringExprBuilder () =
+    type StringBuilderBuilder () =
         member __.Zero () : StringBuilderM = ignore
         member __.Yield (txt : string) : StringBuilderM = fun b -> b.Append txt |> ignore
         member __.Yield (c : char) : StringBuilderM = fun b -> b.Append c |> ignore
-        member __.Yield (o : obj) : StringBuilderM = fun b -> b.Append o |> ignore
+//        member __.Yield (o : obj) : StringBuilderM = fun b -> b.Append o |> ignore
         member __.YieldFrom f = f : StringBuilderM
 
         member __.Combine(f : StringBuilderM, g : StringBuilderM) = fun b -> f b; g b
@@ -32,11 +32,11 @@
 
 
 
-    let string = new StringExprBuilder ()
+    let stringB = new StringBuilderBuilder ()
 
     [<RequireQualifiedAccess>]
     module String =
-        let build (f : StringBuilderM) = 
+        let inline build (f : StringBuilderM) = 
             let b = new StringBuilder ()
             do f b
             b.ToString()
@@ -44,6 +44,9 @@
         /// quick 'n' dirty indentation insertion
         let indentWith (prefix : string) (input : string) =
             (prefix + input.Replace("\n","\n" + prefix))
+
+        let inline append (sb : StringBuilder) (x : string) = 
+            sb.Append x |> ignore
 
 
 
@@ -179,7 +182,7 @@
         let repeat (times : int) (c : char) = String(c,times)
 
         let printHorizontalBorder (template : int list) =
-            string {
+            stringB {
                 yield '+'
 
                 // ------+
@@ -198,7 +201,7 @@
                 | Right -> whitespace - margin, margin
                 | Center -> let div = whitespace / 2 in div, whitespace - div
 
-            string { 
+            stringB { 
                 yield repeat lPadding ' '
                 yield field 
                 yield repeat rPadding ' '
@@ -206,7 +209,7 @@
             }
 
         let printRecord (record : UntypedRecord) =
-            string {
+            stringB {
                 if useBorders then yield '|'
 
                 for (label, value, align) in record do
@@ -220,7 +223,7 @@
             printRecord record'
 
         let printTitle =
-            string {
+            stringB {
                 if not useBorders then yield '\n'
 
                 match title with
@@ -239,7 +242,7 @@
                     if not useBorders then yield '\n'
             }
 
-        string {
+        stringB {
             if useBorders then
                 let horizontalBorder = 
                     header 
