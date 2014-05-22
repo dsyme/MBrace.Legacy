@@ -23,7 +23,7 @@
             member self.Dispose () = provider.Delete self
             member self.Read () = provider.Read self
 
-        override self.ToString() = sprintf' "%s - %s" container id
+        override self.ToString() = sprintf' "cloudfile:%s/%s" container id
 
         new (info : SerializationInfo, context : StreamingContext) = 
             let id = info.GetString("id")

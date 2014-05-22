@@ -19,6 +19,8 @@
         member __.Name = id
         member __.Container = container
 
+        override self.ToString() = sprintf' "mutablecloudref:%s/%s" container id
+
         interface IMutableCloudRef<'T> with
             member self.Name = id
             member self.Container = container
