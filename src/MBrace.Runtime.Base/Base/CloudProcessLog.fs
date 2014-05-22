@@ -11,7 +11,7 @@
     type CloudLogEntry =
         {
             Date : DateTime
-            TaskId : string
+            TaskId : TaskId
             Message : string
             TraceInfo : TraceInfo option
         }
@@ -61,8 +61,8 @@
             match storeLogger with Some s -> s.LogEntry e | None -> ()
 
         interface ICloudLogger with
-            member __.LogTraceInfo (msg, taskId, traceInfo) = logEntry <| CloudLogEntry.Trace taskId msg traceInfo
-            member __.LogUserInfo (msg, taskId) = logEntry <| CloudLogEntry.UserInfo taskId msg
+            member __.LogTraceInfo (msg, taskId, traceInfo) = logEntry <| CloudLogEntry.Trace msg taskId traceInfo
+            member __.LogUserInfo (msg, taskId) = logEntry <| CloudLogEntry.UserInfo msg taskId
 
         interface IDisposable with
             member __.Dispose () = storeLogger |> Option.iter (fun s -> (s :> IDisposable).Dispose())
@@ -73,8 +73,8 @@
         let logEntry (e : CloudLogEntry) = sysLog.LogEntry (e.ToSystemLogEntry processId)
 
         interface ICloudLogger with
-            member __.LogTraceInfo (msg, taskId, traceInfo) = logEntry <| CloudLogEntry.Trace taskId msg traceInfo
-            member __.LogUserInfo (msg, taskId) = logEntry <| CloudLogEntry.UserInfo taskId msg
+            member __.LogTraceInfo (msg, taskId, traceInfo) = logEntry <| CloudLogEntry.Trace msg taskId traceInfo
+            member __.LogUserInfo (msg, taskId) = logEntry <| CloudLogEntry.UserInfo msg taskId 
 
 
     type NullCloudProcessLogger () =

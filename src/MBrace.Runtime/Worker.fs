@@ -37,10 +37,15 @@ let workerBehavior (processId: ProcessId)
 
     let toCloudRef cloudExpr = config.CloudRefProvider.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr.GetType(), cloudExpr)
     let taskManager = state.TaskManager
-    let processTask (processId : ProcessId, taskId : TaskId, functions : FunctionInfo list, Dump (dump)) = 
+
+    let processTask (processId : ProcessId, taskId : TaskId, functions : FunctionInfo list, Dump (dump)) = async {
+        
+        // traverse stack to determine whether trace is enabled
         let isTraceEnabled stack = stack |> List.exists (fun cloudExpr' -> match cloudExpr' with DoEndTraceExpr -> true | _ -> false)
+
         // initialize the process logger for current task
         use procLogger = new RuntimeCloudProcessLogger(processId, logger, store)
+
         let taskConfig =
             {
                 ProcessId = processId
@@ -78,7 +83,9 @@ let workerBehavior (processId: ProcessId)
                     return (ValueExpr (Obj (CloudRefValue cloudRefValue, t))) :: rest
                 | _ -> return stack'
             }
-        processTask' dump 
+
+        return! processTask' dump
+    }
     
     let handleUnexpectedError e =
         let msgName = match msg with

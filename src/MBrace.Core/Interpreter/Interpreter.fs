@@ -339,32 +339,32 @@ namespace Nessos.MBrace.Core
             /// and local/shared-memory scenarios
             let deepClone (expr : CloudExpr) = cloner.Clone expr
             
-            let rec runLocal (traceEnabled : bool) (stack : CloudExpr list) = 
+            let rec eval (traceEnabled : bool) (stack : CloudExpr list) = 
                 async {
                     let! stack' = evaluateSequential primitiveConfig { taskConfig with TaskId = getCurrentTask () } traceEnabled stack
                     match stack' with 
                     | [ValueExpr value] -> return value
                     | GetWorkerCountExpr :: rest -> 
-                        return! runLocal traceEnabled <| ReturnExpr (Environment.ProcessorCount, typeof<int>) :: rest
+                        return! eval traceEnabled <| ReturnExpr (Environment.ProcessorCount, typeof<int>) :: rest
                     | LocalExpr cloudExpr :: rest -> 
-                        return! runLocal traceEnabled <| cloudExpr :: rest
+                        return! eval traceEnabled <| cloudExpr :: rest
                     | ParallelExpr (cloudExprs, elementType) :: rest ->
                         let cloudExprs = Array.map deepClone cloudExprs
-                        let! values = cloudExprs |> Array.map (fun cloudExpr -> runLocal traceEnabled [cloudExpr]) |> Async.Parallel
+                        let! values = cloudExprs |> Array.map (fun cloudExpr -> eval traceEnabled [cloudExpr]) |> Async.Parallel
                         match values |> Array.tryPick (fun value -> match value with Exc (ex, ctx) -> Some ex | _ -> None) with
                         | Some _ -> 
                             let results = values |> Array.map (fun value -> match value with Obj (value, _) -> ValueResult value | Exc (ex, ctx) -> ExceptionResult (ex, ctx) | _ -> raise <| new InvalidOperationException(sprintf "Invalid state %A" value))
                             let parallelException = new Nessos.MBrace.ParallelCloudException(taskConfig.ProcessId, results) :> exn
-                            return! runLocal traceEnabled <| ValueExpr (Exc (parallelException, None)) :: rest
+                            return! eval traceEnabled <| ValueExpr (Exc (parallelException, None)) :: rest
                         | None -> 
                             let arrayOfResults = Array.CreateInstance(elementType, values.Length)
                             Array.Copy(values |> Array.map (fun value -> match value with Obj (ObjValue value, t) -> value | _ -> throwInvalidState value), arrayOfResults, values.Length)
-                            return! runLocal traceEnabled <| ValueExpr (Obj (ObjValue arrayOfResults, elementType)) :: rest
+                            return! eval traceEnabled <| ValueExpr (Obj (ObjValue arrayOfResults, elementType)) :: rest
 
                     | ChoiceExpr (choiceExprs, elementType) :: rest ->
                         let cloudExprs = Array.map deepClone choiceExprs
                         let evalChoiceExpr choiceExpr = async {
-                            let! result = runLocal traceEnabled [choiceExpr]
+                            let! result = eval traceEnabled [choiceExpr]
                             match result with
                             | Obj (ObjValue value, t) ->
                                 if value = null then // value is option type and we use the fact that None is represented as null
@@ -377,13 +377,14 @@ namespace Nessos.MBrace.Core
                         let! result = choiceExprs |> Array.map evalChoiceExpr |> Async.Choice
                         match result with
                         | Some (value) ->
-                            return! runLocal traceEnabled <| ValueExpr (value) :: rest
+                            return! eval traceEnabled <| ValueExpr (value) :: rest
                         | None -> 
-                            return! runLocal traceEnabled <| ValueExpr (Obj (ObjValue None, elementType)) :: rest
+                            return! eval traceEnabled <| ValueExpr (Obj (ObjValue None, elementType)) :: rest
+
                     | _ -> return raise <| new InvalidOperationException(sprintf "Invalid state %A" stack)
                 }
 
-            runLocal traceEnabled stack
+            eval traceEnabled stack
 
         
 
