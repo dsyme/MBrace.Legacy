@@ -80,7 +80,7 @@ namespace Nessos.MBrace.Runtime.Store
 
         static let defaultStore = ref None
         static let storeIndex = Atom.atom Map.empty<StoreId, StoreInfo>
-        static let coreConfigIndex = Atom.atom Map.empty<StoreId, CoreConfiguration>
+        static let coreConfigIndex = Atom.atom Map.empty<StoreId, PrimitiveConfiguration>
 
         static let hashAlgorithm = SHA256Managed.Create() :> HashAlgorithm
         static let computeHash (txt : string) = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes txt)
@@ -101,7 +101,7 @@ namespace Nessos.MBrace.Runtime.Store
                 storeInfo
 
 
-        static member RegisterCoreConfiguration (id : StoreId, cconfig : CoreConfiguration) =
+        static member RegisterCoreConfiguration (id : StoreId, cconfig : PrimitiveConfiguration) =
             coreConfigIndex.Swap(fun m -> m.Add(id, cconfig))
 
         static member TryGetCoreConfiguration (id : StoreId) =

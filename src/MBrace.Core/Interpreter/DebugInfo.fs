@@ -12,7 +12,7 @@
     open Microsoft.FSharp.Quotations.ExprShape
     open Microsoft.FSharp.Quotations.Patterns
     
-    module internal DumpExtractors =
+    module internal DebugInfo =
 
         let tryExtractInfo (typeName : string) = 
             match typeName with
@@ -37,7 +37,7 @@
                     match tryExtractInfo <| objF.GetType().Name with
                     | Some (funcName, line) -> (funcName, line)
                     | None -> ("", "")
-                let funcInfoOption = functions |> Seq.tryFind (fun funInfo -> funInfo.MethodInfo.Name = funcName)
+                let funcInfoOption = functions |> List.tryFind (fun funInfo -> funInfo.MethodInfo.Name = funcName)
                 // construct environment
                 let vars = objF.GetType().GetFields() 
                             |> Array.map (fun fieldInfo -> (fieldInfo.Name, fieldInfo.GetValue(objF)))
@@ -62,7 +62,7 @@
                 { File = file; Start = (int line, 0); End = (0, 0); CodeDump = ""; FunctionName = funcName; Vars = vars' }
 
 
-        let dumpTraceInfo (functions : FunctionInfo list) (logger : ICloudLogger) stack = 
+        let dumpTraceInfo (config : TaskConfiguration) stack = 
             let extractScopeInfo stack =
                 stack 
                 |> List.tryPick (fun cloudExpr -> 
@@ -74,7 +74,7 @@
             let hasNoTraceInfo (objF : obj) = 
                 match objF.GetType().Name |> tryExtractInfo with
                 | Some (funcName, _) -> 
-                    match functions |> List.tryFind (fun functionInfo -> functionInfo.MethodInfo.Name = funcName) with
+                    match config.Functions |> List.tryFind (fun functionInfo -> functionInfo.MethodInfo.Name = funcName) with
                     | Some functionInfo -> 
                         let attribute = functionInfo.MethodInfo.GetCustomAttribute(typeof<NoTraceInfoAttribute>)
                         if attribute = null then
@@ -89,23 +89,18 @@
                     // check for NoTraceInfoAttribute
                     if not <| hasNoTraceInfo objF then 
                         // continue
-                        let dumpContext = extractInfo functions value objF
+                        let dumpContext = extractInfo config.Functions value objF
                         let opt f x = if f x then None else Some x
                         let traceInfo = { 
                                 File = opt String.IsNullOrEmpty dumpContext.File
                                 Function = opt String.IsNullOrEmpty dumpContext.FunctionName
                                 Line = Some <| (fst dumpContext.Start)
-//                                DateTime = DateTime.Now
                                 Environment = dumpContext.Vars
                                                 |> Seq.map (fun (a,b) -> (a, sprintf "%A" b))
                                                 |> Map.ofSeq
-//                                ProcessId = processId
-//                                TaskId = taskId
-//                                Id = logIdCounter.Next()
                             }
 
-                        logger.LogTraceInfo (msg, traceInfo)
-//                        config.CloudLogger.LogTraceInfo(processId, entry)
+                        config.Logger.LogTraceInfo (msg, config.TaskId, traceInfo)
                     else ()
                 | None -> ()
 

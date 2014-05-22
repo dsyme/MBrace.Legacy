@@ -20,9 +20,10 @@ type ResultType = Type
 type ThunkId = string
 type ThunksIdsStack = ThunkId list
 type JobId = System.Guid
+type Dump = Dump of CloudExpr list
 type ProcessBody = ProcessBody of (ResultType * ThunksIdsStack * ICloudRef<FunctionInfo list> * Dump)
 type ExprImage = byte[] //The binary image of an Expr
-type TaskId = Guid
+type TaskId = Nessos.MBrace.Core.TaskId
 type TaskHeader = ProcessId * TaskId
 
 type TaskResult = TaskSuccess of ProcessBody | TaskFailure of exn

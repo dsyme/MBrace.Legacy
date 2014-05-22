@@ -16,8 +16,8 @@
             TraceInfo : TraceInfo option
         }
     with
-        static member UserInfo taskId msg = { Date = DateTime.Now ; TaskId = taskId ; Message = msg ; TraceInfo = None }
-        static member Trace taskId msg traceInfo = { Date = DateTime.Now ; TaskId = taskId ; Message = msg ; TraceInfo = Some traceInfo }
+        static member UserInfo msg taskId = { Date = DateTime.Now ; TaskId = taskId ; Message = msg ; TraceInfo = None }
+        static member Trace msg taskId traceInfo = { Date = DateTime.Now ; TaskId = taskId ; Message = msg ; TraceInfo = Some traceInfo }
 
         member e.ToSystemLogEntry (processId : ProcessId) =
             let message =
@@ -45,40 +45,39 @@
 
     /// Store interface for cloud process logs
 
-    type StoreCloudLogger(store : ICloudStore, processId : ProcessId, taskId : string) =
-        inherit LogStore<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = sprintf "task%s" taskId)
+    type StoreCloudLogger(store : ICloudStore, processId : ProcessId) =
+        inherit LogStore<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = "worker")
 
         static member GetReader(store : ICloudStore, processId : ProcessId) =
-            new LogStoreReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId )
+            new LogStoreReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId)
 
     /// The runtime ICloudLogger implementation
 
-    type RuntimeCloudProcessLogger(processId : ProcessId, taskId : string, ?sysLog : ISystemLogger, ?store : ICloudStore) =
-        let storeLogger = store |> Option.map (fun s -> new StoreCloudLogger(s, processId, taskId))
+    type RuntimeCloudProcessLogger(processId : ProcessId, ?sysLog : ISystemLogger, ?store : ICloudStore) =
+        let storeLogger = store |> Option.map (fun s -> new StoreCloudLogger(s, processId))
 
         let logEntry (e : CloudLogEntry) =
             match sysLog with Some s -> s.LogEntry (e.ToSystemLogEntry processId) | None -> ()
             match storeLogger with Some s -> s.LogEntry e | None -> ()
 
         interface ICloudLogger with
-            member __.LogTraceInfo (msg, traceInfo) = logEntry <| CloudLogEntry.Trace taskId msg traceInfo
-            member __.LogUserInfo msg = logEntry <| CloudLogEntry.UserInfo taskId msg
+            member __.LogTraceInfo (msg, taskId, traceInfo) = logEntry <| CloudLogEntry.Trace taskId msg traceInfo
+            member __.LogUserInfo (msg, taskId) = logEntry <| CloudLogEntry.UserInfo taskId msg
 
         interface IDisposable with
             member __.Dispose () = storeLogger |> Option.iter (fun s -> (s :> IDisposable).Dispose())
 
 
     type InMemoryCloudProcessLogger(sysLog : ISystemLogger, processId : ProcessId) =
-        
-        let taskId() = string <| System.Threading.Thread.CurrentThread.ManagedThreadId
+
         let logEntry (e : CloudLogEntry) = sysLog.LogEntry (e.ToSystemLogEntry processId)
 
         interface ICloudLogger with
-            member __.LogTraceInfo (msg, traceInfo) = logEntry <| CloudLogEntry.Trace (taskId()) msg traceInfo
-            member __.LogUserInfo msg = logEntry <| CloudLogEntry.UserInfo (taskId()) msg
+            member __.LogTraceInfo (msg, taskId, traceInfo) = logEntry <| CloudLogEntry.Trace taskId msg traceInfo
+            member __.LogUserInfo (msg, taskId) = logEntry <| CloudLogEntry.UserInfo taskId msg
 
 
     type NullCloudProcessLogger () =
         interface ICloudLogger with
-            member __.LogTraceInfo (_,_) = ()
-            member __.LogUserInfo _ = ()
+            member __.LogTraceInfo (_,_,_) = ()
+            member __.LogUserInfo (_,_) = ()

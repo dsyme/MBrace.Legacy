@@ -4,6 +4,7 @@ open Microsoft.FSharp.Quotations
 
 open Nessos.MBrace
 open Nessos.MBrace.Core
+open Nessos.MBrace.Runtime
 open Nessos.MBrace.Runtime.Logging
 
 [<AutoOpen>]
@@ -27,20 +28,26 @@ module ClientExtensions =
             runtime.CreateProcess expr
 
         /// Runs the given computation locally without the need of a runtime.
-        static member RunLocalAsync (computation : Cloud<'T>, ?showLogs) : Async<'T> =
+        static member RunLocalAsync (computation : Cloud<'T>, ?showLogs) : Async<'T> = async {
             // force vagrant compilation if dependencies require it ;
             // this is since the local interpreter uses FsPickler internally
             // for deep object cloning
             MBraceSettings.Vagrant.ComputeObjectDependencies(computation, permitCompilation = true) |> ignore
 
+            let processId = 0
+
             let logger =
                 if defaultArg showLogs false then
                     let console = Logger.createConsoleLogger()
-                    new InMemoryCloudProcessLogger(console, 0) :> ICloudLogger
+                    new InMemoryCloudProcessLogger(console, processId) :> ICloudLogger
                 else
                     new NullCloudProcessLogger() :> ICloudLogger
 
-            Interpreter.evaluateLocalWrapped MBraceSettings.DefaultCoreConfiguration logger false computation
+            return! 
+                Interpreter.evaluateLocalWrapped 
+                    MBraceSettings.DefaultPrimitiveConfiguration Serialization.DeepClone 
+                    logger processId computation
+        }
 
         /// Runs the given computation locally without the need of a runtime.
         static member RunLocal (computation : Cloud<'T>, ?showLogs) : 'T = 

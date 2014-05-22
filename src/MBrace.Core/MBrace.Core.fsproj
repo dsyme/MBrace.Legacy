@@ -60,9 +60,9 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Core\Primitives.fs" />
+    <Compile Include="Core\PrimitiveProviders.fs" />
     <Compile Include="Core\CloudExpr.fs" />
     <Compile Include="Core\Exception.fs" />
-    <Compile Include="Core\PrimitiveProviders.fs" />
     <Compile Include="Cloud\Cloud.fsi" />
     <Compile Include="Cloud\Cloud.fs" />
     <Compile Include="Cloud\CloudRef.fsi" />
@@ -76,8 +76,7 @@
     <Compile Include="Cloud\CloudExtensions.fs" />
     <Compile Include="Interpreter\Utils.fs" />
     <Compile Include="Interpreter\Types.fs" />
-    <Compile Include="Interpreter\Utils.fs" />
-    <Compile Include="Interpreter\Dump.fs" />
+    <Compile Include="Interpreter\DebugInfo.fs" />
     <Compile Include="Interpreter\Interpreter.fs" />
   </ItemGroup>
   <ItemGroup>

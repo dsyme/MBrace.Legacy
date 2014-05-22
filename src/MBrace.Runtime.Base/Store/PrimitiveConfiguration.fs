@@ -2,13 +2,13 @@
 
     
     [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    module CoreConfiguration =
+    module PrimitiveConfiguration =
     
         open Nessos.MBrace.Core
         open Nessos.MBrace.Utils
         open Nessos.MBrace.Runtime
 
-        let activate (storeInfo : StoreInfo, cacheStoreEndpoint) : CoreConfiguration =
+        let activate (storeInfo : StoreInfo, cacheStoreEndpoint) : PrimitiveConfiguration =
             match StoreRegistry.TryGetCoreConfiguration storeInfo.Id with
             | Some config -> config
             | None ->
@@ -25,19 +25,12 @@
                 let mrefStore  = new MutableCloudRefProvider(storeInfo)       :> IMutableCloudRefProvider
                 let cfileStore = new CloudFileProvider(storeInfo, localCache) :> ICloudFileProvider
 
-                let cloner = 
-                    {
-                        new IObjectCloner with
-                            member __.Clone(t : 'T) = Serialization.Clone t
-                    }
-
-                let coreConfig : CoreConfiguration =
+                let coreConfig : PrimitiveConfiguration =
                     {
                         CloudRefProvider        = crefStore
                         CloudSeqProvider        = cseqStore
                         CloudFileProvider       = cfileStore
                         MutableCloudRefProvider = mrefStore
-                        Cloner                  = cloner
                     }
 
                 StoreRegistry.RegisterCoreConfiguration(storeInfo.Id, coreConfig)

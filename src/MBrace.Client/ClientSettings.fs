@@ -37,7 +37,7 @@ namespace Nessos.MBrace.Client
                 Vagrant : VagrantServer
 
                 StoreInfo : StoreInfo
-                CoreConfiguration : CoreConfiguration
+                PrimitiveConfiguration : PrimitiveConfiguration
             }
 
         and AppConfigParameter =
@@ -56,7 +56,7 @@ namespace Nessos.MBrace.Client
 
         let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
             let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-            let coreConfig = CoreConfiguration.activate(storeInfo, localCacheDir)
+            let coreConfig = PrimitiveConfiguration.activate(storeInfo, localCacheDir)
                 
             // soonish
             IoC.RegisterValue (coreConfig,      overwrite = true)
@@ -145,7 +145,7 @@ namespace Nessos.MBrace.Client
                 Vagrant = vagrant
 
                 StoreInfo = storeInfo
-                CoreConfiguration = coreConfig
+                PrimitiveConfiguration = coreConfig
             }
 
 
@@ -172,7 +172,7 @@ namespace Nessos.MBrace.Client
             with get () = config.Value.EnableClientSideStaticChecking
             and set p = config.Swap(fun c -> { c with EnableClientSideStaticChecking = p })
 
-        static member internal DefaultCoreConfiguration = config.Value.CoreConfiguration
+        static member internal DefaultPrimitiveConfiguration = config.Value.PrimitiveConfiguration
 
         static member Logger
             with get () = config.Value.Logger
@@ -185,7 +185,7 @@ namespace Nessos.MBrace.Client
                 // store activation has side-effects ; use lock instead of swap
                 lock config (fun () ->
                     let storeInfo, coreConfig = activateDefaultStore config.Value.LocalCacheDirectory p
-                    config.Swap(fun c -> { c with StoreInfo = storeInfo ; CoreConfiguration = coreConfig })
+                    config.Swap(fun c -> { c with StoreInfo = storeInfo ; PrimitiveConfiguration = coreConfig })
                 )
 
         static member WorkingDirectory = config.Value.WorkingDirectory

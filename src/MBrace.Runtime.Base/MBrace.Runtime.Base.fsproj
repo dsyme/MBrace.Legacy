@@ -71,7 +71,7 @@
     <Compile Include="Store\MutableCloudRef.fs" />
     <Compile Include="Store\CloudSeq.fs" />
     <Compile Include="Store\CloudFile.fs" />
-    <Compile Include="Store\CoreConfiguration.fs" />
+    <Compile Include="Store\PrimitiveConfiguration.fs" />
     <Compile Include="Base\SystemLog.fs" />
     <Compile Include="Base\CloudProcessLog.fs" />
     <Compile Include="Base\RuntimeAPI.fs" />

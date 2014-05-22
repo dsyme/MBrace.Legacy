@@ -197,9 +197,9 @@
                 let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
                 // dependency injection: TODO fix
                 let cacheLocation = IoC.Resolve<string>("cacheStoreEndpoint")
-                let coreConfig = CoreConfiguration.activate(storeInfo, cacheLocation)
+                let coreConfig = PrimitiveConfiguration.activate(storeInfo, cacheLocation)
                 
-                IoC.Register<CoreConfiguration>(fun () -> coreConfig)
+                IoC.Register<PrimitiveConfiguration>(fun () -> coreConfig)
                 IoC.RegisterValue(provider)
 
                 storeInfo.Store.Name

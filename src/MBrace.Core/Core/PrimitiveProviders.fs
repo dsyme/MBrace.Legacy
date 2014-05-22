@@ -62,3 +62,12 @@
 
         /// Get all cloud files that exist in specified container
         abstract GetContainedFiles : container:string -> Async<ICloudFile []>
+
+
+    type PrimitiveConfiguration =
+        {
+            CloudRefProvider        : ICloudRefProvider
+            MutableCloudRefProvider : IMutableCloudRefProvider
+            CloudSeqProvider        : ICloudSeqProvider
+            CloudFileProvider       : ICloudFileProvider
+        }

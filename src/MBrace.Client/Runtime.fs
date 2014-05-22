@@ -159,7 +159,7 @@ namespace Nessos.MBrace.Client
         let configuration = 
             CacheAtom.Create(fun () -> postWithReply GetAllNodes |> NodeInfo.Create)
 
-        let coreConfig = IoC.Resolve<CoreConfiguration>()
+        let coreConfig = IoC.Resolve<PrimitiveConfiguration>()
 
         member internal __.ActorRef = runtime
         member internal __.PostWithReply m = postWithReply m

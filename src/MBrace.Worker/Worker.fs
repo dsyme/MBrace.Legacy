@@ -105,8 +105,8 @@
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
                 
-                let coreConfig = CoreConfiguration.activate(storeInfo, cacheStoreEndpoint)
-                IoC.RegisterValue<CoreConfiguration>(coreConfig)
+                let coreConfig = PrimitiveConfiguration.activate(storeInfo, cacheStoreEndpoint)
+                IoC.RegisterValue<PrimitiveConfiguration>(coreConfig)
                 IoC.RegisterValue<ICloudStore>(storeInfo.Store)
                 IoC.RegisterValue<StoreInfo>(storeInfo)
 

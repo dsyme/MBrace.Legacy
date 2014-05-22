@@ -7,7 +7,7 @@
 
     open Nessos.Thespian.Serialization
 
-    open Nessos.MBrace.Utils
+    open Nessos.MBrace.Core
 
     type Serialization private () =
 
@@ -36,9 +36,12 @@
         static member Serialize (x : 'T) = Serialization.DefaultPickler.Pickle<obj>(x)
         static member Deserialize<'T> (data : byte []) = Serialization.DefaultPickler.UnPickle<obj>(data) :?> 'T
 
-        static member Clone(x : 'T) =
-            let pickler = Serialization.DefaultPickler
-            use mem = new MemoryStream()
-            pickler.Serialize(mem, x)
-            mem.Position <- 0L
-            pickler.Deserialize<'T>(mem)
+        static member DeepClone =
+            {
+                new IObjectCloner with
+                    member __.Clone (t : 'T) =
+                        use mem = new MemoryStream()
+                        Serialization.DefaultPickler.Serialize(mem, t)
+                        mem.Position <- 0L
+                        Serialization.DefaultPickler.Deserialize<'T>(mem)
+            }

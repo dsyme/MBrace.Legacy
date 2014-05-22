@@ -40,6 +40,15 @@
                 with :? TargetInvocationException as e when e.InnerException <> null ->
                     reraise' e.InnerException
 
+        let (|TargetInvocationException|_|) (e : exn) =
+            let rec aux depth (e : exn) =
+                match e with
+                | :? TargetInvocationException -> aux (depth + 1) e.InnerException
+                | e when depth = 0 -> None
+                | e -> Some e
+
+            aux 0 e
+
         type Async with
             static member Raise(e : exn) = Async.FromContinuations(fun (_,ec,_) -> ec e)
             static member Choice<'T>(tasks : Async<'T option> seq) : Async<'T option> =
