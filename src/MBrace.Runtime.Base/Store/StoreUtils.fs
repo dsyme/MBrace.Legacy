@@ -1,5 +1,6 @@
 ﻿namespace Nessos.MBrace.Runtime.Store
 
+    open Nessos.Thespian.ConcurrencyTools
 
     open Nessos.MBrace
 
@@ -10,12 +11,11 @@
                 try 
                     return! block
                 with 
-                | :? NonExistentObjectStoreException as e ->
-                    return! Async.FromContinuations(fun (_,ec,_) -> ec e) 
+                | :? NonExistentObjectStoreException
                 | :? MBraceException as e ->
-                    return! Async.FromContinuations(fun (_,ec,_) -> ec e) 
+                    return! Async.Raise e
                 | exn ->
-                    return! Async.FromContinuations(fun (_,ec,_) -> ec <| StoreException(message, exn)) 
+                    return! Async.Raise <| StoreException(message, exn)
             }
 
         let inline onDeleteError (obj : 'U)  = 
