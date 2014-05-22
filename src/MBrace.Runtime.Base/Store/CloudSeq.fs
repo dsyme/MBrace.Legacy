@@ -13,6 +13,7 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Store.Utils
 
     type internal CloudSeqInfo = { Size : int64; Count : int; Type : Type }
 
@@ -124,6 +125,7 @@
 
         member __.GetCloudSeqInfo<'T> (cseq : CloudSeq<'T>) : Async<CloudSeqInfo> =
             getCloudSeqInfo cseq.Container cseq.Name
+            |> onDereferenceError cseq
 
         member __.GetEnumerator<'T> (cseq : CloudSeq<'T>) : Async<IEnumerator<'T>> =
             async {
@@ -138,23 +140,25 @@
                     return raise <| MBraceException(msg)
 
                 return Serialization.DefaultPickler.DeserializeSequence<'T>(stream, info.Count)
-            }
+            } |> onDereferenceError cseq
 
         member __.Delete<'T> (cseq : CloudSeq<'T>) : Async<unit> = 
             store.Delete(cseq.Container, postfix cseq.Name)
+            |> onDeleteError cseq
 
         interface ICloudSeqProvider with
 
-            member this.Create<'T>(container, id, values : seq<'T>) = async {
-                let serializeTo stream = async {
-                    let length = Serialization.DefaultPickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
-                    return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
-                }
-                do! cacheStore.Create(container, postfix id, serializeTo, false)
-                do! cacheStore.Commit(container, postfix id, false)
+            member this.Create<'T>(container, id, values : seq<'T>) = 
+                async {
+                    let serializeTo stream = async {
+                        let length = Serialization.DefaultPickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
+                        return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
+                    }
+                    do! cacheStore.Create(container, postfix id, serializeTo, false)
+                    do! cacheStore.Commit(container, postfix id, false)
 
-                return CloudSeq<'T>(id, container, this) :> ICloudSeq<'T>
-            }
+                    return CloudSeq<'T>(id, container, this) :> ICloudSeq<'T>
+                } |> onCreateError container id
 
             member this.Create (container : string, id : string, ty : Type, values : IEnumerable) : Async<ICloudSeq> =
                 async {
@@ -166,12 +170,13 @@
                     do! cacheStore.Commit(container, postfix id, false)
 
                     return defineUntyped(ty, container, id)
-                }
+                } |> onCreateError container id
 
-            member this.GetExisting (container, id) = async {
-                let! cseqInfo = getCloudSeqInfo container id
-                return defineUntyped(cseqInfo.Type, container, id)
-            }
+            member this.GetExisting (container, id) = 
+                async {
+                    let! cseqInfo = getCloudSeqInfo container id
+                    return defineUntyped(cseqInfo.Type, container, id)
+                } |> onGetError container id
 
             member this.GetContainedSeqs(container : string) : Async<ICloudSeq []> =
                 async {
@@ -190,4 +195,4 @@
                         cseqIds 
                         |> Array.map (fun id -> (this :> ICloudSeqProvider).GetExisting(container, id))
                         |> Async.Parallel
-                }
+                } |> onListError container

@@ -4,6 +4,11 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
+
+MBrace.RunLocal <| CloudSeq.TryGet("foo")
+
+
+
 [<Cloud>]
 let test = cloud {
     let! count = Cloud.GetWorkerCount()

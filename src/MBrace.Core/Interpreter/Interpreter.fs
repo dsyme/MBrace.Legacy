@@ -93,7 +93,7 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 result ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | GetRefByNameExpr (container, id, t) :: rest ->
                         let! cref = Async.Catch <| config.CloudRefProvider.GetExisting(container, id)
@@ -104,14 +104,14 @@ namespace Nessos.MBrace.Core
                             else
                                 return! run traceEnabled <| ValueExpr (Obj (ObjValue cref, cref.Type)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot find CloudRef with Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     | GetRefsByNameExpr (container) :: rest ->
                         let! exec = Async.Catch <| config.CloudRefProvider.GetContainedRefs container
                         match exec with
                         | Choice1Of2 refs ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<ICloudRef []>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | NewMutableRefByNameExpr (container, id, value, t) :: rest ->
                         let! exec = config.MutableCloudRefProvider.Create(container, id, t, value) |> Async.Catch
@@ -119,21 +119,21 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 result ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     | ReadMutableRefExpr(mref, ty) :: rest ->
                         let! exec = Async.Catch <| mref.ReadValue()
                         match exec with
                         | Choice1Of2 result ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue result, mref.Type)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot locate Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     | SetMutableRefExpr(mref, value) :: rest ->
                         let! exec = Async.Catch <| mref.TryUpdate value
                         match exec with
                         | Choice1Of2 result -> 
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue result, typeof<bool>)) :: rest
                         | Choice2Of2 ex -> 
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot update Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | ForceSetMutableRefExpr(mref, value) :: rest ->
                         let! exec = Async.Catch <| mref.ForceUpdate value
@@ -141,7 +141,7 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 result -> 
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue result, typeof<bool>)) :: rest
                         | Choice2Of2 ex -> 
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot update Container: %s, Name: %s" mref.Container mref.Name, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     
                     | GetMutableRefByNameExpr (container, id, t) :: rest ->
                         let! mref = Async.Catch <| config.MutableCloudRefProvider.GetExisting(container, id)
@@ -152,14 +152,14 @@ namespace Nessos.MBrace.Core
                             else 
                                 return! run traceEnabled <| ValueExpr (Obj (ObjValue mref, mref.Type)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot read MutableCloudref with Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     | GetMutableRefsByNameExpr (container) :: rest ->
                         let! exec = Async.Catch <| config.MutableCloudRefProvider.GetContainedRefs(container)
                         match exec with
                         | Choice1Of2 refs ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<IMutableCloudRef []>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     
                     | FreeMutableRefExpr(mref) :: rest ->
                         let! exec = Async.Catch <| mref.Dispose()
@@ -167,7 +167,7 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 () ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot delete MutableCloudRef %A" mref, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | NewCloudFile(container, id, serializer) :: rest ->
                         let! exec = Async.Catch <| config.CloudFileProvider.Create(container, id, serializer)
@@ -175,21 +175,21 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 file ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot create CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     | GetCloudFile(container, id) :: rest ->
                         let! exec = Async.Catch <| config.CloudFileProvider.GetExisting(container, id)
                         match exec with
                         | Choice1Of2 file ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot get CloudFile, Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     | GetCloudFiles(container) :: rest ->
                         let! exec = Async.Catch <| config.CloudFileProvider.GetContainedFiles container
                         match exec with
                         | Choice1Of2 files ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue files, typeof<ICloudFile []>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot get CloudFiles, Container: %s" container, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     
                     | ReadCloudFile(file, deserialize, t) :: rest ->
                         let! exec = Async.Catch <| async { let! stream = file.Read() in return! deserialize stream }
@@ -197,7 +197,7 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 o ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue o, t)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled  <| ValueExpr (Exc (new StoreException(sprintf "Cannot read CloudFile: %A" file, ex), None)) :: rest                        
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | LogExpr msg :: rest ->
                         logger.LogUserInfo msg
@@ -211,7 +211,7 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 cloudSeq ->
                             return! run traceEnabled <| (ValueExpr (Obj (ObjValue cloudSeq, typeof<ICloudSeq>))) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot create Container: %s, Name: %s" container id, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     | GetCloudSeqByNameExpr (container, id, t) :: rest ->
                         let! cseq = Async.Catch <| config.CloudSeqProvider.GetExisting(container, id)
                         match cseq with
@@ -227,7 +227,7 @@ namespace Nessos.MBrace.Core
                         | Choice1Of2 seqs ->
                             return! run traceEnabled <| ValueExpr (Obj (ObjValue seqs, typeof<ICloudSeq []>)) :: rest
                         | Choice2Of2 ex ->
-                            return! run traceEnabled <| ValueExpr (Exc (new StoreException(sprintf "Cannot access Container: %s" container, ex), None)) :: rest
+                            return! run traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     // DO Expr
                     // Monadic Bind
                     | ValueExpr (Obj (ObjValue value, _)) :: DoBindExpr (f, objF) :: rest -> 

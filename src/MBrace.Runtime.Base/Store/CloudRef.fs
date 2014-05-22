@@ -11,6 +11,7 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Core
+    open Nessos.MBrace.Runtime.Store.Utils
 
     type CloudRef<'T> internal (id : string, container : string, provider : CloudRefProvider) as self =
 
@@ -120,31 +121,27 @@
 
                 return! store.Delete(cloudRef.Container, id)
             }
+            |> onDeleteError cloudRef
 
         member self.Dereference<'T> (cref : CloudRef<'T>) : Async<'T> = 
             async {
                 let cacheId = sprintf' "%s/%s" cref.Container cref.Name
 
-                try
-                    // get value
-                    let! cacheResult = cache.TryFind cacheId
-                    match cacheResult with
-                    | Some result ->
-                        let _,value = result :?> Type * obj
-                        return value :?> 'T
-                    | None ->
-                        let! ty, value = read cref.Container <| postfix cref.Name
-                        if typeof<'T> <> ty then 
-                            let msg = sprintf' "CloudRef type mismatch. Internal type %s, expected %s." ty.FullName typeof<'T>.FullName
-                            return! Async.Raise <| StoreException(msg)
-                        // update cache
-                        cache.Set(cacheId, (ty, value))
-                        return value :?> 'T
-
-                with 
-                | :? StoreException as e -> return! Async.Raise e
-                | e -> return! Async.Raise <| new StoreException(sprintf "error reading container '%s'." cacheId, e)
-            }
+                // get value
+                let! cacheResult = cache.TryFind cacheId
+                match cacheResult with
+                | Some result ->
+                    let _,value = result :?> Type * obj
+                    return value :?> 'T
+                | None ->
+                    let! ty, value = read cref.Container <| postfix cref.Name
+                    if typeof<'T> <> ty then 
+                        let msg = sprintf' "CloudRef type mismatch. Internal type %s, expected %s." ty.FullName typeof<'T>.FullName
+                        return! Async.Raise <| StoreException(msg)
+                    // update cache
+                    cache.Set(cacheId, (ty, value))
+                    return value :?> 'T
+            } |> onDereferenceError cref
 
         interface ICloudRefProvider with
 
@@ -152,8 +149,8 @@
                 async {
                     do! store.CreateImmutable(container, postfix id, serialize value typeof<'T>, false)
 
-                    return new CloudRef<'T>(id, container, self) :> _
-                }
+                    return new CloudRef<'T>(id, container, self) :> ICloudRef<_>
+                } |> onCreateError container id
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 
                 async {
@@ -161,13 +158,13 @@
 
                     // construct & return
                     return defineUntyped(t, container, id)
-                }
+                } |> onCreateError container id
 
             member self.GetExisting(container, id) : Async<ICloudRef> =
                 async {
                     let! t = readType container (postfix id)
                     return defineUntyped(t, container, id)
-                }
+                } |> onGetError container id
 
             member self.GetContainedRefs(container : string) : Async<ICloudRef []> =
                 async {
@@ -177,4 +174,4 @@
                         ids 
                         |> Array.map (fun id -> (self :> ICloudRefProvider).GetExisting(container,id))
                         |> Async.Parallel
-                }
+                } |> onListError container

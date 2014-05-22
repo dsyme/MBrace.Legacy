@@ -9,6 +9,7 @@
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Runtime.Store.Utils
 
     type CloudFile internal (id : string, container : string, provider : CloudFileProvider) =
 
@@ -48,14 +49,17 @@
         member __.StoreId = storeInfo.Id
 
         member __.Read(file : CloudFile) = cache.Read(file.Container, file.Name)
+                                           |> onDereferenceError file
 
         member __.Delete(cfile : CloudFile) =
             store.Delete(cfile.Container, cfile.Name)
+            |> onDeleteError cfile
 
-        member __.GetLength(file : CloudFile) = async {
-            use! stream = cache.Read(file.Container, file.Name)
-            return stream.Length
-        }
+        member __.GetLength(file : CloudFile) = 
+            async {
+                use! stream = cache.Read(file.Container, file.Name)
+                return stream.Length
+            } |> onLengthError file
 
         interface ICloudFileProvider with
 
@@ -64,20 +68,20 @@
                     do! cache.Create(container, id, writer, asFile = true)
                     do! cache.Commit(container, id, asFile = true)
 
-                    return CloudFile(id, container, this) :> _
-                }
+                    return CloudFile(id, container, this) :> ICloudFile
+                } |> onCreateError container id
 
             override this.GetExisting (container, id) : Async<ICloudFile> =
                 async {
                     let! exists = store.Exists(container, id) 
                     if exists then 
-                        return CloudFile(id, container, this) :> _
+                        return CloudFile(id, container, this) :> ICloudFile
                     else 
-                        return failwith "File does not exist"
-                }
+                        return raise <| NonExistentObjectStoreException(container, id)
+                } |> onGetError container id
 
             override this.GetContainedFiles(container) : Async<ICloudFile []> =
                 async {
                     let! files = store.GetAllFiles(container)
-                    return files |> Array.map (fun name -> CloudFile(name, container, this) :> _)
-                }
+                    return files |> Array.map (fun name -> CloudFile(name, container, this) :> ICloudFile)
+                } |> onListError container

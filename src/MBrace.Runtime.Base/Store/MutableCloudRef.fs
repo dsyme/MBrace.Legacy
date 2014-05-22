@@ -9,6 +9,7 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Store.Utils
 
 
     type MutableCloudRef<'T> internal (id : string, container : string, tag : Tag, provider : MutableCloudRefProvider) =
@@ -112,13 +113,14 @@
 
         member self.Delete(mref : MutableCloudRef<'T>) : Async<unit> = 
             storeInfo.Store.Delete(mref.Container, postfix mref.Name)
+            |> onDeleteError mref
 
         member self.Dereference(mref : MutableCloudRef<'T>) : Async<'T> =
             async {
                 let! _, value, tag = read mref.Container mref.Name
                 mref.Tag <- tag
                 return value :?> 'T
-            }
+            } |> onDereferenceError mref
 
         member this.TryUpdate(mref : MutableCloudRef<'T>, value : 'T) : Async<bool>  =
             async {
@@ -126,13 +128,13 @@
 
                 if ok then mref.Tag <- tag
                 return ok
-            }
+            } |> onUpdateError mref
 
         member this.ForceUpdate(mref : MutableCloudRef<'T>, value : 'T) : Async<unit> =
             async {
                 let! tag = storeInfo.Store.ForceUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>)
                 mref.Tag <- tag
-            }
+            } |> onUpdateError mref
 
         interface IMutableCloudRefProvider with
 
@@ -140,21 +142,21 @@
                 async {
                     let! tag = storeInfo.Store.CreateMutable(container, postfix id, serialize value typeof<'T>)
 
-                    return new MutableCloudRef<'T>(id, container, tag, self) :> _
-                }
+                    return new MutableCloudRef<'T>(id, container, tag, self) :> IMutableCloudRef<_>
+                } |> onCreateError container id
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<IMutableCloudRef> = 
                 async {
                     let! tag = storeInfo.Store.CreateMutable(container, postfix id, serialize value t)
 
                     return defineUntyped(t, container, id, tag)
-                }
+                } |> onCreateError container id
 
             member self.GetExisting (container , id) : Async<IMutableCloudRef> =
                 async {
                     let! t, tag = readInfo container (postfix id)
                     return defineUntyped(t, container, id, tag)
-                }
+                } |> onGetError container id
 
             member self.GetContainedRefs(container : string) : Async<IMutableCloudRef []> =
                 async {
@@ -163,4 +165,4 @@
                         ids 
                         |> Array.map (fun id -> (self :> IMutableCloudRefProvider).GetExisting(container, id))
                         |> Async.Parallel
-                }
+                } |> onListError container

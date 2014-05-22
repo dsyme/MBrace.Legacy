@@ -599,7 +599,16 @@ namespace Nessos.MBrace.Runtime.Tests
                 |> test.ExecuteExpression
             should equal folder f.Container
 
-        [<Category("MutableCloudRef")>]
+        [<Test>]
+        member test.``CloudFile TryGet by name - failure`` () =
+            let folder = Guid.NewGuid().ToString()
+            let f = 
+                <@ cloud {
+                    return! CloudFile.TryGet(Guid.NewGuid().ToString("N"),Guid.NewGuid().ToString("N"))
+                } @>
+                |> test.ExecuteExpression
+            should equal f None
+
         [<Test>]
         member test.``MutableCloudRef - Simple For Loop`` () =
             <@ cloud {
@@ -609,7 +618,6 @@ namespace Nessos.MBrace.Runtime.Tests
                 return! MutableCloudRef.Read(x)
             } @> |> test.ExecuteExpression |> should equal 10
           
-        [<Category("MutableCloudRef")>]  
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - Set`` () = 
             let run () = 
@@ -623,7 +631,6 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal true
 
-        [<Category("MutableCloudRef")>]
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - Set multiple`` () = 
             let run () =
@@ -641,7 +648,6 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal (true,true)
 
-        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``MutableCloudRef - Force`` () = 
             let run () = 
@@ -655,7 +661,6 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal 2
 
-        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``MutableCloudRef - Free`` () =
             <@ cloud {
@@ -664,7 +669,6 @@ namespace Nessos.MBrace.Runtime.Tests
                 return! MutableCloudRef.TryRead(x)
             } @> |> test.ExecuteExpression |> should equal None
 
-        [<Category("MutableCloudRef")>]
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - High contention`` () = 
             let run () =
@@ -686,7 +690,6 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal true
 
-        [<Category("MutableCloudRef")>]
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - High contention - Large obj`` () = 
             let run () = 
@@ -709,7 +712,6 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal true
 
-        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``MutableCloudRef - Token passing`` () = 
             let run () = 
@@ -742,7 +744,6 @@ namespace Nessos.MBrace.Runtime.Tests
             if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
             |> test.ExecuteExpression |> should equal true
 
-        [<Category("MutableCloudRef")>]
         [<Test>]
         member test.``MutableCloudRef - Get all in container`` () = 
             <@ cloud { 
@@ -758,6 +759,11 @@ namespace Nessos.MBrace.Runtime.Tests
                 return Seq.sum r
                } @> |> test.ExecuteExpression |> should equal 42
 
+        [<Test>]
+        member test.``MutableCloudRef - TryGet by name - failure`` () = 
+            <@ cloud { 
+                return! MutableCloudRef.TryGet(Guid.NewGuid().ToString("N"),Guid.NewGuid().ToString("N"))
+               } @> |> test.ExecuteExpression |> should equal None
 
         [<Test>]
         member test.``UnQuote Exception`` () =
