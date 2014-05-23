@@ -18,7 +18,7 @@
             | EnQueue of 'LogEntry
             | Flush of AsyncReplyChannel<exn option>
 
-        let getNewLogfileName logPrefix = sprintf "%s_%s.log" logPrefix <| DateTime.Now.ToString("yyyyMMddHmmss")
+        let getNewLogfileName logPrefix counter = sprintf "%s_%d.log" logPrefix counter
         let isLogFile (f : string) = f.EndsWith(".log")
 
         let serializeLogs (entries : seq<'LogEntry>) (stream : Stream) = async { 
@@ -43,8 +43,11 @@
 
         do if maxInterval < minInterval then invalidArg "interval" "invalid intervals."
 
+        let cnt = ref 0
+
         let flush (entries : seq<'LogEntry>) = async {
-            let file = getNewLogfileName logPrefix
+            let file = getNewLogfileName logPrefix cnt.Value
+            ThreadSafe.incr cnt
             do! store.CreateImmutable(container, file, serializeLogs entries, asFile = true)
         }
 

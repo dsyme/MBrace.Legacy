@@ -44,7 +44,7 @@ let workerBehavior (processId: ProcessId)
         let isTraceEnabled stack = stack |> List.exists (fun cloudExpr' -> match cloudExpr' with DoEndTraceExpr -> true | _ -> false)
 
         // initialize the process logger for current task
-        use procLogger = new RuntimeCloudProcessLogger(processId, logger, store)
+        use procLogger = new RuntimeCloudProcessLogger(processId, taskId, logger, store)
 
         let taskConfig =
             {
