@@ -71,7 +71,7 @@ namespace Nessos.MBrace.Runtime.Tests
                                      |> Seq.toArray
             let expected = array |> Seq.map (sprintf "i = %d")
                                  |> Seq.toArray
-            should equal dumps expected
+            should equal expected dumps 
 
         [<Test>] 
         member t.``Cloud Log - delete`` () = 
