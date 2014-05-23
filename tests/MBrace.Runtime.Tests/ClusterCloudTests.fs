@@ -51,11 +51,37 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test>] 
         member t.``Cloud Log`` () = 
-            let ps = <@ cloud { do! Cloud.Log "Cloud Log Test Msg" } @> |> t.Runtime.CreateProcess
-            Threading.Thread.Sleep(delay) // storelogger flushes every 2 seconds
+            let msg = "Cloud Log Test Msg"
+            let ps = <@ cloud { do! Cloud.Log msg } @> |> t.Runtime.CreateProcess
+            ps.AwaitResult()
             let dumps = ps.GetLogs()
-            ()
-//                dumps |> Seq.find(fun dump -> dump.Print().Contains("Cloud Log Test Msg")) |> ignore
+            dumps.Length |> should equal 1
+            (dumps |> Seq.head).Message |> should equal msg
+
+        [<Test>] 
+        member t.``Cloud Logf - multiple`` () = 
+            let array = [|1..100|]
+            let ps = <@ cloud { for i in array do 
+                                    do! Cloud.OfAsync <| Async.Sleep 100
+                                    do! Cloud.Logf "i = %d" i } 
+                      @> |> t.Runtime.CreateProcess
+            ps.AwaitResult()
+            let dumps = ps.GetLogs() |> Seq.map (fun d -> d.Message)
+                                     |> Seq.sort
+                                     |> Seq.toArray
+            let expected = array |> Seq.map (sprintf "i = %d")
+                                 |> Seq.toArray
+            should equal dumps expected
+
+        [<Test>] 
+        member t.``Cloud Log - delete`` () = 
+            let msg = "Cloud Log Test Msg"
+            let ps = <@ cloud { do! Cloud.Log msg } @> |> t.Runtime.CreateProcess
+            ps.AwaitResult()
+            Seq.isEmpty (ps.GetLogs()) |> should equal false
+            ps.DeleteLogs()
+            ps.GetLogs() |> should equal Seq.empty
+            
             
         [<Test>] 
         member test.``Cloud Trace`` () = 
