@@ -66,8 +66,8 @@ namespace Nessos.MBrace.Runtime.Tests
                                     do! Cloud.Logf "i = %d" i } 
                       @> |> t.Runtime.CreateProcess
             ps.AwaitResult()
-            let dumps = ps.GetLogs() |> Seq.map (fun d -> d.Message)
-                                     |> Seq.sort
+            let dumps = ps.GetLogs() |> Seq.sortBy (fun d -> d.Date)
+                                     |> Seq.map (fun d -> d.Message)
                                      |> Seq.toArray
             let expected = array |> Seq.map (sprintf "i = %d")
                                  |> Seq.toArray
