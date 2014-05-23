@@ -51,8 +51,8 @@
         static member GetReader(store : ICloudStore, processId : ProcessId) =
             new LogStoreReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId)
 
-        static member GetStreamingReader(store : ICloudStore, processId : ProcessId) =
-            new StreamingLogReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId)
+        static member GetStreamingReader(store : ICloudStore, processId : ProcessId, ct : Threading.CancellationToken) =
+            new StreamingLogReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, ct = ct)
 
     /// The runtime ICloudLogger implementation
 

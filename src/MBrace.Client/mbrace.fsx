@@ -65,9 +65,5 @@ let rec f i : Cloud<unit> = cloud {
 let proc = rt.CreateProcess <@ f 0 @>
 proc.StreamLogs()
 
-
-
 proc.ShowLogs() 
-
-
 
