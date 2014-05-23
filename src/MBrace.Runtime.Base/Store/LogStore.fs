@@ -18,7 +18,7 @@
             | EnQueue of 'LogEntry
             | Flush of AsyncReplyChannel<exn option>
 
-        let getNewLogfileName logPrefix = sprintf "%s_%s.log" logPrefix <| DateTime.Now.ToString("yyyyMMddHmmss")
+        let getNewLogfileName logPrefix counter = sprintf "%s_%d.log" logPrefix counter
         let isLogFile (f : string) = f.EndsWith(".log")
 
         let serializeLogs (entries : seq<'LogEntry>) (stream : Stream) = async { 
@@ -32,7 +32,6 @@
             return Seq.toArray jsd
         }
 
-
     type LogStore<'LogEntry>(store : ICloudStore, container : string, logPrefix : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
 
         let minInterval = defaultArg minInterval 100
@@ -41,8 +40,11 @@
 
         do if maxInterval < minInterval then invalidArg "interval" "invalid intervals."
 
+        let cnt = ref 0
+
         let flush (entries : seq<'LogEntry>) = async {
-            let file = getNewLogfileName logPrefix
+            let file = getNewLogfileName logPrefix cnt.Value
+            ThreadSafe.incr cnt
             do! store.CreateImmutable(container, file, serializeLogs entries, asFile = true)
         }
 
@@ -134,3 +136,49 @@
 
         member self.DeleteLogs () : Async<unit> =
             store.DeleteContainer(container)
+
+
+    type StreamingLogReader<'LogEntry>(store : ICloudStore, container, ct : CancellationToken, ?pollingInterval : int) as this =
+
+        let logsRead = new System.Collections.Generic.HashSet<string>()
+
+        let pollingInterval = defaultArg pollingInterval 500
+
+        let updatedEvent = new Event<_>()
+
+        let rec loop _ = async {
+            let! containerExists = store.ContainerExists container
+
+            if containerExists then 
+                let! files = store.GetAllFiles container
+                let files = files |> Seq.filter (fun file -> isLogFile file && not <| logsRead.Contains file)
+
+                if not <| Seq.isEmpty files then
+                    let readEntries file : Async<'LogEntry []> = async { 
+                        use! stream = store.ReadImmutable(container, file)
+                        return! deserializeLogs stream
+                    }
+
+                    let! entries =
+                        files |> Seq.sort
+                                |> Seq.map readEntries
+                                |> Async.Parallel
+
+                    files |> Seq.iter (logsRead.Add >> ignore)
+
+                    let entries = Seq.concat entries
+
+                    if not <| Seq.isEmpty entries then
+                        updatedEvent.Trigger(this, entries)
+
+            do! Async.Sleep pollingInterval
+            return! loop ()
+        }
+
+        [<CLIEvent>]
+        member this.Updated = updatedEvent.Publish
+
+        member this.StartAsync () = async.Return <| Async.Start(loop (), cancellationToken = ct)
+            
+//        interface IDisposable with
+//            override this.Dispose () = this.Stop()

@@ -45,16 +45,19 @@
 
     /// Store interface for cloud process logs
 
-    type StoreCloudLogger(store : ICloudStore, processId : ProcessId) =
-        inherit LogStore<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = "worker")
+    type StoreCloudLogger(store : ICloudStore, processId : ProcessId, taskId : TaskId) =
+        inherit LogStore<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = sprintf "task_%s" taskId)
 
         static member GetReader(store : ICloudStore, processId : ProcessId) =
             new LogStoreReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId)
 
+        static member GetStreamingReader(store : ICloudStore, processId : ProcessId, ct : Threading.CancellationToken) =
+            new StreamingLogReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, ct = ct)
+
     /// The runtime ICloudLogger implementation
 
-    type RuntimeCloudProcessLogger(processId : ProcessId, ?sysLog : ISystemLogger, ?store : ICloudStore) =
-        let storeLogger = store |> Option.map (fun s -> new StoreCloudLogger(s, processId))
+    type RuntimeCloudProcessLogger(processId : ProcessId, taskId : TaskId, ?sysLog : ISystemLogger, ?store : ICloudStore) =
+        let storeLogger = store |> Option.map (fun s -> new StoreCloudLogger(s, processId, taskId))
 
         let logEntry (e : CloudLogEntry) =
             match sysLog with Some s -> s.LogEntry (e.ToSystemLogEntry processId) | None -> ()

@@ -282,16 +282,6 @@ namespace Nessos.MBrace.Client
 
         member r.ShowSystemLogs() = r.GetSystemLogs() |> Logs.show
 
-        member r.GetProcessLogs(proc : Process, ?clearLogs : bool) : CloudLogEntry [] =
-            // interim store sanity check
-            if not <| runtimeUsesCompatibleStore runtime then
-                mfailwith "incompatible store configuration."
-
-            proc.GetLogs(?clearLogs = clearLogs)
-
-        member r.ShowProcessLogs(proc : Process, ?clearLogs : bool) : unit =
-            proc.ShowLogs(?clearLogs = clearLogs)
-
         /// Deletes a container from the underlying store
         member r.DeleteContainer(container : string) =
             r.DeleteContainerAsync(container)

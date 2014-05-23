@@ -153,20 +153,50 @@
             with e -> Error.handle e
 
 
-        member p.GetLogsAsync (?clearLogs) = async {
-            let clearLogs = defaultArg clearLogs false
+        member p.GetLogs () = p.GetLogsAsync () |> Async.RunSynchronously
+        member p.GetLogsAsync () = async {
             let reader = StoreCloudLogger.GetReader(MBraceSettings.StoreInfo.Store, processId)
             let! logs = reader.FetchLogs()
-            if clearLogs then do! reader.DeleteLogs ()
             return logs |> Array.sortBy (fun e -> e.Date)
         }
 
-        member p.GetLogs (?clearLogs) = p.GetLogsAsync (?clearLogs = clearLogs) |> Async.RunSynchronously
-        member p.ShowLogs (?clearLogs) = 
-            p.GetLogs (?clearLogs = clearLogs) 
+        member p.DeleteLogs () = Async.RunSynchronously <| p.DeleteLogsAsync()
+        member p.DeleteLogsAsync () = async {
+            let reader = StoreCloudLogger.GetReader(MBraceSettings.StoreInfo.Store, processId)
+            do! reader.DeleteLogs()
+        }
+
+        member p.ShowLogs () = 
+            p.GetLogs () 
             |> Array.map (fun l -> l.ToSystemLogEntry(processId).Print(showDate = false))
             |> String.concat "\n"
             |> printfn "%s"
+
+        member p.StreamLogs () = Async.RunSynchronously <| p.StreamLogsAsync()
+        member p.StreamLogsAsync () = 
+            async {
+                let cts = new Threading.CancellationTokenSource()
+                let interval = 100
+                let rec pollingLoop () = async {
+                    if not p.Complete then
+                        do! Async.Sleep interval
+                        return! pollingLoop ()
+                    else 
+                        cts.Cancel()
+                } 
+                
+                let reader = StoreCloudLogger.GetStreamingReader(MBraceSettings.StoreInfo.Store, processId, cts.Token)
+                
+                reader.Updated.Add(fun (_, logs) -> 
+                    logs |> Seq.map (fun l -> l.ToSystemLogEntry(processId).Print(showDate = true))
+                         |> String.concat "\n"
+                         |> printfn "%s" ) 
+
+                do! reader.StartAsync()
+                do! pollingLoop () 
+
+            } |> Error.handleAsync
+
 
         static member Cast<'T> (p : Process) = p.Cast<'T> ()
 
