@@ -43,3 +43,32 @@ for i = 1 to 10 do
     x := runtime.Run <@ cloud { return !x + 1 } @>
 
 x.Value // 10
+
+
+#load "preamble.fsx"
+
+open Nessos.MBrace
+open Nessos.MBrace.Client
+
+
+let rt = MBrace.InitLocal 4
+
+[<Cloud>]
+let rec f i : Cloud<unit> = cloud {
+        if i > 100 then return ()
+        else
+            do! Cloud.OfAsync <| Async.Sleep 100
+            do! Cloud.Logf "i = %d" i
+            return! f (i+1)
+}
+
+let proc = rt.CreateProcess <@ f 0 @>
+proc.StreamLogs()
+
+
+
+
+proc.ShowLogs() 
+
+
+

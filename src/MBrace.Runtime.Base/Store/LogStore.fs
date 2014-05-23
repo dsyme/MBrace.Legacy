@@ -32,6 +32,8 @@
             return Seq.toArray jsd
         }
 
+        type StreamingMessage = Start | Stop
+
 
     type LogStore<'LogEntry>(store : ICloudStore, container : string, logPrefix : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
 
@@ -134,3 +136,69 @@
 
         member self.DeleteLogs () : Async<unit> =
             store.DeleteContainer(container)
+
+
+    type StreamingLogReader<'LogEntry>(store : ICloudStore, container, ?pollingInterval : int) as this =
+
+        let logsRead = new System.Collections.Generic.HashSet<string>()
+
+        let pollingInterval = defaultArg pollingInterval 500
+
+        let updatedEvent = new Event<_>()
+
+        let mutable stopLoop = false
+
+        let loop =
+            let rec loop () = async {
+                if stopLoop then 
+                    return ()
+                else
+                    let! containerExists = store.ContainerExists container
+
+                    if containerExists then 
+                        let! files = store.GetAllFiles container
+                        let files = files |> Seq.filter (fun file -> isLogFile file && not <| logsRead.Contains file)
+
+                        if not <| Seq.isEmpty files then
+                            let readEntries file : Async<'LogEntry []> = async { 
+                                use! stream = store.ReadImmutable(container, file)
+                                return! deserializeLogs stream
+                            }
+
+                            let! entries =
+                                files |> Seq.sort
+                                      |> Seq.map readEntries
+                                      |> Async.Parallel
+
+                            files |> Seq.iter (logsRead.Add >> ignore)
+
+                            let entries = Seq.concat entries
+
+                            if not <| Seq.isEmpty entries then
+                                updatedEvent.Trigger(this, entries)
+
+                    do! Async.Sleep pollingInterval
+                    return! loop ()
+            }
+            loop ()
+
+        let agent = MailboxProcessor<StreamingMessage>.Start(fun inbox ->
+            let rec agentLoop () = async {
+                let! msg = inbox.Receive()
+                match msg with
+                | Start -> Async.Start <| loop 
+                | Stop  -> stopLoop <- false
+            }
+            agentLoop ())
+
+        [<CLIEvent>]
+        member this.Updated = updatedEvent.Publish
+
+        member this.StartAsync () = agent.PostAndAsyncReply(fun ch -> Start)
+        
+        member this.Stop () = agent.Post(Stop)
+
+        member this.Stopped = stopLoop
+
+        interface IDisposable with
+            override this.Dispose () = this.Stop()

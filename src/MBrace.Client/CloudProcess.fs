@@ -169,6 +169,20 @@
             |> String.concat "\n"
             |> printfn "%s"
 
+        member p.StreamLogsAsync () = async {
+                let reader = StoreCloudLogger.GetStreamingReader(MBraceSettings.StoreInfo.Store, processId)
+                
+                reader.Updated.Add(fun (_, logs) -> 
+                    logs |> Seq.map (fun l -> l.ToSystemLogEntry(processId).Print(showDate = true))
+                         |> String.concat "\n"
+                         |> printfn "%s" ) 
+
+                do! reader.StartAsync()
+                    |> Error.handleAsync
+            }
+
+        member p.StreamLogs () = Async.RunSynchronously <| p.StreamLogsAsync()
+
         static member Cast<'T> (p : Process) = p.Cast<'T> ()
 
     and [<Sealed>] Process<'T> internal (info : ProcessInfo, processManager : ActorRef<ProcessManagerMsg>) as self =
