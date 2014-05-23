@@ -74,14 +74,13 @@
     <Compile Include="Store\PrimitiveConfiguration.fs" />
     <Compile Include="Base\SystemLog.fs" />
     <Compile Include="Base\CloudProcessLog.fs" />
+    <Compile Include="Base\CloudUtils.fs" />
+    <Compile Include="Base\Compiler.fs" />
     <Compile Include="Base\RuntimeAPI.fs" />
     <Compile Include="Base\Utils.fs" />
     <Compile Include="Base\DaemonConfig.fs" />
     <Compile Include="Base\WorkerConfig.fs" />
     <Compile Include="Base\Exceptions.fs" />
-    <Compile Include="Base\CloudUtils.fs" />
-    <Compile Include="Base\CompilerStateMonad.fs" />
-    <Compile Include="Base\Compiler.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>

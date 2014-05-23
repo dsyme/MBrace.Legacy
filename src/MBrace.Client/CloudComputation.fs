@@ -13,136 +13,35 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Quotations
 
-    open Nessos.MBrace.Client.QuotationAnalysis
+    type CloudComputation =
+        
+        static member Compile(expr : Expr<Cloud<'T>>, ?name) =
+            // force Vagrant compilation first
+            let dependencies = MBraceSettings.Vagrant.ComputeObjectDependencies(expr, permitCompilation = true)
 
-    module internal CloudComputationUtils =
-    
-        let report (warnings : CloudWarning list) = warnings |> List.iter (printf "%O")
+            // build cloud computation package
+            let comp = CloudComputationPackage.Compile(expr, ?name = name)
 
-        let tryGetLambda =
-            function
-            | LambdaMoP m -> m.Name |> Some
-            | _ -> None
+            // check for errors
+            match comp.Errors with
+            | [] -> new CloudComputation<'T>(comp, dependencies, comp.Warnings)
+            | errors ->
+                let errors = String.concat "\n" errors
+                mfailwithf "Supplied cloud block contains errors:\n%s" errors
 
-    type CloudComputation<'T> (expr : Expr<Cloud<'T>>, ?name) =
-        let warnings, errors, dependencies = clientSideCompile MBraceSettings.ClientSideExpressionCheck expr
+    and CloudComputation<'T> internal (comp : CloudComputationPackage, dependencies : Assembly list, warnings : string list) =
 
-        let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda expr ; Some "" ]
-
-        member __.Value = expr
-        member __.Name = name
-        member internal __.Warnings = warnings
-        member internal __.Errors = errors
-        member internal __.Dependencies = dependencies
+        member __.Name = comp.Name
+        member __.Expr = comp.Expr
+        member __.Warnings = warnings
+        member __.Dependencies = dependencies
 
         member internal __.Image =
-            let pkg = CloudPackage.Create expr
             {
                 ClientId = MBraceSettings.ClientId
-                Name = name
-                Computation = Serialization.Serialize pkg
-                Type = Serialization.Serialize expr.Type
+                Name = comp.Name
+                Computation = Serialization.Serialize comp
+                Type = Serialization.Serialize comp.ReturnType
                 TypeName = Reflection.prettyPrint typeof<'T>
                 Dependencies = dependencies |> List.map VagrantUtils.ComputeAssemblyId
             }
-
-
-////        type ProcessImage = 
-//            {
-//                Name : string
-//                Computation : byte [] // serialized QuotationPackage
-//                Type : byte []  // serialized System.Type
-//                TypeName : string
-//                ClientId : Guid
-//                Dependencies : AssemblyId []
-//            }
-//    type internal CloudComputation<'T> (expr : Expr<Cloud<'T>>, dependencies : Assembly list, warnings : CloudWarning list, ?name : string) =
-//        let name = defaultArg name ""
-//
-//        do CloudComputationUtils.report warnings
-//
-//        let exprImg = Serializer.Serialize <| CloudPackage.Create expr
-//        let typeImg = Serializer.Serialize typeof<'T>
-//        let typeName = Reflection.prettyPrint typeof<'T>
-//
-//        let buildPackets (missing : AssemblyId []) =
-//            let set = Set.ofSeq missing
-//
-//            let packets = 
-//                dependencies
-//                |> Array.map 
-//                    (fun assembly ->
-//                        if set.Contains assembly.Header then assembly.ImagePacket
-//                        else assembly.HashPacket)
-//
-//            { 
-//                Name = name
-//                Computation = exprImg
-//                Type = typeImg
-//                TypeName = typeName
-//                ClientId = MBraceSettings.ClientId
-//                Assemblies = packets 
-//            }
-//
-//        member __.Type = typeof<'T>
-//        member __.Warnings = warnings
-//        member __.Name = name
-//
-//        member internal __.GetHashBundle () = buildPackets [||]
-//        member internal __.GetMissingImageBundle (missing : AssemblyId []) = buildPackets missing
-//
-//        static member Compile (expr : Expr<Cloud<'T>>, ?name : string) =
-//            try
-//                let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda expr ; Some "" ]
-//
-//                let dependencies, warnings = clientSideCompile expr
-//
-//                CloudComputation(expr, dependencies, warnings, name)
-//            with e -> Error.handle e
-//
-//        static member Compile (f : Expr<'I -> Cloud<'R>>, ?name) = try CloudFunc<'I,'R> (f, ?name = name) with e -> Error.handle e
-//        static member Compile (f : Expr<'I1 -> 'I2 -> Cloud<'R>>, ?name) = try CloudFunc<'I1,'I2,'R> (f, ?name = name) with e -> Error.handle e
-//        static member Compile (f : Expr<'I1 -> 'I2 -> 'I3 -> Cloud<'R>>, ?name) = try CloudFunc<'I1,'I2,'I3,'R>(f, ?name = name) with e -> Error.handle e
-//
-//
-//    and internal CloudFunc<'I,'R>  (f : Expr<'I -> Cloud<'R>>, ?name : string) =
-//        let apply (x : 'I) = Expr.Application(f, <@ x @>) |> Expr.cast<Cloud<'R>>
-//
-//        let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda f ; Some "" ]
-//
-//        let dependencies, warnings = clientSideCompile (apply Unchecked.defaultof<'I>)
-//    
-//        member __.Invoke (x : 'I) = try CloudComputation(apply x, dependencies, warnings, name) with e -> Error.handle e
-//
-//        member __.ReturnType = typeof<'R>
-//        member __.Name = name
-//
-//
-//    and internal CloudFunc<'I1,'I2,'R> (f : Expr<'I1 -> 'I2 -> Cloud<'R>>, ?name : string) =
-//        let apply (x : 'I1) (y : 'I2) = Expr.Applications(f, [ [ <@ x @> ] ; [ <@ y @> ] ]) |> Expr.cast<Cloud<'R>>
-//    
-//        let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda f ; Some "" ]
-//
-//        let dependencies, warnings = clientSideCompile (apply Unchecked.defaultof<'I1> Unchecked.defaultof<'I2>)
-//
-//        member __.Invoke (x : 'I1, y : 'I2) = 
-//            try CloudComputation(apply x y, dependencies, warnings, name) with e -> Error.handle e
-//
-//        member __.ReturnType = typeof<'R>
-//        member __.Name = name
-//
-//    and internal CloudFunc<'I1,'I2,'I3,'R> (f : Expr<'I1 -> 'I2 -> 'I3 -> Cloud<'R>>, ?name : string) =
-//        let apply (x : 'I1) (y : 'I2) (z : 'I3) = 
-//            Expr.Applications(f, [ [ <@ x @> ] ; [ <@ y @> ] ; [ <@ z @> ] ] ) |> Expr.cast<Cloud<'R>>
-//    
-//        let name = List.pick id [ name ; CloudComputationUtils.tryGetLambda f ; Some "" ]
-//
-//        let dependencies, warnings = 
-//            clientSideCompile (apply Unchecked.defaultof<'I1> Unchecked.defaultof<'I2> Unchecked.defaultof<'I3>)
-//
-//        member __.Invoke (x : 'I1, y : 'I2, z : 'I3) = 
-//            try CloudComputation(apply x y z, dependencies, warnings, name)
-//            with e -> Error.handle e
-//
-//        member __.ReturnType = typeof<'R>
-//        member __.Name = name

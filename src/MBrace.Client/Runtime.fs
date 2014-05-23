@@ -409,7 +409,7 @@ namespace Nessos.MBrace.Client
 
         member __.CreateProcess (expr : Expr<Cloud<'T>>, ?name) =
             try
-                let computation = CloudComputation<_>(expr, ?name = name)
+                let computation = CloudComputation.Compile(expr, ?name = name)
                 processManager.CreateProcess computation
             with e -> Error.handle e
 
@@ -422,14 +422,14 @@ namespace Nessos.MBrace.Client
             } |> Error.handleAsync
 
         member __.RunAsync (expr : Expr<Cloud<'T>>, ?name) =
-            let computation = CloudComputation<_>(expr, ?name = name)
+            let computation = CloudComputation.Compile(expr, ?name = name)
             __.RunAsync computation
 
         member __.Run (computation : CloudComputation<'T>) = __.RunAsync computation |> Error.handleAsync2
             
         member __.Run (expr : Expr<Cloud<'T>>, ?name) =
             try
-                let computation = CloudComputation<_>(expr, ?name = name)
+                let computation = CloudComputation.Compile(expr, ?name = name)
                 __.Run computation 
             with e -> Error.handle e
 

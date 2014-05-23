@@ -43,26 +43,24 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
             try
                 ctx.LogInfo <| sprintf "NewProcess %A" processId
 
-                let compilerResult = 
+                let package =
                     try
-                        let pkg = Serialization.Deserialize<CloudPackage> exprImage
-                        Choice1Of2 <| Compiler.compile pkg
-                    with
-                    | ex -> Choice2Of2 ex
+                        let pkg = Serialization.Deserialize<CloudComputationPackage> exprImage
+                        Choice1Of2 pkg
 
-                ctx.LogInfo "Process image compiled."
+                    with ex -> Choice2Of2 ex
 
-                match compilerResult with
-                | Choice1Of2 (resultType, expr, cloud, functions) ->
+                match package with
+                | Choice1Of2 package ->
                     ctx.LogInfo "Scheduler: Starting process..."
 
                     //the task manager will confirm the creation of the root task
-                    let! cref = newRef processId functions
-                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (resultType, [Guid.NewGuid().ToString()], cref, Dump [Interpreter.extractCloudExpr cloud]))
+                    let! cref = newRef processId package.Functions
+                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (package.ReturnType, [Guid.NewGuid().ToString()], cref, Dump [package.CloudExpr]))
                 | Choice2Of2 e -> 
                     reply nothing
                          
-                    ctx.LogInfo "Scheduler: Compiler error. Process not started."
+                    ctx.LogInfo "Scheduler: Deserialization error. Process not started."
 
                     do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ProcessInitError e))
             with e ->

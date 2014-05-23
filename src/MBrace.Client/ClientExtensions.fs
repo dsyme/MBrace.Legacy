@@ -10,10 +10,7 @@ open Nessos.MBrace.Runtime.Logging
 [<AutoOpen>]
 module ClientExtensions =
     type MBrace =
-        static member internal Compile (expr : Expr<Cloud<'R>>, ?name) = CloudComputation<_>(expr, ?name = name)
-//        static member internal Compile (f : Expr<'I -> Cloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
-//        static member internal Compile (f : Expr<'I1 -> 'I2 -> Cloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
-//        static member internal Compile (f : Expr<'I1 -> 'I2 -> 'I3 -> Cloud<'R>>, ?name) = CloudComputation<_>.Compile(f, ?name = name)
+        static member internal Compile (expr : Expr<Cloud<'R>>, ?name) = CloudComputation.Compile(expr, ?name = name)
 
         static member internal RunRemoteTask (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) =
             let computation = MBrace.Compile expr

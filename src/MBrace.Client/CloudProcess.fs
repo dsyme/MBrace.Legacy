@@ -17,7 +17,6 @@
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Utils
-    open Nessos.MBrace.Client.QuotationAnalysis
     
     open Microsoft.FSharp.Quotations
 
@@ -340,7 +339,7 @@
 
                 try
                     // serialization errors for dynamic assemblies
-                    let! errors = MBraceSettings.Vagrant.SubmitObjectDependencies(dependencyUploader, comp.Value, permitCompilation = false)
+                    let! errors = MBraceSettings.Vagrant.SubmitObjectDependencies(dependencyUploader, comp.Expr, permitCompilation = false)
 
                     let! info = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, comp.Image)
 

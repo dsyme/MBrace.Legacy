@@ -57,7 +57,7 @@
                     else createVars argName
                 let file = 
                     match funcInfoOption with
-                    | Some funInfo -> funInfo.File
+                    | Some funInfo -> funInfo.Metadata.File
                     | None -> ""
                 { File = file; Start = (int line, 0); End = (0, 0); CodeDump = ""; FunctionName = funcName; Vars = vars' }
 

@@ -18,13 +18,6 @@
     type PackageId = System.Guid
 
 
-    type CloudPackage private (expr : Expr, t : Type) =
-        member __.Expr = expr
-        member __.ReturnType = t
-        member __.Eval () = Swensen.Unquote.Operators.evalRaw expr : Cloud
-        static member Create (expr : Expr<Cloud<'T>>) =
-            CloudPackage(expr, typeof<'T>)
-
     type ProcessImage = 
         {
             Name : string

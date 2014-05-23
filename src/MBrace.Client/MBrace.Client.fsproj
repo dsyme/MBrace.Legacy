@@ -55,7 +55,6 @@
     <Compile Include="Utils.fs" />
     <None Include="ClientSettings.fsi" />
     <Compile Include="ClientSettings.fs" />
-    <Compile Include="QuotationAnalysis.fs" />
     <Compile Include="CloudComputation.fs" />
     <None Include="CloudProcess.fsi" />
     <Compile Include="CloudProcess.fs" />

@@ -81,6 +81,18 @@
                 AppDomain.CurrentDomain.GetAssemblies()
                 |> Array.tryFind (fun a -> try a.FullName = name || a.GetName().Name = name with _ -> false)
 
+        type MemberInfo with
+            member m.IsReflectedDefinition =
+                let rec traverse (m : MemberInfo) =
+                    if m.GetCustomAttributes(typeof<ReflectedDefinitionAttribute>, false).Length <> 0 then true
+                    else
+                        match m.DeclaringType with
+                        | null -> false
+                        | t when Microsoft.FSharp.Reflection.FSharpType.IsModule t -> traverse t
+                        | _ -> false
+
+                traverse m
+
         /// matches against lambda types, returning a tuple ArgType [] * ResultType
         let (|FSharpFunc|_|) : Type -> _ =
             let fsFunctionTypes =
