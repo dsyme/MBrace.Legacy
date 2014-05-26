@@ -23,6 +23,7 @@
         let shouldFailCompilation expr = shouldFailwith<CompilerException> (fun () -> compile expr |> ignore)
         let shouldSucceedCompilation expr = let comp = compile expr in comp.Warnings |> should equal []
 
+
         let valueWithoutAttribute = cloud { return 42 }
         let functionWithoutAttribute x = cloud { return x + 1 }
 
@@ -65,6 +66,12 @@
         }
 
         [<Cloud>]
+        let rec blockThatCallsClientApi2 n =
+            if n = 0 then 1
+            else
+                MBrace.RunLocal <@ cloud { return n * blockThatCallsClientApi2 (n-1) } @>
+
+        [<Cloud>]
         module Module =
 
             module NestedModule =
@@ -74,11 +81,11 @@
                 return! NestedModule.nestedWorkflowThatInheritsCloudAttributeFromContainers ()
             }
 
-        let value = Unchecked.defaultof<Nessos.MBrace.Client.MBraceRuntime>
+        let dummyRuntime = Unchecked.defaultof<Nessos.MBrace.Client.MBraceRuntime>
 
         [<Cloud>]
         let blockThatReferencesMBraceClientValue () = cloud {
-            return value.GetHashCode()
+            return dummyRuntime.GetHashCode()
         }
 
 
@@ -115,6 +122,10 @@
             shouldFailCompilation <@ blockThatCallsClientApi () @>
 
         [<Test>]
+        let ``Cloud block that calls the MBrace client API 2`` () =
+            shouldFailwith<CompilerException>(fun () -> blockThatCallsClientApi2 42 |> ignore)
+
+        [<Test>]
         let ``Cloud block that references MBrace.Client value`` () =
             shouldFailCompilation <@ blockThatReferencesMBraceClientValue () @>
 
@@ -131,3 +142,13 @@
         [<Test>]
         let ``Cloud block that attempts to update MBraceSettings`` () =
             shouldFailCompilation <@ cloud { MBraceSettings.MBracedExecutablePath <- "/tmp" } @>
+
+        [<Test>]
+        let ``Cloud block that references block closure`` () =
+            let block = cloud { return 12 }
+            shouldFailCompilation <@ block @>
+
+        [<Test>]
+        let ``Cloud block that references function closure`` () =
+            let f x = cloud { return x + 15 }
+            shouldFailCompilation <@ f 27 @>

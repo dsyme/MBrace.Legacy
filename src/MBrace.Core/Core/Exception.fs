@@ -5,11 +5,6 @@
 
     open Nessos.MBrace.Core
 
-    //
-    // exceptions that are descendants of or contain MBrace.Exception are treated specially by the client.
-    // for better readability, all descendants this exception type should be defined in the MBrace namespace.
-    //
-
     [<AutoOpen>]
     module private ExceptionUtils =
 

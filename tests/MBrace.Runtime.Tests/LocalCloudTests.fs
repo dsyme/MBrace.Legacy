@@ -13,5 +13,4 @@
         override __.IsLocalTesting = true
 
         override __.ExecuteExpression(expr : Quotations.Expr<Cloud<'T>>) : 'T =
-            let cexpr = Swensen.Unquote.Operators.eval expr
-            MBrace.RunLocal cexpr
+            MBrace.RunLocal expr

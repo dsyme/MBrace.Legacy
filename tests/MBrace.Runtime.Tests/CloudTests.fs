@@ -423,9 +423,9 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test>]
         member test.``Cloud GetTaskId``() = 
-            <@ cloud { 
-                return! Cloud.GetTaskId()
-               } @> |> test.ExecuteExpression |> shouldMatch (fun taskId ->  if test.Name = "RunLocal" then taskId = Guid.Empty.ToString() else Microsoft.FSharp.Core.Operators.not <| String.IsNullOrEmpty(taskId))
+            <@ cloud { return! Cloud.GetTaskId() } @> 
+            |> test.ExecuteExpression 
+            |> shouldMatch (not << String.IsNullOrEmpty)
 
         [<Test>] 
         member test.``Choice `` () =
@@ -622,7 +622,7 @@ namespace Nessos.MBrace.Runtime.Tests
           
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - Set`` () = 
-            let run () = 
+            <@
                 cloud {
                     let! x = MutableCloudRef.New(-1)
                     let! (x,y) = 
@@ -630,12 +630,12 @@ namespace Nessos.MBrace.Runtime.Tests
                         cloud { return! MutableCloudRef.Set(x, 2) }
                     return x <> y
                 } 
-            if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
+            @> 
             |> test.ExecuteExpression |> should equal true
 
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - Set multiple`` () = 
-            let run () =
+            <@
                 cloud {
                     let! x = MutableCloudRef.New(-1)
                     let! n = Cloud.GetWorkerCount()
@@ -647,12 +647,12 @@ namespace Nessos.MBrace.Runtime.Tests
                     let t = Seq.findIndex ((=) true) v
                     return (Seq.length f = n-1), (Seq.nth t v = true)
                 } 
-            if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
+            @>
             |> test.ExecuteExpression |> should equal (true,true)
 
         [<Test>]
         member test.``MutableCloudRef - Force`` () = 
-            let run () = 
+            <@
                 cloud {
                  let! x = MutableCloudRef.New(-1)
                  let! _ = cloud { return! MutableCloudRef.Force(x, 1) } <||>
@@ -660,7 +660,7 @@ namespace Nessos.MBrace.Runtime.Tests
                                   return! MutableCloudRef.Force(x, 2) }
                  return! MutableCloudRef.Read(x)
                 }
-            if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
+            @>
             |> test.ExecuteExpression |> should equal 2
 
         [<Test>]
@@ -673,7 +673,7 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - High contention`` () = 
-            let run () =
+            <@
                 cloud {
                     let! n = Cloud.GetWorkerCount()
                     let  m = (System.Random()).Next(2, 43)
@@ -689,12 +689,12 @@ namespace Nessos.MBrace.Runtime.Tests
                     let! result = MutableCloudRef.Read(x)
                     return result = n * m
                 }
-            if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
+            @>
             |> test.ExecuteExpression |> should equal true
 
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - High contention - Large obj`` () = 
-            let run () = 
+            <@ 
                 cloud {
                     let! n = Cloud.GetWorkerCount()
                     let  m = (System.Random()).Next(2, 43)
@@ -711,12 +711,12 @@ namespace Nessos.MBrace.Runtime.Tests
                     let! result = MutableCloudRef.Read(x)
                     return result = make (len + n * m)
                 }
-            if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
+            @>
             |> test.ExecuteExpression |> should equal true
 
         [<Test>]
         member test.``MutableCloudRef - Token passing`` () = 
-            let run () = 
+            <@
                 cloud {
                     let rec run (id : int) (locks : MVar<unit> []) (token : IMutableCloudRef<int>) : Cloud<int option> = 
                       cloud {
@@ -743,7 +743,7 @@ namespace Nessos.MBrace.Runtime.Tests
                              |> Cloud.Choice
                     return r.Value = value % nodes
                 } 
-            if test.Name = "MultiNode" then <@ run () @> else <@ run () |> local @>
+            @>
             |> test.ExecuteExpression |> should equal true
 
         [<Test>]

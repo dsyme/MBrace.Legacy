@@ -160,10 +160,6 @@
       <HintPath>..\..\packages\Thespian.0.0.3-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Unquote">
-      <HintPath>..\..\packages\Unquote.2.2.2\lib\net40\Unquote.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Vagrant">
       <HintPath>..\..\packages\Vagrant.0.1.3\lib\net45\Vagrant.dll</HintPath>
       <Private>True</Private>

@@ -104,7 +104,7 @@ namespace Nessos.MBrace
             member Zero : unit -> Cloud<unit>
             member Using<'T, 'U when 'T :> ICloudDisposable> : 'T * ('T -> Cloud<'U>) -> Cloud<'U> 
 
-            [<CompilerMessage("While loops in distributed not recommended; consider using an accumulator pattern instead.", 44)>]
+            [<CompilerMessage("While loops in distributed computation not recommended; consider using an accumulator pattern instead.", 44)>]
             member While : guardF:(unit -> bool) * body:Cloud<unit> -> Cloud<unit>
         end
 

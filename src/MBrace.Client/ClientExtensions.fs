@@ -49,3 +49,7 @@ module ClientExtensions =
         /// Runs the given computation locally without the need of a runtime.
         static member RunLocal (computation : Cloud<'T>, ?showLogs) : 'T = 
             MBrace.RunLocalAsync(computation, ?showLogs = showLogs) |> Async.RunSynchronously 
+
+        static member RunLocal (computation : Expr<Cloud<'T>>, ?showLogs) : 'T =
+            let computation = MBrace.Compile computation
+            MBrace.RunLocal(computation.CloudBlock, ?showLogs = showLogs)

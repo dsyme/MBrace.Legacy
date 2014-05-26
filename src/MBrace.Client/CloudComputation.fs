@@ -34,6 +34,8 @@
         member __.Expr = comp.Expr
         member __.Warnings = warnings
         member __.Dependencies = dependencies
+        member __.Functions = comp.Functions
+        member __.CloudBlock = comp.CloudBlock :?> Cloud<'T>
 
         member internal __.Image =
             {

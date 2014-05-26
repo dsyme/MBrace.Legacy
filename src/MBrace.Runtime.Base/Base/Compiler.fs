@@ -3,6 +3,8 @@ namespace Nessos.MBrace.Runtime
     open System
     open System.Reflection
 
+    open Microsoft.FSharp.Reflection
+
     open Microsoft.FSharp.Quotations
     open Microsoft.FSharp.Quotations.Patterns
     open Microsoft.FSharp.Quotations.DerivedPatterns
@@ -83,6 +85,24 @@ namespace Nessos.MBrace.Runtime
                     // fail if cloud expression is not static method
                     elif not methodBase.IsStatic then
                         log Error e "%s references non-static cloud workflow '%s'. This is not supported." blockName memberInfo.Name
+
+                // cloud block loaded from a field; unlikely but possible
+                | FieldGet(_,f) when yieldsCloudBlock f.FieldType ->
+                    log Error e "%s depends on '%s' which lacks [<Cloud>] attribute." blockName f.Name
+
+                // cloud block loaded a closure;
+                // can happen in cases where cloud blocks are defined in nested let bindings:
+                // e.g. let test () = let wf () = cloud { return 42 } in <@ wf () @>
+                // this is a common mistake, so need to make sure that error message is well-documented
+                | Value(o,t) when yieldsCloudBlock t ->
+                    // closure is a function ; can extract a name
+                    if FSharpType.IsFunction t && o <> null then
+                        let name = o.GetType().Name.Split('@').[0]
+                        log Error e "%s references closure '%s'. All cloud blocks should be top-level let bindings." blockName name
+
+                    // generic not much can reported here
+                    elif typeof<Cloud>.IsAssignableFrom t then
+                        log Error e "%s references a closure. All cloud blocks should be top-level let bindings." blockName
                 
                 // typeof<_> literal
                 | TypeOf t when isProhibitedMember t ->
@@ -148,9 +168,8 @@ namespace Nessos.MBrace.Runtime
         member __.Errors = info |> List.choose (function Error m -> Some m | _ -> None)
         member __.Warnings = info |> List.choose (function Warning m -> Some m | _ -> None)
         member __.ReturnType = returnType
-        member __.CloudExpr = 
-            let block = Swensen.Unquote.Operators.evalRaw expr
-            Interpreter.extractCloudExpr block
+        member __.CloudBlock = Swensen.Unquote.Operators.evalRaw expr
+        member __.CloudExpr = Interpreter.extractCloudExpr __.CloudBlock
 
         static member Compile (expr : Expr<Cloud<'T>>, ?name : string) = 
             let name = 
