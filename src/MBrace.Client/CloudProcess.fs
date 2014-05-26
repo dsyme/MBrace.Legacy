@@ -13,7 +13,7 @@
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Utils.String
+    open Nessos.MBrace.Utils.PrettyPrinters
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Utils
@@ -66,7 +66,7 @@
                     Field.create "Result Type" Left (fun p -> p.TypeName)
                 ]
 
-            prettyPrintTable3 template None
+            Record.prettyPrint3 template None
 
     
     type Process internal (info : ProcessInfo, processManager : ActorRef<ProcessManagerMsg>) =
