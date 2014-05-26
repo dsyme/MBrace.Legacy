@@ -49,30 +49,35 @@
 
             aux 0 e
 
+        type private ContainerException<'T>(value : 'T) =
+            inherit System.Exception()
+            member __.Value = value
+
         type Async with
-            static member Raise(e : exn) = Async.FromContinuations(fun (_,ec,_) -> ec e)
-            static member Choice<'T>(tasks : Async<'T option> seq) : Async<'T option> =
-                let wrap task =
-                    async {
-                        let! res = task
-                        match res with
-                        | None -> return ()
-                        | Some r -> return! Async.Raise <| SuccessException r
-                    }
+            
+            /// A general-purpose extension parallelism combinator that extends the
+            /// facility of Async.Parallel. 
+            // Takes a collection of tasks that can return either of two results types:
+            // one accumulative and one exceptional.
+            static member ParGeneric(tasks : Async<Choice<'Acc, 'Exc>> []) : Async<Choice<'Acc [], 'Exc>> =
+                let wrap (task : Async<Choice<'Acc, 'Exc>>) = async {
+                    let! res = task
+                    match res with
+                    | Choice1Of2 a -> return a
+                    | Choice2Of2 e -> return! Async.Raise <| ContainerException<'Exc> e
+                }
 
                 async {
                     try
-                        do!
-                            tasks
-                            |> Seq.map wrap
-                            |> Async.Parallel
-                            |> Async.Ignore
+                        let! aggregates = tasks |> Array.map wrap |> Async.Parallel 
+                        return Choice1Of2 aggregates
 
-                        return None
-                    with 
-                    | :? SuccessException<'T> as ex -> return Some ex.Value
+                    with :? ContainerException<'Exc> as e -> return Choice2Of2 e.Value
                 }
 
-        and private SuccessException<'T>(value : 'T) =
-            inherit System.Exception()
-            member __.Value = value
+            static member Raise(e : exn) =
+#if DEBUG
+                async { return raise  e }
+#else
+                Async.FromContinuations(fun (_,ec,_) -> ec e)
+#endif

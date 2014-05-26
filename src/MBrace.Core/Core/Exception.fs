@@ -143,47 +143,47 @@
 //                yield e.StackTrace
 //            } |> String.build
 
-    [<Serializable>]
-    /// Represents one or more exceptions thrown by user code in a Cloud.Parallel context.
-    type ParallelCloudException =
-
-        inherit CloudException
-
-        val private results : Result<ObjValue> []
-
-
-        new(processId, results : Result<ObjValue> []) =
-            {
-                inherit CloudException("", processId)
-                results = results
-            }
-
-        new (info : SerializationInfo, context : StreamingContext) =
-            {
-                inherit CloudException(info, context)
-                results = read info "results"
-            }
-
-        member e.Results = e.results
-        member e.Exceptions = e.results |> Array.choose (fun result -> match result with  ExceptionResult _ -> Some result | _ -> None) 
-        member e.Values = e.results |> Array.choose (fun result -> match result with ValueResult _ -> Some result | _ -> None) 
-
-        override e.ToString() = sprintf "%A" e.results
-//                let mystring : obj -> string = sprintf "%A" // MAGIC
-                
-//                results
-//                |> Array.map (function 
-//                    | (ValueResult v) -> 
-//                        match v with 
-//                        | CloudRefValue o -> sprintf "ValueResult (%A)" o.Value 
-//                        | _ as x -> x.ToString()
-//                    | _ as e -> e.ToString())
-//                |> sprintf "%O"
+//    [<Serializable>]
+//    /// Represents one or more exceptions thrown by user code in a Cloud.Parallel context.
+//    type ParallelCloudException =
+//
+//        inherit CloudException
+//
+//        val private results : Result<ObjValue> []
 //
 //
-        override e.GetObjectData(info : SerializationInfo, context : StreamingContext) : unit =
-            base.GetObjectData(info, context)
-            write info "results" e.results
-
-        interface ISerializable with      
-            override e.GetObjectData(info : SerializationInfo, context : StreamingContext) : unit = e.GetObjectData(info, context)
+//        new(processId, results : Result<ObjValue> []) =
+//            {
+//                inherit CloudException("", processId)
+//                results = results
+//            }
+//
+//        new (info : SerializationInfo, context : StreamingContext) =
+//            {
+//                inherit CloudException(info, context)
+//                results = read info "results"
+//            }
+//
+//        member e.Results = e.results
+//        member e.Exceptions = e.results |> Array.choose (fun result -> match result with  ExceptionResult _ -> Some result | _ -> None) 
+//        member e.Values = e.results |> Array.choose (fun result -> match result with ValueResult _ -> Some result | _ -> None) 
+//
+//        override e.ToString() = sprintf "%A" e.results
+////                let mystring : obj -> string = sprintf "%A" // MAGIC
+//                
+////                results
+////                |> Array.map (function 
+////                    | (ValueResult v) -> 
+////                        match v with 
+////                        | CloudRefValue o -> sprintf "ValueResult (%A)" o.Value 
+////                        | _ as x -> x.ToString()
+////                    | _ as e -> e.ToString())
+////                |> sprintf "%O"
+////
+////
+//        override e.GetObjectData(info : SerializationInfo, context : StreamingContext) : unit =
+//            base.GetObjectData(info, context)
+//            write info "results" e.results
+//
+//        interface ISerializable with      
+//            override e.GetObjectData(info : SerializationInfo, context : StreamingContext) : unit = e.GetObjectData(info, context)

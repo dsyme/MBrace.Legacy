@@ -337,7 +337,7 @@ namespace Nessos.MBrace.Core
             /// Serialize and deserialize a CloudExpr to force ``call by value`` semantics
             /// on parallel/choice expressions and ensure consistency between distributed execution
             /// and local/shared-memory scenarios
-            let deepClone (expr : CloudExpr) = cloner.Clone expr
+            let deepClone (expr : CloudExpr) = try cloner.Clone expr with _ -> expr
             
             let rec eval (traceEnabled : bool) (stack : CloudExpr list) = 
                 async {
@@ -348,40 +348,49 @@ namespace Nessos.MBrace.Core
                         return! eval traceEnabled <| ReturnExpr (Environment.ProcessorCount, typeof<int>) :: rest
                     | LocalExpr cloudExpr :: rest -> 
                         return! eval traceEnabled <| cloudExpr :: rest
-                    | ParallelExpr (cloudExprs, elementType) :: rest ->
-                        let cloudExprs = Array.map deepClone cloudExprs
-                        let! values = cloudExprs |> Array.map (fun cloudExpr -> eval traceEnabled [cloudExpr]) |> Async.Parallel
-                        match values |> Array.tryPick (fun value -> match value with Exc (ex, ctx) -> Some ex | _ -> None) with
-                        | Some _ -> 
-                            let results = values |> Array.map (fun value -> match value with Obj (value, _) -> ValueResult value | Exc (ex, ctx) -> ExceptionResult (ex, ctx) | _ -> raise <| new InvalidOperationException(sprintf "Invalid state %A" value))
-                            let parallelException = new Nessos.MBrace.ParallelCloudException(taskConfig.ProcessId, results) :> exn
-                            return! eval traceEnabled <| ValueExpr (Exc (parallelException, None)) :: rest
-                        | None -> 
+                    | ParallelExpr (parExprs, elementType) :: rest ->
+                        let parExprs = Array.map deepClone parExprs
+                        let evalParExpr parExpr = async {
+                            let! result = eval traceEnabled [parExpr]
+                            return
+                                match result with
+                                | Obj(ObjValue value,t) -> Choice1Of2 value
+                                | Exc _ as exc -> Choice2Of2 exc
+                                | _ -> throwInvalidState result
+                        }
+
+                        let! result = parExprs |> Array.map evalParExpr |> Async.ParGeneric
+                        match result with
+                        | Choice1Of2 values ->
                             let arrayOfResults = Array.CreateInstance(elementType, values.Length)
-                            Array.Copy(values |> Array.map (fun value -> match value with Obj (ObjValue value, t) -> value | _ -> throwInvalidState value), arrayOfResults, values.Length)
+                            Array.Copy(values, arrayOfResults, values.Length)
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue arrayOfResults, elementType)) :: rest
 
+                        | Choice2Of2 exc -> return! eval traceEnabled <| ValueExpr exc :: rest
+
                     | ChoiceExpr (choiceExprs, elementType) :: rest ->
-                        let cloudExprs = Array.map deepClone choiceExprs
+                        let choiceExprs = Array.map deepClone choiceExprs
                         let evalChoiceExpr choiceExpr = async {
                             let! result = eval traceEnabled [choiceExpr]
-                            match result with
-                            | Obj (ObjValue value, t) ->
-                                if value = null then // value is option type and we use the fact that None is represented as null
-                                    return None
-                                else
-                                    return Some result
-                            | Exc (ex, ctx) -> return Some result
-                            | _ -> return raise <| new InvalidOperationException(sprintf "Invalid state %A" result)
-                        }
-                        let! result = choiceExprs |> Array.map evalChoiceExpr |> Async.Choice
-                        match result with
-                        | Some (value) ->
-                            return! eval traceEnabled <| ValueExpr (value) :: rest
-                        | None -> 
-                            return! eval traceEnabled <| ValueExpr (Obj (ObjValue None, elementType)) :: rest
+                            return
+                                match result with
+                                | Obj (ObjValue value, t) ->
+                                    // 'None' values are represented as null in the CLR
+                                    if value = null then Choice1Of2 ()
+                                    else
+                                        Choice2Of2 result
 
-                    | _ -> return raise <| new InvalidOperationException(sprintf "Invalid state %A" stack)
+                                | Exc _ -> Choice2Of2 result
+                                | _ -> throwInvalidState result 
+                        }
+                        let! result = choiceExprs |> Array.map evalChoiceExpr |> Async.ParGeneric
+                        match result with
+                        | Choice1Of2 _ -> // all children returned 'None'
+                            return! eval traceEnabled <| ValueExpr (Obj (ObjValue None, elementType)) :: rest
+                        | Choice2Of2 value -> // one child return with value : either exception or success
+                            return! eval traceEnabled <| ValueExpr value :: rest
+
+                    | _ -> return throwInvalidState stack
                 }
 
             eval traceEnabled stack
