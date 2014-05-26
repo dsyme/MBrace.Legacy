@@ -7,7 +7,7 @@
 
     open FsUnit
 
-    [<TestFixture>]
+    [<TestFixture; Category("CompilerTests")>]
     module ``Cloud Compiler Tests`` =
 
         let compile expr = 
