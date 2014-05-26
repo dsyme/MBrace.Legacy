@@ -15,7 +15,7 @@ namespace Nessos.MBrace.Core
     module Interpreter =
 
         /// raise exception with given object
-        let inline internal throwInvalidState (value : 'T) = failwithf "invalid state %A" value
+        let inline internal throwInvalidState (value : 'T) = invalidOp <| sprintf "invalid state %A" value
 
         /// extract the untyped cloud tree
         let extractCloudExpr (cloud : Cloud) : CloudExpr = cloud.CloudExpr
@@ -235,7 +235,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| value :: rest
                         | ValueExpr (Exc (ex, ctx)) -> 
                             return! eval traceEnabled <| ValueExpr (Exc (ex, ctx)) :: rest
-                        | _ -> return raise <| new InvalidOperationException(sprintf "Invalid tryFinallyF result %A" result)
+                        | _ -> return invalidOp <| sprintf "Invalid tryFinallyF result %A" result
                     | DoForExpr (values, n, f, objF) :: rest | ValueExpr (Obj _) :: DoForExpr (values, n, f, objF) :: rest -> 
                         if n = values.Length then
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest
@@ -251,7 +251,7 @@ namespace Nessos.MBrace.Core
                                 return! eval traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest
                         | ValueExpr (Exc (ex, ctx)) ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, ctx)) :: rest
-                        | _ -> return raise <| new InvalidOperationException(sprintf "Invalid guardF result %A" result)
+                        | _ -> return invalidOp <| sprintf "Invalid guardF result %A" result
                     | DoCombineExpr secondExpr :: rest ->
                         return! eval traceEnabled <| secondExpr :: rest
                     | _ :: DoCombineExpr secondExpr :: rest ->
@@ -299,7 +299,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| ValueExpr (Exc (ex, ctx)) :: rest
                         | ValueExpr (Exc (ex', ctx)) -> 
                             return! eval traceEnabled <| ValueExpr (Exc (ex', ctx)) :: rest
-                        | _ -> return raise <| new InvalidOperationException(sprintf "Invalid tryFinallyF result %A" result)
+                        | _ -> return invalidOp <| sprintf "Invalid tryFinallyF result %A" result
                     | ValueExpr (Exc (ex, ctx)) as excExpr :: DoDisposableBindExpr cloudDisposable :: rest ->
                         let! valueExpr = 
                             async {
@@ -317,7 +317,7 @@ namespace Nessos.MBrace.Core
                     | LocalExpr _ :: rest -> return stack 
                     | ParallelExpr (_, _) :: rest -> return stack
                     | ChoiceExpr _ :: rest -> return stack
-                    | _ -> return raise <| new InvalidOperationException(sprintf "Invalid state %A" stack)
+                    | _ -> return throwInvalidState stack
                 }
             eval traceEnabled stack
 
@@ -420,9 +420,10 @@ namespace Nessos.MBrace.Core
                 
                 let! result = evaluateLocal primitiveConfig taskConfig getCurrentTaskId cloner false [Cloud.unwrapExpr computation]
 
-                match result with
-                | Obj (ObjValue value, t) -> return value :?> 'T
-                | Exc (ex, ctx) when (ex :? MBraceException) -> return raise ex
-                | Exc (ex, ctx) -> return raise <| new CloudException(ex, 0, ?context = ctx)
-                | _ -> return raise <| new InvalidOperationException(sprintf "Invalid result %A" result)
+                return
+                    match result with
+                    | Obj (ObjValue value, t) -> value :?> 'T
+                    | Exc (ex, ctx) when (ex :? MBraceException) -> raise ex
+                    | Exc (ex, ctx) -> raise <| new CloudException(ex, 0, ?context = ctx)
+                    | _ -> throwInvalidState result
             }

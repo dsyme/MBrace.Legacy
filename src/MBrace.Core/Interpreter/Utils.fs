@@ -55,10 +55,12 @@
 
         type Async with
             
-            /// A general-purpose extension parallelism combinator that extends the
-            /// facility of Async.Parallel. 
-            // Takes a collection of tasks that can return either of two results types:
-            // one accumulative and one exceptional.
+            /// A general-purpose parallelism combinator that extends the facility of Async.Parallel. 
+            /// Takes a collection of tasks that return either accumulative or exceptional results.
+            /// Returns either the accumulated results of *all* tasks or a single result from an exceptional.
+            /// This is general enough to allow us to mix and match cancellation semantics without 
+            /// bothering with exception handling when implementing custom parallelism combinators 
+            /// in the context of abstract trampoline evaluators.
             static member ParGeneric(tasks : Async<Choice<'Acc, 'Exc>> []) : Async<Choice<'Acc [], 'Exc>> =
                 let wrap (task : Async<Choice<'Acc, 'Exc>>) = async {
                     let! res = task
@@ -75,9 +77,10 @@
                     with :? ContainerException<'Exc> as e -> return Choice2Of2 e.Value
                 }
 
+            /// efficient raise
             static member Raise(e : exn) =
 #if DEBUG
-                async { return raise  e }
+                async { return raise e }
 #else
                 Async.FromContinuations(fun (_,ec,_) -> ec e)
 #endif
