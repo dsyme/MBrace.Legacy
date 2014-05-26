@@ -93,7 +93,7 @@
         member self.For(values : 'T list, bindF : ('T -> Cloud<unit>)) : Cloud<unit> = 
             self.For(List.toArray values, bindF)
 
-        [<CompilerMessage("While loops in distributed computation considered harmful; consider using an accumulator pattern instead.", 44)>]
+        [<CompilerMessage("While loops in distributed not recommended; consider using an accumulator pattern instead.", 44)>]
         member self.While (guardF : (unit -> bool), body : Cloud<unit>) : Cloud<unit> = 
             Cloud.wrapExpr <| WhileExpr (guardF, Cloud.unwrapExpr body)
 
