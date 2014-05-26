@@ -441,6 +441,43 @@
                 | :? DivideByZeroException as exn -> return cr.TryValue.IsNone
             }
 
+        [<Cloud>]
+        let schedulerNoOp = Cloud.Ignore <| Cloud.Parallel [cloud.Zero(); cloud.Zero()]
+        [<Cloud>]
+        let rec spinWait mref =
+            cloud {
+                let! v = MutableCloudRef.Read mref
+                if v then return () 
+                else
+                    do! Cloud.OfAsync <| Async.Sleep 100
+                    return! spinWait mref
+            }
+        [<Cloud>]
+        let testParallelWithExceptionCancellation flag =
+            cloud {
+                try
+                    do! Cloud.Ignore <| 
+                        (cloud { 
+                            return invalidOp "Fratricide!"
+                        }
+                        <||>
+                        cloud { //Task A
+                            do! spinWait flag
+                            //scheduler has received the exception and cancellation was triggered
+                            //we force new scheduler transition
+                            //1). the current task is cancelled before the transition is triggered => nothing happens
+                            //2). the transition is triggered before cancellation occurs => scheduler will ignore transition, no new tasks
+                            do! schedulerNoOp
+                            //everything following this is dead code
+                            do! Cloud.Ignore <| MutableCloudRef.Force(flag, false)
+                        })
+                with _ ->
+                    //cancellation has already been triggered
+                    //1). Task A will not have time to see the flag set
+                    //2). Task A will see the flag set => Task A performs a scheduler transition
+                    do! Cloud.Ignore <| MutableCloudRef.Set(flag, true)
+            }
+            
 
     module PrimesTest = 
 
