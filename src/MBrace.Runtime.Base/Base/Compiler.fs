@@ -56,9 +56,9 @@ namespace Nessos.MBrace.Runtime
                 let prefix =
                     match ExprMetadata.TryParse node with
                     | None -> ""
-                    | Some m -> printLocation m
+                    | Some m -> sprintf "%s: " <| printLocation m
 
-                Printf.ksprintf(fun msg -> gathered := errorType (sprintf "%s: %s" prefix msg) :: gathered.Value) fmt
+                Printf.ksprintf(fun msg -> gathered := errorType (sprintf "%s%s" prefix msg) :: gathered.Value) fmt
 
             let checkCurrentNode (e : Expr) =
                 match e with
