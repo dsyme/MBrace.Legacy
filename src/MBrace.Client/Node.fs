@@ -32,9 +32,9 @@ module Logs =
         |> String.concat "\n"
         |> printfn "%s"
 
+type internal MBraceNodeMsg = Nessos.MBrace.Runtime.MBraceNode
 
-
-type MBraceNode private (nodeRef: ActorRef<Runtime>, uri: Uri) as self = 
+type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri: Uri) as self = 
     // NOTE : uri field denotes mbrace uri
 
     static do MBraceSettings.ClientId |> ignore
@@ -51,7 +51,7 @@ type MBraceNode private (nodeRef: ActorRef<Runtime>, uri: Uri) as self =
 
     let nodeInfo = CacheAtom.Create((fun () -> Utils.getNodeInfo nodeRef), interval = 1000, keepLastResultOnError = true)
 
-    internal new (nref: ActorRef<Runtime>) =
+    internal new (nref: ActorRef<MBraceNodeMsg>) =
         let uri = ActorRef.toUri nref |> MBraceUri.actorUriToMbraceUri
         MBraceNode(nref, uri)
 

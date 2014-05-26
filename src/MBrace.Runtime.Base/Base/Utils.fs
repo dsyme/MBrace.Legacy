@@ -103,7 +103,7 @@
             UriBuilder("mbrace", hostEntry.HostName, endPoint.Port).Uri
 
 
-        let (|RuntimeReply|_|) (msg : Runtime) =
+        let (|RuntimeReply|_|) (msg : MBraceNode) =
             match msg with
             | MasterBoot(r, _) -> r :> IReplyChannel |> Some 
             | GetProcessManager r -> r :> IReplyChannel |> Some

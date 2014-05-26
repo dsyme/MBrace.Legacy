@@ -11,5 +11,6 @@ test:
     - MBrace.Runtime.Tests.dll
   categories:
     - FileSystemStore
+    - CompilerTests
     - LocalTests
 #    - ClusterTests

@@ -59,13 +59,13 @@
     <Compile Include="String.fs" />
     <Compile Include="IoC.fs" />
     <Compile Include="Reflection.fs" />
+    <Compile Include="PrettyPrinters\Record.fs" />
+    <Compile Include="PrettyPrinters\Type.fs" />
     <Compile Include="Json.fs" />
     <Compile Include="Retry.fs" />
     <Compile Include="Exiter.fs" />
     <None Include="app.config" />
     <None Include="packages.config" />
-    <Compile Include="PrettyPrinters\Record.fs" />
-    <Compile Include="PrettyPrinters\Type.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">

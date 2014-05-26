@@ -51,19 +51,21 @@
                 Some methodInfo
             else None
 
-        /// matches against a method or property call
-        let (|MemberInfo|_|) (e : Expr) =
-            match e with
-            | Call(_,m,_) -> Some (m :> MemberInfo, m)
-            | PropertyGet(_,p,_) 
-            | PropertySet(_,p,_,_) -> Some (p :> MemberInfo, p.GetGetMethod(true))
-            | _ -> None
-
         /// matches against a cloud method or property call
-        let (|CloudMemberInfo|_|) (e : Expr) =
+        let (|CloudCall|_|) (e : Expr) =
             match e with
             | Call(_,CloudMethod m,_) -> Some(m :> MemberInfo, m)
             | PropertyGet(_, CloudProperty p,_) -> Some(p :> MemberInfo, p.GetGetMethod(true))
+            | _ -> None
+
+        /// matches against a method or property call
+        let (|MemberInfo|_|) (e : Expr) =
+            match e with
+            | Call(_,m,_) -> Some (m :> MemberInfo, m.ReturnType)
+            | PropertyGet(_,p,_) 
+            | PropertySet(_,p,_,_) -> Some (p :> MemberInfo, p.PropertyType)
+            | FieldGet(_,p) -> Some (p :> MemberInfo, p.FieldType)
+            | FieldSet(_,p,_) -> Some (p :> MemberInfo, p.FieldType)
             | _ -> None
 
         /// recognizes call to cloud builder

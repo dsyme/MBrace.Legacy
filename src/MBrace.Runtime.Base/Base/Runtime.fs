@@ -15,22 +15,17 @@
     type ProcessId = Nessos.MBrace.Core.ProcessId
     type RequestId = System.Guid
     type DeploymentId = System.Guid
-    type PackageId = System.Guid
 
 
     type ProcessImage = 
         {
             Name : string
-            Computation : byte [] // serialized QuotationPackage
+            Computation : byte [] // serialized CloudComputationPackage
             Type : byte []  // serialized System.Type
             TypeName : string
             ClientId : Guid
             Dependencies : AssemblyId list
         }
-
-    type ExecuteResult = Nessos.MBrace.Core.Result<obj>
-
-    exception SchedulerDeserializationException of exn
 
     type ExecuteResultImage = 
         | ProcessInitError of exn // compiler / serialization exceptions etc.
@@ -118,9 +113,6 @@
         | CreateDynamicProcess of IReplyChannel<ProcessInfo> * Guid * ProcessImage
         | GetAssemblyLoadInfo of IReplyChannel<AssemblyLoadInfo list> * Guid * AssemblyId list
         | LoadAssemblies of IReplyChannel<AssemblyLoadInfo list> * Guid * PortableAssembly list
-
-//            | GetProcessResult of IReplyChannel<ExecuteResultImage> * ProcessId // marked for deprecation : client no longer sends messages of this type
-//            | TryGetProcessResult of IReplyChannel<ExecuteResultImage option> * ProcessId // ditto
         | GetProcessInfo of IReplyChannel<ProcessInfo> * ProcessId
         | GetAllProcessInfo of IReplyChannel<ProcessInfo []>
         | ClearProcessInfo of IReplyChannel<unit> * ProcessId // Clears process from logs if no longer running
@@ -129,9 +121,7 @@
         | KillProcess of IReplyChannel<unit> * ProcessId
 
 
-//        and ProcessCreationResponse = Process of ProcessInfo | MissingAssemblies of AssemblyLoadResponse []
-
-    type Runtime = 
+    type MBraceNode = 
         //MasterBoot(replyChannel, endPointsOfSlaveNodes, numOfAltMasterNodes)
         //Boots the runtime. The node receiving this message becomes the Master Node
         //and assumes the Scheduler Role.
@@ -167,7 +157,7 @@
         //For internal communication, not for client use
         | GetInternals of IReplyChannel<ActorRef>
 
-    and NodeRef = ActorRef<Runtime>
+    and NodeRef = ActorRef<MBraceNode>
 
     and Configuration(nodes : NodeRef [], replicationFactor : int, failoverFactor : int) =
         member __.Nodes = nodes
@@ -187,7 +177,7 @@
 
     /// a wrapper type to the runtime protocol for use by the client lib
     and ClientRuntimeProxy =
-        | RemoteMsg of Runtime
+        | RemoteMsg of MBraceNode
         | GetLastRecordedState of IReplyChannel<NodeRef list>
 
 

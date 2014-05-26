@@ -26,6 +26,7 @@ namespace Nessos.MBrace.Runtime
 
         /// specifies if given MemberInfo is prohibited for use within cloud workflows
         let isProhibitedMember (m : MemberInfo) =
+            if m = null then false else
             let assembly = match m with :? Type as t -> t.Assembly | m -> m.DeclaringType.Assembly
             let assemblyName = assembly.GetName()
 
@@ -38,12 +39,14 @@ namespace Nessos.MBrace.Runtime
         let printLocation (metadata : ExprMetadata) =
             sprintf "%s(%d,%d)" metadata.File metadata.StartRow metadata.StartCol
 
+        let thisAssembly = Assembly.GetExecutingAssembly()
+
         // checks given expression tree, generating mbrace-related errors and warnings:
         // 1. checks if calls to cloud blocks are accompanied with a [<Cloud>] attribute
         // 2. checks if top-level bindings in the cloud monad are serializable
         // 3. checks that cloud block methods are static
         // 4. checks that cloud blocks do not make calls to the mbrace client API.
-        let checkExpression (name : string option) (expr : Expr) =
+        let checkExpression (name : string option) (metadata : ExprMetadata option) (expr : Expr) =
 
             let gathered = ref []
 
@@ -54,9 +57,11 @@ namespace Nessos.MBrace.Runtime
 
             let log errorType (node : Expr) fmt =
                 let prefix =
-                    match ExprMetadata.TryParse node with
-                    | None -> ""
-                    | Some m -> sprintf "%s: " <| printLocation m
+                    // try parse current node for metadata, fall back to top-level metadata if not found
+                    match ExprMetadata.TryParse node, metadata with
+                    | Some m, _ 
+                    | None, Some m -> sprintf "%s: " <| printLocation m
+                    | None, None -> ""
 
                 Printf.ksprintf(fun msg -> gathered := errorType (sprintf "%s%s" prefix msg) :: gathered.Value) fmt
 
@@ -69,8 +74,8 @@ namespace Nessos.MBrace.Runtime
                         if not <| Serialization.DefaultPickler.IsSerializableType v.Type then
                             log Error e "%s has binding '%s' of type '%s' that is not serializable." blockName v.Name v.Type.Name
                 
-                // let! x = <external cloud expression>
-                | CloudMemberInfo (memberInfo, methodBase) ->
+                // let! x = cloudExpr
+                | CloudCall (memberInfo, methodBase) ->
                     // referenced cloud expression is not a reflected definition
                     if not memberInfo.IsReflectedDefinition then
                         log Error e "%s depends on '%s' which lacks [<Cloud>] attribute." blockName memberInfo.Name
@@ -84,28 +89,21 @@ namespace Nessos.MBrace.Runtime
                     log Error e "%s uses invalid type '%O'." blockName t
                     
                 // generic Call/PropertyGet/PropertySet
-                | MemberInfo (m,getter) ->
+                | MemberInfo (m,_) ->
                     // check if cloud expression references inappropriate MBrace libraries
                     if isProhibitedMember m then
-                        log Error e "%s references runtime method '%s'." blockName m.Name
-                    elif isProhibitedMember getter.ReturnType then
-                        log Error e "%s uses invalid type '%O'." blockName getter.ReturnType
+                        log Error e "%s references invalid MBrace API method '%s'." blockName m.Name
 
-                // Closure
-                | Value(o,t) ->
-                    match o with
-                    | :? Type as t when isProhibitedMember t ->
-                        log Error e "%s uses invalid type '%O'." blockName t
-                    | :? MemberInfo as m when isProhibitedMember m ->
-                        log Error e "%s uses invalid member '%O'." blockName m
-                    | null when isProhibitedMember t ->
-                        log Error e "%s uses invalid type '%O'." blockName t
-                    | _ ->
-                        let t = o.GetType()
-                        if isProhibitedMember t then
-                            log Error e "%s uses invalid type '%O'." blockName t
-
+                // values captured in closure
+                | Value(_,t) when isProhibitedMember t -> log Error e "%s uses invalid type '%O'." blockName t
                 | _ -> ()
+
+                // protect against exception that may be raised by the Expr.Type property
+                try 
+                    if isProhibitedMember e.Type then
+                        log Error e "%s uses invalid type '%O'." blockName expr.Type
+
+                with _ -> ()
 
 
             Expr.iter checkCurrentNode expr
@@ -115,10 +113,10 @@ namespace Nessos.MBrace.Runtime
 
         let checkTopLevelQuotation (expr : Expr) =
             let metadata = ExprMetadata.TryParse expr
-            checkExpression None expr
+            checkExpression None metadata expr
 
         let checkFunctionInfo (f : FunctionInfo) =
-            checkExpression (Some f.FunctionName) f.Expr
+            checkExpression (Some f.FunctionName) (Some f.Metadata) f.Expr
 
         let rec tryGetName (expr : Expr) =
             match expr with 

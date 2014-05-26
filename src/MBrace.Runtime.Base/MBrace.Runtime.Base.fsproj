@@ -76,7 +76,7 @@
     <Compile Include="Base\CloudProcessLog.fs" />
     <Compile Include="Base\CloudUtils.fs" />
     <Compile Include="Base\Compiler.fs" />
-    <Compile Include="Base\RuntimeAPI.fs" />
+    <Compile Include="Base\Runtime.fs" />
     <Compile Include="Base\Utils.fs" />
     <Compile Include="Base\DaemonConfig.fs" />
     <Compile Include="Base\WorkerConfig.fs" />

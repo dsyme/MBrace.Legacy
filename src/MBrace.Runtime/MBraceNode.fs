@@ -25,7 +25,7 @@ let private readEntriesFromMasterLogFile () =
     let file = IoC.Resolve<string>("jsonLogFile")
     JsonFileLogger.ReadLogs file
 
-type internal MBraceNodeManager = Runtime
+type internal MBraceNodeManager = MBraceNode
 
 type State = {
     DeploymentId: Guid
@@ -65,12 +65,12 @@ let private initMultiNodeRuntime (ctx: BehaviorContext<_>) (configuration: Confi
         do! Cluster.NodeManager <!- SyncNodeEvents
         
         let serializerName = Nessos.Thespian.Serialization.SerializerRegistry.GetDefaultSerializer().Name
-        let alts = altAddresses |> Array.map (fun addr -> Remote.TcpProtocol.ActorRef.fromUri (sprintf' "btcp://%O/*/runtime/%s" addr serializerName) : ActorRef<Runtime>)
+        let alts = altAddresses |> Array.map (fun addr -> Remote.TcpProtocol.ActorRef.fromUri (sprintf' "btcp://%O/*/runtime/%s" addr serializerName) : ActorRef<MBraceNode>)
 
         return alts
     }
 
-let private addressToRuntime (address: Address): ActorRef<Runtime> =
+let private addressToRuntime (address: Address): ActorRef<MBraceNode> =
     let serializerName = Nessos.Thespian.Serialization.SerializerRegistry.GetDefaultSerializer().Name
     ActorRef.fromUri (sprintf' "btcp://%O/*/runtime/%s" address serializerName)
     

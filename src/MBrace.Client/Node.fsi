@@ -18,7 +18,7 @@
     type MBraceNode =
         class
             interface System.IComparable
-            internal new : nref:ActorRef<Runtime.Runtime> ->
+            internal new : nref:ActorRef<Runtime.MBraceNode> ->
                                              MBraceNode
 
             ///Create a new MBraceNode object. No node is spawned.
@@ -28,7 +28,7 @@
             ///Create a new MBraceNode object. No node is spawned.
             new : hostname:string * port:int -> MBraceNode
 
-            private new : nodeRef:ActorRef<Runtime.Runtime> * uri:System.Uri -> MBraceNode
+            private new : nodeRef:ActorRef<Runtime.MBraceNode> * uri:System.Uri -> MBraceNode
 
             member CompareTo : y:obj -> int
             
@@ -73,7 +73,7 @@
             ///Returns a UUID bound to this node instance.
             member DeploymentId : System.Guid
             
-            member internal Ref : ActorRef<Runtime.Runtime>
+            member internal Ref : ActorRef<Runtime.MBraceNode>
             
             ///Gets the node's state.
             member State : Runtime.NodeType
