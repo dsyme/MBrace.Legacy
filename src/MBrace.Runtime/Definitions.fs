@@ -717,55 +717,59 @@ type MBraceNodeEventManager() =
                     //3: For each process
                     for workerPoolActivation in workerPoolActivations do
                         let processId = workerPoolActivation.ActivationReference.InstanceId
+                        
+                        //check if process process worker is already activeated here
+                        if Cluster.NodeRegistry.IsActivatedLocally { Definition = empDef/"process"/"worker"/"workerRaw"; InstanceId = processId } then
+                            Log.logInfo <| sprintf' "OnAttachToCluster :: process %A already active in node..." processId
+                        else
+                            Log.logInfo <| sprintf' "OnAttachToCluster :: Adding process %A to node..." processId
 
-                        Log.logInfo <| sprintf' "OnAttachToCluster :: Adding process %A to node..." processId
-
-                        //Throws
-                        //-
-                        let workerPool = ReliableActorRef.FromRef (workerPoolActivation.ActorRef.Value :?> ActorRef<WorkerPool>)
-                        //FaultPoint
-                        //-
-                        let! processInfo = processMonitor <!- fun ch -> Singular(Choice1Of2 <| TryGetProcessInfo(ch, processId))
-                        match processInfo with
-                        | Some { Dependencies = requiredAssemblies } ->
-                            //4.1 Create Worker in process domain
-                            let workerActivationRecord = {
-                                Definition = empDef/"process"/"worker"
-                                Instance = Some processId
-                                Configuration = ActivationConfiguration.FromValues [Conf.Val Configuration.RequiredAssemblies requiredAssemblies]
-                                ActivationStrategy = ActivationStrategy.specificNode Cluster.NodeManager
-                            }
-                            //FaultPoint
-                            //-
-                            let! activations, _ = clusterManager <!- fun ch -> ActivateDefinitionWithResults(ch, true, workerActivationRecord, Array.empty, Array.empty)
-                
                             //Throws
                             //-
-                            let workerActivation = 
-                                activations |> Seq.find (fun clusterActivation -> clusterActivation.ActivationReference.Definition = empDef/"process"/"worker"/"workerRaw")
-
-                            let worker = new RawActorRef<Worker>(workerActivation.ActorRef.Value :?> ActorRef<RawProxy>) :> ActorRef<Worker>
-
-                            let taskManagerActivationRef = {
-                                Definition = empDef/"process"/"taskManager"/"taskManagerRaw"
-                                InstanceId = processId
-                            }
-
-                            let! r = clusterManager <!- fun ch -> ResolveActivationRefs(ch, taskManagerActivationRef)
-                            let taskManager = new RawActorRef<TaskManager>(r.[0] :?> ActorRef<RawProxy>) :> ActorRef<TaskManager>
-    //                            let taskManagerActivation = 
-    //                                activations |> Seq.find (fun clusterActivation -> clusterActivation.ActivationReference.Definition = empDef/"process"/"taskManager"/"taskManagerRaw")
-    //                            new RawActorRef<TaskManager>(taskManagerActivation.ActorRef.Value :?> ActorRef<RawProxy>) :> ActorRef<TaskManager>
-
-                            worker <-- Worker.SwitchTaskManager taskManager
-
-                            //4.2 Add worker to WorkerPool
+                            let workerPool = ReliableActorRef.FromRef (workerPoolActivation.ActorRef.Value :?> ActorRef<WorkerPool>)
                             //FaultPoint
                             //-
-                            workerPool <-- AddWorker worker
-                        | None -> () //process has probably finished
+                            let! processInfo = processMonitor <!- fun ch -> Singular(Choice1Of2 <| TryGetProcessInfo(ch, processId))
+                            match processInfo with
+                            | Some { Dependencies = requiredAssemblies } ->
+                                //4.1 Create Worker in process domain
+                                let workerActivationRecord = {
+                                    Definition = empDef/"process"/"worker"
+                                    Instance = Some processId
+                                    Configuration = ActivationConfiguration.FromValues [Conf.Val Configuration.RequiredAssemblies requiredAssemblies]
+                                    ActivationStrategy = ActivationStrategy.specificNode Cluster.NodeManager
+                                }
+                                //FaultPoint
+                                //-
+                                let! activations, _ = clusterManager <!- fun ch -> ActivateDefinitionWithResults(ch, true, workerActivationRecord, Array.empty, Array.empty)
+                
+                                //Throws
+                                //-
+                                let workerActivation = 
+                                    activations |> Seq.find (fun clusterActivation -> clusterActivation.ActivationReference.Definition = empDef/"process"/"worker"/"workerRaw")
 
-                    Log.logInfo "All processes added to current node."
+                                let worker = new RawActorRef<Worker>(workerActivation.ActorRef.Value :?> ActorRef<RawProxy>) :> ActorRef<Worker>
+
+                                let taskManagerActivationRef = {
+                                    Definition = empDef/"process"/"taskManager"/"taskManagerRaw"
+                                    InstanceId = processId
+                                }
+
+                                let! r = clusterManager <!- fun ch -> ResolveActivationRefs(ch, taskManagerActivationRef)
+                                let taskManager = new RawActorRef<TaskManager>(r.[0] :?> ActorRef<RawProxy>) :> ActorRef<TaskManager>
+        //                            let taskManagerActivation = 
+        //                                activations |> Seq.find (fun clusterActivation -> clusterActivation.ActivationReference.Definition = empDef/"process"/"taskManager"/"taskManagerRaw")
+        //                            new RawActorRef<TaskManager>(taskManagerActivation.ActorRef.Value :?> ActorRef<RawProxy>) :> ActorRef<TaskManager>
+
+                                worker <-- Worker.SwitchTaskManager taskManager
+
+                                //4.2 Add worker to WorkerPool
+                                //FaultPoint
+                                //-
+                                workerPool <-- AddWorker worker
+                            | None -> () //process has probably finished
+
+                    Log.logInfo "OnAttachToCluster :: All processes added to current node."
             else
                 Log.logInfo "OnAttachToCluster :: Common node services already active"
         with e ->
