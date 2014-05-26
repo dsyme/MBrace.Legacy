@@ -78,11 +78,32 @@ namespace Nessos.MBrace.Runtime
                     // fail if cloud expression is not static method
                     elif not methodBase.IsStatic then
                         log Error e "%s references non-static cloud workflow '%s'. This is not supported." blockName memberInfo.Name
-
-                | MemberInfo (m,_) ->
+                
+                // typeof<_> literal
+                | TypeOf t when isProhibitedMember t ->
+                    log Error e "%s uses invalid type '%O'." blockName t
+                    
+                // generic Call/PropertyGet/PropertySet
+                | MemberInfo (m,getter) ->
                     // check if cloud expression references inappropriate MBrace libraries
                     if isProhibitedMember m then
                         log Error e "%s references runtime method '%s'." blockName m.Name
+                    elif isProhibitedMember getter.ReturnType then
+                        log Error e "%s uses invalid type '%O'." blockName getter.ReturnType
+
+                // Closure
+                | Value(o,t) ->
+                    match o with
+                    | :? Type as t when isProhibitedMember t ->
+                        log Error e "%s uses invalid type '%O'." blockName t
+                    | :? MemberInfo as m when isProhibitedMember m ->
+                        log Error e "%s uses invalid member '%O'." blockName m
+                    | null when isProhibitedMember t ->
+                        log Error e "%s uses invalid type '%O'." blockName t
+                    | _ ->
+                        let t = o.GetType()
+                        if isProhibitedMember t then
+                            log Error e "%s uses invalid type '%O'." blockName t
 
                 | _ -> ()
 

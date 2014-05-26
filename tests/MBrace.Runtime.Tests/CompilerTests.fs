@@ -106,3 +106,13 @@
         [<Test>]
         let ``Cloud block that calls the MBrace client API`` () =
             shouldFailCompilation <@ blockThatCallsClientApi () @>
+
+        [<Test>]
+        let ``Cloud block that captures MBrace.Client object`` () =
+            let computation = box <| MBrace.Compile <@ cloud { return 42 } @>
+
+            shouldFailCompilation <@ cloud { let x = computation.GetHashCode() in return x } @>
+
+        [<Test>]
+        let ``Cloud block that references MBrace.Client type`` () =
+            shouldFailCompilation <@ cloud { return typeof<Nessos.MBrace.Client.MBraceRuntime> } @>
