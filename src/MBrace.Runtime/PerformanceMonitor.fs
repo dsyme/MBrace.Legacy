@@ -4,7 +4,6 @@ module internal PerformanceMonitor =
 
         open System
         open System.Diagnostics
-        open System.Management
         open System.Net
         open System.Collections.Generic
         open Nessos.Thespian
