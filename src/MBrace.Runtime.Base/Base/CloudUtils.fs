@@ -12,16 +12,14 @@
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Utils.Quotations
     open Nessos.MBrace.Utils.Reflection
 
     module internal CloudUtils =
 
-        /// checks if the given type or covariant type params are of type Cloud<'T>
+        /// checks if the given type or covariant type arguments are of type Cloud<'T>
         let rec yieldsCloudBlock (t : Type) =
-            if typeof<Cloud>.IsAssignableFrom(t) then true else
-            
             match t with
+            | Named(t, [||]) -> typeof<Cloud>.IsAssignableFrom t
             | FSharpFunc(_,resultT) -> yieldsCloudBlock resultT
             | Named(_, genericArgs) -> Array.exists yieldsCloudBlock genericArgs
             | Param _ -> false
@@ -45,7 +43,7 @@
                 Some methodInfo
             else None
 
-
+        /// matches against a method or property call
         let (|MemberInfo|_|) (e : Expr) =
             match e with
             | Call(_,m,_) -> Some (m :> MemberInfo, m)
@@ -53,24 +51,14 @@
             | PropertySet(_,p,_,_) -> Some (p :> MemberInfo, p.GetGetMethod(true))
             | _ -> None
 
+        /// matches against a cloud method or property call
         let (|CloudMemberInfo|_|) (e : Expr) =
             match e with
             | Call(_,CloudMethod m,_) -> Some(m :> MemberInfo, m)
             | PropertyGet(_, CloudProperty p,_) -> Some(p :> MemberInfo, p.GetGetMethod(true))
             | _ -> None
 
-//        /// matches against a method or property that yields Cloud
-//        let (|CloudMoP|_|) (m : MethodOrProperty) =
-//            match m with
-//            | PropertyGetter(CloudProperty _)
-//            | MethodCall(CloudMethod _) -> Some m
-//            | _ -> None
-
-        let (|Property|_|) (e : Expr) =
-            match e with
-            | PropertyGet(_,p,_) | PropertySet(_,p,_,_) -> Some p
-            | _ -> None
-
+        /// recognizes call to cloud builder
         let (|CloudBuilder|_|) (name : string) (m : MethodInfo) =
             if m.DeclaringType = typeof<CloudBuilder> && m.Name = name then
                 Some ()
@@ -211,13 +199,3 @@
                 | [] -> List.rev gathered
 
             aux false [] [expr]
-
-//        type MethodOrProperty with
-//            member self.yieldsCloudBlock () =
-//                match self with CloudMoP _ -> true | _ -> false
-//
-//        type Quotation with
-//            member self.yieldsCloudBlock() =
-//                match self.ReflectedMethod with
-//                | None -> self.Expr.Type |> yieldsCloudBlock
-//                | Some r -> r.yieldsCloudBlock ()

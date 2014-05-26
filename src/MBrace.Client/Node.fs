@@ -16,7 +16,7 @@ open Nessos.Thespian.Remote.PipeProtocol
 open Nessos.Thespian.ActorExtensions.RetryExtensions
 
 open Nessos.MBrace.Utils
-open Nessos.MBrace.Utils.String
+open Nessos.MBrace.Utils.PrettyPrinters
 
 open Nessos.MBrace.Runtime
 open Nessos.MBrace.Runtime.Utils
@@ -311,7 +311,7 @@ and internal NodeInfo (nodes : seq<MBraceNode>) =
                 Field.create "Connection String" Left (fun n -> n.Uri)
             ]
 
-        String.prettyPrintTable template
+        Record.prettyPrint template
 
     static let prettyPrintPerf =
         let template : Field<MBraceNode * NodePerformanceInfo> list =
@@ -326,7 +326,7 @@ and internal NodeInfo (nodes : seq<MBraceNode>) =
                 Field.create "Network(ul/dl: kbps)" Right (fun (_,p) -> p.TotalNetworkUsage)
             ]
 
-        String.prettyPrintTable template
+        Record.prettyPrint template
 
     static member Create (nrefs : NodeRef seq) = NodeInfo (nrefs |> Seq.map (fun n -> MBraceNode n))
 

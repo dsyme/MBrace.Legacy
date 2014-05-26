@@ -10,8 +10,7 @@
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.MBraceException
 
-    open Nessos.MBrace.Utils
-    open Nessos.MBrace.Utils.Quotations
+    open Nessos.MBrace.Utils.PrettyPrinters
 
     type CloudComputation =
         
@@ -42,6 +41,6 @@
                 Name = comp.Name
                 Computation = Serialization.Serialize comp
                 Type = Serialization.Serialize comp.ReturnType
-                TypeName = Reflection.prettyPrint typeof<'T>
+                TypeName = Type.prettyPrint typeof<'T>
                 Dependencies = dependencies |> List.map VagrantUtils.ComputeAssemblyId
             }

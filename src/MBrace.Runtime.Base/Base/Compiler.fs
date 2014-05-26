@@ -13,7 +13,6 @@ namespace Nessos.MBrace.Runtime
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Reflection
-    open Nessos.MBrace.Utils.Quotations
     open Nessos.MBrace.Runtime.CloudUtils
 
     open Nessos.MBrace.Runtime
@@ -28,6 +27,11 @@ namespace Nessos.MBrace.Runtime
         let printLocation (metadata : ExprMetadata) =
             sprintf "%s(%d,%d)" metadata.File metadata.StartRow metadata.StartCol
 
+        // checks given expression tree, generating mbrace-related errors and warnings:
+        // 1. checks if calls to cloud blocks are accompanied with a [<Cloud>] attribute
+        // 2. checks if top-level bindings in the cloud monad are serializable
+        // 3. checks that cloud block methods are static
+        // 4. checks that cloud blocks do not make calls to the mbrace client API.
         let checkExpression (name : string option) (expr : Expr) =
 
             let gathered = ref []
@@ -96,6 +100,7 @@ namespace Nessos.MBrace.Runtime
             | ShapeLambda(_,body) -> tryGetName body
             | _ -> None
 
+        /// the main compiler method
         let compile (expr : Expr) =
             
             // gather function info
