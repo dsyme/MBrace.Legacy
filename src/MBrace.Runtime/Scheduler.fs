@@ -84,6 +84,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                         match value with
                         | (ValueExpr (Exc _)) -> 
                             let childProcessBody = ProcessBody(resultType, restOfThunkIdsStack, functions, Dump (value :: stack))
+                            do! taskManager <!- fun ch -> CancelSiblingTasks(ch, taskId)
                             do! taskManager <!- fun ch -> CreateTasks(ch, taskHeader, [childProcessBody])
                         | (ValueExpr (Obj (ObjValue null, _))) -> //This is a check for a None value; Nones are represented as nulls, therefore this checks for an (utyped) None
                             match i with
@@ -121,46 +122,48 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                 // Parallel thunks on the stack waiting
                 | Some ((Dump ((ValueExpr (ParallelThunks (thunkValues, elementType))) :: stack) as dumpCell)) ->
                     let i = thunkValues |> Array.tryFindIndex (fun thunkValue -> match thunkValue with ThunkId thunkId' when thunkId = thunkId' -> true | _ -> false)
-                    match i with
-                    | Some index ->
-                        // in place update 
-                        thunkValues.[index] <- Thunk value
-                        //and update the continuation map
-                        //SLOW UPDATE: The entire updated dump is sent
-                        //do! !reliableContinuationsMap <!- fun ch -> ch, ContinuationMap.Update(thunkId, dumpCell)
-                        //--
-                        //FAST UPDATE: Send the value and the in place update is performed in the map
-                        continuationMap <-- AsyncReplicated(Choice1Of2 <| ContinuationMap.UpdateParallelThunkValue(thunkId, index, value))
 
-                        //ON FAULT
-                        //\forall x \in thunkValues. x = (Thunk _)
-                        //Thus there may be no index for the result thunkId to update in the retry.
-                        //When there is no index we go straigt to the completion check.
-                    | _ -> ()
+                    let! isValid = taskManager <!- fun ch -> IsValidTask(ch, taskId)
+                    if isValid then
+                        match value with
+                        | (ValueExpr (Exc _)) -> 
+                            //task produced exception; cancel siblings and continue
+                            let childProcessBody = ProcessBody(resultType, restOfThunkIdsStack, functions, Dump (value :: stack))
+                            do! taskManager <!- fun ch -> CancelSiblingTasks(ch, taskId)
+                            do! taskManager <!- fun ch -> CreateTasks(ch, taskHeader, [childProcessBody])
+                        | _ ->
+                            match i with
+                            | Some index ->
+                                // in place update 
+                                thunkValues.[index] <- Thunk value
+                                //and update the continuation map
+                                //--
+                                //FAST UPDATE: Send the value and the in place update is performed in the map
+                                continuationMap <-- AsyncReplicated(Choice1Of2 <| ContinuationMap.UpdateParallelThunkValue(thunkId, index, value))
 
-                    // completion check
-                    if thunkValues |> Array.forall (fun thunkValue -> match thunkValue with Thunk _ -> true | _ -> false) then
-                        ctx.LogInfo <| sprintf' "PARALLEL THUNK CONTINUATION - COMPLETE (%A, %A)" processId taskId
-                        // check for exceptions and return result
-                        let result =
-                            match thunkValues |> Array.tryPick (fun thunkValue -> match thunkValue with Thunk ((ValueExpr (Exc (exn, _)))) -> Some exn | _ -> None) with
-                            | Some _ ->                                         
-                                thunkValues
-                                |> Array.map (fun thunkValue -> match thunkValue with Thunk ((ValueExpr (Obj (value, _)))) -> ValueResult value | Thunk ((ValueExpr (Exc (exn, ctx)))) -> ExceptionResult (exn, ctx) | _ -> throwInvalidState resultDump)
-                                |> (fun values -> new ParallelCloudException(processId, values) :> exn)
-                                |> (fun ex -> Exc (ex, None))
-                            | None -> 
-                                ParallelThunks (thunkValues, elementType)
+                                //ON FAULT
+                                //\forall x \in thunkValues. x = (Thunk _)
+                                //Thus there may be no index for the result thunkId to update in the retry.
+                                //When there is no index we go straight to the completion check.
+                            | _ -> ()
 
-                        // add result on the stack and continue
-                        let childProcessBody = ProcessBody(resultType, restOfThunkIdsStack, functions, Dump ((ValueExpr result) :: stack))
-                        do! taskManager <!- fun ch -> CreateTasks(ch, taskHeader, [childProcessBody])
-                    else
-                        ctx.LogInfo <| sprintf' "PARALLEL THUNK CONTINUATION - INCOMPLETE (%A, %A)" processId taskId
+                        // completion check
+                        if thunkValues |> Array.forall (fun thunkValue -> match thunkValue with Thunk _ -> true | _ -> false) then
+                            ctx.LogInfo <| sprintf' "PARALLEL THUNK CONTINUATION - COMPLETE (%A, %A)" processId taskId
+                            let result = ParallelThunks (thunkValues, elementType)
 
-                        taskManager <-- LeafTaskComplete taskId
+                            // add result on the stack and continue
+                            let childProcessBody = ProcessBody(resultType, restOfThunkIdsStack, functions, Dump ((ValueExpr result) :: stack))
+                            do! taskManager <!- fun ch -> CreateTasks(ch, taskHeader, [childProcessBody])
+                        else
+                            ctx.LogInfo <| sprintf' "PARALLEL THUNK CONTINUATION - INCOMPLETE (%A, %A)" processId taskId
+
+                            taskManager <-- LeafTaskComplete taskId
                             
-                    continuationMap <-- AsyncReplicated(Choice1Of2 <| ParallelRemove thunkId)
+                        continuationMap <-- AsyncReplicated(Choice1Of2 <| ParallelRemove thunkId)
+                    else
+                        taskManager <-- LeafTaskComplete taskId
+                        continuationMap <-- AsyncReplicated(Choice1Of2 <| ParallelRemove thunkId)
                 | None -> 
                     //The computation is finished when there is a task logged by the taskId
                     //If there is no task logged by that id, then it is the result of a cancelled task
