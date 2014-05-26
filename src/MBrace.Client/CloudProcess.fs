@@ -20,7 +20,7 @@
     
     open Microsoft.FSharp.Quotations
 
-    type internal RuntimeMsg = Runtime
+    type internal RuntimeMsg = MBraceNode
     type internal ProcessManagerMsg = ProcessManager
     type internal OSProcess = System.Diagnostics.Process
 
