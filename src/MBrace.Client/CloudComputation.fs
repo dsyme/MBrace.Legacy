@@ -26,7 +26,7 @@
             | [] -> new CloudComputation<'T>(comp, dependencies, comp.Warnings)
             | errors ->
                 let errors = String.concat "\n" errors
-                mfailwithf "Supplied cloud block contains errors:\n%s" errors
+                raise <| new CompilerException(sprintf "Cloud workflow contains errors:\n%s" errors)
 
     and CloudComputation<'T> internal (comp : CloudComputationPackage, dependencies : Assembly list, warnings : string list) =
 

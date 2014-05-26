@@ -25,6 +25,12 @@ MBrace.RunLocal(test, showLogs = true)
 
 let runtime = MBrace.InitLocal 3
 
+let hello = cloud { return 42 }
+[<Cloud>]
+let bar = cloud { return! hello }
+
+runtime.Run <@ bar @>
+
 let proc = runtime.CreateProcess <@ test @>
 
 proc.ShowLogs()
