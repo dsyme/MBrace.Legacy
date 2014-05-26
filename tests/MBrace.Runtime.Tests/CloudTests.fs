@@ -9,6 +9,8 @@ namespace Nessos.MBrace.Runtime.Tests
 
     open Nessos.MBrace
     open Nessos.MBrace.Client
+    open Nessos.MBrace.Lib
+    open Nessos.MBrace.Lib.Concurrency
 
     [<TestFixture>]
     [<AbstractClass>]
