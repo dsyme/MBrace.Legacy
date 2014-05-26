@@ -29,8 +29,11 @@ namespace Nessos.MBrace.Runtime
             let assembly = match m with :? Type as t -> t.Assembly | m -> m.DeclaringType.Assembly
             let assemblyName = assembly.GetName()
 
-            assemblyName.Name.StartsWith "MBrace.Runtime"
-            || assemblyName.Name.StartsWith "MBrace.Client"
+            match assemblyName.Name with
+            | "MBrace.Runtime"
+            | "MBrace.Runtime.Base"
+            | "MBrace.Client" -> true
+            | _ -> false
 
         let printLocation (metadata : ExprMetadata) =
             sprintf "%s(%d,%d)" metadata.File metadata.StartRow metadata.StartCol
