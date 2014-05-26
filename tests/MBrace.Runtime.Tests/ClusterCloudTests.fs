@@ -184,6 +184,48 @@ namespace Nessos.MBrace.Runtime.Tests
             should equal ProcessResult.Killed ps.Result
             should equal 0 v
 
+        [<Test; Repeat 100>]
+        member test.``Parallel with exception cancellation`` () =
+            let schedulerNoOp = Cloud.Ignore <| Cloud.Parallel [cloud.Zero(); cloud.Zero()]
+            let rec spinWait mref =
+                cloud {
+                    let! v = MutableCloudRef.Read mref
+                    if v then return () 
+                    else
+                        do! Cloud.OfAsync <| Async.Sleep 100
+                        return! spinWait mref
+                }
+
+            let flag = MutableCloudRef.New false |> MBrace.RunLocal
+            let cs =
+                cloud {
+                    try
+                        do! Cloud.Ignore <| 
+                            (cloud { 
+                                return invalidOp "Fratricide!"
+                            }
+                            <||>
+                            cloud { //Task A
+                                do! spinWait flag
+                                //scheduler has received the exception and cancellation was triggered
+                                //we force new scheduler transition
+                                //1). the current task is cancelled before the transition is triggered => nothing happens
+                                //2). the transition is triggered before cancellation occurs => scheduler will ignore transition, no new tasks
+                                do! schedulerNoOp
+                                //everything following this is dead code
+                                do! Cloud.Ignore <| MutableCloudRef.Force(flag, false)
+                            })
+                    with _ ->
+                        //cancellation has already been triggered
+                        //1). Task A will not have time to see the flag set
+                        //2). Task A will see the flag set => Task A performs a scheduler transition
+                        do! Cloud.Ignore <| MutableCloudRef.Set(flag, true)
+                }
+
+            test.Runtime.Run <@ cs @>
+            let v = MutableCloudRef.Read flag |> MBrace.RunLocal
+            v |> should equal true
+
         [<Test; Category("Runtime Administration")>]
         member __.``Fetch logs`` () =
             __.Runtime.GetSystemLogs() |> Seq.isEmpty |> should equal false
