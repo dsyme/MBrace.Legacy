@@ -122,6 +122,23 @@ namespace Nessos.MBrace.Runtime.Tests
             <@ parallelIncrements () @> |> test.ExecuteExpression |> should equal 65;
             <@ cloud { let! r = [|1..10|] |> Array.map (fun x -> cloud { return x }) |> Cloud.Parallel in return r } @> |> test.ExecuteExpression |> (fun r -> r.Length |> should equal 10)
 
+        [<Test>]
+        member test.``Parallel Exception`` () =
+            <@
+                let worker i = cloud { if i = 5 then invalidOp "kaboom" }
+                cloud {
+                    try
+                        let! results =
+                            [1 .. 10] 
+                            |> List.map worker
+                            |> Cloud.Parallel
+
+                        return false
+
+                    with :? InvalidOperationException -> return true
+                }
+            @> |> test.ExecuteExpression |> should equal true
+
         [<Test>] 
         member test.``Try With Exception`` () =
             <@ testTryWithException 0 @> |> test.ExecuteExpression |> should equal -1
