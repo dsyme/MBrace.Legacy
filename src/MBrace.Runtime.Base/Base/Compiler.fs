@@ -24,6 +24,14 @@ namespace Nessos.MBrace.Runtime
             | Warning of string
             | Error of string
 
+        /// specifies if given MemberInfo is prohibited for use within cloud workflows
+        let isProhibitedMember (m : MemberInfo) =
+            let assembly = match m with :? Type as t -> t.Assembly | m -> m.DeclaringType.Assembly
+            let assemblyName = assembly.GetName()
+
+            assemblyName.Name.StartsWith "MBrace.Runtime"
+            || assemblyName.Name.StartsWith "MBrace.Client"
+
         let printLocation (metadata : ExprMetadata) =
             sprintf "%s(%d,%d)" metadata.File metadata.StartRow metadata.StartCol
 
@@ -70,13 +78,7 @@ namespace Nessos.MBrace.Runtime
 
                 | MemberInfo (m,_) ->
                     // check if cloud expression references inappropriate MBrace libraries
-                    let assembly = match m with :? Type as t -> t.Assembly | m -> m.DeclaringType.Assembly
-                    let assemblyName = assembly.GetName()
-                    let isProhibitedAssembly = 
-                        assemblyName.Name.StartsWith "Nessos.MBrace.Runtime"
-                        || assemblyName.Name.StartsWith "Nessos.MBrace.Client"
-
-                    if isProhibitedAssembly then
+                    if isProhibitedMember m then
                         log Error e "%s references runtime method '%s'." blockName m.Name
 
                 | _ -> ()

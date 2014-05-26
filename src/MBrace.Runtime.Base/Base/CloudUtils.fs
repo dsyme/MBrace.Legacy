@@ -18,8 +18,10 @@
 
         /// checks if the given type or covariant type arguments are of type Cloud<'T>
         let rec yieldsCloudBlock (t : Type) =
+            if typeof<Cloud>.IsAssignableFrom t then true else
+
             match t with
-            | Named(t, [||]) -> typeof<Cloud>.IsAssignableFrom t
+            | Named(t, [||]) -> false
             | FSharpFunc(_,resultT) -> yieldsCloudBlock resultT
             | Named(_, genericArgs) -> Array.exists yieldsCloudBlock genericArgs
             | Param _ -> false
