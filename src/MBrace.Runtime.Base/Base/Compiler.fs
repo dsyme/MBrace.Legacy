@@ -24,6 +24,17 @@ namespace Nessos.MBrace.Runtime
             | Warning of string
             | Error of string
 
+        /// specifies if given MemberInfo is prohibited for use within cloud workflows
+        let isProhibitedMember (m : MemberInfo) =
+            let assembly = match m with :? Type as t -> t.Assembly | m -> m.DeclaringType.Assembly
+            let assemblyName = assembly.GetName()
+
+            match assemblyName.Name with
+            | "MBrace.Runtime"
+            | "MBrace.Runtime.Base"
+            | "MBrace.Client" -> true
+            | _ -> false
+
         let printLocation (metadata : ExprMetadata) =
             sprintf "%s(%d,%d)" metadata.File metadata.StartRow metadata.StartCol
 
@@ -45,9 +56,9 @@ namespace Nessos.MBrace.Runtime
                 let prefix =
                     match ExprMetadata.TryParse node with
                     | None -> ""
-                    | Some m -> printLocation m
+                    | Some m -> sprintf "%s: " <| printLocation m
 
-                Printf.ksprintf(fun msg -> gathered := errorType (sprintf "%s: %s" prefix msg) :: gathered.Value) fmt
+                Printf.ksprintf(fun msg -> gathered := errorType (sprintf "%s%s" prefix msg) :: gathered.Value) fmt
 
             let checkCurrentNode (e : Expr) =
                 match e with
@@ -67,17 +78,32 @@ namespace Nessos.MBrace.Runtime
                     // fail if cloud expression is not static method
                     elif not methodBase.IsStatic then
                         log Error e "%s references non-static cloud workflow '%s'. This is not supported." blockName memberInfo.Name
-
-                | MemberInfo (m,_) ->
+                
+                // typeof<_> literal
+                | TypeOf t when isProhibitedMember t ->
+                    log Error e "%s uses invalid type '%O'." blockName t
+                    
+                // generic Call/PropertyGet/PropertySet
+                | MemberInfo (m,getter) ->
                     // check if cloud expression references inappropriate MBrace libraries
-                    let assembly = match m with :? Type as t -> t.Assembly | m -> m.DeclaringType.Assembly
-                    let assemblyName = assembly.GetName()
-                    let isProhibitedAssembly = 
-                        assemblyName.Name.StartsWith "Nessos.MBrace.Runtime"
-                        || assemblyName.Name.StartsWith "Nessos.MBrace.Client"
-
-                    if isProhibitedAssembly then
+                    if isProhibitedMember m then
                         log Error e "%s references runtime method '%s'." blockName m.Name
+                    elif isProhibitedMember getter.ReturnType then
+                        log Error e "%s uses invalid type '%O'." blockName getter.ReturnType
+
+                // Closure
+                | Value(o,t) ->
+                    match o with
+                    | :? Type as t when isProhibitedMember t ->
+                        log Error e "%s uses invalid type '%O'." blockName t
+                    | :? MemberInfo as m when isProhibitedMember m ->
+                        log Error e "%s uses invalid member '%O'." blockName m
+                    | null when isProhibitedMember t ->
+                        log Error e "%s uses invalid type '%O'." blockName t
+                    | _ ->
+                        let t = o.GetType()
+                        if isProhibitedMember t then
+                            log Error e "%s uses invalid type '%O'." blockName t
 
                 | _ -> ()
 

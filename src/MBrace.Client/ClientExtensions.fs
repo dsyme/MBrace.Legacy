@@ -10,9 +10,9 @@ open Nessos.MBrace.Runtime.Logging
 [<AutoOpen>]
 module ClientExtensions =
     type MBrace =
-        static member internal Compile (expr : Expr<Cloud<'R>>, ?name) = CloudComputation.Compile(expr, ?name = name)
+        static member Compile (expr : Expr<Cloud<'R>>, ?name) = CloudComputation.Compile(expr, ?name = name)
 
-        static member internal RunRemoteTask (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) =
+        static member RunRemoteAsTask (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) =
             let computation = MBrace.Compile expr
             Async.StartAsTask (runtime.RunAsync computation)
 

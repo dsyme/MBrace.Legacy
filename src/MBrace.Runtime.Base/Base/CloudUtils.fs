@@ -18,8 +18,10 @@
 
         /// checks if the given type or covariant type arguments are of type Cloud<'T>
         let rec yieldsCloudBlock (t : Type) =
+            if typeof<Cloud>.IsAssignableFrom t then true else
+
             match t with
-            | Named(t, [||]) -> typeof<Cloud>.IsAssignableFrom t
+            | Named(t, [||]) -> false
             | FSharpFunc(_,resultT) -> yieldsCloudBlock resultT
             | Named(_, genericArgs) -> Array.exists yieldsCloudBlock genericArgs
             | Param _ -> false
@@ -28,6 +30,12 @@
             
         /// checks if given type is part of the MBrace.Core library
         let isCloudPrimitive (t : Type) = t.Assembly = typeof<Cloud>.Assembly
+
+        /// matches against a `typeof` literal
+        let (|TypeOf|_|) (e : Expr) =
+            match e with
+            | SpecificCall <@ typeof<int> @> (_,types,_) when types.Length > 0 -> Some types.[0]
+            | _ -> None
 
         /// matches against a property whose return type contains cloud blocks
         let (|CloudProperty|_|) (propInfo : PropertyInfo) =

@@ -1,6 +1,10 @@
-﻿// include Fake lib
-#I "packages/FAKE/tools/"
-#r @"packages/FAKE/tools/FakeLib.dll"
+﻿// --------------------------------------------------------------------------------------
+// FAKE build script 
+// --------------------------------------------------------------------------------------
+
+#I "packages/FAKE/tools"
+#r "packages/FAKE/tools/FakeLib.dll"
+
 open Fake
 open Fake.AssemblyInfoFile
 open Fake.ReleaseNotesHelper
