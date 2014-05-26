@@ -247,7 +247,7 @@ namespace Nessos.MBrace.Runtime.Tests
 
             let n' = __.Runtime.Nodes |> List.length 
             n' - n |> should equal 1
-            Assert.Ignore("Attach is not synchronous")
+            Assert.Inconclusive("Attach is not synchronous")
 
         [<Test; Category("Runtime Administration")>]
         member __.``Detach Node`` () =
@@ -260,4 +260,4 @@ namespace Nessos.MBrace.Runtime.Tests
 
             let n' =__.Runtime.Nodes |> List.length
             n - n' |> should equal 1
-            Assert.Ignore("Attach is not synchronous")
+            Assert.Inconclusive("Detach is not synchronous")

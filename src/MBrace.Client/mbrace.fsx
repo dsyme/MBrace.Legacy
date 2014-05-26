@@ -73,3 +73,13 @@ proc.StreamLogs()
 
 proc.ShowLogs() 
 
+
+//----------------------------------------------------------------------
+// Attach bug
+
+let rt = MBrace.InitLocal 3
+printfn "%d" rt.Nodes.Length
+rt.AttachLocal(1)
+printfn "%d" rt.Nodes.Length
+let ps = <@ cloud { return "foo" } @> |> rt.CreateProcess
+ps.AwaitResult()
