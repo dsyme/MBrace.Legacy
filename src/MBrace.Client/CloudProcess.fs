@@ -197,6 +197,15 @@
 
             } |> Error.handleAsync
 
+        member p.DeleteContainer() =
+            p.DeleteContainerAsync()
+            |> Async.RunSynchronously
+
+        member p.DeleteContainerAsync() =
+            async {
+                let store = MBraceSettings.StoreInfo.Store
+                return! store.DeleteContainer(sprintf' "process%d" p.ProcessId)
+            } |> Error.handleAsync
 
         static member Cast<'T> (p : Process) = p.Cast<'T> ()
 

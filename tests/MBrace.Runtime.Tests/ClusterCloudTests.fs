@@ -188,11 +188,16 @@ namespace Nessos.MBrace.Runtime.Tests
             should equal ProcessResult.Killed ps.Result
             should equal 0 v
 
-        [<Test>]
+        [<Test; Category("Runtime Administration")>]
         member __.``Fetch logs`` () =
             __.Runtime.GetSystemLogs() |> Seq.isEmpty |> should equal false
             __.Runtime.Nodes.Head.GetSystemLogs() |> Seq.isEmpty |> should equal false
 
+        [<Test; Category("Runtime Administration")>]
+        member __.``Process delete container`` () =
+            let ps = __.Runtime.CreateProcess <@ cloud { return! CloudRef.New(42) } @>
+            ps.AwaitResult() |> ignore
+            ps.DeleteContainer()
 
         [<Test; Category("Runtime Administration")>]
         member __.``Ping the Runtime``() =

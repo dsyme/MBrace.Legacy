@@ -293,21 +293,9 @@ namespace Nessos.MBrace.Client
                 if not <| runtimeUsesCompatibleStore runtime then
                     mfailwith "incompatible store configuration."
 
-                try
-                    match IoC.TryResolve<ICloudStore>() with
-                    | None -> raise <| MBraceException("No instance of ICloudStore is registered")
-                    | Some store -> return! store.DeleteContainer(container)
-                with e -> 
-                    Error.handle (MBraceException(sprintf' "Error deleting container %s" container,e))
-            }
-
-
-
-        member r.DeleteContainer(pid : ProcessId) =
-            r.DeleteContainer(sprintf' "process%d" pid)
-
-        member r.DeleteContainerAsync(pid : ProcessId) =
-            r.DeleteContainerAsync(sprintf' "process%d" pid)
+                let store = MBraceSettings.StoreInfo.Store
+                return! store.DeleteContainer(container)
+            } |> Error.handleAsync
 
         //TODO : replace with cooperative shutdowns
         /// violent kill
