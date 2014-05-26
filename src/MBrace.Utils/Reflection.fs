@@ -120,12 +120,20 @@
                 ExprShape.RebuildShapeCombination(a, args')
 
         /// iterates through a quotation
-        let rec iter (iterF : Expr -> unit) expr =
-            do iterF expr
-            match expr with
-            | ExprShape.ShapeVar _ -> ()
-            | ExprShape.ShapeLambda(v, body) -> do iterF (Expr.Var v) ; iter iterF body
-            | ExprShape.ShapeCombination(_, exprs) -> List.iter (iter iterF) exprs
+        let iter (iterF : Expr -> unit) expr =
+            let rec aux exprs =
+                match exprs with
+                | [] -> ()
+                | e :: rest ->
+
+                    do iterF e
+
+                    match e with
+                    | ExprShape.ShapeVar _ -> aux rest
+                    | ExprShape.ShapeLambda(v, body) -> aux (Expr.Var v :: body :: rest)
+                    | ExprShape.ShapeCombination(_, exprs) -> aux (exprs @ rest)
+
+            aux [expr]
 
         let rec fold (foldF : 'State -> Expr -> 'State) state expr =
             let state' = foldF state expr

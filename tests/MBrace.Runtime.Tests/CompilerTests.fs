@@ -74,6 +74,13 @@
                 return! NestedModule.nestedWorkflowThatInheritsCloudAttributeFromContainers ()
             }
 
+        let value = Unchecked.defaultof<Nessos.MBrace.Client.MBraceRuntime>
+
+        [<Cloud>]
+        let blockThatReferencesMBraceClientValue () = cloud {
+            return value.GetHashCode()
+        }
+
 
         [<Test>]
         let ``Cloud value missing [<Cloud>] attribute`` () =
@@ -108,11 +115,19 @@
             shouldFailCompilation <@ blockThatCallsClientApi () @>
 
         [<Test>]
+        let ``Cloud block that references MBrace.Client value`` () =
+            shouldFailCompilation <@ blockThatReferencesMBraceClientValue () @>
+
+        [<Test>]
         let ``Cloud block that captures MBrace.Client object`` () =
-            let computation = box <| MBrace.Compile <@ cloud { return 42 } @>
+            let computation = MBrace.Compile <@ cloud { return 42 } @>
 
             shouldFailCompilation <@ cloud { let x = computation.GetHashCode() in return x } @>
 
         [<Test>]
         let ``Cloud block that references MBrace.Client type`` () =
             shouldFailCompilation <@ cloud { return typeof<Nessos.MBrace.Client.MBraceRuntime> } @>
+
+        [<Test>]
+        let ``Cloud block that attempts to update MBraceSettings`` () =
+            shouldFailCompilation <@ cloud { MBraceSettings.MBracedExecutablePath <- "/tmp" } @>
