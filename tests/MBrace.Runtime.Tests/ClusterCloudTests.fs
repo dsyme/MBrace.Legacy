@@ -86,7 +86,7 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test>] 
         member test.``Cloud Trace`` () = 
             let ps = <@ testTrace 1 @> |> test.Runtime.CreateProcess
-            Threading.Thread.Sleep(delay)
+            ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
             ()
             should equal true (traceHasValue dumps "a" "1")
@@ -99,7 +99,6 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test>]
         member test.``Cloud Trace Exception `` () = 
             let ps = <@ cloud { return 1 / 0 } |> Cloud.Trace @> |> test.Runtime.CreateProcess
-            Threading.Thread.Sleep(delay)
             shouldFailwith<CloudException> (fun () -> ps.AwaitResult() |> ignore)
             let dumps = ps.GetLogs()
             should equal true (dumps |> Seq.exists(fun e -> e.Message.Contains("DivideByZeroException")))
@@ -107,14 +106,14 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test>] 
         member test.``Cloud Trace handle Exception`` () = 
             let ps = <@ testTraceExc () @> |> test.Runtime.CreateProcess
-            Threading.Thread.Sleep(delay)
+            ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
             should equal true (traceHasValue dumps "ex" "error")
 
         [<Test>] 
         member test.``Cloud Trace For Loop`` () = 
             let ps = <@ testTraceForLoop () @> |> test.Runtime.CreateProcess
-            Threading.Thread.Sleep(delay)
+            ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
             should equal true (traceHasValue dumps "i" "1")
             should equal true (traceHasValue dumps "i" "2")
@@ -123,14 +122,14 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test>]
         member test.``Quotation Cloud Trace`` () = 
             let ps = <@ cloud { let! x = cloud { return 1 } in return x } |> Cloud.Trace @> |> test.Runtime.CreateProcess
-            Threading.Thread.Sleep(delay)
+            ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
             should equal false (traceHasValue dumps "x" "1")
 
         [<Test>]
         member test.``Cloud NoTraceInfo Attribute`` () = 
             let ps = <@ cloud { return! cloud { return 1 } <||> cloud { return 2 } } |> Cloud.Trace @> |> test.Runtime.CreateProcess
-            Threading.Thread.Sleep(delay)
+            ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
             let result = 
                 dumps 
@@ -146,7 +145,6 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Parallel Cloud Trace`` () = 
             let proc = <@ testParallelTrace () @> |> test.Runtime.CreateProcess 
             proc.AwaitResult() |> ignore
-            Threading.Thread.Sleep(delay) 
             let dumps = proc.GetLogs()
             should equal true (traceHasValue dumps "x" "2")
             should equal true (traceHasValue dumps "y" "3")
@@ -164,9 +162,7 @@ namespace Nessos.MBrace.Runtime.Tests
                 } @> |> test.Runtime.CreateProcess
 
             test.Runtime.KillProcess(ps.ProcessId)
-            Threading.Thread.Sleep(delay)
             let val1 = MutableCloudRef.Read mref |> MBrace.RunLocal
-            Threading.Thread.Sleep(delay)
             let val2 = MutableCloudRef.Read mref |> MBrace.RunLocal
 
             should equal ps.Result ProcessResult.Killed
@@ -247,10 +243,11 @@ namespace Nessos.MBrace.Runtime.Tests
             let n = __.Runtime.Nodes |> List.length
             __.Runtime.AttachLocal 1 
 
-            do wait 1000
+            wait 1000
 
             let n' = __.Runtime.Nodes |> List.length 
             n' - n |> should equal 1
+            Assert.Ignore("Attach is not synchronous")
 
         [<Test; Category("Runtime Administration")>]
         member __.``Detach Node`` () =
@@ -258,8 +255,9 @@ namespace Nessos.MBrace.Runtime.Tests
             let n = nodes.Length
             let node2 = nodes.[1] 
             __.Runtime.Detach node2 
-            
-            do wait 1000
+
+            wait 1000
 
             let n' =__.Runtime.Nodes |> List.length
             n - n' |> should equal 1
+            Assert.Ignore("Attach is not synchronous")

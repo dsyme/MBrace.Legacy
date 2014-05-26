@@ -779,8 +779,7 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test>]
         member test.``Concurrent cache writes (Parallel CloudSeq read after cleaning cache)`` () =
-            wait 500
-            
+
             let cs = <@ cloud { return! CloudSeq.New(Array.init (10 * 1024 * 1024) id) } @> |> test.ExecuteExpression
             
             // Clear client cache
