@@ -795,6 +795,23 @@ namespace Nessos.MBrace.Runtime.Tests
             @> |> test.ExecuteExpression |> should equal -1
 
         [<Test>]
+        member test.``Cloud.Catch`` () =
+            let result : Choice<unit,exn> = 
+                <@ cloud { 
+                        return! Cloud.Catch <| cloud { return raise <| exn() }
+                   } 
+                @> |> test.ExecuteExpression
+            match result with
+            | Choice1Of2 _ -> Assert.Fail("Expected exception but got result.")
+            | Choice2Of2 e -> ()
+
+        [<Test>]
+        member test.``Cloud.Sleep`` () =
+            <@ cloud { do! Cloud.Sleep 1000 } @>
+            |> test.ExecuteExpression
+            Cloud.Ignore
+
+        [<Test>]
         member test.``Concurrent cache writes (Parallel CloudSeq read after cleaning cache)`` () =
 
             let cs = <@ cloud { return! CloudSeq.New(Array.init (10 * 1024 * 1024) id) } @> |> test.ExecuteExpression

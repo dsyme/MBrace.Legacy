@@ -113,16 +113,3 @@
                 | :? 'Exc -> return None
                 | ex -> return raise ex
             }
-
-    // Useful extensions to Cloud type
-    type Cloud with
-        static member Catch(computation : Cloud<'T>) : Cloud<Choice<'T, exn>> =
-            cloud {
-                try
-                    let! result = computation
-                    return Choice1Of2 result
-                with ex ->
-                    return Choice2Of2 ex
-            }
-
-            
