@@ -805,11 +805,20 @@ namespace Nessos.MBrace.Runtime.Tests
             | Choice1Of2 _ -> Assert.Fail("Expected exception but got result.")
             | Choice2Of2 e -> ()
 
+            let result : Choice<unit,exn> = 
+                <@ cloud { 
+                        return! Cloud.Catch <| cloud { return () }
+                   } 
+                @> |> test.ExecuteExpression
+            match result with
+            | Choice1Of2 _ -> ()
+            | Choice2Of2 e -> Assert.Fail("Expected result but got exception.")
+
         [<Test>]
         member test.``Cloud.Sleep`` () =
             <@ cloud { do! Cloud.Sleep 1000 } @>
             |> test.ExecuteExpression
-            Cloud.Ignore
+            
 
         [<Test>]
         member test.``Concurrent cache writes (Parallel CloudSeq read after cleaning cache)`` () =
