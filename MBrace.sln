@@ -27,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{B6E8
 		RELEASE_NOTES.md = RELEASE_NOTES.md
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Runtime", "src\MBrace.Runtime\MBrace.Runtime.fsproj", "{17B6679B-AB3E-42EE-AEB3-86E4FB4AB29B}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Runtime.Cluster", "src\MBrace.Runtime.Cluster\MBrace.Runtime.Cluster.fsproj", "{17B6679B-AB3E-42EE-AEB3-86E4FB4AB29B}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Worker", "src\MBrace.Worker\MBrace.Worker.fsproj", "{E1458B3D-B72A-441C-B18E-0574B33B1269}"
 EndProject

@@ -17,7 +17,7 @@ open Nessos.MBrace.Runtime.Logging
 open Nessos.MBrace.Runtime.Store
 
 //type alias to prevent conflicts with non-cluster types
-type private ProcessMonitorDb = PublicTypes.ProcessMonitorDb
+type private ProcessMonitorDb = CommonTypes.ProcessMonitorDb
 
 type State = {
     TaskManager: ReliableActorRef<TaskManager>

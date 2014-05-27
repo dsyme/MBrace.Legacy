@@ -8,10 +8,10 @@
     <ProjectGuid>17b6679b-ab3e-42ee-aeb3-86e4fb4ab29b</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>MBrace.Runtime</RootNamespace>
-    <AssemblyName>MBrace.Runtime</AssemblyName>
+    <AssemblyName>MBrace.Runtime.Cluster</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
-    <Name>MBrace.Runtime</Name>
+    <Name>MBrace.Runtime.Cluster</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -59,25 +59,22 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Utils.fs" />
-    <Compile Include="Actor.fs" />
-    <Compile Include="PerformanceMonitor.fs" />
-    <Compile Include="PublicTypes.fs" />
-    <Compile Include="MessageTypes.fs" />
-    <Compile Include="ActivationStrategies.fs" />
-    <Compile Include="AssemblyManager.fs" />
-    <Compile Include="ProcessMonitorForCluster.fs" />
-    <Compile Include="ProcessManager.fs" />
-    <Compile Include="ProcessDomainDb.fs" />
-    <Compile Include="ProcessDomainManager.fs" />
-    <Compile Include="InMemoryProcessDomainManager.fs" />
-    <Compile Include="WorkerPool.fs" />
-    <Compile Include="ContinuationMap.fs" />
-    <Compile Include="TaskLog.fs" />
-    <Compile Include="Scheduler.fs" />
-    <Compile Include="TaskManager.fs" />
-    <Compile Include="Logger.fs" />
-    <Compile Include="Worker.fs" />
+    <Compile Include="ClusterBase\CommonTypes.fs" />
+    <Compile Include="ClusterBase\PerformanceMonitor.fs" />
+    <Compile Include="ClusterBase\ContinuationMap.fs" />
+    <Compile Include="ClusterBase\Logger.fs" />
+    <Compile Include="ClusterBase\AssemblyManager.fs" />
+    <Compile Include="ClusterBase\TaskLog.fs" />
+    <Compile Include="ClusterBase\ProcessMonitorForCluster.fs" />
+    <Compile Include="ClusterBase\ActivationStrategies.fs" />
+    <Compile Include="ProcessDomain\ProcessDomainDb.fs" />
+    <Compile Include="ProcessDomain\ProcessDomainManager.fs" />
+    <Compile Include="ProcessDomain\InMemoryProcessDomainManager.fs" />
+    <Compile Include="ClusterCore\ProcessManager.fs" />
+    <Compile Include="ClusterCore\TaskManager.fs" />
+    <Compile Include="ClusterCore\Scheduler.fs" />
+    <Compile Include="ClusterCore\Worker.fs" />
+    <Compile Include="ClusterCore\WorkerPool.fs" />
     <Compile Include="MBraceNode.fs" />
     <Compile Include="Definitions.fs" />
     <None Include="packages.config" />
@@ -113,11 +110,11 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="Thespian">
-      <HintPath>..\..\packages\Thespian.0.0.3-alpha\lib\net45\Thespian.dll</HintPath>
+      <HintPath>..\..\packages\Thespian.0.0.4-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Thespian.Cluster">
-      <HintPath>..\..\packages\Thespian.0.0.3-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
+      <HintPath>..\..\packages\Thespian.0.0.4-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="UnionArgParser">

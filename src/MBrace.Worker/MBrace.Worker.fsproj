@@ -102,8 +102,8 @@
       <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\MBrace.Runtime\MBrace.Runtime.fsproj">
-      <Name>MBrace.Runtime</Name>
+    <ProjectReference Include="..\MBrace.Runtime.Cluster\MBrace.Runtime.Cluster.fsproj">
+      <Name>MBrace.Runtime.Cluster</Name>
       <Project>{17b6679b-ab3e-42ee-aeb3-86e4fb4ab29b}</Project>
       <Private>True</Private>
     </ProjectReference>
@@ -113,11 +113,11 @@
       <Private>True</Private>
     </ProjectReference>
     <Reference Include="Thespian">
-      <HintPath>..\..\packages\Thespian.0.0.3-alpha\lib\net45\Thespian.dll</HintPath>
+      <HintPath>..\..\packages\Thespian.0.0.4-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Thespian.Cluster">
-      <HintPath>..\..\packages\Thespian.0.0.3-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
+      <HintPath>..\..\packages\Thespian.0.0.4-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="UnionArgParser">

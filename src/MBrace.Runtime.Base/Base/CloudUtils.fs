@@ -21,7 +21,6 @@
             if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<Cloud<_>> then true else
 
             match t with
-            | Named(t, [||]) -> false
             | FSharpFunc(_,resultT) -> yieldsCloudBlock resultT
             | Named(_, genericArgs) -> Array.exists yieldsCloudBlock genericArgs
             | Param _ -> false
