@@ -31,10 +31,9 @@ namespace Nessos.MBrace.Client
                 WorkingDirectory : string
                 LocalCacheDirectory : string
 
-                EnableClientSideStaticChecking : bool
-
                 Logger : ISystemLogger
                 Vagrant : VagrantServer
+                CloudCompiler : CloudCompiler
 
                 StoreInfo : StoreInfo
                 PrimitiveConfiguration : PrimitiveConfiguration
@@ -119,6 +118,7 @@ namespace Nessos.MBrace.Client
 
             // activate vagrant
             let vagrant = new VagrantServer(outpath = vagrantDir)
+            let compiler = new CloudCompiler(vagrant)
 
             // register serializer
             Serialization.Register vagrant.Pickler
@@ -134,8 +134,6 @@ namespace Nessos.MBrace.Client
             {
                 ClientId = vagrant.UUId
 
-                EnableClientSideStaticChecking = true
-
                 MBracedPath = mbracedExe
                 WorkingDirectory = workingDirectory
 
@@ -143,6 +141,7 @@ namespace Nessos.MBrace.Client
 
                 Logger = logger
                 Vagrant = vagrant
+                CloudCompiler = compiler
 
                 StoreInfo = storeInfo
                 PrimitiveConfiguration = coreConfig
@@ -168,11 +167,9 @@ namespace Nessos.MBrace.Client
                 else
                     mfailwithf "Invalid path '%s'." p
 
-        static member ClientSideExpressionCheck
-            with get () = config.Value.EnableClientSideStaticChecking
-            and set p = config.Swap(fun c -> { c with EnableClientSideStaticChecking = p })
-
         static member internal DefaultPrimitiveConfiguration = config.Value.PrimitiveConfiguration
+
+        static member internal CloudCompiler = config.Value.CloudCompiler
 
         static member Logger
             with get () = config.Value.Logger

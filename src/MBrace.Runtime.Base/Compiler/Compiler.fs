@@ -1,4 +1,4 @@
-namespace Nessos.MBrace.Runtime
+namespace Nessos.MBrace.Core
 
     open System
     open System.Reflection
@@ -10,22 +10,25 @@ namespace Nessos.MBrace.Runtime
     open Microsoft.FSharp.Quotations.DerivedPatterns
     open Microsoft.FSharp.Quotations.ExprShape
 
+    open Nessos.Vagrant
+
     open Nessos.MBrace
     open Nessos.MBrace.Core
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Reflection
     open Nessos.MBrace.Utils.PrettyPrinters
-    open Nessos.MBrace.Runtime.CloudUtils
-
+    open Nessos.MBrace.Core.CloudUtils
     open Nessos.MBrace.Runtime
 
     [<AutoOpen>]
-    module private Compiler =
+    module private CompilerImpl =
 
         type CompilerInfo =
             | Warning of string
             | Error of string
+        with
+            member i.Message = match i with Warning m -> m | Error m -> m
 
         /// specifies if given MemberInfo is prohibited for use within cloud workflows
         let isProhibitedMember (m : MemberInfo) =
@@ -58,8 +61,8 @@ namespace Nessos.MBrace.Runtime
 
             let blockName =
                 match name with
-                | None -> "Cloud block"
-                | Some name -> sprintf "Cloud block '%s'" name
+                | None -> "block"
+                | Some name -> sprintf "block '%s'" name
 
             let log errorType (node : Expr) fmt =
                 let prefix =
@@ -92,7 +95,7 @@ namespace Nessos.MBrace.Runtime
 
                 // cloud block loaded from a field; unlikely but possible
                 | FieldGet(_,f) when yieldsCloudBlock f.FieldType ->
-                    log Error e "%s depends on '%s' which lacks [<Cloud>] attribute." blockName f.Name
+                    log Error e "%s depends on cloud workflow '%s' which lacks [<Cloud>] attribute." blockName f.Name
 
                 // cloud block loaded a closure;
                 // can happen in cases where cloud blocks are defined in nested let bindings:
@@ -144,12 +147,17 @@ namespace Nessos.MBrace.Runtime
             | _ -> None
 
         /// the main compiler method
-        let compile (expr : Expr) =
+        let compile name (expr : Expr<Cloud<'T>>) =
+
+            let name = 
+                match name with
+                | Some name -> name
+                | None -> defaultArg (tryGetName expr) ""
             
             // gather function info
             let functions = getFunctionInfo expr
 
-            let errors =
+            let errors, warnings =
                 seq {
                     yield! checkTopLevelQuotation expr
 
@@ -157,26 +165,31 @@ namespace Nessos.MBrace.Runtime
                 } 
                 |> Seq.distinct 
                 |> Seq.toList
+                |> List.partition (function Error _ -> true | Warning _ -> false)
 
-            functions, errors
+            let warnings = warnings |> List.map (fun e -> e.Message)
+
+            match errors with
+            | _ :: _ ->
+                let errors = errors |> List.map (fun e -> e.Message)
+                raise <| new CompilerException(name, typeof<'T>, errors, warnings)
+
+            | [] -> name, functions, warnings
 
 
-    type CloudComputationPackage private (name : string, expr : Expr, block : CloudExpr, returnType : Type, functions : FunctionInfo list, info : CompilerInfo list) =
+    type CloudCompiler (vagrant : VagrantServer) =
 
-        member __.Name = name
-        member __.Expr = expr
-        member __.Functions = functions
-        member __.Errors = info |> List.choose (function Error m -> Some m | _ -> None)
-        member __.Warnings = info |> List.choose (function Warning m -> Some m | _ -> None)
-        member __.ReturnType = returnType
-        member __.CloudExpr = block
+        member __.Compile(expr : Expr<Cloud<'T>>, ?name : string) =
 
-        static member Compile (expr : Expr<Cloud<'T>>, ?name : string) = 
-            let name = 
-                match name with
-                | Some name -> name
-                | None -> defaultArg (Compiler.tryGetName expr) ""
+            let dependencies = vagrant.ComputeObjectDependencies(expr, permitCompilation = true)
 
-            let functions, errors = Compiler.compile expr
-            let block = Swensen.Unquote.Operators.eval expr |> Interpreter.extractCloudExpr
-            new CloudComputationPackage(name, expr, block, typeof<'T>, functions, errors)
+            let name, functions, warnings = compile name expr
+
+            new QuotedCloudComputation<'T>(name, expr, dependencies, functions, warnings) :> CloudComputation<'T>
+
+        member __.Compile(block : Cloud<'T>, ?name : string) =
+            let name = defaultArg name ""
+
+            let dependencies = vagrant.ComputeObjectDependencies(block, permitCompilation = true)
+
+            new BareCloudComputation<'T>(name, block, dependencies) :> CloudComputation<'T>

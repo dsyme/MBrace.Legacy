@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Runtime
+﻿namespace Nessos.MBrace.Core
 
     open System
     open System.Collections.Generic

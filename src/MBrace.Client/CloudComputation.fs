@@ -1,48 +1,24 @@
 ﻿namespace Nessos.MBrace.Client
 
-    open System.Reflection
-
-    open Microsoft.FSharp.Quotations
-
     open Nessos.Vagrant
 
     open Nessos.MBrace
-    open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.MBraceException
-
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils.PrettyPrinters
+    open Nessos.MBrace.Runtime
 
-    type CloudComputation =
-        
-        static member Compile(expr : Expr<Cloud<'T>>, ?name) =
-            // force Vagrant compilation first
-            let dependencies = MBraceSettings.Vagrant.ComputeObjectDependencies(expr, permitCompilation = true)
+    type CloudComputation<'T> = Nessos.MBrace.Core.CloudComputation<'T>
 
-            // build cloud computation package
-            let comp = CloudComputationPackage.Compile(expr, ?name = name)
+    [<AutoOpen>]
+    module internal CloudComputation =
 
-            // check for errors
-            match comp.Errors with
-            | [] -> new CloudComputation<'T>(comp, dependencies, comp.Warnings)
-            | errors ->
-                let errors = String.concat "\n" errors
-                raise <| new CompilerException(sprintf "Cloud workflow contains errors:\n%s" errors)
-
-    and CloudComputation<'T> internal (comp : CloudComputationPackage, dependencies : Assembly list, warnings : string list) =
-
-        member __.Name = comp.Name
-        member __.Expr = comp.Expr
-        member __.Warnings = warnings
-        member __.Dependencies = dependencies
-        member __.Functions = comp.Functions
-        //member __.CloudBlock = comp.CloudBlock :?> Cloud<'T>
-
-        member internal __.Image =
-            {
-                ClientId = MBraceSettings.ClientId
-                Name = comp.Name
-                Computation = Serialization.Serialize comp
-                Type = Serialization.Serialize comp.ReturnType
-                TypeName = Type.prettyPrint typeof<'T>
-                Dependencies = dependencies |> List.map VagrantUtils.ComputeAssemblyId
-            }
+        type CloudComputation with
+            member cmp.GetRawImage () =
+                {
+                    ClientId = MBraceSettings.ClientId
+                    Name = cmp.Name
+                    Computation = Serialization.Serialize cmp
+                    Type = Serialization.Serialize cmp.ReturnType
+                    TypeName = Type.prettyPrint cmp.ReturnType
+                    Dependencies = cmp.Dependencies |> List.map VagrantUtils.ComputeAssemblyId
+                }

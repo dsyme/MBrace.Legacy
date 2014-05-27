@@ -1,6 +1,7 @@
 ﻿namespace Nessos.MBrace.Runtime.Tests
 
     open Nessos.MBrace
+    open Nessos.MBrace.Core
     open Nessos.MBrace.Client
 
     open NUnit.Framework
@@ -10,7 +11,7 @@
     [<TestFixture; Category("CompilerTests")>]
     module ``Cloud Compiler Tests`` =
 
-        let compile expr = 
+        let compile (expr : Quotations.Expr<Cloud<'T>>) = 
             try 
                 let c = MBrace.Compile expr
                 match c.Warnings with

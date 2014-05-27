@@ -378,9 +378,11 @@
 
                 try
                     // serialization errors for dynamic assemblies
-                    let! errors = MBraceSettings.Vagrant.SubmitObjectDependencies(dependencyUploader, comp.Expr, permitCompilation = false)
+                    let! errors = MBraceSettings.Vagrant.SubmitObjectDependencies(dependencyUploader, comp.Dependencies, permitCompilation = false)
 
-                    let! info = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, comp.Image)
+                    let rawImage = comp.GetRawImage()
+
+                    let! info = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, rawImage)
 
                     return Process<'T>(info, processManager)
 //                let rec trySendProcess missingAssemblies =

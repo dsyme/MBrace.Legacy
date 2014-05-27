@@ -72,15 +72,16 @@
     <Compile Include="Store\CloudSeq.fs" />
     <Compile Include="Store\CloudFile.fs" />
     <Compile Include="Store\PrimitiveConfiguration.fs" />
-    <Compile Include="Base\SystemLog.fs" />
-    <Compile Include="Base\CloudProcessLog.fs" />
-    <Compile Include="Base\CloudUtils.fs" />
-    <Compile Include="Base\Compiler.fs" />
-    <Compile Include="Base\Runtime.fs" />
-    <Compile Include="Base\Utils.fs" />
-    <Compile Include="Base\DaemonConfig.fs" />
-    <Compile Include="Base\WorkerConfig.fs" />
-    <Compile Include="Base\Exceptions.fs" />
+    <Compile Include="Compiler\CloudComputation.fs" />
+    <Compile Include="Compiler\CloudUtils.fs" />
+    <Compile Include="Compiler\Compiler.fs" />
+    <Compile Include="RuntimeBase\SystemLog.fs" />
+    <Compile Include="RuntimeBase\CloudProcessLog.fs" />
+    <Compile Include="RuntimeBase\Runtime.fs" />
+    <Compile Include="RuntimeBase\Utils.fs" />
+    <Compile Include="RuntimeBase\DaemonConfig.fs" />
+    <Compile Include="RuntimeBase\WorkerConfig.fs" />
+    <Compile Include="RuntimeBase\Exceptions.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>

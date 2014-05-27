@@ -45,7 +45,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
 
                 let package =
                     try
-                        let pkg = Serialization.Deserialize<CloudComputationPackage> exprImage
+                        let pkg = Serialization.Deserialize<CloudComputation> exprImage
                         Choice1Of2 pkg
 
                     with ex -> Choice2Of2 ex
@@ -56,7 +56,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
 
                     //the task manager will confirm the creation of the root task
                     let! cref = newRef processId package.Functions
-                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (package.ReturnType, [Guid.NewGuid().ToString()], cref, Dump [package.CloudExpr]))
+                    taskManager <-- CreateRootTask(confirmationChannel, processId, ProcessBody (package.ReturnType, [Guid.NewGuid().ToString()], cref, Dump [package.GetCloudExpr()]))
                 | Choice2Of2 e -> 
                     reply nothing
                          

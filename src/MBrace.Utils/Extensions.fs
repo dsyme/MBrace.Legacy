@@ -183,13 +183,8 @@
                 if Boolean.TryParse(x,&res) then Some res else None
 
         type SerializationInfo with
-            member s.Get<'T> ?param =
-                let t = typeof<'T>
-                let param = t.FullName + "-" + defaultArg param ""
-                s.GetValue(param, t) :?> 'T
-            member s.Set<'T> (value : 'T, ?param) =
-                let param = typeof<'T>.FullName + "-" + defaultArg param ""
-                s.AddValue(param, value)
+            member inline s.Read<'T> param = s.GetValue(param, typeof<'T>) :?> 'T
+            member inline s.Write<'T> param (value : 'T) = s.AddValue(param, value)
 
 
         type IDictionary<'K,'V> with

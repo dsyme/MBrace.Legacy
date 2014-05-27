@@ -5,6 +5,8 @@
 
     open Nessos.MBrace.Core
 
+    // TODO : move specialized exceptions to Runtime assemblies
+
     [<AutoOpen>]
     module private ExceptionUtils =
 
@@ -53,13 +55,6 @@
 
     [<Serializable>]
     type SystemFailedException =
-        inherit MBraceException
-
-        new (msg : string, ?inner : exn) = { inherit MBraceException(msg, ?inner = inner) }
-        new (x : SerializationInfo, y : StreamingContext) = { inherit MBraceException(x, y) }
-
-    [<Serializable>]
-    type CompilerException = 
         inherit MBraceException
 
         new (msg : string, ?inner : exn) = { inherit MBraceException(msg, ?inner = inner) }
@@ -116,74 +111,3 @@
 
         interface ISerializable with
             member e.GetObjectData(si : SerializationInfo, sc : StreamingContext) = e.GetObjectData(si, sc)
-
-//        override e.ToString() =
-//            string {
-//                yield sprintf' "MBrace.CloudException: %s\n" e.Message
-//
-//                yield sprintf' "--- Begin {m}brace dump ---\n"
-//
-//                yield sprintf' " Exception:\n" 
-//                yield "  " + e.InnerException.ToString() + "\n"
-//
-//                match context with
-//                | None -> ()
-//                | Some ctx ->
-//                    yield sprintf' " File: %s \n" ctx.File 
-//                    yield sprintf' " Function: %s line: %A\n" ctx.FunctionName (fst ctx.Start)
-//                    //yield sprintf' " CodeDump: %s \n" ctx.CodeDump // SECD Dump rethinking
-//
-//                    if ctx.Vars.Length > 0 then 
-//                        yield sprintf' " Environment:\n"
-//                        for name, value in ctx.Vars do
-//                            yield sprintf' "\t\t %s -> %A\n" name value
-//
-//                yield sprintf' "--- End {m}brace dump ---\n"
-//    
-//                yield e.StackTrace
-//            } |> String.build
-
-//    [<Serializable>]
-//    /// Represents one or more exceptions thrown by user code in a Cloud.Parallel context.
-//    type ParallelCloudException =
-//
-//        inherit CloudException
-//
-//        val private results : Result<ObjValue> []
-//
-//
-//        new(processId, results : Result<ObjValue> []) =
-//            {
-//                inherit CloudException("", processId)
-//                results = results
-//            }
-//
-//        new (info : SerializationInfo, context : StreamingContext) =
-//            {
-//                inherit CloudException(info, context)
-//                results = read info "results"
-//            }
-//
-//        member e.Results = e.results
-//        member e.Exceptions = e.results |> Array.choose (fun result -> match result with  ExceptionResult _ -> Some result | _ -> None) 
-//        member e.Values = e.results |> Array.choose (fun result -> match result with ValueResult _ -> Some result | _ -> None) 
-//
-//        override e.ToString() = sprintf "%A" e.results
-////                let mystring : obj -> string = sprintf "%A" // MAGIC
-//                
-////                results
-////                |> Array.map (function 
-////                    | (ValueResult v) -> 
-////                        match v with 
-////                        | CloudRefValue o -> sprintf "ValueResult (%A)" o.Value 
-////                        | _ as x -> x.ToString()
-////                    | _ as e -> e.ToString())
-////                |> sprintf "%O"
-////
-////
-//        override e.GetObjectData(info : SerializationInfo, context : StreamingContext) : unit =
-//            base.GetObjectData(info, context)
-//            write info "results" e.results
-//
-//        interface ISerializable with      
-//            override e.GetObjectData(info : SerializationInfo, context : StreamingContext) : unit = e.GetObjectData(info, context)
