@@ -114,6 +114,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+
                     | ReadMutableRefExpr(mref, ty) :: rest ->
                         let! exec = Async.Catch <| mref.ReadValue()
                         match exec with
@@ -121,6 +122,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue result, mref.Type)) :: rest
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+
                     | SetMutableRefExpr(mref, value) :: rest ->
                         let! exec = Async.Catch <| mref.TryUpdate value
                         match exec with
@@ -147,6 +149,7 @@ namespace Nessos.MBrace.Core
                                 return! eval traceEnabled <| ValueExpr (Obj (ObjValue mref, mref.Type)) :: rest
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+
                     | GetMutableRefsByNameExpr (container) :: rest ->
                         let! exec = Async.Catch <| primitiveConfig.MutableCloudRefProvider.GetContainedRefs(container)
                         match exec with
@@ -170,6 +173,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+
                     | GetCloudFile(container, id) :: rest ->
                         let! exec = Async.Catch <| primitiveConfig.CloudFileProvider.GetExisting(container, id)
                         match exec with
@@ -177,6 +181,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+
                     | GetCloudFiles(container) :: rest ->
                         let! exec = Async.Catch <| primitiveConfig.CloudFileProvider.GetContainedFiles container
                         match exec with
@@ -196,8 +201,10 @@ namespace Nessos.MBrace.Core
                     | LogExpr msg :: rest ->
                         try taskConfig.Logger.LogUserInfo(msg, taskConfig.TaskId) with _ -> ()
                         return! eval traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest
+
                     | TraceExpr cloudExpr :: rest ->
                         return! eval true <| cloudExpr :: DoEndTraceExpr :: rest
+
                     | NewCloudSeqByNameExpr (container, values, t) :: rest ->
                         let id = Guid.NewGuid().ToString()
                         let! exec = Async.Catch <| primitiveConfig.CloudSeqProvider.Create(container, id, t, values)
@@ -206,6 +213,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| (ValueExpr (Obj (ObjValue cloudSeq, typeof<ICloudSeq>))) :: rest
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+
                     | GetCloudSeqByNameExpr (container, id, t) :: rest ->
                         let! cseq = Async.Catch <| primitiveConfig.CloudSeqProvider.GetExisting(container, id)
                         match cseq with
@@ -215,6 +223,7 @@ namespace Nessos.MBrace.Core
                             else return! eval traceEnabled <| ValueExpr (Obj (ObjValue cseq, cseq.Type)) :: rest
                         | Choice2Of2 exn ->
                             return! eval traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
+
                     | GetCloudSeqsByNameExpr (container) :: rest ->
                         let! exec = Async.Catch <| primitiveConfig.CloudSeqProvider.GetContainedSeqs(container)
                         match exec with
@@ -222,6 +231,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue seqs, typeof<ICloudSeq []>)) :: rest
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+
                     // DO Expr
                     // Monadic Bind
                     | ValueExpr (Obj (ObjValue value, _)) :: DoBindExpr (f, objF) :: rest -> 
@@ -236,11 +246,13 @@ namespace Nessos.MBrace.Core
                         | ValueExpr (Exc (ex, ctx)) -> 
                             return! eval traceEnabled <| ValueExpr (Exc (ex, ctx)) :: rest
                         | _ -> return invalidOp <| sprintf "Invalid tryFinallyF result %A" result
+
                     | DoForExpr (values, n, f, objF) :: rest | ValueExpr (Obj _) :: DoForExpr (values, n, f, objF) :: rest -> 
                         if n = values.Length then
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest
                         else
                             return! eval traceEnabled <| trapExc (fun _ -> f values.[n]) () f :: DoForExpr (values, n + 1,  f, objF) :: rest
+
                     | (DoWhileExpr (guardF, bodyExpr) as doWhileExpr) :: rest | ValueExpr (Obj _) :: (DoWhileExpr (guardF, bodyExpr) as doWhileExpr) :: rest ->
                         let result = trapExc (fun _ -> ValueExpr (Obj (ObjValue (guardF () :> obj), typeof<bool>))) () guardF
                         match result with
@@ -252,10 +264,12 @@ namespace Nessos.MBrace.Core
                         | ValueExpr (Exc (ex, ctx)) ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, ctx)) :: rest
                         | _ -> return invalidOp <| sprintf "Invalid guardF result %A" result
+
                     | DoCombineExpr secondExpr :: rest ->
                         return! eval traceEnabled <| secondExpr :: rest
                     | _ :: DoCombineExpr secondExpr :: rest ->
                         return! eval traceEnabled <| secondExpr :: rest
+
                     | ValueExpr (Obj (ObjValue value, _)) as valueExpr :: DoDisposableBindExpr cloudDisposable :: rest ->
                         let! valueExpr = 
                             async {
@@ -265,6 +279,7 @@ namespace Nessos.MBrace.Core
                                 with ex -> return ValueExpr (Exc (ex, None)) 
                             }
                         return! eval traceEnabled <| valueExpr :: rest
+
                     | cloudExpr :: DoEndTraceExpr :: rest -> 
                         let traceEnabled' = rest |> List.exists (fun cloudExpr' -> match cloudExpr' with DoEndTraceExpr -> true | _ -> false)
                         return! eval traceEnabled' <| cloudExpr :: rest
@@ -283,6 +298,7 @@ namespace Nessos.MBrace.Core
                                                                 | Thunk ((ValueExpr (Obj (ObjValue value, _)))) -> value | _ -> throwInvalidState thunkValue),
                                     arrayOfResults, thunkValues.Length)
                         return! eval traceEnabled <| ValueExpr (Obj (ObjValue arrayOfResults, arrayOfResults.GetType())) :: rest
+
                     | ValueExpr (Obj (CloudRefValue (CloudRef value), t)) :: rest ->
                         return! eval traceEnabled <| ValueExpr (Obj (ObjValue value, t)) :: rest
                     | GetProcessIdExpr :: rest ->
@@ -300,6 +316,7 @@ namespace Nessos.MBrace.Core
                         | ValueExpr (Exc (ex', ctx)) -> 
                             return! eval traceEnabled <| ValueExpr (Exc (ex', ctx)) :: rest
                         | _ -> return invalidOp <| sprintf "Invalid tryFinallyF result %A" result
+
                     | ValueExpr (Exc (ex, ctx)) as excExpr :: DoDisposableBindExpr cloudDisposable :: rest ->
                         let! valueExpr = 
                             async {
@@ -309,6 +326,7 @@ namespace Nessos.MBrace.Core
                                 with ex -> return ValueExpr (Exc (ex, None)) 
                             }
                         return! eval traceEnabled <| excExpr :: rest
+
                     | ValueExpr (Exc (ex, ctx)) :: _  :: rest ->
                         return! eval traceEnabled <| ValueExpr (Exc (ex, ctx)) :: rest
                     | [ValueExpr (Exc (ex, ctx))] -> return stack // return
@@ -337,7 +355,7 @@ namespace Nessos.MBrace.Core
             /// Serialize and deserialize a CloudExpr to force ``call by value`` semantics
             /// on parallel/choice expressions and ensure consistency between distributed execution
             /// and local/shared-memory scenarios
-            let deepClone (expr : CloudExpr) = try cloner.Clone expr with _ -> expr
+            let deepClone (expr : CloudExpr) = cloner.Clone expr
             
             let rec eval (traceEnabled : bool) (stack : CloudExpr list) = 
                 async {
@@ -374,12 +392,10 @@ namespace Nessos.MBrace.Core
                             let! result = eval traceEnabled [choiceExpr]
                             return
                                 match result with
-                                | Obj (ObjValue value, t) ->
-                                    // 'None' values are represented as null in the CLR
-                                    if value = null then Choice1Of2 ()
-                                    else
-                                        Choice2Of2 result
-
+                                // 'None' values are represented with null in the CLR
+                                | Obj (ObjValue null, t) -> Choice1Of2 ()
+                                // both 'Some result' and 'exception' have the same cancellation semantics
+                                | Obj _ -> Choice2Of2 result
                                 | Exc _ -> Choice2Of2 result
                                 | _ -> throwInvalidState result 
                         }
@@ -387,7 +403,7 @@ namespace Nessos.MBrace.Core
                         match result with
                         | Choice1Of2 _ -> // all children returned 'None'
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue None, elementType)) :: rest
-                        | Choice2Of2 value -> // one child return with value : either exception or success
+                        | Choice2Of2 value -> // one child returned with obj or exc : just push to stuck and carry on
                             return! eval traceEnabled <| ValueExpr value :: rest
 
                     | _ -> return throwInvalidState stack

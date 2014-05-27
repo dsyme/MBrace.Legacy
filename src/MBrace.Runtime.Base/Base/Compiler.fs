@@ -15,6 +15,7 @@ namespace Nessos.MBrace.Runtime
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Reflection
+    open Nessos.MBrace.Utils.PrettyPrinters
     open Nessos.MBrace.Runtime.CloudUtils
 
     open Nessos.MBrace.Runtime
@@ -41,6 +42,8 @@ namespace Nessos.MBrace.Runtime
         let printLocation (metadata : ExprMetadata) =
             sprintf "%s(%d,%d)" metadata.File metadata.StartRow metadata.StartCol
 
+        let printMemberInfo (m : MemberInfo) = sprintf "%s.%s" m.DeclaringType.Name m.Name
+
         let thisAssembly = Assembly.GetExecutingAssembly()
 
         // checks given expression tree, generating mbrace-related errors and warnings:
@@ -48,6 +51,7 @@ namespace Nessos.MBrace.Runtime
         // 2. checks if top-level bindings in the cloud monad are serializable
         // 3. checks that cloud block methods are static
         // 4. checks that cloud blocks do not make calls to the mbrace client API.
+        // 5. checks if bindings to cloud expressions are closures (i.e. Expr.Value leaves)
         let checkExpression (name : string option) (metadata : ExprMetadata option) (expr : Expr) =
 
             let gathered = ref []
@@ -74,17 +78,17 @@ namespace Nessos.MBrace.Runtime
                     let bindings = gatherTopLevelCloudBindings body
                     for v, metadata in bindings do
                         if not <| Serialization.DefaultPickler.IsSerializableType v.Type then
-                            log Error e "%s has binding '%s' of type '%s' that is not serializable." blockName v.Name v.Type.Name
+                            log Error e "%s has binding '%s' of type '%s' that is not serializable." blockName v.Name <| Type.prettyPrint v.Type
                 
                 // let! x = cloudExpr
                 | CloudCall (memberInfo, methodBase) ->
                     // referenced cloud expression is not a reflected definition
                     if not memberInfo.IsReflectedDefinition then
-                        log Error e "%s depends on '%s' which lacks [<Cloud>] attribute." blockName memberInfo.Name
+                        log Error e "%s depends on '%s' which lacks [<Cloud>] attribute." blockName <| printMemberInfo memberInfo
 
                     // fail if cloud expression is not static method
                     elif not methodBase.IsStatic then
-                        log Error e "%s references non-static cloud workflow '%s'. This is not supported." blockName memberInfo.Name
+                        log Error e "%s references non-static cloud workflow '%s'. This is not supported." blockName <| printMemberInfo memberInfo
 
                 // cloud block loaded from a field; unlikely but possible
                 | FieldGet(_,f) when yieldsCloudBlock f.FieldType ->
@@ -100,30 +104,25 @@ namespace Nessos.MBrace.Runtime
                         let name = o.GetType().Name.Split('@').[0]
                         log Error e "%s references closure '%s'. All cloud blocks should be top-level let bindings." blockName name
 
-                    // generic not much can reported here
+                    // unknown container : not much can be reported here
                     elif typeof<Cloud>.IsAssignableFrom t then
                         log Error e "%s references a closure. All cloud blocks should be top-level let bindings." blockName
                 
                 // typeof<_> literal
                 | TypeOf t when isProhibitedMember t ->
-                    log Error e "%s uses invalid type '%O'." blockName t
+                    log Error e "%s references prohibited type '%s'." blockName <| Type.prettyPrint t
                     
                 // generic Call/PropertyGet/PropertySet
-                | MemberInfo (m,_) ->
+                | MemberInfo (m,returnType) ->
                     // check if cloud expression references inappropriate MBrace libraries
                     if isProhibitedMember m then
-                        log Error e "%s references invalid MBrace API method '%s'." blockName m.Name
+                        log Error e "%s references prohibited method '%s'." blockName <| printMemberInfo m
+                    elif isProhibitedMember returnType then
+                        log Error e "%s references member '%s' of prohibited type '%s'." blockName <| printMemberInfo m <| Type.prettyPrint returnType
 
                 // values captured in closure
-                | Value(_,t) when isProhibitedMember t -> log Error e "%s uses invalid type '%O'." blockName t
+                | Value(_,t) when isProhibitedMember t -> log Error e "%s references prohibited type '%s'." blockName <| Type.prettyPrint t
                 | _ -> ()
-
-                // protect against exception that may be raised by the Expr.Type property
-                try 
-                    if isProhibitedMember e.Type then
-                        log Error e "%s uses invalid type '%O'." blockName expr.Type
-
-                with _ -> ()
 
 
             Expr.iter checkCurrentNode expr
@@ -151,11 +150,13 @@ namespace Nessos.MBrace.Runtime
             let functions = getFunctionInfo expr
 
             let errors =
-                [
+                seq {
                     yield! checkTopLevelQuotation expr
 
                     for f in functions do yield! checkFunctionInfo f
-                ]
+                } 
+                |> Seq.distinct 
+                |> Seq.toList
 
             functions, errors
 

@@ -114,7 +114,7 @@
             shouldSucceedCompilation <@ blockThatContainsNonMonadicNonSerializableBinding () @>
 
         [<Test>]
-        let ``Cloud block that is object member`` () =
+        let ``Cloud block that is non-static member`` () =
             shouldFailCompilation <@ cloud { let obj = new CloudObject () in return! obj.Compute () } @>
 
         [<Test>]

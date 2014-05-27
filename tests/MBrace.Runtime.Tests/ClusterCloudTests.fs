@@ -2,6 +2,7 @@ namespace Nessos.MBrace.Runtime.Tests
 
     open System
     open System.IO
+    open System.Threading
 
     open FsUnit
     open NUnit.Framework
@@ -171,15 +172,23 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test; Repeat 10>]
         member test.``Z4 Test Kill Process - Fork bomb`` () =
             let m = MutableCloudRef.New 0 |> MBrace.RunLocal
-            let rec fork () : Cloud<unit> = 
-                cloud { do! MutableCloudRef.Force(m,1)
-                        let! _ = fork() <||> fork() in return () }
-            let ps = test.Runtime.CreateProcess <@ fork () @>
-            Async.RunSynchronously <| Async.Sleep 4000
+
+            let ps = 
+                test.Runtime.CreateProcess 
+                    <@ 
+                        let rec fork () = cloud { 
+                            do! MutableCloudRef.Force(m,1)
+                            let! _ = fork() <||> fork() 
+                            return () } in 
+                        
+                        fork () 
+                    @>
+
+            Thread.Sleep 4000
             test.Runtime.KillProcess(ps.ProcessId)
-            Async.RunSynchronously <| Async.Sleep 2000
+            Thread.Sleep 2000
             MutableCloudRef.Force(m, 0) |> MBrace.RunLocal
-            Async.RunSynchronously <| Async.Sleep 1000
+            Thread.Sleep 1000
             let v = MutableCloudRef.Read(m) |> MBrace.RunLocal
             should equal ProcessResult.Killed ps.Result
             should equal 0 v

@@ -66,21 +66,16 @@
                     let! res = task
                     match res with
                     | Choice1Of2 a -> return a
-                    | Choice2Of2 e -> return! Async.Raise <| ContainerException<'Exc> e
+                    | Choice2Of2 e -> return! Async.Raise <| ContainerException e
                 }
 
                 async {
                     try
-                        let! aggregates = tasks |> Array.map wrap |> Async.Parallel 
+                        let! aggregates = tasks |> Array.map wrap |> Async.Parallel
                         return Choice1Of2 aggregates
 
                     with :? ContainerException<'Exc> as e -> return Choice2Of2 e.Value
                 }
 
             /// efficient raise
-            static member Raise(e : exn) =
-#if DEBUG
-                async { return raise e }
-#else
-                Async.FromContinuations(fun (_,ec,_) -> ec e)
-#endif
+            static member Raise(e : exn) = Async.FromContinuations(fun (_,ec,_) -> ec e)
