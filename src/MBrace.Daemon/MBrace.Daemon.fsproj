@@ -123,8 +123,8 @@
       <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\MBrace.Runtime\MBrace.Runtime.fsproj">
-      <Name>MBrace.Runtime</Name>
+    <ProjectReference Include="..\MBrace.Runtime.Cluster\MBrace.Runtime.Cluster.fsproj">
+      <Name>MBrace.Runtime.Cluster</Name>
       <Project>{17b6679b-ab3e-42ee-aeb3-86e4fb4ab29b}</Project>
       <Private>True</Private>
     </ProjectReference>
