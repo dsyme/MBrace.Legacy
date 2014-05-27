@@ -89,8 +89,7 @@
                     else
                         match m.DeclaringType with
                         | null -> false
-                        | t when Microsoft.FSharp.Reflection.FSharpType.IsModule t -> traverse t
-                        | _ -> false
+                        | t -> traverse t
 
                 traverse m
 

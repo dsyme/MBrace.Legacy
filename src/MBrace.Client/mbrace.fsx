@@ -57,29 +57,51 @@ open Nessos.MBrace
 open Nessos.MBrace.Client
 
 
+//----------------------------------------------------------------------
+// 
+
+[<Cloud>]
+type Cloud with
+    [<Cloud>]
+    static member Catch(computation : Cloud<'T>) : Cloud<Choice<'T, exn>> =
+        cloud {
+            try
+                let! result = computation
+                return Choice1Of2 result
+            with ex ->
+                return Choice2Of2 ex
+        }
+
 let rt = MBrace.InitLocal 4
 
 [<Cloud>]
-let rec f i : Cloud<unit> = cloud {
-        if i > 100 then return ()
-        else
-            do! Cloud.OfAsync <| Async.Sleep 100
-            do! Cloud.Logf "i = %d" i
-            return! f (i+1)
-}
+let foo =
+    cloud {
+        let a = cloud { return 42 }
+        let b = cloud { return failwith "Foo" }
+        let c = cloud { return 43 }
+        return! Cloud.Parallel [| a;b;c |]
+    }
 
-let proc = rt.CreateProcess <@ f 0 @>
-proc.StreamLogs()
-
-proc.ShowLogs() 
+rt.Run <@ foo |> Cloud.Catch @> 
 
 
-//----------------------------------------------------------------------
-// Attach bug
 
-let rt = MBrace.InitLocal 3
-printfn "%d" rt.Nodes.Length
-rt.AttachLocal(1)
-printfn "%d" rt.Nodes.Length
-let ps = <@ cloud { return "foo" } @> |> rt.CreateProcess
-ps.AwaitResult()
+[<Cloud>] 
+module MFoo =
+    let MBar = cloud { return 42 }
+
+
+rt.Run <@ MFoo.MBar @>
+
+MBrace.RunLocal(MFoo.MBar)
+
+
+[<ReflectedDefinition>] 
+type Foo  =
+    static member Bar = 1 + 1
+
+let mi = typeof<Foo>.GetMembers()
+for mi in mi do
+    printfn "%A" <| try Quotations.Expr.TryGetReflectedDefinition(mi :?> System.Reflection.MethodBase) with _ -> None
+
