@@ -2,15 +2,16 @@
 
     open System
     open System.Data.SqlClient
+    open System.Data.Common
     open System.Collections.Generic
     
     type SqlTransaction (conn : SqlConnection) =
-        member this.execQuery (command : string) (parameters : SqlParameter[]) : Async<SqlDataReader> =
+        member this.execQuery (command : string) (parameters : SqlParameter[]) : Async<DbDataReader> =
             async {
                 use command = new SqlCommand(command, conn)
                 command.Parameters.AddRange(parameters) |> ignore
-                return! command.ExecuteReaderAsync()
-                        |> Async.AwaitTask           
+                let! reader = Async.AwaitTask <| command.ExecuteReaderAsync()
+                return reader :> DbDataReader
             }
 
         member this.execNonQuery (command : string) (parameters : SqlParameter[]) : Async<int> =
@@ -34,17 +35,16 @@
                 return ret                
             }
 
-        member this.execQuery (command : string) (parameters : SqlParameter[]) (continuation : SqlDataReader -> Async<'a>) : Async<'a> =
+        member this.execQuery (command : string) (parameters : SqlParameter[]) (continuation : DbDataReader -> Async<'a>) : Async<'a> =
             async {
                 use conn = new SqlConnection(connectionString)
                 do! conn.OpenAsync().ContinueWith(ignore)
                     |> Async.AwaitTask
                 use command = new SqlCommand(command, conn)
                 command.Parameters.AddRange(parameters) |> ignore
-                let! reader = command.ExecuteReaderAsync()
-                              |> Async.AwaitTask
+                let! reader = Async.AwaitTask <| command.ExecuteReaderAsync() 
 
-                return! continuation reader                
+                return! continuation (reader :> DbDataReader)             
             }
 
         member this.exec command parameters =
