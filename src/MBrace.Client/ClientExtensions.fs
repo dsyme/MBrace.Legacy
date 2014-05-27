@@ -50,6 +50,7 @@ module ClientExtensions =
         static member RunLocal (computation : Cloud<'T>, ?showLogs) : 'T = 
             MBrace.RunLocalAsync(computation, ?showLogs = showLogs) |> Async.RunSynchronously 
 
-        static member RunLocal (computation : Expr<Cloud<'T>>, ?showLogs) : 'T =
-            let computation = MBrace.Compile computation
-            MBrace.RunLocal(computation.CloudBlock, ?showLogs = showLogs)
+        static member RunLocal (expr : Expr<Cloud<'T>>, ?showLogs) : 'T =
+            let computation = MBrace.Compile expr
+            let cb = Swensen.Unquote.Operators.eval expr
+            MBrace.RunLocal(cb, ?showLogs = showLogs)

@@ -18,7 +18,7 @@
 
         /// checks if the given type or covariant type arguments are of type Cloud<'T>
         let rec yieldsCloudBlock (t : Type) =
-            if typeof<Cloud>.IsAssignableFrom t then true else
+            if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<Cloud<_>> then true else
 
             match t with
             | Named(t, [||]) -> false
@@ -29,7 +29,7 @@
             | Ptr(_,t) -> yieldsCloudBlock t
             
         /// checks if given type is part of the MBrace.Core library
-        let isCloudPrimitive (t : Type) = t.Assembly = typeof<Cloud>.Assembly
+        let isCloudPrimitive (t : Type) = t.Assembly = typeof<Cloud<_>>.Assembly
 
         /// matches against a `typeof` literal
         let (|TypeOf|_|) (e : Expr) =

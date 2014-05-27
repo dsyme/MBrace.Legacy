@@ -105,7 +105,7 @@ namespace Nessos.MBrace.Runtime
                         log Error e "%s references closure '%s'. All cloud blocks should be top-level let bindings." blockName name
 
                     // unknown container : not much can be reported here
-                    elif typeof<Cloud>.IsAssignableFrom t then
+                    else
                         log Error e "%s references a closure. All cloud blocks should be top-level let bindings." blockName
                 
                 // typeof<_> literal
@@ -161,7 +161,7 @@ namespace Nessos.MBrace.Runtime
             functions, errors
 
 
-    type CloudComputationPackage private (name : string, expr : Expr, returnType : Type, functions : FunctionInfo list, info : CompilerInfo list) =
+    type CloudComputationPackage private (name : string, expr : Expr, block : CloudExpr, returnType : Type, functions : FunctionInfo list, info : CompilerInfo list) =
 
         member __.Name = name
         member __.Expr = expr
@@ -169,8 +169,7 @@ namespace Nessos.MBrace.Runtime
         member __.Errors = info |> List.choose (function Error m -> Some m | _ -> None)
         member __.Warnings = info |> List.choose (function Warning m -> Some m | _ -> None)
         member __.ReturnType = returnType
-        member __.CloudBlock = Swensen.Unquote.Operators.evalRaw expr
-        member __.CloudExpr = Interpreter.extractCloudExpr __.CloudBlock
+        member __.CloudExpr = block
 
         static member Compile (expr : Expr<Cloud<'T>>, ?name : string) = 
             let name = 
@@ -179,5 +178,5 @@ namespace Nessos.MBrace.Runtime
                 | None -> defaultArg (Compiler.tryGetName expr) ""
 
             let functions, errors = Compiler.compile expr
-            
-            new CloudComputationPackage(name, expr, typeof<'T>, functions, errors)
+            let block = Swensen.Unquote.Operators.eval expr |> Interpreter.extractCloudExpr
+            new CloudComputationPackage(name, expr, block, typeof<'T>, functions, errors)

@@ -63,7 +63,7 @@
     <Compile Include="Core\PrimitiveProviders.fs" />
     <Compile Include="Core\CloudExpr.fs" />
     <Compile Include="Core\Exception.fs" />
-    <Compile Include="Cloud\Cloud.fsi" />
+    <None Include="Cloud\Cloud.fsi" />
     <Compile Include="Cloud\Cloud.fs" />
     <Compile Include="Cloud\CloudRef.fsi" />
     <Compile Include="Cloud\CloudRef.fs" />

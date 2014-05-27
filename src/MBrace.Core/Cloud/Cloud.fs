@@ -13,58 +13,52 @@
             inherit System.Attribute()
             member self.Name = "NoTraceInfo"
 
-    [<AbstractClass>]
-    type Cloud internal (cloudExpr : CloudExpr) =
-        abstract Type : Type
-        member internal __.CloudExpr = cloudExpr
-
     [<Sealed>]
     type Cloud<'T> internal (cloudExpr : CloudExpr) =
-        inherit Cloud(cloudExpr)
-        override __.Type = typeof<'T>
+        member __.Type = typeof<'T>
+        member __.CloudExpr = cloudExpr
 
-    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    [<RequireQualifiedAccess>]
-    module Cloud =
+    type Cloud =
 
-        let inline internal wrapExpr (cloudExpr : CloudExpr) = new Cloud<'T>(cloudExpr)
-        let inline internal unwrapExpr (cloudBlock : Cloud<'T>) = cloudBlock.CloudExpr
+        static member inline internal wrapExpr (cloudExpr : CloudExpr) = new Cloud<'T>(cloudExpr)
+        static member inline internal unwrapExpr (cloudBlock : Cloud<'T>) = cloudBlock.CloudExpr
 
-        let Trace (cloudComputation : Cloud<'T>) : Cloud<'T> = 
-            wrapExpr <| TraceExpr (unwrapExpr cloudComputation)
+        static member Trace (cloudComputation : Cloud<'T>) : Cloud<'T> = 
+            Cloud.wrapExpr <| TraceExpr (Cloud.unwrapExpr cloudComputation)
 
-        let Log (msg : string) : Cloud<unit> = 
-            wrapExpr <| LogExpr msg
+        static member Log (msg : string) : Cloud<unit> = 
+            Cloud.wrapExpr <| LogExpr msg
 
-        let Logf (fmt : Printf.StringFormat<_, Cloud<unit>>) =
-            Printf.ksprintf (LogExpr >> wrapExpr) fmt
+        static member Logf (fmt : Printf.StringFormat<_, Cloud<unit>>) =
+            Printf.ksprintf (LogExpr >> Cloud.wrapExpr) fmt
 
-        let OfAsync<'T>(asyncComputation : Async<'T>) : Cloud<'T> =
+        static member OfAsync<'T>(asyncComputation : Async<'T>) : Cloud<'T> =
             let cloudAsync = 
                 { new ICloudAsync with
                     member self.UnPack (polyMorpInvoker : IPolyMorphicMethodAsync) =
                         polyMorpInvoker.Invoke<'T>(asyncComputation) }
-            wrapExpr <| OfAsyncExpr cloudAsync
+            Cloud.wrapExpr <| OfAsyncExpr cloudAsync
                     
-        let ToLocal<'T>(cloudComputation : Cloud<'T>) : Cloud<'T> =
-            wrapExpr <| LocalExpr (unwrapExpr cloudComputation)
+        static member ToLocal<'T>(cloudComputation : Cloud<'T>) : Cloud<'T> =
+            Cloud.wrapExpr <| LocalExpr (Cloud.unwrapExpr cloudComputation)
 
-        let GetWorkerCount() : Cloud<int> =
-            wrapExpr GetWorkerCountExpr
+        static member GetWorkerCount() : Cloud<int> =
+            Cloud.wrapExpr GetWorkerCountExpr
 
-        let GetProcessId() : Cloud<ProcessId> =
-            wrapExpr GetProcessIdExpr
+        static member GetProcessId() : Cloud<ProcessId> =
+            Cloud.wrapExpr GetProcessIdExpr
 
-        let GetTaskId() : Cloud<string> =
-            wrapExpr GetTaskIdExpr
+        static member GetTaskId() : Cloud<string> =
+            Cloud.wrapExpr GetTaskIdExpr
     
-        let Parallel<'T>(computations : seq<Cloud<'T>>) : Cloud<'T []> =
+        static member Parallel<'T>(computations : seq<Cloud<'T>>) : Cloud<'T []> =
             let computations = Seq.toArray computations
-            wrapExpr <| ParallelExpr (computations |> Array.map unwrapExpr, typeof<'T>)
+            Cloud.wrapExpr <| ParallelExpr (computations |> Array.map Cloud.unwrapExpr, typeof<'T>)
 
-        let Choice<'T>(computations : seq<Cloud<'T option>>) : Cloud<'T option> =
+        static member Choice<'T>(computations : seq<Cloud<'T option>>) : Cloud<'T option> =
             let computations = Seq.toArray computations
-            wrapExpr <| ChoiceExpr (computations |> Array.map unwrapExpr, typeof<'T option>)
+            Cloud.wrapExpr <| ChoiceExpr (computations |> Array.map Cloud.unwrapExpr, typeof<'T option>)
+
 
     // The Monadic Builder - Computation Expressions
     type CloudBuilder() =

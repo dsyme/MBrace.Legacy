@@ -57,29 +57,15 @@ open Nessos.MBrace
 open Nessos.MBrace.Client
 
 
+//----------------------------------------------------------------------
+// 
+
 let rt = MBrace.InitLocal 4
 
-[<Cloud>]
-let rec f i : Cloud<unit> = cloud {
-        if i > 100 then return ()
-        else
-            do! Cloud.OfAsync <| Async.Sleep 100
-            do! Cloud.Logf "i = %d" i
-            return! f (i+1)
-}
+rt.Ping()
+rt.Echo 42
 
-let proc = rt.CreateProcess <@ f 0 @>
-proc.StreamLogs()
-
-proc.ShowLogs() 
+rt.Run <@ cloud { return 42 } @>
 
 
-//----------------------------------------------------------------------
-// Attach bug
 
-let rt = MBrace.InitLocal 3
-printfn "%d" rt.Nodes.Length
-rt.AttachLocal(1)
-printfn "%d" rt.Nodes.Length
-let ps = <@ cloud { return "foo" } @> |> rt.CreateProcess
-ps.AwaitResult()

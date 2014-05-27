@@ -15,20 +15,12 @@ namespace Nessos.MBrace
             member Name : string
         end
 
-    [<AbstractClass>]
-    type Cloud =
-        class
-            internal new : cloudExpr:CloudExpr -> Cloud
-            abstract member Type : Type
-            member internal CloudExpr : CloudExpr
-        end
-
     [<Sealed>]
     type Cloud<'T> =
         class
-            inherit Cloud
             internal new : cloudExpr:CloudExpr -> Cloud<'T>
-            override Type : Type
+            member Type : Type
+            member CloudExpr : CloudExpr
         end
         
     /// Contains the methods (combinators) to express the primitive computations directly supported by
