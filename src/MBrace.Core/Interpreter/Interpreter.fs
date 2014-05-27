@@ -18,7 +18,7 @@ namespace Nessos.MBrace.Core
         let inline internal throwInvalidState (value : 'T) = invalidOp <| sprintf "invalid state %A" value
 
         /// extract the untyped cloud tree
-        let extractCloudExpr (cloud : Cloud) : CloudExpr = cloud.CloudExpr
+        let extractCloudExpr (cloud : Cloud<'T>) : CloudExpr = cloud.CloudExpr
 
         /// <summary>
         ///     evalutes the symbolic stack sequentially until a cloud primitive is encountered.

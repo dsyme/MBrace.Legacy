@@ -60,48 +60,12 @@ open Nessos.MBrace.Client
 //----------------------------------------------------------------------
 // 
 
-[<Cloud>]
-type Cloud with
-    [<Cloud>]
-    static member Catch(computation : Cloud<'T>) : Cloud<Choice<'T, exn>> =
-        cloud {
-            try
-                let! result = computation
-                return Choice1Of2 result
-            with ex ->
-                return Choice2Of2 ex
-        }
-
 let rt = MBrace.InitLocal 4
 
-[<Cloud>]
-let foo =
-    cloud {
-        let a = cloud { return 42 }
-        let b = cloud { return failwith "Foo" }
-        let c = cloud { return 43 }
-        return! Cloud.Parallel [| a;b;c |]
-    }
+rt.Ping()
+rt.Echo 42
 
-rt.Run <@ foo |> Cloud.Catch @> 
+rt.Run <@ cloud { return 42 } @>
 
 
-
-[<Cloud>] 
-module MFoo =
-    let MBar = cloud { return 42 }
-
-
-rt.Run <@ MFoo.MBar @>
-
-MBrace.RunLocal(MFoo.MBar)
-
-
-[<ReflectedDefinition>] 
-type Foo  =
-    static member Bar = 1 + 1
-
-let mi = typeof<Foo>.GetMembers()
-for mi in mi do
-    printfn "%A" <| try Quotations.Expr.TryGetReflectedDefinition(mi :?> System.Reflection.MethodBase) with _ -> None
 
