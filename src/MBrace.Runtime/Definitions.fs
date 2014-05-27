@@ -15,7 +15,7 @@ open Nessos.MBrace.Runtime
 open Nessos.MBrace.Runtime.Logging
 
 //type aliases to resolve conficts with non-cluster types
-type private ProcessMonitorDb = PublicTypes.ProcessMonitorDb
+type private ProcessMonitorDb = CommonTypes.ProcessMonitorDb
 
 // resolve conflict from Nessos.MBrace.Utils.LogLevel
 type private LogLevel = Nessos.Thespian.LogLevel
@@ -135,12 +135,12 @@ type PerformanceMonitorDefinition(parent: DefinitionPath) =
 //MASTER NODE DEFINITIONS
 
 type internal ProcessMonitorDefinition(parent: DefinitionPath) =
-    inherit ReplicatedActorDefinition<ProcessMonitor, Nessos.MBrace.Runtime.Definitions.PublicTypes.ProcessMonitorDb>(parent)
+    inherit ReplicatedActorDefinition<ProcessMonitor, Nessos.MBrace.Runtime.Definitions.CommonTypes.ProcessMonitorDb>(parent)
 
     override __.Name = "processMonitor"
 
-    override __.InitState = Nessos.MBrace.Runtime.Definitions.PublicTypes.ProcessMonitorDb.Create()
-    override __.Behavior(configuration: ActivationConfiguration, instanceId: int, state: Nessos.MBrace.Runtime.Definitions.PublicTypes.ProcessMonitorDb) =
+    override __.InitState = Nessos.MBrace.Runtime.Definitions.CommonTypes.ProcessMonitorDb.Create()
+    override __.Behavior(configuration: ActivationConfiguration, instanceId: int, state: Nessos.MBrace.Runtime.Definitions.CommonTypes.ProcessMonitorDb) =
         Behavior.stateful (ReplicatedState.create state) Nessos.MBrace.Runtime.Definitions.ProcessMonitor.processMonitorBehavior
 
     override __.ReplicatedOnNodeLossAction = ReActivateOnNodeLossSpecific ActivationStrategy.masterNode
@@ -181,7 +181,7 @@ type internal ProcessManagerDefinition(parent: DefinitionPath) =
     override __.Dependencies = []
     override __.PublishProtocols = [Remote.TcpProtocol.Bidirectional.BTcp()] //TODO!!! Add UTCP as well?
     override __.Behavior(_, _) = async {
-        let processMonitor = Cluster.NodeRegistry.ResolveLocal<Replicated<ProcessMonitor, PublicTypes.ProcessMonitorDb>>
+        let processMonitor = Cluster.NodeRegistry.ResolveLocal<Replicated<ProcessMonitor, CommonTypes.ProcessMonitorDb>>
                                 (empDef/"master"/"processMonitor"/"replicated"/"processMonitor" |> ActivationReference.FromPath)
 
         let masterAssemblyManager = Cluster.NodeRegistry.ResolveLocal<AssemblyManager>
@@ -268,7 +268,7 @@ type internal ProcessStateDefinition(parent: DefinitionPath) =
     override __.Behavior2(_, _) = Nessos.MBrace.Runtime.Definitions.TaskLog.taskLogBehavior
 
 type internal ProcessMonitorProxyDefinition(parent: DefinitionPath) =
-    inherit ReplicatedProxyActorDefinition<ProcessMonitor, Nessos.MBrace.Runtime.Definitions.PublicTypes.ProcessMonitorDb>(
+    inherit ReplicatedProxyActorDefinition<ProcessMonitor, Nessos.MBrace.Runtime.Definitions.CommonTypes.ProcessMonitorDb>(
                 parent,
                 {
                     Definition = empDef/"master"/"processMonitor"/"replicated"/"processMonitor"
