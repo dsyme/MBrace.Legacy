@@ -200,6 +200,17 @@ namespace Nessos.MBrace.Runtime.Tests
             let v = MutableCloudRef.Read flag |> MBrace.RunLocal
             v |> should equal true
 
+        [<Test;>]
+        member test.``Process.StreamLogs`` () =
+            let ps =
+                <@ cloud {
+                        for i in [|1..10|] do
+                            do! Cloud.Logf "i = %d" i 
+                } @> |> test.Runtime.CreateProcess
+            ps.AwaitResult()
+            ps.StreamLogs()
+
+
         [<Test; Category("Runtime Administration")>]
         member __.``Fetch logs`` () =
             __.Runtime.GetSystemLogs() |> Seq.isEmpty |> should equal false

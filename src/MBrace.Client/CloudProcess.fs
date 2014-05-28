@@ -175,7 +175,7 @@
         member p.StreamLogs () = Async.RunSynchronously <| p.StreamLogsAsync()
         member p.StreamLogsAsync () = 
             async {
-                let cts = new Threading.CancellationTokenSource()
+                use cts = new Threading.CancellationTokenSource()
                 let interval = 100
                 let rec pollingLoop () = async {
                     if not p.Complete then
