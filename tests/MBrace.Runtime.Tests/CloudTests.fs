@@ -394,14 +394,28 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test>]
         member test.``RunLocal Cloud`` () = 
-              cloud { 
-                    let x = ref 1
-                    let! _ = cloud { 
-                                do x := !x + 1
-                                return ()
-                             }
-                    return !x 
-              } |> MBrace.RunLocal |> should equal 2
+            cloud { 
+                let x = ref 1
+                let! _ = cloud { 
+                            do x := !x + 1
+                            return ()
+                            }
+                return !x 
+            } |> MBrace.RunLocal |> should equal 2
+
+        [<Test; Repeat 10>]
+        member test.``Cloud Side effects`` () =
+            <@ cloud {
+                let  x = ref 0
+                let! n = Cloud.GetWorkerCount()
+                let  n = n * 50
+                do! [|1..n|] 
+                    |> Array.map (fun i -> cloud { do x := i })
+                    |> Cloud.Parallel
+                    |> Cloud.Ignore
+
+                return x.Value
+            } @> |> test.ExecuteExpression |> should equal 0
 
         [<Test>]
         member test.``Cloud ToLocal``() = 
