@@ -3,7 +3,6 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
-
 [<Cloud>]
 let test = cloud {
     let! count = Cloud.GetWorkerCount()
@@ -19,6 +18,8 @@ let test = cloud {
         |> Cloud.Parallel
         |> Cloud.Ignore
 }
+MBraceNode.SpawnMultiple(1)
+MBraceSettings.MBracedExecutablePath
 
 MBrace.RunLocal(test, showLogs = true)
 
