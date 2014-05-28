@@ -378,7 +378,7 @@
 
                 try
                     // serialization errors for dynamic assemblies
-                    let! errors = MBraceSettings.Vagrant.SubmitObjectDependencies(dependencyUploader, comp.Dependencies, permitCompilation = false)
+                    let! errors = MBraceSettings.Vagrant.SubmitAssemblies(dependencyUploader, comp.Dependencies)
 
                     let rawImage = comp.GetRawImage()
 
