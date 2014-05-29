@@ -56,6 +56,7 @@
     <None Include="ClientSettings.fsi" />
     <Compile Include="ClientSettings.fs" />
     <Compile Include="CloudComputation.fs" />
+    <Compile Include="StoreClient.fs" />
     <None Include="CloudProcess.fsi" />
     <Compile Include="CloudProcess.fs" />
     <Compile Include="Node.fsi" />
@@ -64,7 +65,7 @@
     <Compile Include="Runtime.fs" />
     <Compile Include="ClientExtensions.fs" />
     <None Include="preamble.fsx" />
-    <None Include="mbrace.fsx" />
+    <None Include="eirik.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
