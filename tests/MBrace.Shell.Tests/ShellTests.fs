@@ -101,17 +101,64 @@
             fsi.EvalInteraction "open Nessos.MBrace"
             fsi.EvalInteraction "open Nessos.MBrace.Client"
             fsi.EvalInteraction <| """MBraceSettings.MBracedExecutablePath <- "mbraced.exe" """
-            fsi.EvalInteraction <| "MBraceNode.SpawnMultiple(1)" 
+            fsi.EvalInteraction <| "let runtime = MBrace.InitLocal(4)" 
 
         [<TestFixtureTearDown>]
         let stopFsiSession () =
             FsiSession.Value.Interrupt()
-            //FsiSession.Value.EvalInteraction "client.Kill()"
+            FsiSession.Value.EvalInteraction "runtime.Kill()"
             FsiSession.Stop()
 
         [<Test>]
-        let ``01. Simple execution`` () =
+        let ``Simple execution - inlined quotation`` () =
+            let fsi = FsiSession.Value
+            "runtime.Run <@ cloud { return 42 } @>" |> fsi.TryEvalExpression |> shouldEqual 42
+
+        [<Test;>]
+        let ``Simple execution - let binding`` () =
+            let fsi = FsiSession.Value
+            "[<Cloud>]let f = cloud { return 42 }" |> fsi.EvalInteraction
+            "runtime.Run <@ f @>" |> fsi.EvalExpression |> shouldEqual 42
+
+        [<Test;>]
+        let ``Custom type`` () =
+            let fsi = FsiSession.Value
+            "type 'a tree = Leaf | Node of 'a * 'a tree * 'a tree" |> fsi.EvalInteraction
+            "let t = Node(2, Leaf, Node(40, Leaf, Leaf))" |> fsi.EvalInteraction
+            "[<Cloud>]let rec g x = cloud { match x with Leaf -> return 0 | Node(v,l,r) -> let! (l,r) = g l <||> g r in return v + l + r}" |> fsi.EvalInteraction
+            "runtime.Run <@ g t @>" |> fsi.EvalExpression |> shouldEqual 42
+
+        [<Test;>]
+        let ``Mutable ref captured`` () =
+            let fsi = FsiSession.Value
+            "let x = ref 0" |> fsi.EvalInteraction
+            "for i = 1 to 5 do x := runtime.Run <@ cloud { return !x + 1 } @>" |> fsi.EvalInteraction
+            "x.Value" |> fsi.EvalExpression |> shouldEqual 5
+
+        [<Test;>]
+        let ``Reference to external library`` () =
+            let code = """
+            
+            module StaticAssemblyTest
+
+                type Test<'T> = TestCtor of 'T
+
+                let value = TestCtor (42, "42")
+            """
+
+            let scs = new SimpleSourceCodeServices()
+
+            let workDir = Path.GetTempPath()
+            let name = Path.GetRandomFileName()
+            let sourcePath = Path.Combine(workDir, Path.ChangeExtension(name, ".fs"))
+            let assemblyPath = Path.Combine(workDir, Path.ChangeExtension(name, ".dll"))
+            
+            do File.WriteAllText(sourcePath, code)
+            let errors,code = scs.Compile [| "" ; "--target:library" ; sourcePath ; "-o" ; assemblyPath |]
+            if code <> 0 then failwithf "Compiler error: %A" errors
 
             let fsi = FsiSession.Value
 
-            "42" |> fsi.TryEvalExpression |> shouldEqual 42
+            fsi.AddReferences [assemblyPath]
+            fsi.EvalInteraction "open StaticAssemblyTest"
+            fsi.EvalExpression "runtime.Run <@ cloud { let (TestCtor (v,_)) = value in return v } @>" |> shouldEqual 42
