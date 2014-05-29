@@ -14,7 +14,10 @@ open System.IO
 
 
 let project = "MBrace"
-let testAssemblies = ["bin/MBrace.Runtime.Tests.dll"]
+let testAssemblies = ["bin/MBrace.Runtime.Tests.dll"
+                      "bin/MBrace.Shell.Tests.dll"
+                      "bin/MBrace.Store.Tests.dll"
+                     ]
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 

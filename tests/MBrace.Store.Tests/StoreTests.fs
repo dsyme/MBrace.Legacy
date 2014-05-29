@@ -1,8 +1,5 @@
 ﻿namespace Nessos.MBrace.Runtime.Tests.Store
 
-open Nessos.MBrace.Utils
-open Nessos.MBrace.Core
-open Nessos.MBrace.Client
 open Nessos.MBrace.Runtime.Store
 open System
 open System.IO

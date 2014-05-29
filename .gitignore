@@ -6,9 +6,6 @@
 *.user
 *.sln.docstates
 
-# ignore connections.config in tests
-tests/MBrace.Runtime.Tests/connections.config
-
 # Build results
 
 [Dd]ebug/
@@ -157,4 +154,3 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
-tests/MBrace.Runtime.Tests/connections.config
