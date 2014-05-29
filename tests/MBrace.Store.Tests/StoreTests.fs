@@ -225,8 +225,8 @@ type ``Store tests`` () =
         ms.ToArray() |> should equal [| byte i |]
         s.Dispose()
 
-    [<Test>]
-    member test.``Z.0 Cleanup`` () =
+    [<TestFixtureTearDown>]
+    member test.``Cleanup`` () =
         test.UsedContainers
         |> Seq.filter (test.Store.ContainerExists >> Async.RunSynchronously)
         |> Seq.iter   (test.Store.DeleteContainer >> Async.RunSynchronously)
