@@ -466,6 +466,14 @@ type internal ProcessGroupDefinition(parent: DefinitionPath) =
                           |> Seq.map (fun rawProxyRef -> new RawActorRef<Worker>(rawProxyRef) :> ActorRef<Worker>)
                           |> Seq.toList
 
+            let collocatedWorker = 
+                Cluster.NodeRegistry.ResolveActivation({ Definition = empDef/"process"/"worker"/"workerRaw"; InstanceId = activation.InstanceId }, Cluster.NodeManager)
+            match collocatedWorker with
+            | Some { ActorRef = Some w } ->
+                let worker = new RawActorRef<Worker>(w :?> ActorRef<RawProxy>) :> ActorRef<Worker>
+                workerPool <-- RemoveWorker worker
+            | _ -> ()
+
             def.LogInfo "Setting up Workers..."
 
             do! workers
