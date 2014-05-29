@@ -8,11 +8,20 @@ namespace Nessos.MBrace
     type ProcessId = Nessos.MBrace.Core.ProcessId
 
     [<Sealed>]
+    /// Disable tracing for cloud workflow
     type NoTraceInfoAttribute =
         class
             inherit System.Attribute
             new : unit -> NoTraceInfoAttribute
             member Name : string
+        end
+
+    [<Sealed>]
+    /// Disable [<Cloud>] warnings for current workflow
+    type NoWarnAttribute =
+        class
+            inherit System.Attribute
+            new : unit -> NoWarnAttribute
         end
 
     [<Sealed>]

@@ -10,10 +10,10 @@ open Nessos.MBrace.Runtime.Logging
 [<AutoOpen>]
 module ClientExtensions =
     type MBrace =
-        static member Compile (expr : Expr<Cloud<'R>>, ?name) = MBraceSettings.CloudCompiler.Compile(expr, ?name = name)
+        static member Compile (expr : Expr<Cloud<'R>>, ?name) = CloudComputation.Compile(expr, ?name = name)
         
         [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
-        static member Compile (block : Cloud<'R>, ?name) = MBraceSettings.CloudCompiler.Compile(block, ?name = name)
+        static member Compile (block : Cloud<'R>, ?name) = CloudComputation.Compile(block, ?name = name)
 
         static member RunRemoteAsTask (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) =
             let computation = MBrace.Compile expr

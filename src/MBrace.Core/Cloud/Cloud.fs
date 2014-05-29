@@ -14,6 +14,10 @@
             member self.Name = "NoTraceInfo"
 
     [<Sealed>]
+    type NoWarnAttribute() =
+        inherit System.Attribute()
+
+    [<Sealed>]
     type Cloud<'T> internal (cloudExpr : CloudExpr) =
         member __.Type = typeof<'T>
         member __.CloudExpr = cloudExpr

@@ -6,6 +6,7 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils.PrettyPrinters
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Logging
 
     type CloudComputation<'T> = Nessos.MBrace.Core.CloudComputation<'T>
 
@@ -22,3 +23,15 @@
                     TypeName = Type.prettyPrint cmp.ReturnType
                     Dependencies = cmp.Dependencies |> List.map VagrantUtils.ComputeAssemblyId
                 }
+
+            static member Compile (block : Cloud<'T>, ?name : string) =
+                let cc = MBraceSettings.CloudCompiler.Compile(block, ?name = name)
+                for w in cc.Warnings do
+                    MBraceSettings.Logger.LogWarning w
+                cc
+
+            static member Compile (expr : Quotations.Expr<Cloud<'T>>, ?name : string) =
+                let cc = MBraceSettings.CloudCompiler.Compile(expr, ?name = name)
+                for w in cc.Warnings do
+                    MBraceSettings.Logger.LogWarning w
+                cc

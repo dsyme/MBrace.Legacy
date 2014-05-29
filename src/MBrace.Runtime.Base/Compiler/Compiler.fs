@@ -85,17 +85,22 @@ namespace Nessos.MBrace.Core
                 
                 // let! x = cloudExpr
                 | CloudCall (memberInfo, methodBase) ->
-                    // referenced cloud expression is not a reflected definition
-                    if not memberInfo.IsReflectedDefinition then
-                        log Error e "%s depends on '%s' which lacks [<Cloud>] attribute." blockName <| printMemberInfo memberInfo
-
                     // fail if cloud expression is not static method
-                    elif not methodBase.IsStatic then
+                    if not methodBase.IsStatic then
                         log Error e "%s references non-static cloud workflow '%s'. This is not supported." blockName <| printMemberInfo memberInfo
+
+                    // referenced cloud expression is not a reflected definition
+                    elif isLackingCloudAttribute memberInfo then
+                        log Warning e "%s depends on '%s' which lacks [<Cloud>] attribute." blockName <| printMemberInfo memberInfo
 
                 // cloud block loaded from a field; unlikely but possible
                 | FieldGet(_,f) when yieldsCloudBlock f.FieldType ->
-                    log Error e "%s depends on cloud workflow '%s' which lacks [<Cloud>] attribute." blockName f.Name
+                    // fail if cloud expression is not static method
+                    if not f.IsStatic then
+                        log Error e "%s references non-static cloud workflow '%s'. This is not supported." blockName <| printMemberInfo f
+
+                    elif isLackingCloudAttribute f then
+                        log Warning e "%s depends on cloud workflow '%s' which lacks [<Cloud>] attribute." blockName f.Name
 
                 // cloud block loaded a closure;
                 // can happen in cases where cloud blocks are defined in nested let bindings:
@@ -177,11 +182,14 @@ namespace Nessos.MBrace.Core
             | [] -> name, functions, warnings
 
 
-    type CloudCompiler (vagrant : VagrantServer) =
+    type CloudCompiler (?vagrant : VagrantServer) =
 
         member __.Compile(expr : Expr<Cloud<'T>>, ?name : string) =
 
-            let dependencies = vagrant.ComputeObjectDependencies(expr, permitCompilation = true)
+            let dependencies = 
+                match vagrant with
+                | Some v -> v.ComputeObjectDependencies(expr, permitCompilation = true)
+                | None -> VagrantUtils.ComputeAssemblyDependencies expr
 
             let name, functions, warnings = compile name expr
 
@@ -190,6 +198,9 @@ namespace Nessos.MBrace.Core
         member __.Compile(block : Cloud<'T>, ?name : string) =
             let name = defaultArg name ""
 
-            let dependencies = vagrant.ComputeObjectDependencies(block, permitCompilation = true)
+            let dependencies = 
+                match vagrant with
+                | Some v -> v.ComputeObjectDependencies(block, permitCompilation = true)
+                | None -> VagrantUtils.ComputeAssemblyDependencies block
 
             new BareCloudComputation<'T>(name, block, dependencies) :> CloudComputation<'T>

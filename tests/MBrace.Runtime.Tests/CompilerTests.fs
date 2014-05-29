@@ -11,9 +11,13 @@
     [<TestFixture; Category("CompilerTests")>]
     module ``Cloud Compiler Tests`` =
 
+        // force FsPickler initialization
+        do MBraceSettings.ClientId |> ignore
+        let compiler = Nessos.MBrace.Core.CloudCompiler()
+
         let compile (expr : Quotations.Expr<Cloud<'T>>) = 
             try 
-                let c = MBrace.Compile expr
+                let c = compiler.Compile expr
                 match c.Warnings with
                 | [] -> printfn "compilation successful."
                 | ws -> printfn "compilation with warnings:\n%s" <| String.concat "\n" ws
@@ -21,12 +25,20 @@
 
             with e -> printfn "%O" e ; reraise ()
 
-        let shouldFailCompilation expr = shouldFailwith<CompilerException> (fun () -> compile expr |> ignore)
         let shouldSucceedCompilation expr = let comp = compile expr in comp.Warnings |> should equal []
+        let shouldFailCompilation expr = shouldFailwith<CompilerException> (fun () -> compile expr |> ignore)
+        let shouldWarnCompilationWith warn expr = 
+            let comp = compile expr 
+            comp.Warnings 
+            |> List.exists(fun msg -> msg.Contains warn) 
+            |> should equal true
 
 
         let valueWithoutAttribute = cloud { return 42 }
         let functionWithoutAttribute x = cloud { return x + 1 }
+
+        [<NoWarn>]
+        let functionWithNoWarnAttribute x = cloud { return x + 1 }
 
         [<Cloud>]
         let blockWithCloudAttributeCallingBlockWithCloudAttr () = cloud {
@@ -92,15 +104,19 @@
 
         [<Test>]
         let ``Cloud value missing [<Cloud>] attribute`` () =
-            shouldFailCompilation <@ valueWithoutAttribute @>
+            shouldWarnCompilationWith "[<Cloud>]" <@ valueWithoutAttribute @>
 
         [<Test>]
         let ``Cloud function missing [<Cloud>] attribute`` () =
-            shouldFailCompilation <@ functionWithoutAttribute 41 @>
+            shouldWarnCompilationWith "[<Cloud>]" <@ functionWithoutAttribute 41 @>
+
+        [<Test>]
+        let ``Cloud function with [<NoWarn>] attribute`` () =
+            shouldSucceedCompilation <@ functionWithNoWarnAttribute 41 @>
 
         [<Test>]
         let ``Nested cloud block missing [<Cloud>] attribute`` () =
-            shouldFailCompilation <@ blockWithCloudAttributeCallingBlockWithCloudAttr () @>
+            shouldWarnCompilationWith "[<Cloud>]" <@ blockWithCloudAttributeCallingBlockWithCloudAttr () @>
 
         [<Test>]
         let ``Workflow that inherits [<Cloud>] attribute from containing modules`` () =

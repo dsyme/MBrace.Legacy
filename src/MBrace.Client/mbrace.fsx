@@ -27,8 +27,15 @@ let runtime = MBrace.InitLocal 5
 runtime.Run <@ cloud { return! Cloud.GetWorkerCount() } @>
 
 let hello = cloud { return 42 }
-[<Cloud>]
+//[<Cloud>]
 let bar = cloud { return! hello }
+
+runtime.Run bar
+
+let cc = MBrace.Compile <@ bar @>
+open Nessos.MBrace.Runtime.Logging
+MBraceSettings.Logger.LogWarning cc.Warnings.[0]
+cc.Warnings
 
 runtime.Run <@ bar @>
 

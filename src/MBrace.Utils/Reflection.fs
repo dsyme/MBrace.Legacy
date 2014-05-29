@@ -83,9 +83,9 @@
                 |> Array.tryFind (fun a -> try a.FullName = name || a.GetName().Name = name with _ -> false)
 
         type MemberInfo with
-            member m.IsReflectedDefinition =
+            member m.ContainsCustomAttributeRecursive<'Attr when 'Attr :> Attribute> () =
                 let rec traverse (m : MemberInfo) =
-                    if m.GetCustomAttributes(typeof<ReflectedDefinitionAttribute>, false).Length <> 0 then true
+                    if m.GetCustomAttributes(typeof<'Attr>, false).Length <> 0 then true
                     else
                         match m.DeclaringType with
                         | null -> false

@@ -30,6 +30,11 @@
         /// checks if given type is part of the MBrace.Core library
         let isCloudPrimitive (t : Type) = t.Assembly = typeof<Cloud<_>>.Assembly
 
+        /// checks if given member contains CloudAttribute
+        let isLackingCloudAttribute (m : MemberInfo) =
+            not (m.ContainsCustomAttributeRecursive<ReflectedDefinitionAttribute> () ||
+                    m.ContainsCustomAttributeRecursive<NoWarnAttribute> ())
+
         /// matches against a `typeof` literal
         let (|TypeOf|_|) (e : Expr) =
             match e with

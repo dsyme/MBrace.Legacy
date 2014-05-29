@@ -385,12 +385,6 @@ namespace Nessos.MBrace.Client
         //  Computation Section
         //
 
-        member __.CreateProcess (expr : Expr<Cloud<'T>>, ?name) =
-            try
-                let computation = MBraceSettings.CloudCompiler.Compile(expr, ?name = name)
-                processManager.CreateProcess computation
-            with e -> Error.handle e
-
         member __.CreateProcess (computation : CloudComputation<'T>) = processManager.CreateProcess computation
 
         member __.RunAsync (computation : CloudComputation<'T>) =
@@ -399,15 +393,40 @@ namespace Nessos.MBrace.Client
                 return! proc.AwaitResultAsync ()
             } |> Error.handleAsync
 
+        member __.Run (computation : CloudComputation<'T>) = __.RunAsync computation |> Error.handleAsync2
+
+        member __.CreateProcess (expr : Expr<Cloud<'T>>, ?name) =
+            try
+                let computation = CloudComputation.Compile(expr, ?name = name)
+                processManager.CreateProcess computation
+            with e -> Error.handle e
+
         member __.RunAsync (expr : Expr<Cloud<'T>>, ?name) =
-            let computation = MBraceSettings.CloudCompiler.Compile(expr, ?name = name)
+            let computation = CloudComputation.Compile(expr, ?name = name)
             __.RunAsync computation
 
-        member __.Run (computation : CloudComputation<'T>) = __.RunAsync computation |> Error.handleAsync2
-            
         member __.Run (expr : Expr<Cloud<'T>>, ?name) =
             try
-                let computation = MBraceSettings.CloudCompiler.Compile(expr, ?name = name)
+                let computation = CloudComputation.Compile(expr, ?name = name)
+                __.Run computation 
+            with e -> Error.handle e
+
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
+        member __.CreateProcess (block : Cloud<'T>, ?name) =
+            try
+                let computation = CloudComputation.Compile(block, ?name = name)
+                processManager.CreateProcess computation
+            with e -> Error.handle e
+
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
+        member __.RunAsync (block : Cloud<'T>, ?name) =
+            let computation = CloudComputation.Compile(block, ?name = name)
+            __.RunAsync computation
+
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
+        member __.Run (block : Cloud<'T>, ?name) =
+            try
+                let computation = CloudComputation.Compile(block, ?name = name)
                 __.Run computation 
             with e -> Error.handle e
 
@@ -442,14 +461,6 @@ namespace Nessos.MBrace.Client
                             ?failoverFactor = None,
                             ?debug = debug, 
                             ?background = background)
-
-
-        member r.RunFunc (f : Func<'T>) : Task<'T> =
-            try
-                r.RunAsync <@ cloud { return f.Invoke() } @> |> Async.StartAsTask
-            with e -> Error.handle e
-
-        member r.Echo (input : 'a) = r.Run <@ cloud { return input } @>
 
     type MBrace = MBraceRuntime
 
