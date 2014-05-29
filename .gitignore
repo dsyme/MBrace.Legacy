@@ -6,6 +6,8 @@
 *.user
 *.sln.docstates
 
+tests/MBrace.Store.Tests/connections.config
+
 # Build results
 
 [Dd]ebug/
