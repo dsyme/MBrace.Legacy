@@ -65,9 +65,10 @@
     <Compile Include="Runtime.fs" />
     <Compile Include="ClientExtensions.fs" />
     <None Include="preamble.fsx" />
-    <None Include="eirik.fsx" />
+    <None Include="kostas.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
+    <None Include="eirik.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">
