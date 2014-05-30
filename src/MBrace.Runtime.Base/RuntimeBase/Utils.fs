@@ -136,6 +136,17 @@
             | ClearAllProcessInfo r -> r :> IReplyChannel |> Some
             | RequestDependencies(r,_) -> r :> IReplyChannel |> Some
 
+        /// recursively traverses through MessageHandlingExceptions, retrieving the innermost exception raised by the original actor
+        let (|MessageHandlingExceptionRec|_|) (e : exn) =
+            let rec aux depth (e : exn) =
+                match e with
+                | :? MessageHandlingException -> aux (depth + 1) e.InnerException
+                | null -> None
+                | e when depth = 0 -> None
+                | e -> Some e
+
+            aux 0 e
+
         let nodeUsesCompatibleStore (node : NodeRef) =
             try (node <!= GetStoreId) = StoreRegistry.DefaultStore.Id
             with _ -> false

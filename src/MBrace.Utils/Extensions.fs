@@ -191,3 +191,22 @@
             member d.TryFind (k : 'K) =
                 let found, v = d.TryGetValue k
                 if found then Some v else None
+
+
+        [<AbstractClass>]
+        type Existential internal () =
+            abstract Type : Type
+            abstract Apply : func:IFunc<'R> -> 'R
+
+            static member Create(t : Type) =
+                let et = typedefof<Existential<_>>.MakeGenericType [|t|]
+                Activator.CreateInstance(et) :?> Existential
+
+        and Existential<'T> () =
+            inherit Existential()
+
+            override __.Type = typeof<'T>
+            override __.Apply func = func.Invoke<'T> ()
+
+        and IFunc<'R> =
+            abstract Invoke<'T> : unit -> 'R

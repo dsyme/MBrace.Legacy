@@ -24,18 +24,22 @@
     type internal ProcessManagerMsg = ProcessManager
     type internal OSProcess = System.Diagnostics.Process
 
-    [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
-    module ProcessResult = 
-        type ProcessResult<'T> =
-            | Pending
-            | CompilerError of exn
-            | Value of 'T
-            | Exception of exn
-            | Fault of exn
-            | Killed
-        and ProcessResult = ProcessResult<obj>
-    
-    open ProcessResult
+    type ProcessResult<'T> =
+        | Pending
+        | InitError of exn
+        | Success of 'T
+        | UserException of exn
+        | Fault of exn
+        | Killed
+    with
+        member r.TryGetValue () =
+            match r with
+            | Pending -> None
+            | Success t -> Some t
+            | InitError e -> mfailwithInner e "process initialization error."
+            | UserException e -> reraise' e
+            | Fault e -> reraise' e
+            | Killed -> mfailwith "process has been user terminated."
 
     module internal ProcessInfo =
 
@@ -43,11 +47,11 @@
             match info.Result with
             | None -> Pending
             | Some(ProcessSuccess bytes) ->
-                match Serialization.Deserialize<Result<'T>> bytes with
-                | ValueResult v -> Value v
-                | ExceptionResult (e, ctx) -> Exception e
+                match Serialization.Deserialize<Result<obj>> bytes with
+                | ValueResult v -> Success (v :?> 'T)
+                | ExceptionResult (e, ctx) -> UserException e
             | Some(ProcessFault e) -> Fault e
-            | Some(ProcessInitError e) -> CompilerError e
+            | Some(ProcessInitError e) -> InitError e
             | Some(ProcessKilled) -> Killed
 
         let getReturnType (info : ProcessInfo) = Serialization.Deserialize<Type> info.Type
@@ -68,91 +72,42 @@
 
             Record.prettyPrint3 template None
 
-    
-    type Process internal (info : ProcessInfo, processManager : ActorRef<ProcessManagerMsg>) =
-        let processId = info.ProcessId
-        let returnType = ProcessInfo.getReturnType info
+    [<AbstractClass>]
+    type Process internal (processId : ProcessId, returnType : Type, processManager : ProcessManager) =
 
-        let getProcessInfo () =
-            async {
-                try
-                    return! processManager <!- fun ch -> GetProcessInfo(ch, processId)
-                with
-                | MBraceExn e -> return raise e
-                | MessageHandlingException (_,_,_,e) ->
-                    return mfailwithInner e "Client process manager has replied with exception."
-                | :? ActorInactiveException as e ->
-                    return raise <| ObjectDisposedException("Client process manager has been disposed.", e)
-            }
+        let processInfo = CacheAtom.Create(fun () -> processManager.GetProcessInfo(processId) |> Async.RunSynchronously)
 
-        let processInfo = CacheAtom.Create(fun () -> getProcessInfo () |> Async.RunSynchronously)
+        abstract AwaitBoxedResultAsync : ?pollingInterval:int -> Async<obj>
+        abstract AwaitBoxedResult : ?pollingInterval:int -> obj
+        abstract TryGetBoxedResult : unit -> obj option
 
-        member p.AwaitResultBoxedAsync ?pollingInterval =
-            let pollingInterval = defaultArg pollingInterval 200
-
-            let rec retriable () =
-                async {
-                    let! processInfo = getProcessInfo ()
-
-                    match ProcessInfo.getResult<obj> processInfo with
-                    | Pending ->
-                        do! Async.Sleep pollingInterval 
-                        return! retriable ()
-                    | Value v -> return v
-                    | Exception e -> return raise e
-                    | Fault e -> return raise e
-                    | CompilerError (MBraceExn e) -> return raise e
-                    | CompilerError e -> return mfailwithfInner e "Cloud compiler raised an exception. Process not started."
-                    | Killed -> return raise (new ProcessKilledException("Process has been killed.") :> exn)
-                }
-
-            retriable () |> Error.handleAsync
-
-        member p.AwaitResultBoxed () = p.AwaitResultBoxedAsync () |> Error.handleAsync2
-
-        member p.Name = info.Name
+        member p.Name = processInfo.Value.Name
         member p.ProcessId = processId
         member p.ReturnType = returnType
-        member internal p.ProcessInfo =  try processInfo.Value with e -> Error.handle e
-        member p.Result : ProcessResult = try ProcessInfo.getResult<obj> processInfo.Value with e -> Error.handle e
-        member p.ExecutionTime = p.ProcessInfo.ExecutionTime
-        member p.Complete = p.ProcessInfo.Result.IsSome
-        member p.InitTime = p.ProcessInfo.InitTime
-        member p.Workers = p.ProcessInfo.Workers
-        member p.Tasks = p.ProcessInfo.Tasks
-        member p.ClientId = p.ProcessInfo.ClientId
+        member internal p.ProcessInfo = processInfo.Value
+        member p.ExecutionTime = processInfo.Value.ExecutionTime
+        member p.Complete = processInfo.Value.Result.IsSome
+        member p.InitTime = processInfo.Value.InitTime
+        member p.Workers = processInfo.Value.Workers
+        member p.Tasks = processInfo.Value.Tasks
+        member p.ClientId = processInfo.Value.ClientId
+
+        static member internal CreateUntyped(t : Type, processId : ProcessId, processManager : ProcessManager) =
+            let existential = Existential.Create t
+            let ctor =
+                {
+                    new IFunc<Process> with
+                        member __.Invoke<'T> () = new Process<'T>(processId, processManager) :> Process
+                }
+
+            existential.Apply ctor
+
         // TODO : only printable in shell mode
         member p.ShowInfo (?useBorders) =
             let useBorders = defaultArg useBorders false
-            [p.ProcessInfo] |> ProcessInfo.prettyPrint useBorders |> printfn "%s"
-        
-        member p.TryGetResultBoxed () =
-            try
-                match p.Result with
-                | Pending -> None
-                | Exception e -> raise e
-                | Value v -> Some v
-                | CompilerError (MBraceExn e) -> raise e
-                | CompilerError e -> mfailwithInner e "Cloud Compiler error. Process not started."
-                | Killed -> mfailwith "Process has been killed by the user."
-                | Fault e -> raise e
-            with e -> Error.handle e
+            [processInfo.Value] |> ProcessInfo.prettyPrint useBorders |> printfn "%s"
 
-        member p.Cast<'T> () =
-            try
-                if typeof<'T>.IsAssignableFrom returnType then
-                    new Process<'T> (info, processManager)
-                else
-                    mfailwithf "Unable to cast type '%A' to type '%A'." returnType typeof<'T>
-            with e -> Error.handle e
-
-        member p.Kill () = 
-            try
-                processManager <!- fun ch -> KillProcess(ch, processId)
-                |> Async.RunSynchronously
-            with e -> Error.handle e
-
-
+        member p.Kill () = processManager.Kill processId |> Async.RunSynchronously
         member p.GetLogs () = p.GetLogsAsync () |> Async.RunSynchronously
         member p.GetLogsAsync () = async {
             let reader = StoreCloudLogger.GetReader(MBraceSettings.StoreInfo.Store, processId)
@@ -207,101 +162,79 @@
                 return! store.DeleteContainer(sprintf' "process%d" p.ProcessId)
             } |> Error.handleAsync
 
-        static member Cast<'T> (p : Process) = p.Cast<'T> ()
+    and [<Sealed>] Process<'T> internal (id : ProcessId, processManager : ProcessManager) =
+        inherit Process(id, typeof<'T>, processManager)
 
-    and [<Sealed>] Process<'T> internal (info : ProcessInfo, processManager : ActorRef<ProcessManagerMsg>) as self =
-        inherit Process(info, processManager)
+        member p.Result =
+            let info = base.ProcessInfo
+            ProcessInfo.getResult<'T> info
 
-        let pBase = self :> Process
-
-        member p.AwaitResultAsync<'T>(?pollingInterval) =
-            async {
-                let! result = pBase.AwaitResultBoxedAsync(?pollingInterval = pollingInterval)
-
-                return result :?> 'T
-            } |> Error.handleAsync
-
-        member p.AwaitResult<'T> () = p.AwaitResultAsync<'T> () |> Error.handleAsync2
-        member p.TryGetResult<'T>() = try pBase.TryGetResultBoxed () |> Option.map (fun o -> o :?> 'T) with e -> Error.handle e
-
-
-    [<Sealed>]
-    type ProcessManager internal (runtime: ActorRef<ClientRuntimeProxy>) =
-
-        let failoverActor =
-            let rec behaviour (state : (DeploymentId * ActorRef<ProcessManagerMsg>) option) (msg : ProcessManagerMsg) =
-                async {
-                    let reply = match msg with ProcessManagerReply r -> r.ReplyUntyped | _ -> ignore
-
-                    try
-                        match state with
-                        | None ->
-                            let! pm = runtime <!- (RemoteMsg << GetProcessManager)
-                            let! id = runtime <!- (RemoteMsg << GetDeploymentId)
-
-                            return! behaviour (Some (id,pm)) msg
-                        | Some (id,pm) ->  
-                            let! currentId = runtime <!- (RemoteMsg << GetDeploymentId)
-
-                            if id = currentId then
-                                // temporary store sanity check
-                                match msg with
-                                // messages that involve sending/receiving computation data to the runtime
-                                | CreateDynamicProcess _ | GetProcessInfo _ | GetAllProcessInfo _ ->
-                                    if runtimeUsesCompatibleStore runtime then pm <-- msg
-                                    else reply <| Reply.exn (mkMBraceExn None "incompatible store configuration.")
-                                | _ -> pm <-- msg
-                                    
-                                return state
-                            else // clear state if working with new runtime instance
-                                return! behaviour None msg
-
-                    with
-                    | MBraceExn e -> e |> Reply.exn |> reply ; return state
-                    | CommunicationException (_,_,_,e) ->
-                        if state.IsSome then
-                            // retry with clean state
-                            return! behaviour None msg
-                        else
-                            mkMBraceExn (Some e) "Cannot communicate with {m}brace runtime." |> Reply.exn |> reply
-                            return state
-
-                    | MessageHandlingException (_,_,_,e) ->
-                        mkMBraceExn (Some e) "Runtime replied with exception." |> Reply.exn |> reply
-                        return state
-
-                    | e -> reply <| Reply.Exception e; return state
-                }
-
-            Actor.bind <| Behavior.stateful None behaviour |> Actor.start
-
-        let processManager = failoverActor.Ref
-
-        let verbosity = true // match Shell.Settings with Some conf -> conf.Verbose | _ -> false
-
-        let postMsg (msgBuilder : IReplyChannel<'T> -> ProcessManagerMsg) =
-            async {
-                try
-                    return! processManager <!- msgBuilder
-                with
-                | MBraceExn e -> return raise e
-                | MessageHandlingException (_,_,_,e) ->
-                    return! Async.Raise <| mkMBraceExn (Some e) "Processmanager replied with exception."
-                | :? ActorInactiveException ->
-                    return! Async.Raise <| mkMBraceExn None "Processmanager client has been disposed."
+        member p.TryGetResult () = p.Result.TryGetValue()
+        member p.AwaitResultAsync(?pollingInterval) = async {
+            let pollingInterval = defaultArg pollingInterval 200
+            let rec retriable () = async {
+                match p.Result.TryGetValue() with
+                | None ->
+                    do! Async.Sleep pollingInterval
+                    return! retriable ()
+                | Some v -> return v
             }
 
-        let getProcessInfoAsync (pid : ProcessId) = async {
+            return! retriable ()
+        }
 
-            let processInfoRef = ref Unchecked.defaultof<ProcessInfo>
+        member p.AwaitResult(?pollingInterval) = 
+            p.AwaitResultAsync(?pollingInterval = pollingInterval)
+            |> Async.RunSynchronously
 
+        override p.TryGetBoxedResult () = p.TryGetResult() |> Option.map (fun r -> r :> obj)
+        override p.AwaitBoxedResultAsync (?pollingInterval) = async {
+            let! r = p.AwaitResultAsync(?pollingInterval = pollingInterval)
+            return r :> obj
+        }
+        override p.AwaitBoxedResult (?pollingInterval) =
+            p.AwaitBoxedResultAsync(?pollingInterval = pollingInterval)
+            |> Async.RunSynchronously
+
+    and internal ProcessManager (runtime: ActorRef<ClientRuntimeProxy>) =
+        
+        // keep track of process id's handled by process manager
+        let processes = Atom.atom Set.empty<ProcessId>
+
+        let processManagerActor = CacheAtom.Create(fun () -> runtime <!= (RemoteMsg << GetProcessManager))
+
+        let post (msg : ProcessManagerMsg) =
+            try
+                do processManagerActor.Value.Post msg
+            with
+            | MBraceExn e -> reraise' e
+            | :? CommunicationException as e -> mfailwithInner e "Cannot communicate with runtime."
+            | MessageHandlingExceptionRec e -> mfailwithInner e "Runtime replied with exception."
+
+        let postWithReply (msgB : IReplyChannel<'R> -> ProcessManagerMsg) = async {
+            try
+                return! processManagerActor.Value <!- msgB
+            with
+            | MBraceExn e -> return reraise' e
+            | :? CommunicationException as e -> return mfailwithInner e "Cannot communicate with runtime."
+            | MessageHandlingExceptionRec e ->
+                return! mfailwithInner e "Runtime replied with exception."
+
+        }
+
+        member pm.GetProcessInfo (pid : ProcessId) : Async<ProcessInfo> = 
+            postWithReply(fun ch -> GetProcessInfo(ch, pid))
+
+        member pm.DownloadProcessDependencies (pid : ProcessId) = async {
+            
+            if processes.Value.Contains pid then return () else
+
+            // vagrant components for the assembly fetch protocol
             let dependencyDownloader =
                 {
                     new IRemoteAssemblyPublisher with
                         member __.GetRequiredAssemblyInfo () = async {
-                            let! processInfo = postMsg <| fun ch -> GetProcessInfo(ch, pid)
-
-                            processInfoRef := processInfo
+                            let! processInfo = postWithReply <| fun ch -> GetProcessInfo(ch, pid)
 
                             return 
                                 if processInfo.ClientId = MBraceSettings.ClientId then []
@@ -310,132 +243,66 @@
                         }
 
                         member __.PullAssemblies (ids : AssemblyId list) = 
-                            if verbosity then printfn "Downloading dependencies for cloud process %d..." pid
-
-                            postMsg <| fun ch -> RequestDependencies(ch, ids)
+                            postWithReply <| fun ch -> RequestDependencies(ch, ids)
                 }
 
             do! MBraceSettings.Vagrant.Client.ReceiveDependencies dependencyDownloader
 
-            return processInfoRef.Value
+            processes.Swap(fun ps -> ps.Add pid)
         }
-//            async {
-//                let! processInfo = postMsg <| fun ch -> GetProcessInfo(ch, pid)
-//
-//                if processInfo.ClientId <> MBraceSettings.ClientId then
-//                    let missingAssemblies = processInfo.Dependencies |> List.filter (not << MBraceSettings.Vagrant.Client.IsLoadedAssembly)
-//                    if missingAssemblies.Length <> 0 then
-//                        if verbosity then printfn "Downloading dependencies for cloud process %d..." processInfo.ProcessId
-//                        
-//                        let! assemblies = postMsg <| fun ch -> RequestDependencies (ch, missingAssemblies)
-//                        let loadResults = MBraceSettings.Vagrant.Client.LoadPortableAssemblies assemblies
-//                        return
-//                            match loadResults |> List.tryFind (function Loaded _ -> false | _ -> true) with
-//                            | None -> ()
-//                            | Some a ->
-//                                mfailwithf "Protocol error: could not download dependency '%s'." a.Id.FullName
-//
-//                return processInfo
-//            }
 
-        let getAllProcessInfoAsync () = 
-            async {
-                let! images = postMsg GetAllProcessInfo
+        member pm.GetProcess (pid : ProcessId) = async {
+            do! pm.DownloadProcessDependencies pid
+            let! info = processManagerActor.Value <!- fun ch -> GetProcessInfo(ch, pid)
+            let returnType = ProcessInfo.getReturnType info
 
-                return 
-                    images 
-                    |> Array.toList 
-                    |> List.sortBy (fun p -> p.InitTime)
-            }
+            return Process.CreateUntyped(returnType, pid, pm)
+        }
 
-        let clearProcessInfoAsync (pid : ProcessId) =
-            async {
-                do! postMsg <| fun ch -> ClearProcessInfo (ch, pid)
-            }  
+        member pm.GetAllProcesses () = async {
+            let! infos = postWithReply GetAllProcessInfo
 
-        let clearAllProcessInfoAsync () =
-            async {
-                do! postMsg ClearAllProcessInfo
-            }
+            return!
+                infos
+                |> Array.map (fun info -> pm.GetProcess info.ProcessId)
+                |> Async.Parallel
+        }            
 
-        let getProcessInfo pid = getProcessInfoAsync pid |> Async.RunSynchronously
-        let getAllProcessInfo () = getAllProcessInfoAsync () |> Async.RunSynchronously
+        member pm.ClearProcessInfo (pid : ProcessId) = postWithReply <| fun ch -> ClearProcessInfo(ch, pid)
+        member pm.ClearAllProcessInfo () = postWithReply ClearAllProcessInfo
 
-        member pm.CreateProcessAsync<'T> (comp : CloudComputation<'T>) : Async<Process<'T>> =
-            async {
-                let requestId = RequestId.NewGuid()
+        member pm.CreateProcess<'T> (comp : CloudComputation<'T>) : Async<Process<'T>> = async {
+            let requestId = RequestId.NewGuid()
 
-                let dependencyUploader =
-                    {
-                        new IRemoteAssemblyReceiver with
-                            member __.GetLoadedAssemblyInfo (ids : AssemblyId list) =
-                                processManager <!- fun ch -> GetAssemblyLoadInfo(ch, requestId, ids)
+            let dependencyUploader =
+                {
+                    new IRemoteAssemblyReceiver with
+                        member __.GetLoadedAssemblyInfo (ids : AssemblyId list) =
+                            postWithReply <| fun ch -> GetAssemblyLoadInfo(ch, requestId, ids)
 
-                            member __.PushAssemblies (pas : PortableAssembly list) =
-                                processManager <!- fun ch -> LoadAssemblies(ch, requestId, pas)
-                    
-                    }
+                        member __.PushAssemblies (pas : PortableAssembly list) =
+                            postWithReply <| fun ch -> LoadAssemblies(ch, requestId, pas)
+                }
 
-                try
-                    // serialization errors for dynamic assemblies
-                    let! errors = MBraceSettings.Vagrant.SubmitAssemblies(dependencyUploader, comp.Dependencies)
+            // serialization errors for dynamic assemblies
+            let! errors = MBraceSettings.Vagrant.SubmitAssemblies(dependencyUploader, comp.Dependencies)
 
-                    let rawImage = comp.GetRawImage()
+            let rawImage = comp.GetRawImage()
 
-                    let! info = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, rawImage)
+            let! info = postWithReply <| fun ch -> CreateDynamicProcess(ch, requestId, rawImage)
 
-                    return Process<'T>(info, processManager)
-//                let rec trySendProcess missingAssemblies =
-//                    async {
-//                        let processImage, firstRequest =
-//                            match missingAssemblies with
-//                            | None -> comp.GetHashBundle() , true
-//                            | Some missing -> comp.GetMissingImageBundle missing , false
-//                        
-//                        if verbosity && not firstRequest then printfn "uploading dependencies... "
-//
-//                        let! response = processManager <!- fun ch -> CreateDynamicProcess(ch, requestId, processImage)
-//                    
-//                        match response with
-//                        | Process info ->
-////                            if verbosity && not firstRequest then printfn "done"
-//
-//                            return Process<'T>(info, processManager)
-//                        | MissingAssemblies missing ->
-//                            if firstRequest then
-//                                return! trySendProcess <| Some missing
-//                            else
-//                                return mfailwith "Failed to create cloud process."
-//                    }
-//
-//                try
-//                    return! trySendProcess None
-                with
-                | MBraceExn e -> return! Async.Raise e
-                | MessageHandlingException (_,_,_,e) ->
-                    return! Async.Raise <| mkMBraceExn (Some e) "Processmanager client has replied with exception."
-                | :? ActorInactiveException as e ->
-                    return! Async.Raise <| mkMBraceExn None "Processmanager client has been disposed."
-            } |> Error.handleAsync
+            processes.Swap(fun ps -> ps.Add info.ProcessId)
 
-        member pm.KillAsync (pid : ProcessId) =
-            async {
-                return! postMsg <| fun ch -> KillProcess(ch,pid)
-            } |> Error.handleAsync
+            return Process<'T>(info.ProcessId, pm)
+        }
 
-        member pm.CreateProcess<'T> expr = pm.CreateProcessAsync<'T> expr |> Error.handleAsync2
-        member pm.GetProcess (pid : ProcessId) = try Process(getProcessInfo pid, processManager) with e -> Error.handle e
-        member pm.GetProcess<'T> (pid : ProcessId) = try let p = pm.GetProcess pid in p.Cast<'T> () with e -> Error.handle e
-        member pm.GetAllProcesses () = try getAllProcessInfo () |> List.map (fun info -> Process(info, processManager)) with e -> Error.handle e
-        member pm.ClearProcessInfo (pid : ProcessId) = clearProcessInfoAsync pid |> Error.handleAsync2
-        member pm.ClearAllProcessInfo () = clearAllProcessInfoAsync () |> Error.handleAsync2
-        member pm.Kill pid = pm.KillAsync pid |> Error.handleAsync2
+        member pm.Kill (pid : ProcessId) = postWithReply <| fun ch -> KillProcess(ch, pid)
+
         // TODO : only printable in shell mode!!
         member pm.ShowInfo (?useBorders) =
             let useBorders = defaultArg useBorders false
-            try getAllProcessInfo () |> ProcessInfo.prettyPrint useBorders |> printfn "%s" 
-            with e -> Error.handle e
-        
-
-        interface IDisposable with
-            member pm.Dispose() = failoverActor.Stop()    
+            postWithReply GetAllProcessInfo
+            |> Async.RunSynchronously
+            |> Array.toList
+            |> ProcessInfo.prettyPrint useBorders 
+            |> printfn "%s"

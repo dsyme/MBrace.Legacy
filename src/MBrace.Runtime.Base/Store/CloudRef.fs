@@ -100,15 +100,23 @@
         }
 
         let defineUntyped(ty : Type, container : string, id : string) =
-            typeof<CloudRefProvider>
-                .GetMethod("CreateCloudRef", BindingFlags.Static ||| BindingFlags.NonPublic)
-                .MakeGenericMethod([| ty |])
-                .Invoke(null, [| id :> obj ; container :> obj ; self :> obj |])
-                :?> ICloudRef
+            let existential = Existential.Create ty
+            let ctor =
+                {
+                    new IFunc<ICloudRef> with
+                        member __.Invoke<'T> () = new CloudRef<'T>(container, id, self) :> ICloudRef
+                }
 
-        // WARNING : method called by reflection from 'defineUntyped' function above
-        static member CreateCloudRef<'T>(container, id, provider) =
-            new CloudRef<'T>(container, id, provider)
+            existential.Apply ctor
+//            typeof<CloudRefProvider>
+//                .GetMethod("CreateCloudRef", BindingFlags.Static ||| BindingFlags.NonPublic)
+//                .MakeGenericMethod([| ty |])
+//                .Invoke(null, [| id :> obj ; container :> obj ; self :> obj |])
+//                :?> ICloudRef
+
+//        // WARNING : method called by reflection from 'defineUntyped' function above
+//        static member CreateCloudRef<'T>(container, id, provider) =
+//            new CloudRef<'T>(container, id, provider)
 
         member __.StoreId = storeInfo.Id
 

@@ -6,6 +6,7 @@ namespace Nessos.MBrace.Utils
     open System.Net.Sockets
     open System.Collections.Generic
     open System.Runtime.Serialization
+    open System.Reflection
     open System.Text
     open System.Text.RegularExpressions
 
@@ -41,6 +42,22 @@ namespace Nessos.MBrace.Utils
         
         /// a guid that identifies this specific AppDomain
         let processUUID = Guid.NewGuid ()
+
+        let private remoteStackTraceField =
+            let getField name = typeof<System.Exception>.GetField(name, BindingFlags.Instance ||| BindingFlags.NonPublic)
+            match getField "remote_stack_trace" with
+            | null ->
+                match getField "_remoteStackTraceString" with
+                | null -> failwith "a piece of unreliable code has just failed."
+                | f -> f
+            | f -> f
+
+        let setStackTrace (trace : string) (e : exn) = remoteStackTraceField.SetValue(e, trace)
+
+        /// reraise exception, keeping its stacktrace intact
+        let inline reraise' (e : #exn) =
+            setStackTrace (e.StackTrace + System.Environment.NewLine) e
+            raise e
 
 
         //

@@ -72,7 +72,7 @@
 
             new CloudSeq<'T>(id, container, provider)
     
-    and internal CloudSeqProvider (storeInfo : StoreInfo, cacheStore : LocalCacheStore) as this = 
+    and internal CloudSeqProvider (storeInfo : StoreInfo, cacheStore : LocalCacheStore) as self = 
 
         let store = storeInfo.Store
         let extension = "seq"
@@ -111,15 +111,23 @@
             }
 
         let defineUntyped(ty : Type, container : string, id : string) =
-            typeof<CloudSeqProvider>
-                .GetMethod("CreateCloudSeq", BindingFlags.Static ||| BindingFlags.NonPublic)
-                .MakeGenericMethod([| ty |])
-                .Invoke(null, [| id :> obj ; container :> obj ; this :> obj |])
-                :?> ICloudSeq
+            let existential = Existential.Create ty
+            let ctor =
+                {
+                    new IFunc<ICloudSeq> with
+                        member __.Invoke<'T> () = new CloudSeq<'T>(id, container, self) :> ICloudSeq
+                }
 
-        // WARNING : method called by reflection from 'defineUntyped' function above
-        static member CreateCloudSeq<'T>(id, container, provider) =
-            new CloudSeq<'T>(id , container, provider)
+            existential.Apply ctor
+//            typeof<CloudSeqProvider>
+//                .GetMethod("CreateCloudSeq", BindingFlags.Static ||| BindingFlags.NonPublic)
+//                .MakeGenericMethod([| ty |])
+//                .Invoke(null, [| id :> obj ; container :> obj ; this :> obj |])
+//                :?> ICloudSeq
+//
+//        // WARNING : method called by reflection from 'defineUntyped' function above
+//        static member CreateCloudSeq<'T>(id, container, provider) =
+//            new CloudSeq<'T>(id , container, provider)
 
         member __.StoreId = storeInfo.Id
 

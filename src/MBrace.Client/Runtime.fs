@@ -349,7 +349,7 @@ namespace Nessos.MBrace.Client
 
         interface IDisposable with
             member r.Dispose() =
-                (processManager :> IDisposable).Dispose()
+//                (processManager :> IDisposable).Dispose()
                 if isEncapsulatedActor then runtimeActor.Stop()
 
         interface IComparable with
@@ -375,7 +375,7 @@ namespace Nessos.MBrace.Client
 
         member __.RunAsync (computation : CloudComputation<'T>) =
             async {
-                let! proc = processManager.CreateProcessAsync computation
+                let! proc = processManager.CreateProcess computation
                 return! proc.AwaitResultAsync ()
             } |> Error.handleAsync
 
@@ -384,7 +384,7 @@ namespace Nessos.MBrace.Client
         member __.CreateProcess (expr : Expr<Cloud<'T>>, ?name) =
             try
                 let computation = CloudComputation.Compile(expr, ?name = name)
-                processManager.CreateProcess computation
+                processManager.CreateProcess computation |> Async.RunSynchronously
             with e -> Error.handle e
 
         member __.RunAsync (expr : Expr<Cloud<'T>>, ?name) =
@@ -418,15 +418,15 @@ namespace Nessos.MBrace.Client
 
         member __.KillProcess (pid : ProcessId) = processManager.Kill pid
 
-        member __.GetProcess (pid : ProcessId) = processManager.GetProcess pid
-        member __.GetProcess<'T> (pid : ProcessId) = processManager.GetProcess<'T> pid
+        member __.GetProcess (pid : ProcessId) = processManager.GetProcess pid |> Async.RunSynchronously
+        member __.GetProcess<'T> (pid : ProcessId) = processManager.GetProcess pid |> Async.RunSynchronously :?> Process<'T>
         member __.GetProcess (pid : string) = __.GetProcess (stringToProcessId pid)
         member __.GetProcess<'T> (pid : string) = __.GetProcess<'T> (stringToProcessId pid)
-        member __.GetAllProcesses () = processManager.GetAllProcesses ()
+        member __.GetAllProcesses () = processManager.GetAllProcesses () |> Async.RunSynchronously
 
-        member __.ClearProcessInfo (pid : ProcessId) = processManager.ClearProcessInfo pid
+        member __.ClearProcessInfo (pid : ProcessId) = processManager.ClearProcessInfo pid |> Async.RunSynchronously
         member __.ClearProcessInfo (pid : string) =  __.ClearProcessInfo (stringToProcessId pid)
-        member __.ClearAllProcessInfo () = processManager.ClearAllProcessInfo ()
+        member __.ClearAllProcessInfo () = processManager.ClearAllProcessInfo () |> Async.RunSynchronously
 
         member __.ShowProcessInfo (?useBorders) = processManager.ShowInfo (?useBorders = useBorders)
 

@@ -7,7 +7,7 @@ namespace Nessos.MBrace.Utils
     open Nessos.Thespian.ConcurrencyTools
     
     /// thread safe cache with expiry semantics
-    type CacheAtom<'T> (provider : 'T option -> 'T, ?interval : int, ?initial : 'T) =
+    type CacheAtom<'T> internal (provider : 'T option -> 'T, ?interval : int, ?initial : 'T) =
 
         let interval = defaultArg interval 1000 |> float |> TimeSpan.FromMilliseconds
         let initial = match initial with None -> Undefined | Some t -> Success(t, DateTime.Now)

@@ -101,15 +101,23 @@
         }
 
         let defineUntyped(ty : Type, container : string, id : string, tag : string) =
-            typeof<MutableCloudRefProvider>
-                .GetMethod("CreateCloudRef", BindingFlags.Static ||| BindingFlags.NonPublic)
-                .MakeGenericMethod([| ty |])
-                .Invoke(null, [| id :> obj ; container :> obj ; tag :> obj ; self :> obj |])
-                :?> IMutableCloudRef
+            let existential = Existential.Create ty
+            let ctor =
+                {
+                    new IFunc<IMutableCloudRef> with
+                        member __.Invoke<'T> () = new MutableCloudRef<'T>(id, container, tag, self) :> IMutableCloudRef
+                }
 
-        // WARNING : method called by reflection from 'defineUntyped' function above
-        static member CreateCloudRef<'T>(id, container, tag, provider) =
-            new MutableCloudRef<'T>(id , container, tag, provider)
+            existential.Apply ctor
+//            typeof<MutableCloudRefProvider>
+//                .GetMethod("CreateCloudRef", BindingFlags.Static ||| BindingFlags.NonPublic)
+//                .MakeGenericMethod([| ty |])
+//                .Invoke(null, [| id :> obj ; container :> obj ; tag :> obj ; self :> obj |])
+//                :?> IMutableCloudRef
+//
+//        // WARNING : method called by reflection from 'defineUntyped' function above
+//        static member CreateCloudRef<'T>(id, container, tag, provider) =
+//            new MutableCloudRef<'T>(id , container, tag, provider)
 
         member self.StoreId = storeInfo.Id
 
