@@ -114,6 +114,6 @@
         member this.DeleteContainerAsync(container : string) =
             Error.handleAsync <| store.Store.DeleteContainer(container)
 
-        member this.Deletestring(container : string) =
+        member this.DeleteContainer(container : string) =
             Async.RunSynchronously <| this.DeleteContainerAsync(container)
             
