@@ -5,14 +5,17 @@ open Nessos.MBrace.Client
 
 let rt = MBrace.InitLocal 3
 
-let mref = StoreClient.Default.CreateMutableCloudRef("foo", 42)
+let store = StoreClient.Default
+let mref = store.CreateMutableCloudRef("foo", 42)
+
 let xs = 
-    [1..100]
+    [1..1000]
     |> List.map (fun i -> mref.TryUpdate(i))
     |> Async.Parallel
     |> Async.RunSynchronously
     
 xs |> Seq.filter id |> Seq.length
+
 mref.Value
 
 

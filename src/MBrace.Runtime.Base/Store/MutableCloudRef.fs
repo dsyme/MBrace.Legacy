@@ -14,6 +14,14 @@
 
     type MutableCloudRef<'T> internal (id : string, container : string, tag : Tag, provider : MutableCloudRefProvider) =
 
+        // These methods are used to synchronize tag updates in the case of multithreaded parallelism.
+        // In cloud execution there is no need to sync, as no threads share the same mutablecloudref instance.
+        let mutable isAcquiredRefInstance = 0
+        member internal __.TryAcquire () = 
+            System.Threading.Interlocked.CompareExchange(&isAcquiredRefInstance, 1, 0) = 0
+        member internal __.Release () = isAcquiredRefInstance <- 0
+            
+
         member val internal Tag = tag with get, set
 
         member __.Name = id
@@ -119,23 +127,37 @@
 
         member self.Dereference(mref : MutableCloudRef<'T>) : Async<'T> =
             async {
+                while not <| mref.TryAcquire () do
+                    do! Async.Sleep 100
+
                 let! _, value, tag = read mref.Container mref.Name
                 mref.Tag <- tag
+
+                mref.Release()
+
                 return value :?> 'T
             } |> onDereferenceError mref
 
         member this.TryUpdate(mref : MutableCloudRef<'T>, value : 'T) : Async<bool>  =
             async {
-                let! ok, tag = storeInfo.Store.TryUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>, mref.Tag)
+                if not <| mref.TryAcquire () then return false else
 
+                let! ok, tag = storeInfo.Store.TryUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>, mref.Tag)
+                
                 if ok then mref.Tag <- tag
+
+                mref.Release()
                 return ok
             } |> onUpdateError mref
 
         member this.ForceUpdate(mref : MutableCloudRef<'T>, value : 'T) : Async<unit> =
             async {
+                while not <| mref.TryAcquire () do
+                    do! Async.Sleep 100
                 let! tag = storeInfo.Store.ForceUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>)
                 mref.Tag <- tag
+                
+                mref.Release()
             } |> onUpdateError mref
 
         interface IMutableCloudRefProvider with
