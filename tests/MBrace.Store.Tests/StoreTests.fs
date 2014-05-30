@@ -8,10 +8,17 @@ open Microsoft.FSharp.Quotations
 open NUnit.Framework
 open FsUnit
 
+[<AutoOpen>]
+module private PicklerHelper =
+    let private pickler = Nessos.FsPickler.FsPickler()
+    let serialize<'T>   (value : 'T) (stream : Stream) = async { do pickler.Serialize<'T>(stream, value) }
+    let deserialize<'T> (stream : Stream) = pickler.Deserialize<'T>(stream)
+
+
 [<TestFixture>]
 [<AbstractClass>]
 type ``Store tests`` () =
-
+    
     abstract Store : ICloudStore
     
     member val private UsedContainers = ResizeArray<string>()
@@ -31,6 +38,7 @@ type ``Store tests`` () =
 
     member this.Temp = this.GetTempContainer()
     member this.TempFile = this.GetTempFilename()
+
 
 
     [<Test>]
@@ -197,7 +205,7 @@ type ``Store tests`` () =
         s'.Dispose()
 
     [<Test>]
-    member test.``C.2 Concurrent updates - Race.`` () =
+    member test.``C.2 Concurrent updates (byte) - Race.`` () =
         let c, f = test.GetTempContainer(), test.GetTempFilename()
         let t0 = test.Store.CreateMutable(c, f, fun s -> async { s.WriteByte 0uy })
                  |> Async.RunSynchronously
@@ -223,6 +231,64 @@ type ``Store tests`` () =
         let s, _ = test.Store.ReadMutable(c,f) |> Async.RunSynchronously
         s.CopyTo(ms)
         ms.ToArray() |> should equal [| byte i |]
+        s.Dispose()
+
+    [<Test; Repeat 50>]
+    member test.``C.3 Concurrent updates (int) - Race.`` () =
+        let store = test.Store
+        let c, f = test.GetTempContainer(), test.GetTempFilename()
+        let t0 = store.CreateMutable(c, f, serialize -1)
+                 |> Async.RunSynchronously
+
+        let n = 200
+
+        let oks, ts =
+            [0..n-1]
+            |> List.map (fun i -> 
+                async { return! store.TryUpdateMutable(c, f, serialize i, t0) })
+            |> Async.Parallel
+            |> Async.RunSynchronously
+            |> Array.unzip
+
+        oks |> Seq.filter ((=) false) |> Seq.length |> should equal (n-1)
+        oks |> Seq.filter ((=) true)  |> Seq.length |> should equal 1     // yes i know :P
+
+        ts |> Seq.filter ((=) t0) |> Seq.length |> should equal (n-1)
+        
+        let i = Seq.findIndex ((=) true) oks
+
+        let s, _ = store.ReadMutable(c,f) |> Async.RunSynchronously
+        let result = deserialize<int> s
+        result |> should equal i
+        s.Dispose()
+
+    [<Test; Repeat 50>]
+    member test.``C.4 Concurrent updates (array) - Race.`` () =
+        let store = test.Store
+        let c, f = test.GetTempContainer(), test.GetTempFilename()
+        let t0 = store.CreateMutable(c, f, serialize<int []> [||])
+                 |> Async.RunSynchronously
+
+        let n = 200
+        let size = 1024
+        let oks, ts =
+            [0..n-1]
+            |> List.map (fun i -> 
+                async { return! store.TryUpdateMutable(c, f, serialize (Array.create size i), t0) })
+            |> Async.Parallel
+            |> Async.RunSynchronously
+            |> Array.unzip
+
+        oks |> Seq.filter ((=) false) |> Seq.length |> should equal (n-1)
+        oks |> Seq.filter ((=) true)  |> Seq.length |> should equal 1     // yes i know :P
+
+        ts |> Seq.filter ((=) t0) |> Seq.length |> should equal (n-1)
+        
+        let i = Seq.findIndex ((=) true) oks
+
+        let s, _ = store.ReadMutable(c,f) |> Async.RunSynchronously
+        let result = deserialize<int []> s
+        result |> should equal (Array.create size i)
         s.Dispose()
 
     [<TestFixtureTearDown>]
