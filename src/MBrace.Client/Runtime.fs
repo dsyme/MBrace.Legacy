@@ -282,21 +282,6 @@ namespace Nessos.MBrace.Client
 
         member r.ShowSystemLogs() = r.GetSystemLogs() |> Logs.show
 
-        /// Deletes a container from the underlying store
-        member r.DeleteContainer(container : string) =
-            r.DeleteContainerAsync(container)
-            |> Async.RunSynchronously
-
-        member r.DeleteContainerAsync(container : string) =
-            async {
-                // interim store sanity check
-                if not <| runtimeUsesCompatibleStore runtime then
-                    mfailwith "incompatible store configuration."
-
-                let store = MBraceSettings.StoreInfo.Store
-                return! store.DeleteContainer(container)
-            } |> Error.handleAsync
-
         //TODO : replace with cooperative shutdowns
         /// violent kill
         member r.Kill() =
@@ -380,6 +365,7 @@ namespace Nessos.MBrace.Client
 
         override r.GetHashCode() = r.Id.GetHashCode()
 
+        member r.StoreClient = StoreClient.Default // TODO : change this
 
         //
         //  Computation Section

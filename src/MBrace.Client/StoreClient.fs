@@ -9,21 +9,27 @@
     open Nessos.MBrace.Runtime.Store
 
     /// Provides methods for interacting with the store and the primitives without the need for a runtime.
-    type StoreClient internal (config : PrimitiveConfiguration) =
+    type StoreClient internal (config : PrimitiveConfiguration, store : StoreInfo) =
 
         let newId () = Guid.NewGuid().ToString()
+
+        static member Default 
+            with get () = 
+                let config = MBraceSettings.DefaultPrimitiveConfiguration
+                let store  = MBraceSettings.StoreInfo
+                new StoreClient(config, store)
 
         //---------------------------------------------------------------------------------
         // CloudRef
 
         member this.CreateCloudRefAsync(container : Container, value : 'T) =
-            config.CloudRefProvider.Create(container, newId(), value)
+            Error.handleAsync <| config.CloudRefProvider.Create(container, newId(), value)
             
         member this.GetCloudRefsAsync(container : Container) =
-            config.CloudRefProvider.GetContainedRefs(container)
+            Error.handleAsync <| config.CloudRefProvider.GetContainedRefs(container)
 
         member this.GetCloudRefAsync(container : Container, id : Id) =
-            config.CloudRefProvider.GetExisting(container, id)
+            Error.handleAsync <| config.CloudRefProvider.GetExisting(container, id)
 
 
         member this.CreateCloudRef(container : Container,  value : 'T) =
@@ -40,13 +46,13 @@
         // CloudSeq
 
         member this.CreateCloudSeqAsync(container : Container,  values : 'T seq) =
-            config.CloudSeqProvider.Create(container, newId(), values)
+            Error.handleAsync <| config.CloudSeqProvider.Create(container, newId(), values)
 
         member this.GetCloudSeqsAsync(container : Container) =
-            config.CloudSeqProvider.GetContainedSeqs(container)
+            Error.handleAsync <| config.CloudSeqProvider.GetContainedSeqs(container)
 
         member this.GetCloudSeqAsync(container : Container, id : Id) =
-            config.CloudSeqProvider.GetExisting(container, id)
+            Error.handleAsync <| config.CloudSeqProvider.GetExisting(container, id)
 
 
         member this.CreateCloudSeq(container : Container,  values : 'T seq) =
@@ -62,13 +68,13 @@
         // CloudFile
 
         member this.CreateCloudFileAsync(container : Container, writer : Stream -> Async<unit>) =
-            config.CloudFileProvider.Create(container, newId(), writer)
+            Error.handleAsync <| config.CloudFileProvider.Create(container, newId(), writer)
 
         member this.GetCloudFilesAsync(container : Container) =
-            config.CloudFileProvider.GetContainedFiles(container)
+            Error.handleAsync <| config.CloudFileProvider.GetContainedFiles(container)
 
         member this.GetCloudFileAsync(container : Container, id : Id) =
-            config.CloudFileProvider.GetExisting(container, id)
+            Error.handleAsync <| config.CloudFileProvider.GetExisting(container, id)
             
 
         member this.CreateCloudFile(container : Container, writer : Stream -> Async<unit>) =
@@ -84,13 +90,13 @@
         // MutableCloudRef
 
         member this.CreateMutableCloudRefAsync(container : Container,  value : 'T) =
-            config.MutableCloudRefProvider.Create(container, newId(), value)
+            Error.handleAsync <| config.MutableCloudRefProvider.Create(container, newId(), value)
 
         member this.GetMutableCloudRefsAsync(container : Container) =
-            config.MutableCloudRefProvider.GetContainedRefs(container)
+            Error.handleAsync <| config.MutableCloudRefProvider.GetContainedRefs(container)
 
         member this.GetMutableCloudRefAsync(container : Container, id : Id) =
-            config.MutableCloudRefProvider.GetExisting(container, id)
+            Error.handleAsync <| config.MutableCloudRefProvider.GetExisting(container, id)
             
 
         member this.CreateMutableCloudRef(container : Container,  value : 'T) =
@@ -101,4 +107,13 @@
 
         member this.GetMutableCloudRef(container : Container, id : Id) =
             Async.RunSynchronously <| config.MutableCloudRefProvider.GetExisting(container, id)
+
+        //---------------------------------------------------------------------------------
+        // Misc
+
+        member this.DeleteContainerAsync(container : string) =
+            Error.handleAsync <| store.Store.DeleteContainer(container)
+
+        member this.DeleteContainer(container : string) =
+            Async.RunSynchronously <| this.DeleteContainerAsync(container)
             
