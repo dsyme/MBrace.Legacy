@@ -66,10 +66,7 @@ namespace Nessos.MBrace.Client
 
         let registerLogger (logger : ISystemLogger) =
             // register logger
-            let logger = Logger.createConsoleLogger()
-            IoC.RegisterValue<ISystemLogger>(logger, overwrite = true)
             ThespianLogger.Register(logger)
-            logger
 
         let initConfiguration () =
             
@@ -123,7 +120,8 @@ namespace Nessos.MBrace.Client
             // register serializer
             Serialization.Register vagrant.Pickler
 
-            let logger = registerLogger <| Logger.createConsoleLogger()
+            let logger = Logger.createConsoleLogger()
+            do registerLogger logger
 
             // activate store provider
             let storeInfo, coreConfig = activateDefaultStore localCacheDir storeProvider
@@ -173,7 +171,11 @@ namespace Nessos.MBrace.Client
 
         static member Logger
             with get () = config.Value.Logger
-            and set   l = config.Swap(fun c -> { c with Logger = l })
+            and set l = 
+                lock config (fun () ->
+                    registerLogger l
+                    config.Swap(fun c -> { c with Logger = l })
+                )
 
         static member StoreProvider
             with get () = config.Value.StoreInfo.Provider
