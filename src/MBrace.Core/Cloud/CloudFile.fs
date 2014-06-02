@@ -52,9 +52,9 @@
             mkTry<StoreException,_> <| CloudFile.Read(cloudFile, deserialize)
 
     // TODO: this is non-essential; could be moved to MBrace.Lib
-
-    and CloudFileSequence<'T>(file : ICloudFile, reader : Stream -> Async<seq<'T>>) =
-
+    
+    and [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
+      internal CloudFileSequence<'T>(file : ICloudFile, reader : Stream -> Async<seq<'T>>) =
         let enumerate () = 
             async {
                 let! stream = file.Read()
@@ -62,11 +62,14 @@
                 return seq.GetEnumerator()
             } |> Async.RunSynchronously
         
+        override self.ToString() = file.ToString()
+        member private this.StructuredFormatDisplay = this.ToString()
+
         interface ICloudSeq<'T> with
             member __.Name = file.Name
             member __.Container = file.Container
             member __.Type = typeof<'T>
-            member __.Count = raise <| new NotSupportedException()
+            member __.Count = raise <| new NotSupportedException("Count not supported for CloudSeqs created from CloudFiles.")
             member __.Size = file.Size
             member __.Dispose() = async.Zero()
 

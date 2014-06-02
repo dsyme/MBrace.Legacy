@@ -5,31 +5,38 @@ open Nessos.MBrace.Client
 
 let rt = MBrace.InitLocal 3
 
-let store = StoreClient.Default
+open System.IO
 
-let mref = store.CreateMutableCloudRef("foo", 42)
-let cf = store.CreateCloudFile("foo", fun _ -> async.Return ())
-CloudFile.ReadAsSeq()
+let g (s : Stream) = 
+    async {
+        use sw = new StreamWriter(s)
+        sw.WriteLine("Hello")
+        sw.WriteLine("world")
+    }
+
+let g1 (s : Stream) = 
+    async {
+        use sr = new StreamReader(s)
+        return sr.ReadToEnd()
+    }
+
+let g2 (s : Stream) = 
+    async {
+        return seq { use sr = new StreamReader(s) in while not sr.EndOfStream do yield sr.ReadLine() }
+    }
 
 
-let xs = 
-    [1..1000]
-    |> List.map (fun i -> mref.TryUpdate(i))
-    |> Async.Parallel
-    |> Async.RunSynchronously
-    
-xs |> Seq.filter id |> Seq.length
-
-mref.Value
-
-
-
+[<Cloud>]
 let f = cloud {
-    let! mref = MutableCloudRef.New(42)
-    return! [1..100]
-            |> List.map (fun i -> MutableCloudRef.Set(mref, i))
-            |> Cloud.Parallel
+    let! cf = CloudFile.Create(g)
+    let! a = CloudFile.Read(cf, g1)
+    let! b = CloudFile.ReadAsSeq(cf, g2)
+    return a, b
 }
 
-let ys = MBrace.RunLocal f
-ys |> Seq.filter id |> Seq.length
+
+let a, b = rt.Run <@ f @>
+
+b.Count
+
+b |> Seq.toArray
