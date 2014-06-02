@@ -7,17 +7,24 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Store
+    open Nessos.Thespian.ConcurrencyTools
 
     /// Provides methods for interacting with the store and the primitives without the need for a runtime.
     type StoreClient internal (config : PrimitiveConfiguration, store : StoreInfo) =
 
         let newId () = Guid.NewGuid().ToString()
 
+        static let registry = Atom.atom Map.empty<StoreId, StoreClient>
+
         static member Default 
             with get () = 
                 let config = MBraceSettings.DefaultPrimitiveConfiguration
                 let store  = MBraceSettings.StoreInfo
-                new StoreClient(config, store)
+                match registry.Value.TryFind store.Id with
+                | Some sc -> sc
+                | None ->
+                    registry.Swap(fun m -> m.Add(store.Id, new StoreClient(config, store)))
+                    registry.Value.Item store.Id
 
         //---------------------------------------------------------------------------------
         // CloudRef

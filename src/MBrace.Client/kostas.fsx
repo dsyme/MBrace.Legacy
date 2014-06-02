@@ -6,6 +6,7 @@ open Nessos.MBrace.Client
 let rt = MBrace.InitLocal 3
 
 let store = StoreClient.Default
+
 let mref = store.CreateMutableCloudRef("foo", 42)
 
 let xs = 
