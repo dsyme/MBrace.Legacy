@@ -89,9 +89,12 @@
         //---------------------------------------------------------------------------------
         // MutableCloudRef
 
-        member this.CreateMutableCloudRefAsync(container : string,  value : 'T) =
-            Error.handleAsync <| config.MutableCloudRefProvider.Create(container, newId(), value)
+        member this.CreateMutableCloudRefAsync(container : string, id : string,  value : 'T) =
+            Error.handleAsync <| config.MutableCloudRefProvider.Create(container, id, value)
 
+        member this.CreateMutableCloudRefAsync(container : string,  value : 'T) =
+            this.CreateMutableCloudRefAsync(container, newId(), value)
+            
         member this.GetMutableCloudRefsAsync(container : string) =
             Error.handleAsync <| config.MutableCloudRefProvider.GetContainedRefs(container)
 
@@ -99,8 +102,11 @@
             Error.handleAsync <| config.MutableCloudRefProvider.GetExisting(container, id)
             
 
+        member this.CreateMutableCloudRef(container : string, id : string, value : 'T) =
+            Async.RunSynchronously <| config.MutableCloudRefProvider.Create(container, id, value)
+
         member this.CreateMutableCloudRef(container : string,  value : 'T) =
-            Async.RunSynchronously <| config.MutableCloudRefProvider.Create(container, newId(), value)
+            this.CreateMutableCloudRef(container, newId(), value)
 
         member this.GetMutableCloudRefs(container : string) =
             Async.RunSynchronously <| config.MutableCloudRefProvider.GetContainedRefs(container)
