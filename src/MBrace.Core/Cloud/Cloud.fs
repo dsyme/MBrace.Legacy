@@ -8,7 +8,7 @@
     type ProcessId = Nessos.MBrace.Core.ProcessId
 
     [<Sealed>]
-    [<System.AttributeUsage(AttributeTargets.Class ||| AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Constructor, AllowMultiple = false)>]
+    [<System.AttributeUsage(AttributeTargets.Class ||| AttributeTargets.Method ||| AttributeTargets.Property, AllowMultiple = false)>]
     type NoTraceInfoAttribute() = 
             inherit System.Attribute()
             member self.Name = "NoTraceInfo"

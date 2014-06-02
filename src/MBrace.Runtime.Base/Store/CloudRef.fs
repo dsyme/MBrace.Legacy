@@ -104,7 +104,7 @@
             let ctor =
                 {
                     new IFunc<ICloudRef> with
-                        member __.Invoke<'T> () = new CloudRef<'T>(container, id, self) :> ICloudRef
+                        member __.Invoke<'T> () = new CloudRef<'T>(id, container, self) :> ICloudRef
                 }
 
             existential.Apply ctor
