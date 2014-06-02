@@ -200,8 +200,6 @@
                 let coreConfig = PrimitiveConfiguration.activate(storeInfo, cacheLocation)
                 
                 IoC.Register<PrimitiveConfiguration>(fun () -> coreConfig)
-                IoC.RegisterValue storeInfo.Store
-                IoC.RegisterValue storeInfo.Provider
 
                 storeInfo.Store.Name
             with e ->

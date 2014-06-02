@@ -59,8 +59,6 @@ namespace Nessos.MBrace.Client
                 
             // soonish
             IoC.RegisterValue (coreConfig,      overwrite = true)
-            IoC.RegisterValue (storeInfo,       overwrite = true)
-            IoC.RegisterValue (storeInfo.Store, overwrite = true)
 
             storeInfo, coreConfig
 

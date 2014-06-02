@@ -107,8 +107,6 @@
                 
                 let coreConfig = PrimitiveConfiguration.activate(storeInfo, cacheStoreEndpoint)
                 IoC.RegisterValue<PrimitiveConfiguration>(coreConfig)
-                IoC.RegisterValue<ICloudStore>(storeInfo.Store)
-                IoC.RegisterValue<StoreInfo>(storeInfo)
 
 
             with e -> results.Raise (sprintf "Error connecting to store: %s" e.Message, 2)

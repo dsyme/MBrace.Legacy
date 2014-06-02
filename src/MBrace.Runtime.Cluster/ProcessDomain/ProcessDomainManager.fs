@@ -73,8 +73,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
         let processExecutable = IoC.Resolve<string> "MBraceProcessExe"
         let debugMode = defaultArg (IoC.TryResolve<bool> "debugMode") false
 
-        // TODO : store registry
-        let storeProvider = IoC.Resolve<Nessos.MBrace.Client.StoreProvider>()
+        let storeProvider = Store.StoreRegistry.DefaultStore.Provider
                     
         let cacheStoreEndpoint = IoC.Resolve<string> "cacheStoreEndpoint"
 
