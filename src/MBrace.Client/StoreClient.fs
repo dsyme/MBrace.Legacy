@@ -10,6 +10,7 @@
     open Nessos.Thespian.ConcurrencyTools
 
     /// Provides methods for interacting with the store and the primitives without the need for a runtime.
+    [<Sealed>]
     type StoreClient internal (config : PrimitiveConfiguration, store : StoreInfo) =
 
         let newId () = Guid.NewGuid().ToString()

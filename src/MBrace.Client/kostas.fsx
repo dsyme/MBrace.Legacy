@@ -8,6 +8,9 @@ let rt = MBrace.InitLocal 3
 let store = StoreClient.Default
 
 let mref = store.CreateMutableCloudRef("foo", 42)
+let cf = store.CreateCloudFile("foo", fun _ -> async.Return ())
+CloudFile.ReadAsSeq()
+
 
 let xs = 
     [1..1000]

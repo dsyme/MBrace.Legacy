@@ -851,6 +851,46 @@ namespace Nessos.MBrace.Runtime.Tests
             should equal r.[0] r.[1]
 
 
+        [<Test>]
+        member test.``StoreClient CloudRef`` () =
+            let sc = StoreClient.Default
+            let c = Guid.NewGuid().ToString("N")
+            let cr = sc.CreateCloudRef(c, 42)
+            cr.Value |> should equal 42
+            let cr' = sc.GetCloudRef(c, cr.Name) :?> ICloudRef<int>
+            cr'.Value |> should equal 42
+            sc.DeleteContainer(c)
 
+        [<Test>]
+        member test.``StoreClient CloudSeq`` () =
+            let sc = StoreClient.Default
+            let c = Guid.NewGuid().ToString("N")
+            let cr = sc.CreateCloudSeq(c, [42])
+            cr |> Seq.toList |> should equal [42]
+            let cr' = sc.GetCloudSeq(c, cr.Name) :?> ICloudSeq<int>
+            cr' |> Seq.toList |> should equal [42]
+            sc.DeleteContainer(c)
 
+        [<Test>]
+        member test.``StoreClient CloudFile`` () =
+            let sc = StoreClient.Default
+            let c = Guid.NewGuid().ToString("N")
+            let cr = sc.CreateCloudFile(c, fun _ -> async.Return () )
+            use s = cr.Read() |> Async.RunSynchronously
+            s.Length |> should equal 0
+            let cr' = sc.GetCloudFile(c, cr.Name) 
+            use s' = cr.Read() |> Async.RunSynchronously
+            s'.Length |> should equal 0
+            sc.DeleteContainer(c)
 
+        [<Test>]
+        member test.``StoreClient MutableCloudRef`` () =
+            let sc = StoreClient.Default
+            let c = Guid.NewGuid().ToString("N")
+            let cr = sc.CreateMutableCloudRef(c, -1)
+            cr.Value |> should equal -1
+            let cr' = sc.GetMutableCloudRef(c, cr.Name) :?> IMutableCloudRef<int>
+            cr'.Value |> should equal -1
+            cr.ForceUpdate(42) |> Async.RunSynchronously
+            cr'.Value |> should equal 42
+            sc.DeleteContainer(c)
