@@ -1,4 +1,6 @@
-﻿namespace Nessos.MBrace.Runtime.Tests
+﻿#nowarn "0044" // 'While loop considered harmful' message.
+
+namespace Nessos.MBrace.Runtime.Tests
 
     open System
     open System.Runtime.Serialization
