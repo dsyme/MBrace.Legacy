@@ -56,9 +56,6 @@ namespace Nessos.MBrace.Client
         let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
             let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
             let coreConfig = PrimitiveConfiguration.activate(storeInfo, localCacheDir)
-                
-            // soonish
-            IoC.RegisterValue (coreConfig,      overwrite = true)
 
             storeInfo, coreConfig
 

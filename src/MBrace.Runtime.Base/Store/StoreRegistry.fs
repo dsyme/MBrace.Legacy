@@ -126,3 +126,10 @@ namespace Nessos.MBrace.Runtime.Store
                 and set (s : StoreInfo) =
                     storeIndex.Swap(fun m -> m.Add(s.Id, s))
                     defaultStore := Some s
+
+        static member DefaultPrimitiveConfiguration
+            with get () =
+                let storeId = StoreRegistry.DefaultStore.Id
+                match StoreRegistry.TryGetCoreConfiguration(storeId) with
+                | None -> invalidOp "Store: no configuration has been registered for %A." storeId
+                | Some cc -> cc

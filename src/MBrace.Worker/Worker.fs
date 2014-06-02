@@ -106,9 +106,7 @@
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
                 
                 let coreConfig = PrimitiveConfiguration.activate(storeInfo, cacheStoreEndpoint)
-                IoC.RegisterValue<PrimitiveConfiguration>(coreConfig)
-
-
+                ()
             with e -> results.Raise (sprintf "Error connecting to store: %s" e.Message, 2)
 
             // Register listeners

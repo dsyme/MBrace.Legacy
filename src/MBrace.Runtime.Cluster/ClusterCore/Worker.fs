@@ -31,7 +31,7 @@ let workerBehavior (processId: ProcessId)
                    (msg: Worker) =
     
     /// Dependency injection point. Fix!
-    let config = IoC.Resolve<PrimitiveConfiguration> ()
+    let config = StoreRegistry.DefaultPrimitiveConfiguration
     let logger = IoC.Resolve<ISystemLogger> ()
     let store = StoreRegistry.DefaultStore.Store
 

@@ -198,8 +198,6 @@
                 // dependency injection: TODO fix
                 let cacheLocation = IoC.Resolve<string>("cacheStoreEndpoint")
                 let coreConfig = PrimitiveConfiguration.activate(storeInfo, cacheLocation)
-                
-                IoC.Register<PrimitiveConfiguration>(fun () -> coreConfig)
 
                 storeInfo.Store.Name
             with e ->
