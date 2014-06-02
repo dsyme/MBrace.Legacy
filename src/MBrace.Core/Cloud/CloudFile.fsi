@@ -29,11 +29,6 @@
             /// <param name="deserialize">The function that reads data from the underlying stream.</param>
             static member Read : cloudFile:ICloudFile * deserialize :(Stream -> Async<'Result>) -> Cloud<'Result>
             
-            /// <summary> Read the contents of a CloudFile as a sequence of objects using the given deserialize/reader function.</summary>
-            /// <param name="cloudFile">The CloudFile to read.</param>
-            /// <param name="deserialize">The function that reads data from the underlying stream as a sequence.</param>
-            static member ReadAsSeq : cloudFile:ICloudFile * deserialize :(Stream -> Async<seq<'T>>) -> Cloud<ICloudSeq<'T>>
-
             /// <summary> Return all the files (as CloudFiles) in a folder.</summary>
             /// <param name="container">The container (folder) to search.</param>
             static member Get : container:string -> Cloud<ICloudFile []>
