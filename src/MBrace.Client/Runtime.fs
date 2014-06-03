@@ -417,7 +417,7 @@ namespace Nessos.MBrace.Client
                 __.Run computation 
             with e -> Error.handle e
 
-        member __.KillProcess (pid : ProcessId) = processManager.Kill pid
+        member __.KillProcess (pid : ProcessId) = processManager.Kill pid |> Async.RunSynchronously
 
         member __.GetProcess (pid : ProcessId) = processManager.GetProcess pid |> Async.RunSynchronously
         member __.GetProcess<'T> (pid : ProcessId) = processManager.GetProcess pid |> Async.RunSynchronously :?> Process<'T>
