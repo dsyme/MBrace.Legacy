@@ -122,7 +122,10 @@ namespace Nessos.MBrace.Client
         //
 
         let runtime = runtimeActor.Ref
-        let processManager = new Nessos.MBrace.Client.ProcessManager(runtime)
+        // temporary solution : take the default configuration
+        let storeInfo = StoreRegistry.DefaultStore
+        let coreConfig = StoreRegistry.DefaultPrimitiveConfiguration
+        let processManager = new Nessos.MBrace.Client.ProcessManager(runtime, storeInfo.Id)
 
         // temporary store sanity check
         // TODO : shell logger
@@ -159,8 +162,6 @@ namespace Nessos.MBrace.Client
         let configuration = 
             CacheAtom.Create(fun () -> postWithReply GetAllNodes |> NodeInfo.Create)
 
-        let storeInfo = StoreRegistry.DefaultStore
-        let coreConfig = StoreRegistry.DefaultPrimitiveConfiguration
 
         member internal __.ActorRef = runtime
         member internal __.PostWithReply m = postWithReply m

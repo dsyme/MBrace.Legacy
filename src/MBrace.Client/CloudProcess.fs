@@ -77,6 +77,8 @@
 
         let processInfo = CacheAtom.Create(fun () -> processManager.GetProcessInfo(processId) |> Async.RunSynchronously)
 
+        let storeInfo = Store.StoreRegistry.GetInstance(processManager.StoreId)
+
         abstract AwaitBoxedResultAsync : ?pollingInterval:int -> Async<obj>
         abstract AwaitBoxedResult : ?pollingInterval:int -> obj
         abstract TryGetBoxedResult : unit -> obj option
@@ -110,14 +112,14 @@
         member p.Kill () = processManager.Kill processId |> Async.RunSynchronously
         member p.GetLogs () = p.GetLogsAsync () |> Async.RunSynchronously
         member p.GetLogsAsync () = async {
-            let reader = StoreCloudLogger.GetReader(MBraceSettings.StoreInfo.Store, processId)
+            let reader = StoreCloudLogger.GetReader(storeInfo.Store, processId)
             let! logs = reader.FetchLogs()
             return logs |> Array.sortBy (fun e -> e.Date)
         }
 
         member p.DeleteLogs () = Async.RunSynchronously <| p.DeleteLogsAsync()
         member p.DeleteLogsAsync () = async {
-            let reader = StoreCloudLogger.GetReader(MBraceSettings.StoreInfo.Store, processId)
+            let reader = StoreCloudLogger.GetReader(storeInfo.Store, processId)
             do! reader.DeleteLogs()
         }
 
@@ -140,7 +142,7 @@
                         cts.Cancel()
                 } 
                 
-                let reader = StoreCloudLogger.GetStreamingReader(MBraceSettings.StoreInfo.Store, processId, cts.Token)
+                let reader = StoreCloudLogger.GetStreamingReader(storeInfo.Store, processId, cts.Token)
                 
                 reader.Updated.Add(fun (_, logs) -> 
                     logs |> Seq.map (fun l -> l.ToSystemLogEntry(processId).Print(showDate = true))
@@ -196,7 +198,7 @@
             p.AwaitBoxedResultAsync(?pollingInterval = pollingInterval)
             |> Async.RunSynchronously
 
-    and internal ProcessManager (runtime: ActorRef<ClientRuntimeProxy>) =
+    and internal ProcessManager (runtime: ActorRef<ClientRuntimeProxy>, storeId : StoreId) =
         
         // keep track of process id's handled by process manager
         let processes = Atom.atom Set.empty<ProcessId>
@@ -221,6 +223,8 @@
                 return! mfailwithInner e "Runtime replied with exception."
 
         }
+
+        member pm.StoreId = storeId
 
         member pm.GetProcessInfo (pid : ProcessId) : Async<ProcessInfo> = 
             postWithReply(fun ch -> GetProcessInfo(ch, pid))
