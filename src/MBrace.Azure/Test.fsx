@@ -1,7 +1,6 @@
 ﻿//#region Preamble
-#I "../Library"
-#r "../Nessos.MBrace.Client/bin/debug/Nessos.MBrace.Store.dll"
-#r "bin/Debug/Nessos.MBrace.Store.Azure.dll"
+#r "../../bin/MBrace.Runtime.Base.dll"
+#r "../../bin/MBrace.Azure.dll"
 #r "Microsoft.WindowsAzure.Storage.dll"
 #r "Microsoft.Data.OData.dll"
 #r "Microsoft.WindowsAzure.Configuration.dll"
@@ -9,8 +8,8 @@
 open Microsoft.WindowsAzure
 open Microsoft.WindowsAzure.Storage
 open Microsoft.WindowsAzure.Storage.Blob
-open Nessos.MBrace.Store
-open Nessos.MBrace.Store.Azure
+open Nessos.MBrace.Runtime.Store
+open Nessos.MBrace.Azure
 open System.IO
 
 let name = @""
@@ -30,7 +29,7 @@ let deserialize (stream : Stream) =
 let large : Stream -> unit = serialize (1024 * 1024 * 1) 42uy
 let small : Stream -> unit = serialize (64 * 1024 + 1) 43uy
 
-let store = AzureStore config :> IStore
+let store = AzureStore config :> ICloudStore
 
 //#endregion
 
