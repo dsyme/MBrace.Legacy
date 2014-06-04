@@ -67,15 +67,14 @@
         let getTableClient conn =
             let account = CloudStorageAccount.Parse(conn) 
             let client = account.CreateCloudTableClient()
-            client.GetTableServiceContext().IgnoreResourceNotFoundException <- true
             client
 
         let getBlobClient conn =
             let account = CloudStorageAccount.Parse(conn) 
             let client = account.CreateCloudBlobClient()
-
-            do client.ParallelOperationThreadCount <- System.Nullable(4 * System.Environment.ProcessorCount)
-            do client.SingleBlobUploadThresholdInBytes <- System.Nullable(1L <<< 23) // 8MB, possible ranges: 1..64MB, default 32MB
+            
+            client.DefaultRequestOptions.ParallelOperationThreadCount <- System.Nullable(4 * System.Environment.ProcessorCount)
+            client.DefaultRequestOptions.SingleBlobUploadThresholdInBytes <- System.Nullable(1L <<< 23) // 8MB, possible ranges: 1..64MB, default 32MB
 
             client
 
