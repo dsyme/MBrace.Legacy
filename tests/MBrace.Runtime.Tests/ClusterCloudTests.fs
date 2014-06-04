@@ -168,7 +168,7 @@ namespace Nessos.MBrace.Runtime.Tests
             let val1 = MutableCloudRef.Read mref |> MBrace.RunLocal
             let val2 = MutableCloudRef.Read mref |> MBrace.RunLocal
 
-            should equal ps.Result ProcessResult.Killed
+            ps.Result |> should equal ProcessResult<unit>.Killed
             should equal val1 val2
 
         [<Test; Repeat 10>]
@@ -192,7 +192,7 @@ namespace Nessos.MBrace.Runtime.Tests
             MutableCloudRef.Force(m, 0) |> MBrace.RunLocal
             Thread.Sleep 1000
             let v = MutableCloudRef.Read(m) |> MBrace.RunLocal
-            should equal ProcessResult.Killed ps.Result
+            ps.Result |> should equal ProcessResult<unit>.Killed
             should equal 0 v
 
         [<Test; Repeat 100>]
