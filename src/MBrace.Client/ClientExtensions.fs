@@ -29,10 +29,8 @@ module ClientExtensions =
 
         /// Runs the given computation locally without the need of a runtime.
         static member RunLocalAsync (computation : Cloud<'T>, ?showLogs) : Async<'T> = async {
-            // force vagrant compilation if dependencies require it ;
-            // this is since the local interpreter uses FsPickler internally
-            // for deep object cloning
-            MBraceSettings.Vagrant.ComputeObjectDependencies(computation, permitCompilation = true) |> ignore
+            // force dependency compilation
+            let cc = CloudComputation.Compile(computation)
 
             let processId = 0
 
@@ -46,7 +44,7 @@ module ClientExtensions =
             return! 
                 Interpreter.evaluateLocalWrapped 
                     MBraceSettings.DefaultPrimitiveConfiguration Serialization.DeepClone 
-                    logger processId computation
+                    logger processId cc.Value
         }
 
         /// Runs the given computation locally without the need of a runtime.
