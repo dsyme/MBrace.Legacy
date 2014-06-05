@@ -42,7 +42,7 @@
                 info.AddValue("container", container)
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
     
-    and internal CloudFileProvider (id : StoreId, store : ICloudStore, cache : LocalCacheStore) =
+    and internal CloudFileProvider (id : StoreId, store : ICloudStore, cache : LocalCache) =
 
         member __.StoreId = id
 

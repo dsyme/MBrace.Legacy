@@ -61,7 +61,7 @@
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
     
 
-    and internal CloudRefProvider(id : StoreId, store : ICloudStore, cache : LocalObjectCache) as self =
+    and internal CloudRefProvider(id : StoreId, store : ICloudStore, inmem : InMemCache, fscache : LocalCache) as self =
 
         static let extension = "ref"
         static let postfix s = sprintf' "%s.%s" s extension
@@ -75,14 +75,14 @@
         }
 
         let read container id : Async<Type * obj> = async {
-            use! stream = store.ReadImmutable(container, id)
+            use! stream = fscache.Read(container, id) 
             let t = Serialization.DefaultPickler.Deserialize<Type> stream
             let o = Serialization.DefaultPickler.Deserialize<obj> stream
             return t, o
         }
 
         let readType container id  = async {
-            use! stream = store.ReadImmutable(container, id)
+            use! stream = store.ReadImmutable(container, id) // force cache loading?
             let t = Serialization.DefaultPickler.Deserialize<Type> stream
             return t
         }
@@ -105,35 +105,22 @@
                 }
 
             existential.Apply ctor
-//            typeof<CloudRefProvider>
-//                .GetMethod("CreateCloudRef", BindingFlags.Static ||| BindingFlags.NonPublic)
-//                .MakeGenericMethod([| ty |])
-//                .Invoke(null, [| id :> obj ; container :> obj ; self :> obj |])
-//                :?> ICloudRef
-
-//        // WARNING : method called by reflection from 'defineUntyped' function above
-//        static member CreateCloudRef<'T>(container, id, provider) =
-//            new CloudRef<'T>(container, id, provider)
 
         member __.StoreId = id
 
         member self.Delete<'T> (cloudRef : CloudRef<'T>) : Async<unit> =
             async {
                 let id = postfix cloudRef.Name
-                let! containsKey = cache.ContainsKey id
-                if containsKey then
-                    do! cache.Delete(id)
-
+                do! inmem.DeleteIfExists(id) // delete from fscache?
                 return! store.Delete(cloudRef.Container, id)
-            }
-            |> onDeleteError cloudRef
+            } |> onDeleteError cloudRef
 
         member self.Dereference<'T> (cref : CloudRef<'T>) : Async<'T> = 
             async {
-                let cacheId = sprintf' "%s/%s" cref.Container cref.Name
+                let inmemCacheId = sprintf' "%s/%s" cref.Container cref.Name
 
                 // get value
-                let! cacheResult = cache.TryFind cacheId
+                let! cacheResult = inmem.TryFind inmemCacheId
                 match cacheResult with
                 | Some result ->
                     let _,value = result :?> Type * obj
@@ -144,7 +131,7 @@
                         let msg = sprintf' "CloudRef type mismatch. Internal type %s, expected %s." ty.FullName typeof<'T>.FullName
                         return! Async.Raise <| StoreException(msg)
                     // update cache
-                    cache.Set(cacheId, (ty, value))
+                    inmem.Set(inmemCacheId, (ty, value))
                     return value :?> 'T
             } |> onDereferenceError cref
 
@@ -152,14 +139,16 @@
 
             member self.Create (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
                 async {
-                    do! store.CreateImmutable(container, postfix id, serialize value typeof<'T>, false)
+                    do! fscache.Create(container, postfix id, serialize value typeof<'T>, false)
+                    do! fscache.Commit(container, postfix id, false)
 
                     return new CloudRef<'T>(id, container, self) :> ICloudRef<_>
                 } |> onCreateError container id
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 
                 async {
-                    do! store.CreateImmutable(container, postfix id, serialize value t, false)
+                    do! fscache.Create(container, postfix id, serialize value t, false)
+                    do! fscache.Commit(container, postfix id, false)
 
                     // construct & return
                     return defineUntyped(t, container, id)

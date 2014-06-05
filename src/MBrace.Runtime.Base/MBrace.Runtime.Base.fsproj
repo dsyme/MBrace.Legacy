@@ -62,8 +62,8 @@
     <Compile Include="Serialization.fs" />
     <Compile Include="Store\StoreUtils.fs" />
     <Compile Include="Store\ICloudStore.fs" />
-    <Compile Include="Store\LocalObjectCache.fs" />
-    <Compile Include="Store\LocalCacheStore.fs" />
+    <Compile Include="Store\InMemCache.fs" />
+    <Compile Include="Store\LocalCache.fs" />
     <Compile Include="Store\FileSystemStore.fs" />
     <Compile Include="Store\LogStore.fs" />
     <Compile Include="Store\StoreRegistry.fs" />

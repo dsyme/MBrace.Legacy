@@ -14,11 +14,7 @@
     // probably need a __.Delete implementation here too.
     // Better still, implement a full ICloudStore interface wrap
 
-    type LocalCacheStore(id : string, localCacheStore : ICloudStore, targetStore : ICloudStore) = 
-        
-        //do if Directory.Exists path then try Directory.Delete(path, true) with _ -> ()
-        //let cache = new FileSystemStore(path, name = id) :> ICloudStore
-        //let underlyingLazy = lazy StoreRegistry.DefaultStore.Store
+    type LocalCache(id : string, localCacheStore : ICloudStore, targetStore : ICloudStore) = 
 
         let getCachedFileName (container : string) (name : string) =
             let name' = String.Convert.StringToBase32(container + name)
@@ -38,8 +34,7 @@
                 return! targetStore.CopyFrom(folder, file, stream, asFile)
             }
 
-        member this.Read(folder, file, ?checkCoherence : bool) = 
-            let checkCoherence = defaultArg checkCoherence true
+        member this.Read(folder, file) = 
             let cachedFileName = getCachedFileName folder file
 
             let rec attemptRead () = async {
@@ -64,10 +59,7 @@
                         return! retryAsync (RetryPolicy.Infinite(0.5<sec>)) (attemptRead())
 
                 | true, false -> 
-                    if checkCoherence then 
-                        return raise <| Nessos.MBrace.MBraceException(sprintf' "Incoherent cache : Item %s - %s found in cache but not in the main store" folder file)
-                    else 
-                        return! localCacheStore.ReadImmutable(id, cachedFileName)
+                    return raise <| Nessos.MBrace.MBraceException(sprintf' "Incoherent cache : Item %s - %s found in cache but not in the main store" folder file)
                 | false, false -> 
                     return raise <| Nessos.MBrace.NonExistentObjectStoreException(folder,file)
             }
