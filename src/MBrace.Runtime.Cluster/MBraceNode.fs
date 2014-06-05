@@ -216,7 +216,7 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
 
             | GetStoreId(RR ctx reply) ->
                 try
-                    reply <| Value StoreRegistry.DefaultStore.Id
+                    reply <| Value StoreRegistry.DefaultStoreInfo.Id
 
                     return stay state
                 with e ->

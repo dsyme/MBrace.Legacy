@@ -48,9 +48,9 @@
             let container = info.GetString("container")
             let storeId = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
             let provider =
-                match StoreRegistry.TryGetCoreConfiguration storeId with
+                match StoreRegistry.TryGetStoreInfo storeId with
                 | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some config -> config.CloudRefProvider :?> CloudRefProvider
+                | Some info -> info.Primitives.CloudRefProvider :?> CloudRefProvider
             
             new CloudRef<'T>(id, container, provider)
                     
@@ -61,10 +61,7 @@
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
     
 
-    and internal CloudRefProvider(storeInfo : StoreInfo, cache : LocalObjectCache) as self =
-
-        let store = storeInfo.Store
-        let storeId = storeInfo.Id
+    and internal CloudRefProvider(id : StoreId, store : ICloudStore, cache : LocalObjectCache) as self =
 
         static let extension = "ref"
         static let postfix s = sprintf' "%s.%s" s extension
@@ -118,7 +115,7 @@
 //        static member CreateCloudRef<'T>(container, id, provider) =
 //            new CloudRef<'T>(container, id, provider)
 
-        member __.StoreId = storeInfo.Id
+        member __.StoreId = id
 
         member self.Delete<'T> (cloudRef : CloudRef<'T>) : Async<unit> =
             async {

@@ -66,15 +66,14 @@
             let storeId   = info.GetValue ("storeId", typeof<StoreId>) :?> StoreId
 
             let provider =
-                match StoreRegistry.TryGetCoreConfiguration storeId with
+                match StoreRegistry.TryGetStoreInfo storeId with
                 | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some config -> config.CloudSeqProvider :?> CloudSeqProvider
+                | Some info -> info.Primitives.CloudSeqProvider :?> CloudSeqProvider
 
             new CloudSeq<'T>(id, container, provider)
     
-    and internal CloudSeqProvider (storeInfo : StoreInfo, cacheStore : LocalCacheStore) as self = 
+    and internal CloudSeqProvider (id : StoreId, store : ICloudStore, cacheStore : LocalCacheStore) as self = 
 
-        let store = storeInfo.Store
         let extension = "seq"
         let postfix = fun s -> sprintf' "%s.%s" s extension
 
@@ -129,9 +128,10 @@
 //        static member CreateCloudSeq<'T>(id, container, provider) =
 //            new CloudSeq<'T>(id , container, provider)
 
-        member __.StoreId = storeInfo.Id
+        member __.StoreId = id
 
         member __.GetCloudSeqInfo<'T> (cseq : CloudSeq<'T>) : Async<CloudSeqInfo> =
+            // TODO : item should be deleted through the cache?
             getCloudSeqInfo cseq.Container cseq.Name
             |> onDereferenceError cseq
 

@@ -73,15 +73,13 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
         let processExecutable = IoC.Resolve<string> "MBraceProcessExe"
         let debugMode = defaultArg (IoC.TryResolve<bool> "debugMode") false
 
-        let storeProvider = Store.StoreRegistry.DefaultStore.Provider
-                    
-        let cacheStoreEndpoint = IoC.Resolve<string> "cacheStoreEndpoint"
+        let storeProvider = Store.StoreRegistry.DefaultStoreInfo.Provider
+        // TODO : currently passing only connection string since local cache is FileSystem
+        // should probably pass entire provider info to arguments
+        let cacheStoreEndpoint = Store.StoreRegistry.LocalCache.Provider.ConnectionString
 
-//        let serializerName = IoC.Resolve<string> "defaultSerializerName"
-//        let compressSerialization = IoC.Resolve<bool> "compressSerialization"
         // protocol specific! should be changed
         let primaryAddr = IoC.Resolve<Address> "primaryAddress"
-        //sprintf "%s%cmbrace.process.exe" AppDomain.CurrentDomain.BaseDirectory Path.DirectorySeparatorChar
              
         let args =
             [
@@ -98,8 +96,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                     yield Port selectedPort
                 | None -> ()
 
-                if cacheStoreEndpoint <> null then
-                    yield Cache_Store_Endpoint cacheStoreEndpoint
+                yield Cache_Store_Endpoint cacheStoreEndpoint
             ]
 
         let command, args =

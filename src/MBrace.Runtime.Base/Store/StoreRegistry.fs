@@ -47,6 +47,7 @@
 namespace Nessos.MBrace.Runtime.Store
     
     open System
+    open System.Collections.Concurrent
     open System.Runtime
     open System.Reflection
     open System.Security.Cryptography
@@ -67,69 +68,59 @@ namespace Nessos.MBrace.Runtime.Store
 
     with override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
 
-
-    and StoreInfo =
+    // TODO : add LocalCache and Cached store instances here
+    type LocalCacheInfo =
         {
             Id : StoreId
             Provider : StoreProvider
             Store : ICloudStore
         }
 
+    [<AutoSerializable(false)>]
+    type StoreInfo internal (id : StoreId, provider : StoreProvider, store : ICloudStore, primitives : PrimitiveConfiguration) =
+        member __.Id = id
+        member __.Provider = provider
+        member __.Store = store
+        member __.Primitives = primitives
+
     // TODO : handle all dependent assemblies
     and StoreRegistry private () =
 
         static let defaultStore = ref None
-        static let storeIndex = Atom.atom Map.empty<StoreId, StoreInfo>
-        static let coreConfigIndex = Atom.atom Map.empty<StoreId, PrimitiveConfiguration>
+        static let localCache = ref None
+        static let registry = new ConcurrentDictionary<StoreId, StoreInfo> ()
 
         static let hashAlgorithm = SHA256Managed.Create() :> HashAlgorithm
         static let computeHash (txt : string) = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes txt)
 
-        static member Activate (provider : StoreProvider, ?makeDefault) =
-            let factory = Activator.CreateInstance(provider.StoreFactoryType) :?> ICloudStoreFactory
+        static member internal InitStore(provider : StoreProvider) =
+            let factory = Activator.CreateInstance provider.StoreFactoryType :?> ICloudStoreFactory
             let store = factory.CreateStoreFromConnectionString provider.ConnectionString
-            let id = { AssemblyQualifiedName = store.GetType().FullName ; UUID = computeHash store.UUID } 
+            let id = { AssemblyQualifiedName = store.GetType().FullName ; UUID = computeHash store.UUID }
+            id, store
 
-            match storeIndex.Value.TryFind id with
-            | Some sI -> sI
-            | None ->
-                let storeInfo = { Id = id ; Provider = provider ; Store = store }
-            
-                if (defaultArg makeDefault false) then defaultStore := Some storeInfo
+        static member internal Register(store : StoreInfo, ?makeDefault) : bool =
+            let success = registry.TryAdd(store.Id, store)
+            if success && defaultArg makeDefault false then
+                lock defaultStore (fun () -> defaultStore := Some store)
+            success
 
-                storeIndex.Swap(fun m -> m.Add(storeInfo.Id, storeInfo))
-                storeInfo
+        static member ActivateLocalCache(provider : StoreProvider) =
+            lock localCache (fun () ->
+                let id, store = StoreRegistry.InitStore provider
+                let info = { Id = id ; Provider = provider ; Store = store }
+                localCache := Some info)
 
+        static member TryGetLocalCache () = localCache.Value
+        static member LocalCache =
+            match localCache.Value with
+            | None -> invalidOp "a local cache has not been registered."
+            | Some lc -> lc
 
-        static member RegisterCoreConfiguration (id : StoreId, cconfig : PrimitiveConfiguration) =
-            coreConfigIndex.Swap(fun m -> m.Add(id, cconfig))
+        static member TryGetDefaultStoreInfo () = defaultStore.Value
+        static member DefaultStoreInfo = 
+            match defaultStore.Value with
+            | None -> invalidOp "a default store has not been registered."
+            | Some ds -> ds
 
-        static member TryGetCoreConfiguration (id : StoreId) =
-            coreConfigIndex.Value.TryFind id
-
-        static member TryGetInstance (id : StoreId) = storeIndex.Value.TryFind id
-
-        static member GetInstance (id : StoreId) =
-            match storeIndex.Value.TryFind id with
-            | Some store -> store
-            | None -> invalidOp "Store: missing instance with id '%O'." id
-
-        static member GetProvider(id : StoreId, ?includeImage) =
-            let storeInfo = StoreRegistry.GetInstance id
-            storeInfo.Provider
-
-        static member DefaultStore 
-                with get () =
-                    match defaultStore.Value with
-                    | None -> invalidOp "Store: no default store has been registered."
-                    | Some s -> s
-                and set (s : StoreInfo) =
-                    storeIndex.Swap(fun m -> m.Add(s.Id, s))
-                    defaultStore := Some s
-
-        static member DefaultPrimitiveConfiguration
-            with get () =
-                let storeId = StoreRegistry.DefaultStore.Id
-                match StoreRegistry.TryGetCoreConfiguration(storeId) with
-                | None -> invalidOp "Store: no configuration has been registered for %A." storeId
-                | Some cc -> cc
+        static member TryGetStoreInfo id = registry.TryFind id

@@ -122,7 +122,7 @@ namespace Nessos.MBrace.Client
         //
 
         let runtime = runtimeActor.Ref
-        let processManager = new Nessos.MBrace.Client.ProcessManager(runtime, StoreRegistry.DefaultStore)
+        let processManager = new Nessos.MBrace.Client.ProcessManager(runtime, StoreRegistry.DefaultStoreInfo)
 
         // temporary store sanity check
         // TODO : shell logger

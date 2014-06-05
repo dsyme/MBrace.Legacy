@@ -30,9 +30,9 @@
             let container = info.GetString("container")
             let storeId = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
             let provider =
-                match StoreRegistry.TryGetCoreConfiguration storeId with
+                match StoreRegistry.TryGetStoreInfo storeId with
                 | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some config -> config.CloudFileProvider :?> CloudFileProvider
+                | Some info -> info.Primitives.CloudFileProvider :?> CloudFileProvider
 
             new CloudFile(id, container, provider)
         
@@ -42,11 +42,9 @@
                 info.AddValue("container", container)
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
     
-    and internal CloudFileProvider (storeInfo : StoreInfo, cache : LocalCacheStore) =
+    and internal CloudFileProvider (id : StoreId, store : ICloudStore, cache : LocalCacheStore) =
 
-        let store = storeInfo.Store
-
-        member __.StoreId = storeInfo.Id
+        member __.StoreId = id
 
         member __.Read(file : CloudFile) = cache.Read(file.Container, file.Name)
                                            |> onDereferenceError file
