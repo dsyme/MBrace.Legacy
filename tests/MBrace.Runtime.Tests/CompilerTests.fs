@@ -98,7 +98,7 @@
 
         [<Cloud>]
         let blockThatReferencesMBraceClientValue () = cloud {
-            return dummyRuntime.GetHashCode()
+            return dummyRuntime.Nodes
         }
 
 

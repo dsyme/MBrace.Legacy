@@ -52,13 +52,6 @@ namespace Nessos.MBrace.Client
                     | Store_Provider _ -> "The type of storage to be used by mbrace."
                     | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
-//        let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
-//            StoreRegistry.Activate(provider, makeDefault = true)
-////            let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-////            let coreConfig = Store.activate(storeInfo, localCacheDir)
-//
-//            storeInfo, coreConfig
-
         let registerLogger (logger : ISystemLogger) =
             // register logger
             ThespianLogger.Register(logger)

@@ -82,16 +82,16 @@
         abstract AwaitBoxedResult : ?pollingInterval:int -> obj
         abstract TryGetBoxedResult : unit -> obj option
 
-        member p.Name = processInfo.Value.Name
-        member p.ProcessId = processId
-        member p.ReturnType = returnType
-        member internal p.ProcessInfo = processInfo.Value
-        member p.ExecutionTime = processInfo.Value.ExecutionTime
-        member p.Complete = processInfo.Value.Result.IsSome
-        member p.InitTime = processInfo.Value.InitTime
-        member p.Workers = processInfo.Value.Workers
-        member p.Tasks = processInfo.Value.Tasks
-        member p.ClientId = processInfo.Value.ClientId
+        member p.Name : string = processInfo.Value.Name
+        member p.ProcessId : ProcessId = processId
+        member p.ReturnType : Type = returnType
+        member internal p.ProcessInfo : ProcessInfo = processInfo.Value
+        member p.ExecutionTime : TimeSpan = processInfo.Value.ExecutionTime
+        member p.Complete : bool = processInfo.Value.Result.IsSome
+        member p.InitTime : DateTime = processInfo.Value.InitTime
+        member p.Workers : int = processInfo.Value.Workers
+        member p.Tasks : int = processInfo.Value.Tasks
+        member p.ClientId : Guid = processInfo.Value.ClientId
 
         static member internal CreateUntyped(t : Type, processId : ProcessId, processManager : ProcessManager) =
             let existential = Existential.Create t
@@ -108,28 +108,27 @@
             let useBorders = defaultArg useBorders false
             [processInfo.Value] |> ProcessInfo.prettyPrint useBorders |> printfn "%s"
 
-        member p.Kill () = processManager.Kill processId |> Async.RunSynchronously
-        member p.GetLogs () = p.GetLogsAsync () |> Async.RunSynchronously
-        member p.GetLogsAsync () = async {
+        member p.Kill () : unit = processManager.Kill processId |> Async.RunSynchronously
+        member p.GetLogs () : CloudLogEntry [] = p.GetLogsAsync () |> Async.RunSynchronously
+        member p.GetLogsAsync () : Async<CloudLogEntry []> = async {
             let reader = StoreCloudLogger.GetReader(processManager.RuntimeStore, processId)
             let! logs = reader.FetchLogs()
             return logs |> Array.sortBy (fun e -> e.Date)
         }
 
-        member p.DeleteLogs () = Async.RunSynchronously <| p.DeleteLogsAsync()
-        member p.DeleteLogsAsync () = async {
+        member p.DeleteLogs () : unit = Async.RunSynchronously <| p.DeleteLogsAsync()
+        member p.DeleteLogsAsync () : Async<unit> = async {
             let reader = StoreCloudLogger.GetReader(processManager.RuntimeStore, processId)
             do! reader.DeleteLogs()
         }
 
-        member p.ShowLogs () = 
+        member p.ShowLogs () : unit =
             p.GetLogs () 
-            |> Array.map (fun l -> l.ToSystemLogEntry(processId).Print(showDate = false))
-            |> String.concat "\n"
-            |> printfn "%s"
+            |> Array.map (fun l -> l.ToSystemLogEntry(processId))
+            |> Logs.show
 
-        member p.StreamLogs () = Async.RunSynchronously <| p.StreamLogsAsync()
-        member p.StreamLogsAsync () = 
+        member p.StreamLogs () : unit = Async.RunSynchronously <| p.StreamLogsAsync()
+        member p.StreamLogsAsync () : Async<unit> = 
             async {
                 use cts = new Threading.CancellationTokenSource()
                 let interval = 100
@@ -143,35 +142,33 @@
                 
                 let reader = StoreCloudLogger.GetStreamingReader(processManager.RuntimeStore, processId, cts.Token)
                 
-                reader.Updated.Add(fun (_, logs) -> 
-                    logs |> Seq.map (fun l -> l.ToSystemLogEntry(processId).Print(showDate = true))
-                         |> String.concat "\n"
-                         |> printfn "%s" ) 
+                reader.Updated.Add(fun (_, logs) -> logs |> Seq.map (fun l -> l.ToSystemLogEntry processId) |> Logs.show) 
 
                 do! reader.StartAsync()
                 do! pollingLoop () 
 
             }
 
-        member p.DeleteContainer() =
+        member p.DeleteContainer() : unit =
             p.DeleteContainerAsync()
             |> Async.RunSynchronously
 
-        member p.DeleteContainerAsync() =
+        member p.DeleteContainerAsync() : Async<unit> =
             async {
                 let store = MBraceSettings.StoreInfo.Store
                 return! store.DeleteContainer(sprintf' "process%d" p.ProcessId)
             }
 
-    and [<Sealed>][<AutoSerializable(false)>] Process<'T> internal (id : ProcessId, processManager : ProcessManager) =
+    and [<Sealed; NoEquality ; NoComparison ; AutoSerializable(false)>] 
+      Process<'T> internal (id : ProcessId, processManager : ProcessManager) =
         inherit Process(id, typeof<'T>, processManager)
 
-        member p.Result =
+        member p.Result : ProcessResult<'T> =
             let info = base.ProcessInfo
             ProcessInfo.getResult<'T> info
 
-        member p.TryGetResult () = p.Result.TryGetValue()
-        member p.AwaitResultAsync(?pollingInterval) = async {
+        member p.TryGetResult () : 'T option = p.Result.TryGetValue()
+        member p.AwaitResultAsync(?pollingInterval) : Async<'T> = async {
             let pollingInterval = defaultArg pollingInterval 200
             let rec retriable () = async {
                 match p.Result.TryGetValue() with
@@ -184,7 +181,7 @@
             return! retriable ()
         }
 
-        member p.AwaitResult(?pollingInterval) = 
+        member p.AwaitResult(?pollingInterval) : 'T = 
             p.AwaitResultAsync(?pollingInterval = pollingInterval)
             |> Async.RunSynchronously
 
