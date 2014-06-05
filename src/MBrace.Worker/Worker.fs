@@ -103,9 +103,8 @@
             // Register Store
             try
                 let storeProvider = StoreProvider.Parse(storeProvider, storeEndpoint)
+                StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem cacheStoreEndpoint)
                 let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
-                
-                let coreConfig = PrimitiveConfiguration.activate(storeInfo, cacheStoreEndpoint)
                 ()
             with e -> results.Raise (sprintf "Error connecting to store: %s" e.Message, 2)
 

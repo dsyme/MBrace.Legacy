@@ -31,9 +31,9 @@ let workerBehavior (processId: ProcessId)
                    (msg: Worker) =
     
     /// Dependency injection point. Fix!
-    let config = StoreRegistry.DefaultPrimitiveConfiguration
+    let config = StoreRegistry.DefaultStoreInfo.Primitives
     let logger = IoC.Resolve<ISystemLogger> ()
-    let store = StoreRegistry.DefaultStore.Store
+    let store = StoreRegistry.DefaultStoreInfo.Store
 
     let toCloudRef cloudExpr = config.CloudRefProvider.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr.GetType(), cloudExpr)
     let taskManager = state.TaskManager

@@ -11,7 +11,9 @@
 
     /// Provides methods for interacting with the store and the primitives without the need for a runtime.
     [<Sealed>]
-    type StoreClient internal (config : PrimitiveConfiguration, store : StoreInfo) =
+    type StoreClient internal (info : StoreInfo) =
+
+        let config = info.Primitives
 
         let newId () = Guid.NewGuid().ToString()
 
@@ -19,13 +21,12 @@
 
         static member Default 
             with get () = 
-                let config = MBraceSettings.DefaultPrimitiveConfiguration
-                let store  = MBraceSettings.StoreInfo
-                match registry.Value.TryFind store.Id with
+                let info = MBraceSettings.DefaultStoreInfo
+                match registry.Value.TryFind info.Id with
                 | Some sc -> sc
                 | None ->
-                    registry.Swap(fun m -> m.Add(store.Id, new StoreClient(config, store)))
-                    registry.Value.Item store.Id
+                    registry.Swap(fun m -> m.Add(info.Id, new StoreClient(info)))
+                    registry.Value.Item info.Id
 
         //---------------------------------------------------------------------------------
         // CloudRef
@@ -126,7 +127,7 @@
         // Misc
 
         member this.DeleteContainerAsync(container : string) =
-            Error.handleAsync <| store.Store.DeleteContainer(container)
+            Error.handleAsync <| info.Store.DeleteContainer(container)
 
         member this.DeleteContainer(container : string) =
             Async.RunSynchronously <| this.DeleteContainerAsync(container)

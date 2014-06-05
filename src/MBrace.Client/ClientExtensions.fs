@@ -43,7 +43,7 @@ module ClientExtensions =
 
             return! 
                 Interpreter.evaluateLocalWrapped 
-                    MBraceSettings.DefaultPrimitiveConfiguration Serialization.DeepClone 
+                    MBraceSettings.DefaultStoreInfo.Primitives Serialization.DeepClone 
                     logger processId cc.Value
         }
 

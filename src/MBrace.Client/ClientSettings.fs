@@ -36,7 +36,6 @@ namespace Nessos.MBrace.Client
                 CloudCompiler : CloudCompiler
 
                 StoreInfo : StoreInfo
-                PrimitiveConfiguration : PrimitiveConfiguration
             }
 
         and AppConfigParameter =
@@ -53,11 +52,12 @@ namespace Nessos.MBrace.Client
                     | Store_Provider _ -> "The type of storage to be used by mbrace."
                     | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
-        let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
-            let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-            let coreConfig = PrimitiveConfiguration.activate(storeInfo, localCacheDir)
-
-            storeInfo, coreConfig
+//        let activateDefaultStore (localCacheDir : string) (provider : StoreProvider) = 
+//            StoreRegistry.Activate(provider, makeDefault = true)
+////            let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
+////            let coreConfig = Store.activate(storeInfo, localCacheDir)
+//
+//            storeInfo, coreConfig
 
         let registerLogger (logger : ISystemLogger) =
             // register logger
@@ -118,8 +118,11 @@ namespace Nessos.MBrace.Client
             let logger = Logger.createConsoleLogger()
             do registerLogger logger
 
+            // activate local cache
+            do StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem(localCacheDir))
+
             // activate store provider
-            let storeInfo, coreConfig = activateDefaultStore localCacheDir storeProvider
+            let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
 
             // initialize connection pool
             do ConnectionPool.TcpConnectionPool.Init()
@@ -137,7 +140,6 @@ namespace Nessos.MBrace.Client
                 CloudCompiler = compiler
 
                 StoreInfo = storeInfo
-                PrimitiveConfiguration = coreConfig
             }
 
 
@@ -160,7 +162,7 @@ namespace Nessos.MBrace.Client
                 else
                     mfailwithf "Invalid path '%s'." p
 
-        static member internal DefaultPrimitiveConfiguration = config.Value.PrimitiveConfiguration
+        static member internal DefaultStoreInfo = config.Value.StoreInfo
 
         static member internal CloudCompiler = config.Value.CloudCompiler
 
@@ -178,8 +180,8 @@ namespace Nessos.MBrace.Client
             and set p =
                 // store activation has side-effects ; use lock instead of swap
                 lock config (fun () ->
-                    let storeInfo, coreConfig = activateDefaultStore config.Value.LocalCacheDirectory p
-                    config.Swap(fun c -> { c with StoreInfo = storeInfo ; PrimitiveConfiguration = coreConfig })
+                    let storeInfo = StoreRegistry.Activate(p, makeDefault = true)
+                    config.Swap(fun c -> { c with StoreInfo = storeInfo })
                 )
 
         static member WorkingDirectory = config.Value.WorkingDirectory

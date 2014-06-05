@@ -71,7 +71,7 @@ let processManagerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, 
 
                     // try cleaning up cloud process logs ; not sure if this is the best place to do it
                     try
-                        let store = StoreRegistry.DefaultStore.Store
+                        let store = StoreRegistry.DefaultStoreInfo.Store
                         let reader = StoreCloudLogger.GetReader(store, processRecord.ProcessId)
                         do! reader.DeleteLogs()
 

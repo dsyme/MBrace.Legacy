@@ -148,11 +148,11 @@
             aux 0 e
 
         let nodeUsesCompatibleStore (node : NodeRef) =
-            try (node <!= GetStoreId) = StoreRegistry.DefaultStore.Id
+            try (node <!= GetStoreId) = StoreRegistry.DefaultStoreInfo.Id
             with _ -> false
 
         let runtimeUsesCompatibleStore (runtime : ActorRef<ClientRuntimeProxy>) =
-            try runtime <!= (RemoteMsg << GetStoreId) = StoreRegistry.DefaultStore.Id
+            try runtime <!= (RemoteMsg << GetStoreId) = StoreRegistry.DefaultStoreInfo.Id
             with _ -> false
 
 

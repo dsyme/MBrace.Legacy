@@ -142,9 +142,7 @@
                     IoC.RegisterValue vcache
                     IoC.RegisterValue vclient
 
-            do create "LocalCache" <| 
-                    fun cachePath ->          
-                        IoC.RegisterValue(cachePath, "cacheStoreEndpoint")
+            do create "LocalCache" (fun endpoint -> StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem(endpoint)))
 
         let registerProcessDomainExecutable (path : string) =
             let path =
@@ -194,12 +192,7 @@
         let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =
             try
                 let provider = StoreProvider.Parse(storeProvider, storeEndpoint)
-                let storeInfo = StoreRegistry.Activate(provider, makeDefault = true)
-                // dependency injection: TODO fix
-                let cacheLocation = IoC.Resolve<string>("cacheStoreEndpoint")
-                let coreConfig = PrimitiveConfiguration.activate(storeInfo, cacheLocation)
-
-                storeInfo.Store.Name
+                StoreRegistry.Activate(provider, makeDefault = true)
             with e ->
                 exiter.Exit(sprintf "Error connecting to store: %s" e.Message, 2)
 

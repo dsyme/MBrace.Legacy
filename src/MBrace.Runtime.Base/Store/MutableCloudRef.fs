@@ -60,9 +60,9 @@
             let tag         = info.GetString("tag")
             let storeId     = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
             let config =
-                match StoreRegistry.TryGetCoreConfiguration storeId with
+                match StoreRegistry.TryGetStoreInfo storeId with
                 | None -> raise <| new StoreException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some config -> config.MutableCloudRefProvider :?> MutableCloudRefProvider
+                | Some info -> info.Primitives.MutableCloudRefProvider :?> MutableCloudRefProvider
 
             new MutableCloudRef<'T>(id, container, tag, config)
         
@@ -74,7 +74,7 @@
                 info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
 
 
-    and internal MutableCloudRefProvider(storeInfo : StoreInfo) as self =
+    and internal MutableCloudRefProvider(id : StoreId, store : ICloudStore) as self =
 
         static let extension = "mref"
         static let postfix s = sprintf' "%s.%s" s extension
@@ -86,7 +86,7 @@
 
         let read container id : Async<Type * obj * Tag> = async {
             let id = postfix id
-            let! stream, tag = storeInfo.Store.ReadMutable(container, id)
+            let! stream, tag = store.ReadMutable(container, id)
             let t = Serialization.DefaultPickler.Deserialize<Type> stream
             let o = Serialization.DefaultPickler.Deserialize<obj> stream
             stream.Dispose()
@@ -94,14 +94,14 @@
         }
 
         let readInfo container id = async {
-            let! stream, tag = storeInfo.Store.ReadMutable(container, id)        
+            let! stream, tag = store.ReadMutable(container, id)        
             let t = Serialization.DefaultPickler.Deserialize<Type> stream
             stream.Dispose()
             return t, tag
         }
 
         let getIds (container : string) : Async<string []> = async {
-            let! files = storeInfo.Store.GetAllFiles(container)
+            let! files = store.GetAllFiles(container)
             return files 
                     |> Seq.filter (fun w -> w.EndsWith extension)
                     |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
@@ -127,10 +127,10 @@
 //        static member CreateCloudRef<'T>(id, container, tag, provider) =
 //            new MutableCloudRef<'T>(id , container, tag, provider)
 
-        member self.StoreId = storeInfo.Id
+        member self.StoreId = id
 
         member self.Delete(mref : MutableCloudRef<'T>) : Async<unit> = 
-            storeInfo.Store.Delete(mref.Container, postfix mref.Name)
+            store.Delete(mref.Container, postfix mref.Name)
             |> onDeleteError mref
 
         member self.Dereference(mref : MutableCloudRef<'T>) : Async<'T> =
@@ -150,7 +150,7 @@
             async {
                 if not <| mref.TryAcquire () then return false else
 
-                let! ok, tag = storeInfo.Store.TryUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>, mref.Tag)
+                let! ok, tag = store.TryUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>, mref.Tag)
                 
                 if ok then mref.Tag <- tag
 
@@ -162,7 +162,7 @@
             async {
                 while not <| mref.TryAcquire () do
                     do! Async.Sleep 100
-                let! tag = storeInfo.Store.ForceUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>)
+                let! tag = store.ForceUpdateMutable(mref.Container, postfix mref.Name, serialize value typeof<'T>)
                 mref.Tag <- tag
                 
                 mref.Release()
@@ -172,14 +172,14 @@
 
             member self.Create (container : string, id : string, value : 'T) : Async<IMutableCloudRef<'T>> = 
                 async {
-                    let! tag = storeInfo.Store.CreateMutable(container, postfix id, serialize value typeof<'T>)
+                    let! tag = store.CreateMutable(container, postfix id, serialize value typeof<'T>)
 
                     return new MutableCloudRef<'T>(id, container, tag, self) :> IMutableCloudRef<_>
                 } |> onCreateError container id
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<IMutableCloudRef> = 
                 async {
-                    let! tag = storeInfo.Store.CreateMutable(container, postfix id, serialize value t)
+                    let! tag = store.CreateMutable(container, postfix id, serialize value t)
 
                     return defineUntyped(t, container, id, tag)
                 } |> onCreateError container id

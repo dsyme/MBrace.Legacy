@@ -51,7 +51,7 @@
             | None ->
                 match parameter with
                 | None -> failwithf "IoC: no dependency of type '%s' has been registered." typeof<'T>.Name
-                | Some p -> failwithf "IoC: no depoendency of type '%s' and parameter '%s' has been registered." typeof<'T>.Name p
+                | Some p -> failwithf "IoC: no dependency of type '%s' and parameter '%s' has been registered." typeof<'T>.Name p
 
 
     type IoC private () =
