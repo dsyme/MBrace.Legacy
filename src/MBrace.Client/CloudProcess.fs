@@ -151,7 +151,7 @@
                 do! reader.StartAsync()
                 do! pollingLoop () 
 
-            } |> Error.handleAsync
+            }
 
         member p.DeleteContainer() =
             p.DeleteContainerAsync()
@@ -161,9 +161,9 @@
             async {
                 let store = MBraceSettings.StoreInfo.Store
                 return! store.DeleteContainer(sprintf' "process%d" p.ProcessId)
-            } |> Error.handleAsync
+            }
 
-    and [<Sealed>] Process<'T> internal (id : ProcessId, processManager : ProcessManager) =
+    and [<Sealed>][<AutoSerializable(false)>] Process<'T> internal (id : ProcessId, processManager : ProcessManager) =
         inherit Process(id, typeof<'T>, processManager)
 
         member p.Result =

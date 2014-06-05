@@ -41,13 +41,13 @@ type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri: Uri) as self =
 
     let handleError (e : exn) : 'T =
         match e with
-        | MessageHandlingException(_,_,_,e) ->
+        | MessageHandlingExceptionRec e ->
             mfailwithfInner e "Node %A has replied with exception." self
         | CommunicationException _ ->
             mfailwithf "Cannot communicate with %A." self
-        | :? TimeoutException -> 
-            mkMBraceExn None (sprintf' "Timeout when connecting to %A." self) |> Error.handle
-        | e -> Error.handle e
+        | :? TimeoutException ->
+            mfailwith "Timed out while connecting to %A." self
+        | _ -> reraise' e
 
     let nodeInfo = CacheAtom.Create((fun () -> Utils.getNodeInfo nodeRef), interval = 1000, keepLastResultOnError = true)
 
@@ -203,7 +203,7 @@ type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri: Uri) as self =
                 with e -> mfailwithf "Argument Parse error: %s" e.Message
 
             return! MBraceNode.SpawnAsync(arguments, ?background = background)
-        } |> Error.handleAsync2
+        } |> Async.RunSynchronously
 
     static member SpawnAsync(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                 ?permissions : Permissions, ?serializerName : string, ?compressSerialization : bool, ?debug : bool,
@@ -250,7 +250,7 @@ type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri: Uri) as self =
                                     ?logLevel = logLevel, ?permissions = permissions, ?serializerName = serializerName, 
                                     ?compressSerialization = compressSerialization, ?debug = debug, ?workingDirectory = workingDirectory,
                                     ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?storeProvider = storeProvider)
-        |> Error.handleAsync2
+        |> Async.RunSynchronously
 
     static member SpawnMultiple(nodeCount : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?serializerName : string, ?compressSerialization : bool, ?debug : bool, 
@@ -277,7 +277,7 @@ type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri: Uri) as self =
                     |> Async.Parallel
 
                 return Array.toList nodes
-        } |> Error.handleAsync2
+        } |> Async.RunSynchronously
 
 
     static member PrettyPrint(nodes : MBraceNode list, ?displayPerfCounters, ?header, ?useBorders) =
