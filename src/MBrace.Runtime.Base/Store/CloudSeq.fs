@@ -72,7 +72,7 @@
 
             new CloudSeq<'T>(id, container, provider)
     
-    and internal CloudSeqProvider (id : StoreId, store : ICloudStore, cacheStore : LocalCacheStore) as self = 
+    and internal CloudSeqProvider (id : StoreId, store : ICloudStore, cacheStore : LocalCache) as self = 
 
         let extension = "seq"
         let postfix = fun s -> sprintf' "%s.%s" s extension
@@ -118,20 +118,10 @@
                 }
 
             existential.Apply ctor
-//            typeof<CloudSeqProvider>
-//                .GetMethod("CreateCloudSeq", BindingFlags.Static ||| BindingFlags.NonPublic)
-//                .MakeGenericMethod([| ty |])
-//                .Invoke(null, [| id :> obj ; container :> obj ; this :> obj |])
-//                :?> ICloudSeq
-//
-//        // WARNING : method called by reflection from 'defineUntyped' function above
-//        static member CreateCloudSeq<'T>(id, container, provider) =
-//            new CloudSeq<'T>(id , container, provider)
 
         member __.StoreId = id
 
         member __.GetCloudSeqInfo<'T> (cseq : CloudSeq<'T>) : Async<CloudSeqInfo> =
-            // TODO : item should be deleted through the cache?
             getCloudSeqInfo cseq.Container cseq.Name
             |> onDereferenceError cseq
 
@@ -151,6 +141,7 @@
             } |> onDereferenceError cseq
 
         member __.Delete<'T> (cseq : CloudSeq<'T>) : Async<unit> = 
+            // TODO : item should be deleted through the cache?
             store.Delete(cseq.Container, postfix cseq.Name)
             |> onDeleteError cseq
 
