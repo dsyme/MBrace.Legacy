@@ -29,22 +29,18 @@
         // In-Memory Cache Policy
         let policy = new CacheItemPolicy()
 
-        member self.TryFind (key : string) = async {
-            if cache.Contains key then return Some cache.[key]
-            else return None // cache failed (io problem or data corruption)... just say no and continue
-        }
+        member self.TryFind (key : string) =
+            if cache.Contains key then Some cache.[key]
+            else None // cache failed (io problem or data corruption)... just say no and continue
 
-        member self.Get (key : string) = async {
-            let! result = self.TryFind key 
-            return
-                match result with
-                | None -> raise <| new ArgumentException("Key not found in cache.")
-                | Some o -> o
-        }
+        member self.Get (key : string) = 
+            let result = self.TryFind key 
+            match result with
+            | None -> raise <| new ArgumentException("Key not found in cache.")
+            | Some o -> o
 
-        member self.ContainsKey (key : string) = async {
-            return cache.Contains key
-        }
+        member self.ContainsKey (key : string) =
+            cache.Contains key
 
         member self.Set(key : string, value : obj) =
             if value <> null then
@@ -55,7 +51,6 @@
                     self.Set(key, value)
             else ()
 
-        member self.DeleteIfExists(key : string) = async {
+        member self.DeleteIfExists(key : string) = 
             if cache.Contains key then
                 cache.Remove(key) |> ignore
-        }

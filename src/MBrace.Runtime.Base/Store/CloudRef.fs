@@ -111,7 +111,7 @@
         member self.Delete<'T> (cloudRef : CloudRef<'T>) : Async<unit> =
             async {
                 let id = postfix cloudRef.Name
-                do! inmem.DeleteIfExists(id) // delete from fscache?
+                do inmem.DeleteIfExists(id) // delete from fscache?
                 return! store.Delete(cloudRef.Container, id)
             } |> onDeleteError cloudRef
 
@@ -120,7 +120,7 @@
                 let inmemCacheId = sprintf' "%s/%s" cref.Container cref.Name
 
                 // get value
-                let! cacheResult = inmem.TryFind inmemCacheId
+                let cacheResult = inmem.TryFind inmemCacheId
                 match cacheResult with
                 | Some result ->
                     let _,value = result :?> Type * obj
