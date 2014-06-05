@@ -17,8 +17,8 @@
 
                     // TODO : move cache stuff to StoreRegistry
                     let cacheInfo = StoreRegistry.LocalCache
-                    let inMemCache = new InMemCache()
-                    let localCache = new LocalCache("localCacheStore", cacheInfo.Store, store)
+                    let inMemCache = new InMemCache(sprintf "inmemcache-%d" <| hash id)
+                    let localCache = new LocalCache(sprintf "fscache-%d" <| hash id, cacheInfo.Store, store)
 
                     let crefStore  = new CloudRefProvider(id, store, inMemCache, localCache)  :> ICloudRefProvider
                     let cseqStore  = new CloudSeqProvider(id, store, localCache)              :> ICloudSeqProvider
