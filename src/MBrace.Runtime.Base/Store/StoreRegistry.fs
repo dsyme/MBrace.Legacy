@@ -74,6 +74,7 @@ namespace Nessos.MBrace.Runtime.Store
             Id : StoreId
             Provider : StoreProvider
             Store : ICloudStore
+            InMemoryCache : InMemCache
         }
 
     [<AutoSerializable(false)>]
@@ -108,7 +109,7 @@ namespace Nessos.MBrace.Runtime.Store
         static member ActivateLocalCache(provider : StoreProvider) =
             lock localCache (fun () ->
                 let id, store = StoreRegistry.InitStore provider
-                let info = { Id = id ; Provider = provider ; Store = store }
+                let info = { Id = id ; Provider = provider ; Store = store ; InMemoryCache = InMemCache() }
                 localCache := Some info)
 
         static member TryGetLocalCache () = localCache.Value
