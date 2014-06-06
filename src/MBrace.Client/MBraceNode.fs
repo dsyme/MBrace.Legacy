@@ -20,6 +20,8 @@
 
     type private MBraceNodeMsg = Nessos.MBrace.Runtime.MBraceNode
 
+    type Permissions = Nessos.MBrace.Runtime.Permissions
+
     module internal Logs =
 
         let show (logs : seq<SystemLogEntry>) =
@@ -43,7 +45,7 @@
                 mfailwith "Timed out while connecting to %A." self
             | _ -> reraise' e
 
-        let nodeInfo = CacheAtom.Create((fun () -> Utils.getNodeInfo nodeRef), interval = 1000, keepLastResultOnError = true)
+        let nodeInfo = CacheAtom.Create((fun () -> Utils.getNodeInfo nodeRef), interval = 100, keepLastResultOnError = true)
 
         internal new (nref: ActorRef<MBraceNodeMsg>) =
             let uri = ActorRef.toUri nref |> MBraceUri.actorUriToMbraceUri
@@ -202,7 +204,7 @@
                         if debug then yield Debug
                         if useTemporaryWorkDir then yield Use_Temp_WorkDir
 
-                        match permissions with Some p -> yield Permissions (int p) | _ -> ()
+                        match permissions with Some p -> yield MBracedConfig.Permissions(int p) | _ -> ()
                         match workingDirectory with Some w -> yield Working_Directory w | _ -> ()
                         match logLevel with Some l -> yield Log_Level l.Value | _ -> ()
 

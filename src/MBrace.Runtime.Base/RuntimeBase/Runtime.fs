@@ -45,11 +45,10 @@
             | Idle -> "Idle"
                 
     type Permissions =
-        | None   = 0b000
-        | Slave  = 0b001
-        | Master = 0b010
-        | Other  = 0b100 // dummy
-        | All    = 0b111
+        | None   = 0
+        | Slave  = 1
+        | Master = 2
+        | All    = 3
 
     type ProcessRecoveryType = RecoveringScheduler | RecoveringWorker | RecoveringLogger //TODO!!! Perhaps make this an enum?
     type ProcessState = Initialized | Created | Running | Recovering of ProcessRecoveryType | Completed | Failed | Killed

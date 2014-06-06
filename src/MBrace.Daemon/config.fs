@@ -236,11 +236,11 @@
                         yield! printPort p
             } |> String.build
 
-        let parsePermissions (n : int) =
-            let p = enum<Permissions> n
-            if p < Permissions.None || p > Permissions.All then
-                failwithf "invalid permissions %d" n
-            else p
+//        let parsePermissions (n : int) =
+//            let p = enum<Permissions> n
+//            if p < Permissions.None || p > Permissions.All then
+//                failwithf "invalid permissions %d" n
+//            else p
 
         let isLocalIpAddress =
             let localIPs =
