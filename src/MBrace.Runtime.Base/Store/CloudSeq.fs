@@ -154,8 +154,6 @@
                         return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
                     }
                     do! cacheStore.Create(container, postfix id, serializeTo, false)
-                    do! cacheStore.Commit(container, postfix id, false)
-
                     return CloudSeq<'T>(id, container, this) :> ICloudSeq<'T>
                 } |> onCreateError container id
 
@@ -166,8 +164,6 @@
                         return setInfo stream { Size = -1L; Count = length; Type = ty }
                     }
                     do! cacheStore.Create(container, postfix id, serializeTo, false)
-                    do! cacheStore.Commit(container, postfix id, false)
-
                     return defineUntyped(ty, container, id)
                 } |> onCreateError container id
 

@@ -27,11 +27,8 @@
             
         member this.Name = localCacheStore.Name
 
-        member this.Create(folder, file, serializeTo : Stream -> Async<unit>, asFile) = 
-            localCacheStore.CreateImmutable(cacheContainer, getCachedFileName folder file, serializeTo, asFile)
-
-        member this.Commit(folder, file, asFile : bool) = 
-            async {
+        member this.Create(folder, file, serializeTo : Stream -> Async<unit>, asFile) = async {
+                do! localCacheStore.CreateImmutable(cacheContainer, getCachedFileName folder file, serializeTo, asFile)
                 use! stream = localCacheStore.ReadImmutable(cacheContainer, getCachedFileName folder file)
                 return! targetStore.CopyFrom(folder, file, stream, asFile)
             }

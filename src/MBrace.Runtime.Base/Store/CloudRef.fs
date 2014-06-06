@@ -142,17 +142,12 @@
             member self.Create (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
                 async {
                     do! fscache.Create(container, postfix id, serialize value typeof<'T>, false)
-                    do! fscache.Commit(container, postfix id, false)
-
                     return new CloudRef<'T>(id, container, self) :> ICloudRef<_>
                 } |> onCreateError container id
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 
                 async {
                     do! fscache.Create(container, postfix id, serialize value t, false)
-                    do! fscache.Commit(container, postfix id, false)
-
-                    // construct & return
                     return defineUntyped(t, container, id)
                 } |> onCreateError container id
 
