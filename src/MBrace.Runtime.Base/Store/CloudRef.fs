@@ -74,6 +74,8 @@
             Serialization.DefaultPickler.Serialize<obj>(stream, value)
         }
 
+        let storeHash = String.Convert.BytesToBase32(id.UUID)
+
         let read container id : Async<Type * obj> = async {
             use! stream = fscache.Read(container, id) 
             let t = Serialization.DefaultPickler.Deserialize<Type> stream
@@ -117,7 +119,7 @@
 
         member self.Dereference<'T> (cref : CloudRef<'T>) : Async<'T> = 
             async {
-                let inmemCacheId = sprintf' "%s/%s" cref.Container cref.Name
+                let inmemCacheId = sprintf' "%s/%s/%s" storeHash cref.Container cref.Name
 
                 // get value
                 let cacheResult = inmem.TryFind inmemCacheId
@@ -140,17 +142,12 @@
             member self.Create (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
                 async {
                     do! fscache.Create(container, postfix id, serialize value typeof<'T>, false)
-                    do! fscache.Commit(container, postfix id, false)
-
                     return new CloudRef<'T>(id, container, self) :> ICloudRef<_>
                 } |> onCreateError container id
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 
                 async {
                     do! fscache.Create(container, postfix id, serialize value t, false)
-                    do! fscache.Commit(container, postfix id, false)
-
-                    // construct & return
                     return defineUntyped(t, container, id)
                 } |> onCreateError container id
 

@@ -64,8 +64,6 @@
             override this.Create(container : Container, id : Id, writer : (Stream -> Async<unit>)) : Async<ICloudFile> =
                 async {
                     do! cache.Create(container, id, writer, asFile = true)
-                    do! cache.Commit(container, id, asFile = true)
-
                     return CloudFile(id, container, this) :> ICloudFile
                 } |> onCreateError container id
 

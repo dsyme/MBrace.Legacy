@@ -35,7 +35,6 @@
             tag
 
         let rec trap path (mode : FileMode) (access : FileAccess) (share : FileShare) : Async<Stream> = async {
-            //let fs = try Some(new FileStream(path, mode, FileSystemRights.Modify, share, 4096, FileOptions.None))
             let fs = try Some(new FileStream(path, mode, access, share))
                      with :? IOException as e when File.Exists(path) -> None
             match fs with
@@ -56,23 +55,12 @@
 
                     use fs = new FileStream(Path.Combine(path, file), FileMode.Create, FileAccess.Write, FileShare.None)
                     return! serialize fs
-
-//                    return!
-//                        retryAsync (RetryPolicy.Retry(5, 0.5<sec>)) 
-//                            (async {
-//                                use s = new FileStream(Path.Combine(path, file), FileMode.Create, FileAccess.Write, FileShare.None) :> Stream
-//                                return! serialize s })
                 }
              
             override self.ReadImmutable(folder : string, file : string) : Async<Stream> = 
                 async {
                     let path = Path.Combine(path, folder, file)
                     return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read) :> _
-//                    return
-//                        retry (RetryPolicy.Retry(5, 0.2<sec>))
-//                            (fun () ->
-//                                let fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)   
-//                                fs :> _)
                 }
                   
             override self.GetAllFiles(folder : string) : Async<string []> =
