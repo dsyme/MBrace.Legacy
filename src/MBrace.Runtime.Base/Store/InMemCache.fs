@@ -12,6 +12,14 @@
     open Nessos.MBrace.Utils.Retry
     open Nessos.MBrace.Runtime
 
+#if NO_INMEM_CACHE
+    type InMemCache(?physicalMemoryLimitPercentage : int) =
+        member self.TryFind (key : string) = None : obj option
+        member self.Get (key : string) = raise <| new ArgumentException("Key not found in cache.")
+        member self.ContainsKey (key : string) = false
+        member self.Set(key : string, value : obj) = ()
+        member self.DeleteIfExists(key : string) = ()
+#else
     type InMemCache(?physicalMemoryLimitPercentage : int) =
 
         // arg parsing
@@ -53,3 +61,4 @@
         member self.DeleteIfExists(key : string) = 
             if cache.Contains key then
                 cache.Remove(key) |> ignore
+#endif
