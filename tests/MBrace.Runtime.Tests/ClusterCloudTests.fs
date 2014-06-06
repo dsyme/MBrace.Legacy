@@ -290,3 +290,25 @@ namespace Nessos.MBrace.Runtime.Tests
             let n' =__.Runtime.Nodes |> List.length
             n - n' |> should equal 1
             Assert.Inconclusive("Detach is not synchronous")
+
+        [<Test; Category("Runtime Administration")>]
+        member __.``Node Permissions`` () =
+            let nodes = __.Runtime.Nodes 
+            let n = nodes.Head
+
+            // Node client caches information for a few millisecods
+            // sleep to force that values are up to date
+
+            let p = n.Permissions
+
+            n.Permissions <- Permissions.None
+            do Thread.Sleep 500
+            n.Permissions |> should equal Permissions.None
+
+            n.Permissions <- Permissions.Slave
+            do Thread.Sleep 500
+            n.Permissions |> should equal Permissions.Slave
+
+            n.Permissions <- p
+            do Thread.Sleep 500
+            n.Permissions |> should equal p

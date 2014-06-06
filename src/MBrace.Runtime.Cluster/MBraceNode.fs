@@ -27,9 +27,13 @@ let private readEntriesFromMasterLogFile () =
 
 type internal MBraceNodeManager = MBraceNode
 
-type State = {
-    DeploymentId: Guid
-} with static member Empty = { DeploymentId = Guid.Empty; }
+type State = 
+    {
+        DeploymentId: Guid
+        Permissions : Permissions
+    } 
+with
+    static member Empty = { DeploymentId = Guid.Empty; Permissions = IoC.Resolve<Permissions>() }
 
 let private initMultiNodeRuntime (ctx: BehaviorContext<_>) (configuration: Configuration) nodes = 
     async {
@@ -344,8 +348,8 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
 
                 return stay state
 
-            | SetNodePermissions _ ->
-                return stay state
+            | SetNodePermissions perms ->
+                return stay { state with Permissions = perms }
 
             | Ping(RR ctx reply, silence) ->
                 if not silence then ctx.LogInfo "PING"
@@ -361,7 +365,7 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
                     | Nessos.Thespian.Cluster.Common.NodeType.Slave -> Nessos.MBrace.Runtime.NodeType.Slave
                     | Nessos.Thespian.Cluster.Common.NodeType.Idle -> Nessos.MBrace.Runtime.NodeType.Idle
 
-                let info = Utils.mkNodeDeploymentInfo Permissions.All nodeType
+                let info = Utils.mkNodeDeploymentInfo state.Permissions nodeType
 
                 reply <| Value info
 

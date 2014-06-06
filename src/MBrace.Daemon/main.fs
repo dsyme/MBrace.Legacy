@@ -44,7 +44,7 @@
             let workingDirectory = results.TryGetResult <@ Working_Directory @>
             let logLevel = results.PostProcessResult(<@ Log_Level @>, LogLevel.Parse)
             let logFiles = results.GetResults <@ Log_File @>
-            let defaultPermissions = results.PostProcessResult(<@ Permissions @>, parsePermissions)
+            let defaultPermissions = results.PostProcessResult(<@ Permissions @>, (fun p -> enum<Permissions> p))
             let debugMode = results.Contains <@ Debug @>
             let detach = results.Contains <@ Detach @>
             let spawnWindow = results.Contains <@ Spawn_Window @>
@@ -98,6 +98,7 @@
             //  Initialization and registrations
             //
 
+            IoC.RegisterValue<Permissions>(defaultPermissions)
 
             // TODO : remove?
             IoC.RegisterValue(debugMode, "debugMode")
