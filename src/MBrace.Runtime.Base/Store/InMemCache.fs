@@ -12,10 +12,9 @@
     open Nessos.MBrace.Utils.Retry
     open Nessos.MBrace.Runtime
 
-    type InMemCache(?id : string, ?physicalMemoryLimitPercentage : int) =
+    type InMemCache(?physicalMemoryLimitPercentage : int) =
 
         // arg parsing
-        let id = Guid.NewGuid().ToString()
         let percentage = 
             match defaultArg physicalMemoryLimitPercentage 70 with
             | n when n > 0 && n <= 100 -> n
@@ -24,7 +23,7 @@
         // In-Memory Cache
         let config = new System.Collections.Specialized.NameValueCollection()
         do config.Add("PhysicalMemoryLimitPercentage", percentage.ToString())
-        let cache = new MemoryCache(id, config)
+        let cache = new MemoryCache(Guid.NewGuid().ToString(), config)
         
         // In-Memory Cache Policy
         let policy = new CacheItemPolicy()

@@ -842,7 +842,7 @@ namespace Nessos.MBrace.Runtime.Tests
             let cs = <@ cloud { return! CloudSeq.New(Array.init (10 * 1024 * 1024) id) } @> |> test.ExecuteExpression
             let storeId = Runtime.Store.StoreRegistry.DefaultStoreInfo.Id
             // Clear client cache
-            let cacheDir = Path.Combine(MBraceSettings.WorkingDirectory, sprintf @"LocalCache\fscache-%d" <| hash storeId) 
+            let cacheDir = Path.Combine(MBraceSettings.WorkingDirectory, "LocalCache", sprintf "fscache-%d" <| hash storeId)
             Directory.Delete(cacheDir, true)
 
             let read () = async { return cs |> Seq.toArray }

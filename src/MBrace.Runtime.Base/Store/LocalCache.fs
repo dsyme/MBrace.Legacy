@@ -22,6 +22,8 @@
                 name' + Path.GetExtension name
             else
                 name'
+           
+        member this.Container = cacheContainer
             
         member this.Name = localCacheStore.Name
 
