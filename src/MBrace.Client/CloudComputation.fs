@@ -8,6 +8,7 @@
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
 
+    /// Represents a cloud computation that has been statically checked by the client.
     type CloudComputation<'T> = Nessos.MBrace.Core.CloudComputation<'T>
 
     [<AutoOpen>]

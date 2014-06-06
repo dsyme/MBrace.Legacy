@@ -30,6 +30,7 @@
             |> String.concat "\n"
             |> printfn "%s"
 
+    ///The type representing a {m}brace node.
     [<Sealed; NoEquality; NoComparison; AutoSerializable(false)>]
     type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri: Uri) as self =
 
@@ -51,28 +52,37 @@
             let uri = ActorRef.toUri nref |> MBraceUri.actorUriToMbraceUri
             MBraceNode(nref, uri)
 
+        /// Create a new MBraceNode object. No node is spawned.
         new (uri: Uri) =
             let nref = uri |> MBraceUri.mbraceUriToActorUri Serialization.SerializerRegistry.DefaultName |> ActorRef.fromUri
             MBraceNode(nref, uri)
 
+        /// Create a new MBraceNode object. No node is spawned.
         new (hostname : string, port : int) = MBraceNode(hostPortToUri(hostname, port))
 
+         /// Create a new MBraceNode object. No node is spawned.
         new (uri : string) = MBraceNode(new Uri(uri))
 
+        /// Gets the System.Diagnostics.Process object that corresponds to the node's process.
         member __.Process : Process option = snd nodeInfo.Value
         member internal __.Ref = nodeRef
+        
+        /// Gets the node's uri.
         member __.Uri : Uri = uri
 
+        /// Sets the node's permissions.
         member __.Permissions
             with get () : Permissions = (fst nodeInfo.Value).Permissions
             and  set (newPermissions: Permissions) =
                 try setPermissions newPermissions <| nodeRef
                 with e -> handleError e
 
+        /// Sets whether the node has slave permissions.
         member n.IsPermittedSlave
             with get() = try n.Permissions.HasFlag Permissions.Slave with e -> handleError e
             and  set (x: bool) = try switchPermissionFlag x Permissions.Slave n.Permissions nodeRef with e -> handleError e
 
+        /// Sets whether the node has master permissions.
         member n.IsPermittedMaster
             with get () = try n.Permissions.HasFlag Permissions.Slave with e -> handleError e
             and  set (x: bool) = try switchPermissionFlag x Permissions.Master n.Permissions nodeRef with e -> handleError e

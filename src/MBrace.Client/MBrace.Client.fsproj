@@ -52,7 +52,6 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <None Include="ClientSettings.fsi" />
     <Compile Include="ClientSettings.fs" />
     <Compile Include="CloudComputation.fs" />
     <Compile Include="StoreClient.fs" />

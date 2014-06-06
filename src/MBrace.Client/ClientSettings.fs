@@ -138,12 +138,15 @@ namespace Nessos.MBrace.Client
 
     open ConfigUtils
 
+    /// The object representing the {m}brace client settings.
     type MBraceSettings private () =
 
         static let config = Atom.atom <| initConfiguration ()
         
+        /// Gets the client's unique identifier.
         static member ClientId = config.Value.ClientId
 
+        /// The (relative/absolute) path to the mbraced.exe.
         static member MBracedExecutablePath 
             with get () = 
                 match config.Value.MBracedPath with 
@@ -159,6 +162,7 @@ namespace Nessos.MBrace.Client
 
         static member internal CloudCompiler = config.Value.CloudCompiler
 
+        /// Gets or sets the logger used by the client.
         static member Logger
             with get () = config.Value.Logger
             and set l = 
@@ -167,6 +171,7 @@ namespace Nessos.MBrace.Client
                     config.Swap(fun c -> { c with Logger = l })
                 )
 
+        /// Gets or sets the StoreProvider used by the client.
         static member StoreProvider
             with get () = config.Value.StoreInfo.Provider
 
@@ -177,6 +182,7 @@ namespace Nessos.MBrace.Client
                     config.Swap(fun c -> { c with StoreInfo = storeInfo })
                 )
 
+        /// Gets the path used by the client as a working directory.
         static member WorkingDirectory = config.Value.WorkingDirectory
 
         static member internal Vagrant = config.Value.Vagrant
