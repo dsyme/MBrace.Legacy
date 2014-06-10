@@ -66,4 +66,4 @@
         abstract Container : string
         abstract Size : int64
 
-        abstract Read : unit -> Async<Stream>
+        abstract Read<'T> : (Stream -> Async<'T>) -> Async<'T>

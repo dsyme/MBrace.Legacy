@@ -191,7 +191,7 @@ namespace Nessos.MBrace.Core
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     
                     | ReadCloudFile(file, deserialize, t) :: rest ->
-                        let! exec = Async.Catch <| async { let! stream = file.Read() in return! deserialize stream }
+                        let! exec = Async.Catch <| file.Read(deserialize) 
                         match exec with
                         | Choice1Of2 o ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue o, t)) :: rest
