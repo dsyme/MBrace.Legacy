@@ -60,8 +60,8 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <None Include="packages.config" />
     <Compile Include="Worker.fs" />
+    <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>

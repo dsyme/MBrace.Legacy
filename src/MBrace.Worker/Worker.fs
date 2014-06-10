@@ -65,7 +65,7 @@
             let results = workerConfig.ParseCommandLine(errorHandler = plugExiter exiter)
 #endif
 
-            let parentPid = results.GetResult <@ Parent_Pid @>
+            let parentProc = results.PostProcessResult(<@ Parent_Pid @>, Process.GetProcessById)
             let debugMode = results.Contains <@ Debug @>
             let processDomainId = results.GetResult <@ Process_Domain_Id @>
             let assemblyPath = results.GetResult <@ Assembly_Cache @>
@@ -143,7 +143,8 @@
 
                 let address = new Address(TcpListenerPool.DefaultHostname, TcpListenerPool.GetListener().LocalEndPoint.Port)
                 Definitions.Service.bootProcessDomain address
-                mainLoop <| System.Diagnostics.Process.GetProcessById(parentPid)
+
+                mainLoop parentProc
             with e ->
                 logger.LogWithException e "Failed to start process domain." Error
                 1
