@@ -67,6 +67,7 @@
     <Compile Include="CloudTestDefinitions.fs" />
     <Compile Include="CompilerTests.fs" />
     <Compile Include="CloudTests.fs" />
+    <Compile Include="ChaosTests.fs" />
     <Compile Include="LocalCloudTests.fs" />
     <Compile Include="ClusterCloudTests.fs" />
   </ItemGroup>
