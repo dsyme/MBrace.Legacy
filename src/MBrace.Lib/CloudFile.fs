@@ -26,7 +26,8 @@
         type internal CloudFileSequence<'T>(file : ICloudFile, reader : Stream -> Async<seq<'T>>) =
             let enumerate () = 
                 async {
-                    let! seq = file.Read(reader)
+                    let! stream = file.Read()
+                    let! seq = reader stream
                     return seq.GetEnumerator()
                 } |> Async.RunSynchronously
         

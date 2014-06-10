@@ -52,15 +52,15 @@
             let uri = ActorRef.toUri nref |> MBraceUri.actorUriToMbraceUri
             MBraceNode(nref, uri)
 
-        /// Create a new MBraceNode object. No node is spawned.
+        /// <summary>Create a new MBraceNode object. No node is spawned.</summary>
         new (uri: Uri) =
             let nref = uri |> MBraceUri.mbraceUriToActorUri Serialization.SerializerRegistry.DefaultName |> ActorRef.fromUri
             MBraceNode(nref, uri)
 
-        /// Create a new MBraceNode object. No node is spawned.
+        /// <summary>Create a new MBraceNode object. No node is spawned.</summary>
         new (hostname : string, port : int) = MBraceNode(hostPortToUri(hostname, port))
 
-         /// Create a new MBraceNode object. No node is spawned.
+        /// <summary>Create a new MBraceNode object. No node is spawned.</summary>
         new (uri : string) = MBraceNode(new Uri(uri))
 
         /// Gets the System.Diagnostics.Process object that corresponds to the node's process.
@@ -360,5 +360,5 @@
             NodeInfo.PrettyPrint(nodes, ?displayPerfCounters = displayPerfCounters, header = title, ?useBorders = useBorders)
 
 
-
+    /// An abbreviation for the MBraceNode type.
     type Node = MBraceNode

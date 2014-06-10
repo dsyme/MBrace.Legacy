@@ -879,11 +879,11 @@ namespace Nessos.MBrace.Runtime.Tests
             let c = Guid.NewGuid().ToString("N")
             let a = [|1uy..10uy|]
             let cr = sc.CreateCloudFile(c, "cloudfile", fun stream -> stream.AsyncWrite(a) )
-            let l = cr.Read(fun s -> s.AsyncRead(a.Length)) |> Async.RunSynchronously
-            l |> should equal a
+            let l = cr.Read() |> Async.RunSynchronously
+            l.AsyncRead(a.Length) |> Async.RunSynchronously |> should equal a
             let cr' = sc.GetCloudFile(c, cr.Name) 
-            let l' = cr.Read(fun s -> s.AsyncRead(a.Length)) |> Async.RunSynchronously
-            l' |> should equal a
+            let l' = cr.Read() |> Async.RunSynchronously
+            l'.AsyncRead(a.Length) |> Async.RunSynchronously |> should equal a
             sc.DeleteContainer(c)
 
         [<Test>]
