@@ -132,7 +132,7 @@ namespace Nessos.MBrace.Runtime.Tests
                     printfn "Booting runtime"
                     let rt = MBrace.InitLocal(4, debug = true)
                     let chaos = chaosMonkey defaultConf actions rt
-                    let cts = new CancellationTokenSource()
+                    use cts = new CancellationTokenSource()
                     try 
                         printfn "Creating process"
                         let ps = rt.CreateProcess(cexpr)
@@ -143,6 +143,7 @@ namespace Nessos.MBrace.Runtime.Tests
                         printfn "Process completed"
                     finally
                         cts.Cancel()
+                        rt.Ping() |> should greaterThan 0
                         rt.Kill()
                         Process.GetProcessesByName("mbraced") 
                         |> Seq.iter (fun ps -> ps.Kill()) ))
