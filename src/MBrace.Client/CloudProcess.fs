@@ -54,37 +54,6 @@
             | ProcessResultImage.Fault e -> Fault e
             | ProcessResultImage.Killed -> Killed
 
-//    module internal ProcessInfo =
-//
-//        let getResult<'T> (info : ProcessInfo) =
-//            match info.Result with
-//            | None -> Pending
-//            | Some(ProcessSuccess bytes) ->
-//                match Serialization.Deserialize<Result<obj>> bytes with
-//                | ValueResult v -> Success (v :?> 'T)
-//                | ExceptionResult (e, ctx) -> UserException e
-//            | Some(ProcessFault e) -> Fault e
-//            | Some(ProcessInitError e) -> InitError e
-//            | Some(ProcessKilled) -> Killed
-//
-//        let getReturnType (info : ProcessInfo) = Serialization.Deserialize<Type> info.Type
-//
-//        let prettyPrint =
-//
-//            let template : Field<ProcessInfo> list =
-//                [
-//                    Field.create "Name" Left (fun p -> p.Name)
-//                    Field.create "Process Id" Right (fun p -> p.ProcessId)
-//                    Field.create "Status" Left (fun p -> p.ProcessState)
-//                    Field.create "#Workers" Right (fun p -> p.Workers)
-//                    Field.create "#Tasks" Right (fun p -> p.Workers)
-//                    Field.create "Start Time" Left (fun p -> p.InitTime)
-//                    Field.create "Execution Time" Left (fun p -> p.ExecutionTime)
-//                    Field.create "Result Type" Left (fun p -> p.TypeName)
-//                ]
-//
-//            Record.prettyPrint3 template None
-
     [<AbstractClass>]
     type Process internal (processId : ProcessId, returnType : Type, processManager : ProcessManager) =
 
@@ -115,8 +84,8 @@
 
             existential.Apply ctor
 
-        // TODO : should only be printable in shell mode
-        member p.ShowInfo (?useBorders) = MBraceProcessReporter.Report [processInfo.Value]
+        member p.GetInfo () : string = MBraceProcessReporter.Report [processInfo.Value]
+        member p.ShowInfo () : unit = p.GetInfo() |> Console.WriteLine
 
         member p.Kill () : unit = processManager.Kill processId |> Async.RunSynchronously
         member p.GetLogs () : CloudLogEntry [] = p.GetLogsAsync () |> Async.RunSynchronously
@@ -307,8 +276,6 @@
 
         member pm.Kill (pid : ProcessId) = postWithReply <| fun ch -> KillProcess(ch, pid)
 
-        // TODO : should only be printable in shell mode
-        member pm.ShowInfo (?useBorders) =
+        member pm.GetInfo () : string =
             let info = postWithReply GetAllProcessInfo |> Async.RunSynchronously |> Array.toList
-            MBraceProcessReporter.Report(info, ?showBorder = useBorders)
-            |> Console.WriteLine
+            MBraceProcessReporter.Report(info, showBorder = false)

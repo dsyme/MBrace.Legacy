@@ -8,9 +8,14 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
+    open Nessos.MBrace.Client.Reporting
+
+    // type abbreviations
 
     type Node = Nessos.MBrace.Client.MBraceNode
     type MBrace = Nessos.MBrace.Client.MBraceRuntime
+    type CloudComputation = Nessos.MBrace.Core.CloudComputation
+    type CloudComputation<'T> = Nessos.MBrace.Core.CloudComputation<'T>
 
     [<AutoOpen>]
     module ClientExtensions =

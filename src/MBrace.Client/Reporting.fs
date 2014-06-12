@@ -18,6 +18,21 @@
             |> printfn "%s"
 
 
+    type CloudComputation =
+
+        static member Compile (block : Cloud<'T>, ?name : string) =
+            let cc = MBraceSettings.CloudCompiler.Compile(block, ?name = name)
+            for w in cc.Warnings do
+                MBraceSettings.Logger.LogWarning w
+            cc
+
+        static member Compile (expr : Quotations.Expr<Cloud<'T>>, ?name : string) =
+            let cc = MBraceSettings.CloudCompiler.Compile(expr, ?name = name)
+            for w in cc.Warnings do
+                MBraceSettings.Logger.LogWarning w
+            cc
+
+
     type MBraceNodeReporter private () =
 
         static let nodeReportTemplate : Field<NodeDeploymentInfo> list =
