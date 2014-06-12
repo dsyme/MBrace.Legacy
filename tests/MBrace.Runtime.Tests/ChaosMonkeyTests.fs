@@ -45,9 +45,9 @@ namespace Nessos.MBrace.Runtime.Tests
                 logfn "CHAOS MONKEY COMPLETED" 
             | action :: rest ->
                 let random = new Random(System.DateTime.Now.Millisecond)
+                logfn "Current action %A" action
                 let nodeCount = runtime.Nodes.Length
                 logfn "NodeCount %d" nodeCount
-                logfn "Current action %A" action
 
                 try
                     match action with
