@@ -22,7 +22,7 @@
 
     type private MBraceNodeMsg = Nessos.MBrace.Runtime.MBraceNode
 
-    type NodePerformanceInfo = Nessos.MBrace.Runtime.PerformanceMonitor.NodePerformanceInfo
+    type NodePerformanceInfo = Nessos.MBrace.Runtime.NodePerformanceInfo
     type Permissions = Nessos.MBrace.Runtime.Permissions
 
     ///The type representing a {m}brace node.
@@ -116,6 +116,11 @@
         member __.GetPerformanceCounters () : NodePerformanceInfo =
             let info = __.GetNodeInfoAsync true |> Async.RunSynchronously
             info.PerformanceInfo |> Option.get
+
+        member __.ShowPerformanceCounters () =
+                let info = __.GetNodeInfoAsync true |> Async.RunSynchronously
+                Reporting.MBraceNodeReporter.Report(Seq.singleton info, showPerf = true, showBorder = false)
+                |> Console.WriteLine
 
         member n.GetSystemLogs () : SystemLogEntry [] =
             try nodeRef <!= GetLogDump

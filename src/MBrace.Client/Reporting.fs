@@ -30,15 +30,19 @@
             ]
 
         static let nodePerfReportTemplate : Field<NodeDeploymentInfo> list =
+            let printer (value : PerformanceCounter) =
+                match value with
+                | None -> "N/A"
+                | Some value -> sprintf "%.2f" value
             [
                 Field.create "Host" Left (fun n -> n.Uri.Host)
                 Field.create "Port" Right (fun n -> n.Uri.Port)
                 Field.create "Role" Left (fun n -> n.State)
-                Field.create "%Cpu" Right (fun n -> n.PerformanceInfo.Value.TotalCpuUsage)
-                Field.create "%Cpu(avg)" Right (fun n -> n.PerformanceInfo.Value.TotalCpuUsageAverage)
-                Field.create "Memory(MB)" Right (fun n -> n.PerformanceInfo.Value.TotalMemory)
-                Field.create "%Memory" Right (fun n -> n.PerformanceInfo.Value.TotalMemoryUsage)
-                Field.create "Network(ul/dl: kbps)" Right (fun n -> n.PerformanceInfo.Value.TotalNetworkUsage)
+                Field.create "%Cpu" Right (fun n -> printer n.PerformanceInfo.Value.CpuUsage)
+                Field.create "%Cpu(avg)" Right (fun n -> printer n.PerformanceInfo.Value.CpuUsageAverage)
+                Field.create "Total Memory(MB)" Right (fun n -> printer n.PerformanceInfo.Value.TotalMemory)
+                Field.create "%Memory" Right (fun n -> printer n.PerformanceInfo.Value.MemoryUsage)
+                Field.create "Network(ul/dl: kbps)" Right (fun n -> sprintf "%s / %s" <| printer n.PerformanceInfo.Value.NetworkUsageUp <| printer n.PerformanceInfo.Value.NetworkUsageUp )
             ]
 
         static member Report(nodes : seq<NodeDeploymentInfo>, showPerf, ?title, ?showBorder) =

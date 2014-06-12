@@ -123,7 +123,7 @@
                     State = state
                     PerformanceInfo = 
                         if includePerfMetrics then
-                            Some <| PerformanceMonitor.getCounters ()
+                            Some <| IoC.Resolve<PerformanceMonitor>().GetCounters()
                         else
                             None
                 }
