@@ -100,7 +100,8 @@
 
             IoC.RegisterValue<Permissions>(defaultPermissions)
 
-            do initPerfMon ()
+            let perfMon = registerPerfMonitor() 
+            perfMon.Start()
 
             // TODO : remove?
             IoC.RegisterValue(debugMode, "debugMode")
@@ -139,6 +140,8 @@
             logger.Logf Info "Default Serializer = %s" Serialization.SerializerRegistry.DefaultName
             logger.Logf Info "Working Directory = %s" workingDirectory
             logger.Logf Info "StoreProvider = %s" info.Store.Name
+            logger.Logf Info "Performance Monitor state = %s" 
+                <| if perfMon.GetCounters() <> NodePerformanceInfo.NotAvailable then "active" else "inactive"
 
             if debugMode then logger.LogInfo "Running in DEBUG mode."
             if isWindowed then registerFancyConsoleEvent debugMode address
