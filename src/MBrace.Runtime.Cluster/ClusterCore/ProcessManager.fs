@@ -7,6 +7,7 @@ open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.BehaviorExtensions
 
 open Nessos.MBrace
+open Nessos.MBrace.Core
 open Nessos.MBrace.Runtime
 open Nessos.MBrace.Runtime.Store
 open Nessos.MBrace.Runtime.Logging
@@ -52,16 +53,17 @@ let processManagerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, 
                 match processInfoOpt with
                 | Some entry -> entry (*|> Process*) |> Value |> reply
                 | None ->
-                    ctx.LogInfo <| sprintf' "Creating new process for (request = %A, client = %A)..."  requestId processImage.ClientId
+                    ctx.LogInfo <| sprintf' "Creating new process for (request = %A, client = %A)..."  requestId processImage.CompilerId
 
-                    let processInitializationRecord: ProcessCreationData = { 
-                        ClientId = processImage.ClientId
-                        RequestId = requestId
-                        Name = processImage.Name
-                        Type = processImage.Type
-                        TypeName = processImage.TypeName
-                        Dependencies = processImage.Dependencies
-                    }
+                    let processInitializationRecord: ProcessCreationData = 
+                        { 
+                            ClientId = processImage.CompilerId
+                            RequestId = requestId
+                            Name = processImage.Name
+                            Type = processImage.ReturnTypeRaw
+                            TypeName = processImage.TypeName
+                            Dependencies = processImage.Dependencies
+                        }
 
                     //FaultPoint
                     //SystemException => run out of pid slots ;; SYSTEM FAULT
@@ -113,7 +115,7 @@ let processManagerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, 
 
                     //FaultPoint
                     //BroadcastFailureException => no replication at all;; root task not posted;; SYSTEM FAULT
-                    do! scheduler <!- fun ch -> NewProcess(ch, processRecord.ProcessId, processImage.Computation)
+                    do! scheduler <!- fun ch -> NewProcess(ch, processRecord.ProcessId, processImage.ComputationRaw)
                         
                     //FaultPoint
                     //BroadcastFailureException => no replication at all;; SYSTEM FAULT
@@ -194,7 +196,7 @@ let processManagerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, 
                 //FaultPoint
                 //-
                 //do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ExceptionResult (new ProcessKilledException("Process has been killed.") :> exn, None) |> Serializer.Serialize |> ProcessSuccess))
-                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ProcessKilled))
+                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, Killed))
 
                 //FaultPoint
                 //-

@@ -129,7 +129,7 @@ let workerBehavior (processId: ProcessId)
                         with CommunicationException(_, _, _, (:? SerializationException as e)) ->
                                 //FaultPoint
                                 //-
-                                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ExceptionResult(Nessos.MBrace.CloudException("Failed to serialize", processId, e) :> exn, None) |> Serialization.Serialize |> ProcessSuccess ))
+                                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ExceptionResult(Nessos.MBrace.CloudException("Failed to serialize", processId, e) :> exn, None) |> ProcessResultImage.OfResult ))
 
                                 processMonitor <-- Singular(Choice1Of2 <| ProcessMonitor.DestroyProcess processId)
                             | e -> ctx.LogError e //"Worker: Unable to send task result."

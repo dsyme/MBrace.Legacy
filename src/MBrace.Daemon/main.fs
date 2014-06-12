@@ -100,6 +100,8 @@
 
             IoC.RegisterValue<Permissions>(defaultPermissions)
 
+            do initPerfMon ()
+
             // TODO : remove?
             IoC.RegisterValue(debugMode, "debugMode")
 

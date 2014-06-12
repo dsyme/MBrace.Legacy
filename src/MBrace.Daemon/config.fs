@@ -164,10 +164,10 @@
                     if Environment.UserInteractive then
                         let consoleBgColor,role =
                             match state with
-                            | NodeType.Slave 
-                            | NodeType.Alt -> ConsoleColor.Blue, "Slave"
-                            | NodeType.Master -> ConsoleColor.DarkMagenta, "Master"
-                            | NodeType.Idle -> ConsoleColor.Black, "Idle"
+                            | NodeState.Slave 
+                            | NodeState.AltMaster -> ConsoleColor.Blue, "Slave"
+                            | NodeState.Master -> ConsoleColor.DarkMagenta, "Master"
+                            | NodeState.Idle -> ConsoleColor.Black, "Idle"
 
                         let title =
                             stringB {
@@ -187,6 +187,11 @@
 
         let registerSerializers () =
             Nessos.MBrace.Runtime.Serialization.Register(new FsPickler())
+
+
+        let initPerfMon () =
+            let actor = Nessos.MBrace.Runtime.PerformanceMonitor.init()
+            IoC.RegisterValue<_>(actor.Ref)
 
 
         let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =

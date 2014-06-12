@@ -9,6 +9,9 @@
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
 
+    type Node = Nessos.MBrace.Client.MBraceNode
+    type MBrace = Nessos.MBrace.Client.MBraceRuntime
+
     [<AutoOpen>]
     module ClientExtensions =
 

@@ -5,8 +5,9 @@ namespace Nessos.MBrace.Client
     open System.Threading.Tasks
     open System.Diagnostics
 
+    open Microsoft.FSharp.Quotations
+
     open Nessos.Thespian
-    open Nessos.Thespian.ActorExtensions
     open Nessos.Thespian.ActorExtensions.RetryExtensions
 
     open Nessos.MBrace
@@ -19,125 +20,61 @@ namespace Nessos.MBrace.Client
 
     open Nessos.MBrace.Client
 
-    open Microsoft.FSharp.Quotations
+    [<NoEquality ; NoComparison ; AutoSerializable(false)>]
+    type MBraceRuntime private (runtime : ActorRef<MBraceNodeMsg>, disposables : IDisposable list) =
 
-    [<Sealed ; NoEquality ; NoComparison ; AutoSerializable(false)>]
-    type MBraceRuntime internal (runtimeActor : Actor<ClientRuntimeProxy>, isEncapsulatedActor : bool) =        
         static do MBraceSettings.ClientId |> ignore
 
-        // the runtime proxy actor is responsible for two things:
-        // * keeps a manifest of all runtime nodes as an internal state and updates it accordingly
-        // * forwards messages to the runtime with failover
-        static let createRuntimeProxy (nodes : NodeRef list) =
-
-            let rec proxyBehaviour (state : NodeRef list) (self : Actor<ClientRuntimeProxy>) : Async<NodeRef list> =
-                async {
-
-                    let! msg = self.Receive()
-
-                    try 
-                        // TODO: permitted & isActive hide communication: should be made async
-                        match msg with
-                        | RemoteMsg (MasterBoot (R reply, conf)) ->
-                            match conf.Nodes |> Array.tryFind (permitted Permissions.Master) with
-                            | None ->
-                                mkMBraceExn None "Cannot boot runtime; no appropriate master node candidate found." |> Reply.exn |> reply
-                                return state
-
-                            | Some candidate ->
-                                if isActive candidate then
-                                    mkMBraceExn None "Cannot boot runtime; runtime appears to be already active." |> Reply.exn |> reply
-                                    return state
-                                else
-                                    let! master, alts = candidate <!- fun ch -> MasterBoot(ch, conf)
-                                    let! state' = master <!- GetAllNodes
-
-                                    if state'.Length <> 0 then
-                                        reply <| Value (master,alts)
-                                        return Array.toList state'
-                                    else
-                                        mkMBraceExn None "Cannot boot runtime; insufficient nodes." |> Reply.exn |> reply
-                                        return state
-
-                        | RemoteMsg (GetAllNodes(R reply)) ->
-                            if state.IsEmpty then
-                                mkMBraceExn None "Client: no nodes specified or runtime not booted." |> Reply.exn |> reply
-                                return state
-                            else 
-                                let! response,_ = Failover.postWithReply GetAllNodes self.LogWarning state GetAllNodes
-
-                                reply response
-
-                                match response with
-                                | Value nodes -> return Array.toList nodes
-                                | Exception _ -> return state
-
-                        | RemoteMsg msg -> 
-                            return! Failover.post GetAllNodes self.LogWarning state msg
-
-                        // local messages
-                        | GetLastRecordedState rc -> rc.Reply (Value state) ; return state
-
-                    // uh oh, cannot communicate with runtime
-                    with e -> tryReply msg (Exception e) ; return state
-                }
-
-            let actor =
-                proxyBehaviour
-                |> Behavior.stateful2 nodes
-                |> Actor.bind
-                |> Actor.start
-
-            new MBraceRuntime(actor, true)
-        
-        static let connect (candidate : NodeRef) =
-            async {
-                if isActive candidate then
-                    let! nodes = candidate <!- Runtime.GetAllNodes
-                    return createRuntimeProxy <| Array.toList nodes
-                else
-                    return mfailwith "Cannot connect to runtime; runtime is inactive."
-            }
-
-        //
-        // construction
-        //
-
-        let runtime = runtimeActor.Ref
-        let processManager = new Nessos.MBrace.Client.ProcessManager(runtime, StoreRegistry.DefaultStoreInfo)
-
-        // temporary store sanity check
-        // TODO : shell logger
-        do if not <| runtimeUsesCompatibleStore runtime then
-            eprintfn "Warning: connecting to runtime with incompatible store configuration."
-            
-        let postWithReplyAsync msgBuilder =
-            async {
-                try
-                    return! runtime <!- (RemoteMsg << msgBuilder)
-                with
-                | MBraceExn e -> return reraise' e
-                | MessageHandlingExceptionRec(MBraceExn e) -> return reraise' e
-                | MessageHandlingExceptionRec e ->
-                    return mfailwithInner e "MBrace runtime has replied with exception."
-            }
-
-        let post msg = 
-            try
-                runtime <-- RemoteMsg msg
-            with
+        static let handleError (e : exn) =
+            match e with
             | MBraceExn e -> reraise' e
             | MessageHandlingExceptionRec(MBraceExn e) -> reraise' e
-            | MessageHandlingExceptionRec e ->
-                mfailwithInner e "MBrace runtime has replied with exception."
+            | MessageHandlingExceptionRec e -> mfailwithInner e "Runtime replied with exception."
+            | _ -> reraise' e
 
+        let postAsync msg = async {
+            try return! runtime.PostRetriable(msg, 2)
+            with e -> return handleError e
+        }
+
+        let postWithReplyAsync msgBuilder = async {
+            try return! runtime.PostWithReplyRetriable(msgBuilder, 2)
+            with e -> return handleError e
+        }
+
+        let post m = postAsync m |> Async.RunSynchronously
         let postWithReply m = postWithReplyAsync m |> Async.RunSynchronously
 
-        let configuration = CacheAtom.Create(fun () -> postWithReply GetAllNodes |> NodeInfo.Create)
+        let clusterConfiguration = CacheAtom.Create(fun () -> postWithReply(fun ch -> GetClusterDeploymentInfo(ch, false)))
+        let nodeConfiguration = CacheAtom.Create(fun () -> postWithReply(fun ch -> GetNodeDeploymentInfo(ch, false)))
 
-        member internal __.ActorRef = runtime
-        member internal __.PostWithReply m = postWithReply m
-        member internal __.PostWithReplyAsync m = postWithReplyAsync m
+        // temporary store sanity check ; replace with store load protocol
+        do 
+            if clusterConfiguration.Value.StoreId <> MBraceSettings.StoreInfo.Id then
+                mfailwith "Connecting to runtime with incompatible store configuration."
+
+        let processManager = new Nessos.MBrace.Client.ProcessManager((fun () -> clusterConfiguration.Value.ProcessManager), StoreRegistry.DefaultStoreInfo)
+
+
+        static let initOfProxyActor(actor : Actor<MBraceNodeMsg>) = 
+            do actor.Start()
+            new MBraceRuntime(actor.Ref, [actor :> IDisposable])
+//        //
+//        // construction
+//        //
+//
+//        let runtime = runtimeActor.Ref
+//        let processManager = new Nessos.MBrace.Client.ProcessManager(runtime, StoreRegistry.DefaultStoreInfo)
+//
+
+//            
+
+//
+//        let configuration = CacheAtom.Create(fun () -> postWithReply GetAllNodes |> NodeInfo.Create)
+//
+//        member internal __.ActorRef = runtime
+//        member internal __.PostWithReply m = postWithReply m
+//        member internal __.PostWithReplyAsync m = postWithReplyAsync m
 
         //
         //  Runtime Boot/Connect methods
@@ -145,72 +82,67 @@ namespace Nessos.MBrace.Client
 
         static member ConnectAsync(uri: Uri): Async<MBraceRuntime> =
             async {
-                let node = MBraceNode uri
-                return! connect node.Ref
+                try
+                    let node = MBraceNode uri
+                    let! proxy = RuntimeProxy.connect node.Ref
+                    return initOfProxyActor proxy
+
+                with e -> return handleError e
             }
 
+        static member BootAsync (master : MBraceNode, config : BootConfiguration) : Async<MBraceRuntime> =
+            async {
+                let! proxy = RuntimeProxy.boot(master.Ref, config)
+                return initOfProxyActor proxy
+            }
+
+        static member BootAsync(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor) : Async<MBraceRuntime> = async {
+            let failoverFactor = defaultArg failoverFactor 2
+            let replicationFactor = defaultArg replicationFactor (if failoverFactor = 0 then 0 else 2)
+            let nodes = nodes |> Seq.map (fun n -> n.Ref) |> Seq.toArray
+            let! proxy = RuntimeProxy.bootNodes(nodes, replicationFactor, failoverFactor)
+            return initOfProxyActor proxy
+        }
+
         static member Connect(uri: Uri): MBraceRuntime = MBraceRuntime.ConnectAsync(uri) |> Async.RunSynchronously
-        static member Connect(host: string, port : int) : MBraceRuntime = MBraceRuntime.Connect(hostPortToUri(host, port))
+        static member Connect(host: string, port : int) : MBraceRuntime = MBraceRuntime.Connect(MBraceUri.hostPortToUri(host, port))
         static member Connect(uri: string): MBraceRuntime = MBraceRuntime.Connect(Uri(uri))
         static member ConnectAsync(uri: string): Async<MBraceRuntime> = MBraceRuntime.ConnectAsync(Uri(uri))
 
-        static member internal BootAsync (conf : Configuration) : Async<MBraceRuntime> =
-            async {
-                let runtime = createRuntimeProxy <| Array.toList conf.Nodes
-                let! _ = runtime.PostWithReplyAsync <| fun ch -> MasterBoot(ch,conf)
-                return runtime
-            }
 
-        static member internal Boot(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor) : MBraceRuntime =
-            if nodes.Length < 1 then raise <| ArgumentException("Cannot boot; insufficient nodes.")
+        static member Boot(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor) : MBraceRuntime = 
+            MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor)
+            |> Async.RunSynchronously
 
-            let nrefs = nodes |> Seq.map (fun node -> node.Ref) |> Seq.toArray
-            let replicationFactor = defaultArg replicationFactor <| min (nodes.Length - 1) 2
-            let failoverFactor = defaultArg failoverFactor <| min (nodes.Length - 1) 3
-            
-            let conf = Configuration(nrefs, replicationFactor, failoverFactor)
-
-            MBraceRuntime.BootAsync conf |> Async.RunSynchronously
-
-        static member Boot(nodes : MBraceNode list) : MBraceRuntime = MBraceRuntime.Boot(nodes, ?replicationFactor = None, ?failoverFactor = None)
-
-        static member internal InitLocal(totalNodes : int, ?hostname, ?replicationFactor : int, ?storeProvider,
+        static member InitLocal(totalNodes : int, ?hostname, ?replicationFactor : int, ?storeProvider,
                                          ?failoverFactor : int, ?debug, ?background) : MBraceRuntime =
 
-            if totalNodes < 2 then mfailwithInner (ArgumentException()) "Error spawning local runtime."
+            if totalNodes < 3 then invalidArg "totalNodes" "should have at least 3 nodes."
             let nodes = MBraceNode.SpawnMultiple(totalNodes, ?hostname = hostname, ?debug = debug,
                                                     ?storeProvider = storeProvider, ?background = background)
             
             MBraceRuntime.Boot(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor)
 
-        static member InitLocal(totalNodes : int, ?hostname, ?storeProvider, ?debug, ?background) : MBraceRuntime =
-            MBraceRuntime.InitLocal(totalNodes, 
-                            ?hostname = hostname,
-                            ?replicationFactor = None, 
-                            ?storeProvider = storeProvider,
-                            ?failoverFactor = None,
-                            ?debug = debug, 
-                            ?background = background)
+        static member FromActorRef(ref : ActorRef<MBraceNodeMsg>) = new MBraceRuntime(ref, [])
 
         //
         //  Cluster Management section
         //
 
-        member internal r.BootAsync (?replicationFactor, ?failoverFactor) : Async<unit> =
+        member r.BootAsync (?replicationFactor, ?failoverFactor) : Async<unit> =
             async {
-                if isActiveRuntime runtime then
+                if nodeConfiguration.Value.State <> Idle then
                     mfailwith "Cannot boot; runtime is already active."
                 else
-                    let! nodes = runtime <!- GetLastRecordedState
+                    let nodes = clusterConfiguration.Value.Nodes |> Array.map (fun n -> n.Reference)
+                    let config =
+                        {
+                            Nodes = nodes
+                            ReplicationFactor =  defaultArg replicationFactor <| min (nodes.Length - 1) 2
+                            FailoverFactor = defaultArg failoverFactor <| min (nodes.Length - 1) 2
+                        }
 
-                    let nodes = Array.ofList nodes
-
-                    let replicationFactor = defaultArg replicationFactor 0
-                    let failoverFactor = defaultArg failoverFactor <| min (nodes.Length - 1) 3
-
-                    let conf = Configuration(nodes,replicationFactor,failoverFactor)
-
-                    let! _ = postWithReplyAsync <| fun ch -> MasterBoot(ch,conf)
+                    let! _ = postWithReplyAsync <| fun ch -> MasterBoot(ch,config)
 
                     return ()
             }
@@ -224,11 +156,7 @@ namespace Nessos.MBrace.Client
 
         member r.BootAsync () : Async<unit> = r.BootAsync(?replicationFactor = None, ?failoverFactor = None)
         member r.RebootAsync () : Async<unit> = r.RebootAsync(?replicationFactor = None, ?failoverFactor = None)
-        member r.ShutdownAsync () : Async<unit> = 
-            async {
-                post Shutdown // TODO : make synchronous
-                do! Async.Sleep 2000
-            }
+        member r.ShutdownAsync () : Async<unit> = postWithReplyAsync ShutdownSync
 
         member r.AttachAsync (nodes : seq<MBraceNode>) : Async<unit> =
             async {
@@ -265,30 +193,43 @@ namespace Nessos.MBrace.Client
 
         member __.Ping(?silent: bool, ?timeout: int) : int =
             let silent = defaultArg silent false
-            let timeout = defaultArg timeout 10000
+            let timeout = defaultArg timeout 5000
 
             let timer = new Stopwatch()
 
             timer.Start()
-            runtime <!== ( (fun chan -> RemoteMsg(Ping(chan,silent))) , timeout )
+            runtime <!== (Ping, timeout)
             timer.Stop()
 
             int timer.ElapsedMilliseconds
 
-        member r.Id : DeploymentId = postWithReply GetDeploymentId
-        member r.Nodes : MBraceNode list = configuration.Value.Nodes
-        member r.Alts : MBraceNode list = configuration.Value.Alts
-        member r.Master : MBraceNode option = configuration.Value.Master
-        member r.Active : bool = isActiveRuntime runtime
-        member r.LocalNodes : MBraceNode list = configuration.Value.Nodes |> List.filter (fun node -> node.IsLocal)
-        member r.ShowInfo (?showPerformanceCounters : bool, ?useBorders) : unit = 
+        member r.Id : Guid = clusterConfiguration.Value.DeploymentId
+        member r.Nodes : MBraceNode list = clusterConfiguration.Value.Nodes |> Seq.map (fun n -> MBraceNode(n)) |> Seq.toList
+        member r.Alts : MBraceNode list = 
+            clusterConfiguration.Value.Nodes 
+            |> Seq.filter(fun nI -> nI.State = AltMaster) 
+            |> Seq.map (fun n -> MBraceNode(n)) 
+            |> Seq.toList
+
+        member r.Master : MBraceNode = let nI = clusterConfiguration.Value.MasterNode in MBraceNode(nI)
+        member r.Active : bool = nodeConfiguration.Value.State <> Idle
+        member r.LocalNodes : MBraceNode list = r.Nodes |> List.filter (fun node -> node.IsLocal)
+        member r.ShowInfo (?showPerformanceCounters : bool) : unit = 
             try
-                configuration.Value.Display(?displayPerfCounters = showPerformanceCounters, ?useBorders = useBorders)
-                |> printfn "%s" 
-            with e -> printfn "%s" e.Message
+                let showPerformanceCounters = defaultArg showPerformanceCounters false
+                let info =
+                    if showPerformanceCounters then
+                        postWithReply (fun ch -> GetClusterDeploymentInfo(ch, true))
+                    else
+                        clusterConfiguration.Value
+
+                Reporting.MBraceNodeReporter.Report(info.Nodes, showPerf = showPerformanceCounters, showBorder = false)
+                |> Console.WriteLine
+
+            with e -> Console.Error.WriteLine e.Message
 
         member r.GetSystemLogs() : SystemLogEntry [] = postWithReply GetLogDump
-        member r.ShowSystemLogs() : unit = r.GetSystemLogs() |> Logs.show
+        member r.ShowSystemLogs() : unit = r.GetSystemLogs() |> Reporting.Logs.show
 
         //TODO : replace with cooperative shutdowns
         /// violent kill
@@ -301,7 +242,7 @@ namespace Nessos.MBrace.Client
             (r :> IDisposable).Dispose()
 
         interface IDisposable with
-            member r.Dispose() = if isEncapsulatedActor then runtimeActor.Stop()
+            member r.Dispose() = for d in disposables do d.Dispose()
 
         member r.StoreClient : StoreClient = StoreClient.Default
 
@@ -354,30 +295,6 @@ namespace Nessos.MBrace.Client
         member __.GetAllProcesses () : Process [] = processManager.GetAllProcesses () |> Async.RunSynchronously
 
         member __.ClearProcessInfo (pid : ProcessId) : unit = processManager.ClearProcessInfo pid |> Async.RunSynchronously
-        member __.ClearProcessInfo (pid : string) : unit =  __.ClearProcessInfo (stringToProcessId pid)
         member __.ClearAllProcessInfo () : unit = processManager.ClearAllProcessInfo () |> Async.RunSynchronously
 
         member __.ShowProcessInfo (?useBorders) : unit = processManager.ShowInfo (?useBorders = useBorders)
-
-    type MBrace = MBraceRuntime
-
-//namespace Nessos.MBrace.Runtime
-//
-//    open Nessos.Thespian
-//
-//    open Nessos.MBrace.Utils
-//    open Nessos.MBrace.Client
-//
-//    [<AutoOpen>]
-//    module RuntimeExtensions =
-//
-//        type MBraceRuntime with
-//            static member FromActor(actor: Actor<RuntimeMsg>) =
-//                let wrapper = 
-//                    function
-//                    | RemoteMsg msg -> msg
-//                    | GetLastRecordedState rc -> GetAllNodes (ReplyChannel.map List.ofArray rc)
-//
-//                let wrappedActor = Actor.map wrapper actor |> Actor.start
-//
-//                new MBraceRuntime(wrappedActor, true)

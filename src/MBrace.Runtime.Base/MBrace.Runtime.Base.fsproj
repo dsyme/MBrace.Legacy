@@ -87,7 +87,9 @@
     <Compile Include="Compiler\Compiler.fs" />
     <Compile Include="RuntimeBase\SystemLog.fs" />
     <Compile Include="RuntimeBase\CloudProcessLog.fs" />
-    <Compile Include="RuntimeBase\Runtime.fs" />
+    <Compile Include="RuntimeBase\PerformanceMonitor.fs" />
+    <Compile Include="RuntimeBase\ProcessManager.fs" />
+    <Compile Include="RuntimeBase\MBraceNode.fs" />
     <Compile Include="RuntimeBase\Utils.fs" />
     <Compile Include="RuntimeBase\DaemonConfig.fs" />
     <Compile Include="RuntimeBase\WorkerConfig.fs" />
@@ -100,6 +102,7 @@
       <HintPath>..\..\packages\FsPickler.0.8.6.2\lib\net45\FsPickler.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Mono.Cecil">
       <HintPath>..\..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.dll</HintPath>
       <Private>True</Private>

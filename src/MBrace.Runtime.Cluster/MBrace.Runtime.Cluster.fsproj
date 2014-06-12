@@ -60,7 +60,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="ClusterBase\CommonTypes.fs" />
-    <Compile Include="ClusterBase\PerformanceMonitor.fs" />
     <Compile Include="ClusterBase\ContinuationMap.fs" />
     <Compile Include="ClusterBase\Logger.fs" />
     <Compile Include="ClusterBase\AssemblyManager.fs" />

@@ -205,7 +205,7 @@ namespace Nessos.MBrace.Utils
         with
             static member Local =
                 let hostname = Dns.GetHostName()
-                let ifs = Dns.GetHostAddresses(hostname) |> Seq.map (fun i -> i.ToString()) |> Set.ofSeq
+                let ifs = Dns.GetHostAddresses(hostname) |> Array.map (fun i -> i.ToString()) |> Set.ofArray
                 { HostName = hostname ; Interfaces = ifs }
 
         /// inherit this class if you want to scrap all the comparison boilerplate

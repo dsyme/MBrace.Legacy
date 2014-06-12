@@ -29,6 +29,7 @@
         type ProcessBody = ProcessBody of (ResultType * ThunksIdsStack * ICloudRef<FunctionInfo list> * Dump)
         type ExprImage = byte[] //The binary image of an Expr
         type TaskId = Nessos.MBrace.Core.TaskId
+        type ProcessId = Nessos.MBrace.Core.ProcessId
         type TaskHeader = ProcessId * TaskId
 
         type TaskResult = TaskSuccess of ProcessBody | TaskFailure of exn
@@ -37,7 +38,7 @@
             {
                 ProcessId: ProcessId
                 ClientId: Guid
-                RequestId: RequestId
+                RequestId: Guid
                 Name: string
                 Type: byte[]
                 TypeName: string
@@ -47,7 +48,7 @@
                 Completed: DateTime option
                 TasksRecovered: int
                 Dependencies : AssemblyId list
-                Result: ExecuteResultImage option
+                Result: ProcessResultImage
                 State: ProcessState
             }
 
@@ -130,7 +131,7 @@
 
         and ProcessCreationData = {
             ClientId: Guid
-            RequestId: RequestId
+            RequestId: Guid
             Name: string
             Type: byte[]
             TypeName: string
@@ -150,8 +151,8 @@
         //    | NotifyProcessWorkersAllocated of ProcessId * (ActorRef<WorkerManager> * ActorRef<ProcessDomainManager>) []
         //    | NotifyProcessWorkerDeallocated of ProcessId * ActorRef<WorkerManager>
             | NotifyProcessStarted of ProcessId * DateTime
-            | NotifyRecoverState of ProcessId * ProcessRecoveryType option
-            | CompleteProcess of ProcessId * ExecuteResultImage
+//            | NotifyRecoverState of ProcessId * ProcessRecoveryType option
+            | CompleteProcess of ProcessId * ProcessResultImage
             | DestroyProcess of ProcessId
             | NotifyProcessTaskRecovery of ProcessId * int
             | FreeProcess of ProcessId
@@ -163,9 +164,9 @@
             | TryGetProcessInfo of IReplyChannel<ProcessInfo option> * ProcessId
             //Throws
             //SystemCorruptionException => system inconsistency;; SYSTEM FAULT
-            | TryGetProcessInfoByRequestId of IReplyChannel<ProcessInfo option> * RequestId
-            | TryGetProcessResult of IReplyChannel<ExecuteResultImage option option> * ProcessId
-            | GetResult of IReplyChannel<ExecuteResultImage> * ProcessId
+            | TryGetProcessInfoByRequestId of IReplyChannel<ProcessInfo option> * requestId:Guid
+            | TryGetProcessResult of IReplyChannel<ProcessResultImage option> * ProcessId
+            | GetResult of IReplyChannel<ProcessResultImage> * ProcessId
             | GetAllProcessInfo of IReplyChannel<ProcessInfo []>
 
         and AssemblyManager =

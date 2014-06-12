@@ -137,7 +137,7 @@
             try
                 let title = sprintf "{m}brace session started on %O." session.StartedOn
                     
-                MBraceNode.PrettyPrint(nodes, header = title, useBorders = false) |> printfn "%s"
+                MBraceNode.PrettyPrint(nodes, title = title, useBorders = false) |> printfn "%s"
             with e -> exiter.Exit(sprintf "mbracectl: unexpected error: %s" e.Message, 5)
 
         let spawnNodes spawnWindows (multiNode : (int * bool) option) =

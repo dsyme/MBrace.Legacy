@@ -64,17 +64,18 @@ let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)
         return {
             Name = record.Name
             ProcessId = record.ProcessId
-            Type = record.Type
+            TypeRaw = record.Type
             InitTime = record.Initialized
             TypeName = record.TypeName
             ExecutionTime = match record.Started, record.Completed with
                             | Some whenStarted, Some whenCompleted -> whenCompleted - whenStarted
                             | Some whenStarted, None -> DateTime.Now - whenStarted
                             | None, _ -> TimeSpan.FromMilliseconds 0.
+
             Workers = workerCount
             Tasks = taskCount
-            Result = record.Result
-            ProcessState = record.State
+            ResultRaw = record.Result
+            State = record.State
             Dependencies = record.Dependencies
             ClientId = record.ClientId
         }
@@ -87,10 +88,10 @@ let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)
         | InitializeProcess(RR ctx reply, data) ->
             //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
             try
-                if db.Process.DataMap.Count >= Utils.PidSlots then 
+                if db.Process.DataMap.Count >= ProcessId.PidSlots then 
                         return! Async.Raise <| new SystemException("Pid Allocator ran out of slots.")
 
-                let pid = Utils.genNextPid (fun p -> not <| db.Process.DataMap.ContainsKey p)
+                let pid = ProcessId.generateUniqueProcessId (fun p -> db.Process.DataMap.ContainsKey p)
 
                 let processRecord = {
                     ProcessId = pid
@@ -105,7 +106,7 @@ let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)
                     Completed = None
                     TasksRecovered = 0
                     Dependencies = data.Dependencies
-                    Result = None
+                    Result = Pending
                     State = Initialized
                 }
 
@@ -158,33 +159,33 @@ let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)
 
                 return same state
 
-        | NotifyRecoverState(processId, None) ->
-            try
-                let db' = 
-                    match db.Process.DataMap.TryFind processId with
-                    | Some record -> db |> Database.insert <@ fun db -> db.Process @> { record with State = Running }
-                    | None -> db
+//        | NotifyRecoverState(processId, None) ->
+//            try
+//                let db' = 
+//                    match db.Process.DataMap.TryFind processId with
+//                    | Some record -> db |> Database.insert <@ fun db -> db.Process @> { record with State = Running }
+//                    | None -> db
+//
+//                return update state db'
+//            with e ->
+//                ctx.LogError e
+//                //TODO!!! trigger system fault
+//
+//                return same state
 
-                return update state db'
-            with e ->
-                ctx.LogError e
-                //TODO!!! trigger system fault
-
-                return same state
-
-        | NotifyRecoverState(processId, Some recoveryMode) ->
-            try
-                let db' =
-                    match db.Process.DataMap.TryFind processId with
-                    | Some record -> db |> Database.insert <@ fun db -> db.Process @> { record with State = Recovering recoveryMode }
-                    | None -> db
-
-                return update state db'
-            with e ->
-                ctx.LogError e
-                //TODO!!! trigger system fault
-
-                return same state
+//        | NotifyRecoverState(processId, Some recoveryMode) ->
+//            try
+//                let db' =
+//                    match db.Process.DataMap.TryFind processId with
+//                    | Some record -> db |> Database.insert <@ fun db -> db.Process @> { record with State = Recovering recoveryMode }
+//                    | None -> db
+//
+//                return update state db'
+//            with e ->
+//                ctx.LogError e
+//                //TODO!!! trigger system fault
+//
+//                return same state
 
         | CompleteProcess(processId, resultImage) ->
             try
@@ -192,7 +193,16 @@ let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)
 
                 let db' =
                     match db.Process.DataMap.TryFind processId with
-                    | Some record -> db |> Database.insert <@ fun db -> db.Process @> { record with Completed = Some DateTime.Now; Result = Some resultImage; State = match resultImage with ProcessInitError _ | ProcessSuccess _ | ProcessKilled _ -> Completed | ProcessFault _ -> Failed }
+                    | Some record -> 
+                        let state = 
+                            match resultImage with 
+                            | Pending -> Running 
+                            | InitError _ -> Failed
+                            | Success _ | UserException _  -> Completed
+                            | Fault _ -> Failed
+                            | Killed _ -> ProcessState.Killed
+
+                        db |> Database.insert <@ fun db -> db.Process @> { record with Completed = Some DateTime.Now; Result = resultImage; State = state }
                     | None -> db //TODO!!! Log a warning
 
                 if ctx.Self.Name.Contains "local" then
@@ -294,7 +304,7 @@ let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)
 
                 //Throws
                 //KeyNotFoundException
-                reply (Value result.Result.Value)
+                reply (Value result.Result)
             with :? System.Collections.Generic.KeyNotFoundException as e ->
                     reply (Exception e)
                 | e ->

@@ -17,40 +17,41 @@
     open Nessos.MBrace.Runtime.Utils
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Daemon.Configuration
+    
+    open Nessos.MBrace.Client.Reporting
 
     type private MBraceNodeMsg = Nessos.MBrace.Runtime.MBraceNode
 
+    type NodePerformanceInfo = Nessos.MBrace.Runtime.PerformanceMonitor.NodePerformanceInfo
     type Permissions = Nessos.MBrace.Runtime.Permissions
-
-    module internal Logs =
-
-        let show (logs : seq<SystemLogEntry>) =
-            logs
-            |> Seq.map (fun e -> e.Print(showDate = true))
-            |> String.concat "\n"
-            |> printfn "%s"
 
     ///The type representing a {m}brace node.
     [<Sealed; NoEquality; NoComparison; AutoSerializable(false)>]
-    type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri: Uri) as self =
+    type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri : Uri) as self =
 
         static do MBraceSettings.ClientId |> ignore
 
         let handleError (e : exn) : 'T =
             match e with
-            | MessageHandlingExceptionRec e ->
-                mfailwithfInner e "Node %A has replied with exception." self
-            | CommunicationException _ ->
-                mfailwithf "Cannot communicate with %A." self
-            | :? TimeoutException ->
-                mfailwith "Timed out while connecting to %A." self
+            | :? CommunicationException
+            | :? TimeoutException -> mfailwith "Timed out while connecting to '%O'." self
+            | MessageHandlingExceptionRec e -> mfailwithfInner e "Node '%O' has replied with exception." self
             | _ -> reraise' e
 
-        let nodeInfo = CacheAtom.Create((fun () -> Utils.getNodeInfo nodeRef), interval = 100, keepLastResultOnError = true)
+        let nodeInfo = 
+            CacheAtom.Create(
+                (fun () ->
+                    let info : NodeDeploymentInfo = self.GetNodeInfoAsync(false) |> Async.RunSynchronously
+                    let proc = info.TryGetLocalProcess()
+                    info, proc), 
+                        
+                        interval = 100, keepLastResultOnError = true)
 
         internal new (nref: ActorRef<MBraceNodeMsg>) =
             let uri = ActorRef.toUri nref |> MBraceUri.actorUriToMbraceUri
             MBraceNode(nref, uri)
+
+        internal new (info : NodeDeploymentInfo) = MBraceNode(info.Reference, info.Uri)
 
         /// Create a new MBraceNode object. No node is spawned.
         new (uri: Uri) =
@@ -58,7 +59,7 @@
             MBraceNode(nref, uri)
 
         /// Create a new MBraceNode object. No node is spawned.
-        new (hostname : string, port : int) = MBraceNode(hostPortToUri(hostname, port))
+        new (hostname : string, port : int) = MBraceNode(MBraceUri.hostPortToUri(hostname, port))
 
          /// Create a new MBraceNode object. No node is spawned.
         new (uri : string) = MBraceNode(new Uri(uri))
@@ -74,20 +75,20 @@
         member __.Permissions
             with get () : Permissions = (fst nodeInfo.Value).Permissions
             and  set (newPermissions: Permissions) =
-                try setPermissions newPermissions <| nodeRef
+                try nodeRef <-- SetNodePermissions newPermissions
                 with e -> handleError e
 
         /// Sets whether the node has slave permissions.
         member n.IsPermittedSlave
-            with get() = try n.Permissions.HasFlag Permissions.Slave with e -> handleError e
-            and  set (x: bool) = try switchPermissionFlag x Permissions.Slave n.Permissions nodeRef with e -> handleError e
+            with get() = n.Permissions.HasFlag Permissions.Slave
+            and  set (x: bool) = n.Permissions <- Permissions.switch x Permissions.Slave n.Permissions
 
         /// Sets whether the node has master permissions.
         member n.IsPermittedMaster
-            with get () = try n.Permissions.HasFlag Permissions.Slave with e -> handleError e
-            and  set (x: bool) = try switchPermissionFlag x Permissions.Master n.Permissions nodeRef with e -> handleError e
+            with get () = n.Permissions.HasFlag Permissions.Slave
+            and  set (x: bool) = n.Permissions <- Permissions.switch x Permissions.Slave n.Permissions 
 
-        member n.State : NodeType = (fst nodeInfo.Value).State
+        member n.State : NodeState = (fst nodeInfo.Value).State
         member n.DeploymentId = (fst nodeInfo.Value).DeploymentId
         member n.IsActive = n.State <> Idle
 
@@ -99,15 +100,22 @@
                 let timer = new Stopwatch()
 
                 timer.Start()
-                nodeRef <!== ( (fun chan -> Ping(chan,silent)) , timeout )
+                nodeRef <!== (Ping , timeout)
                 timer.Stop()
 
                 int timer.ElapsedMilliseconds
             with e -> handleError e
 
+        member internal __.GetNodeInfoAsync getPerformanceCounters = async {
+            try
+                return! nodeRef <!- fun ch -> GetNodeDeploymentInfo(ch, getPerformanceCounters)
+            with e ->
+                return handleError e
+        }
+
         member __.GetPerformanceCounters () : NodePerformanceInfo =
-            try nodeRef <!= GetNodePerformanceCounters
-            with e -> handleError e
+            let info = __.GetNodeInfoAsync true |> Async.RunSynchronously
+            info.PerformanceInfo |> Option.get
 
         member n.GetSystemLogs () : SystemLogEntry [] =
             try nodeRef <!= GetLogDump
@@ -193,8 +201,8 @@
             } |> Async.RunSynchronously
 
         static member SpawnAsync(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
-                                    ?permissions : Permissions, ?serializerName : string, ?compressSerialization : bool, ?debug : bool,
-                                    ?workingDirectory : string, ?useTemporaryWorkDir : bool, ?background : bool, ?storeProvider : StoreProvider) : Async<MBraceNode> = 
+                                    ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
+                                    ?background : bool, ?storeProvider : StoreProvider) : Async<MBraceNode> = 
             async {
                 let debug = defaultArg debug false
                 let useTemporaryWorkDir = defaultArg useTemporaryWorkDir false
@@ -226,23 +234,20 @@
             }
 
         static member Spawn(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
-                                    ?permissions : Permissions, ?serializerName : string, ?compressSerialization : bool, ?debug : bool,
-                                    ?workingDirectory : string, ?useTemporaryWorkDir : bool, ?background : bool, ?storeProvider : StoreProvider) : MBraceNode =
+                                    ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
+                                    ?background : bool, ?storeProvider : StoreProvider) : MBraceNode =
 
             MBraceNode.SpawnAsync(?hostname = hostname, ?primaryPort = primaryPort, ?workerPorts = workerPorts, ?logFiles = logFiles,
-                                        ?logLevel = logLevel, ?permissions = permissions, ?serializerName = serializerName, 
-                                        ?compressSerialization = compressSerialization, ?debug = debug, ?workingDirectory = workingDirectory,
+                                        ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?workingDirectory = workingDirectory,
                                         ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?storeProvider = storeProvider)
             |> Async.RunSynchronously
 
         static member SpawnMultiple(nodeCount : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                        ?permissions : Permissions, ?serializerName : string, ?compressSerialization : bool, ?debug : bool, 
-                                        ?background : bool, ?storeProvider : StoreProvider) : MBraceNode list =
+                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeProvider : StoreProvider) : MBraceNode list =
         
             let spawnSingle primary pool =
                     MBraceNode.SpawnAsync(?hostname = hostname, primaryPort = primary, workerPorts = pool, ?logFiles = logFiles,
-                                            ?logLevel = logLevel, ?permissions = permissions, ?serializerName = serializerName,
-                                                ?compressSerialization = compressSerialization, ?debug = debug, ?background = background,
+                                            ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?background = background,
                                                     ?storeProvider = storeProvider, useTemporaryWorkDir = true)
             async {
                 let workerPortsPerNode = defaultArg workerPortsPerNode 7
@@ -264,101 +269,12 @@
             } |> Async.RunSynchronously
 
 
-        static member PrettyPrint(nodes : MBraceNode list, ?displayPerfCounters, ?header, ?useBorders) : string =
-            NodeInfo.PrettyPrint([nodes], ?displayPerfCounters = displayPerfCounters, ?header = header, ?useBorders = useBorders)
+        static member PrettyPrintAsync(nodes : seq<MBraceNode>, ?displayPerfCounters, ?title, ?useBorders) : Async<string> = async {
+            let displayPerfCounters = defaultArg displayPerfCounters false
+            let! nodeInfo = nodes |> Seq.map (fun n -> n.GetNodeInfoAsync(displayPerfCounters)) |> Async.Parallel
+            return MBraceNodeReporter.Report(nodeInfo, displayPerfCounters, ?title = title, ?showBorder = useBorders)
+        }
 
-
-    //
-    // Node & Runtime information display types
-    //
-
-    and internal NodeInfo (nodes : seq<MBraceNode>) =
-
-        let roleTable =
-            nodes
-            |> Seq.groupBy (fun node -> node.State)
-            |> Seq.map (fun (role, info) -> role, List.ofSeq info)
-            |> Map.ofSeq
-
-        let getByRole key = defaultArg (roleTable.TryFind key) []
-
-        let master = match getByRole Master with [] -> None | h :: _ -> Some h
-
-        // node pretty printer
-        static let prettyPrint =
-            let template : Field<MBraceNode> list =
-                [
-                    Field.create "Host" Left (fun n -> n.Uri.Host)
-                    Field.create "Port" Right (fun n -> n.Uri.Port)
-                    Field.create "Role" Left (fun n -> n.State)
-                    Field.create "Location" Left (fun n -> match n.Process with Some p -> sprintf' "Local (Pid %d)" p.Id | _ -> "Remote")
-                    Field.create "Connection String" Left (fun n -> n.Uri)
-                ]
-
-            Record.prettyPrint template
-
-        static let prettyPrintPerf =
-            let template : Field<MBraceNode * NodePerformanceInfo> list =
-                [
-                    Field.create "Host" Left (fun (n,_) -> n.Uri.Host)
-                    Field.create "Port" Right (fun (n,_) -> n.Uri.Port)
-                    Field.create "Role" Left (fun (n,_) -> n.State)
-                    Field.create "%Cpu" Right (fun (_,p) -> p.TotalCpuUsage)
-                    Field.create "%Cpu(avg)" Right (fun (_,p) -> p.TotalCpuUsageAverage)
-                    Field.create "Memory(MB)" Right (fun (_,p) -> p.TotalMemory)
-                    Field.create "%Memory" Right (fun (_,p) -> p.TotalMemoryUsage)
-                    Field.create "Network(ul/dl: kbps)" Right (fun (_,p) -> p.TotalNetworkUsage)
-                ]
-
-            Record.prettyPrint template
-
-        static member Create (nrefs : NodeRef seq) = NodeInfo (nrefs |> Seq.map (fun n -> MBraceNode n))
-
-        static member internal PrettyPrint(nodes : MBraceNode list list, ?displayPerfCounters, ?header, ?useBorders) =
-            let useBorders = defaultArg useBorders false
-            let displayPerfCounter = defaultArg displayPerfCounters false
-
-            let parMap (f : 'T -> 'S) (inputs : 'T list list) = 
-                inputs 
-                |> List.toArray
-                |> Array.Parallel.map (Array.ofList >> Array.Parallel.map f >> Array.toList)
-                |> List.ofArray
-
-            if displayPerfCounter then
-                // force lookup of nodes in parallel
-                let info = nodes |> parMap (fun n -> n, n.GetPerformanceCounters())
-                prettyPrintPerf header useBorders info
-            else
-                prettyPrint header useBorders nodes
-
-        member __.Master = master
-        member __.Slaves = getByRole Slave
-        member __.Alts = getByRole Alt
-        member __.Idle = getByRole Idle
-
-        member conf.Nodes =
-            [
-                yield! conf.Master |> Option.toList
-                yield! conf.Alts
-                yield! conf.Slaves
-                yield! conf.Idle
-            ]
-
-        member conf.Display(?displayPerfCounters, ?useBorders) =
-            let title =
-                if master.IsSome then "{m}brace runtime information (active)"
-                else "{m}brace runtime information (inactive)"
-
-            let nodes =
-                [
-                    yield master |> Option.toList
-                    yield getByRole Alt 
-                    yield getByRole Slave
-                    yield getByRole Idle
-                ]
-
-            NodeInfo.PrettyPrint(nodes, ?displayPerfCounters = displayPerfCounters, header = title, ?useBorders = useBorders)
-
-
-
-    type Node = MBraceNode
+        static member PrettyPrint(nodes : seq<MBraceNode>, ?displayPerfCounters, ?title, ?useBorders) =
+            MBraceNode.PrettyPrintAsync(nodes, ?displayPerfCounters = displayPerfCounters, ?title = title, ?useBorders = useBorders)
+            |> Async.RunSynchronously

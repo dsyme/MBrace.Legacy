@@ -18,6 +18,8 @@
     open Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Utils
+
+    open Nessos.MBrace.Client.Reporting
     
     open Microsoft.FSharp.Quotations
 
@@ -42,36 +44,46 @@
             | Fault e -> reraise' e
             | Killed -> mfailwith "process has been user terminated."
 
-    module internal ProcessInfo =
+        static member internal OfProcessInfo(info : ProcessInfo) =
+            match info.ResultRaw with
+            | ProcessResultImage.Pending -> Pending
+            | ProcessResultImage.InitError e -> InitError e
+            | ProcessResultImage.Success _ as result -> Success (ProcessResultImage.GetUserValue result :?> 'T)
+            // CloudDump is discarded here; maybe use somehow?
+            | ProcessResultImage.UserException _ as result -> UserException(ProcessResultImage.GetUserExceptionInfo result |> fst)
+            | ProcessResultImage.Fault e -> Fault e
+            | ProcessResultImage.Killed -> Killed
 
-        let getResult<'T> (info : ProcessInfo) =
-            match info.Result with
-            | None -> Pending
-            | Some(ProcessSuccess bytes) ->
-                match Serialization.Deserialize<Result<obj>> bytes with
-                | ValueResult v -> Success (v :?> 'T)
-                | ExceptionResult (e, ctx) -> UserException e
-            | Some(ProcessFault e) -> Fault e
-            | Some(ProcessInitError e) -> InitError e
-            | Some(ProcessKilled) -> Killed
-
-        let getReturnType (info : ProcessInfo) = Serialization.Deserialize<Type> info.Type
-
-        let prettyPrint =
-
-            let template : Field<ProcessInfo> list =
-                [
-                    Field.create "Name" Left (fun p -> p.Name)
-                    Field.create "Process Id" Right (fun p -> p.ProcessId)
-                    Field.create "Status" Left (fun p -> p.ProcessState)
-                    Field.create "#Workers" Right (fun p -> p.Workers)
-                    Field.create "#Tasks" Right (fun p -> p.Workers)
-                    Field.create "Start Time" Left (fun p -> p.InitTime)
-                    Field.create "Execution Time" Left (fun p -> p.ExecutionTime)
-                    Field.create "Result Type" Left (fun p -> p.TypeName)
-                ]
-
-            Record.prettyPrint3 template None
+//    module internal ProcessInfo =
+//
+//        let getResult<'T> (info : ProcessInfo) =
+//            match info.Result with
+//            | None -> Pending
+//            | Some(ProcessSuccess bytes) ->
+//                match Serialization.Deserialize<Result<obj>> bytes with
+//                | ValueResult v -> Success (v :?> 'T)
+//                | ExceptionResult (e, ctx) -> UserException e
+//            | Some(ProcessFault e) -> Fault e
+//            | Some(ProcessInitError e) -> InitError e
+//            | Some(ProcessKilled) -> Killed
+//
+//        let getReturnType (info : ProcessInfo) = Serialization.Deserialize<Type> info.Type
+//
+//        let prettyPrint =
+//
+//            let template : Field<ProcessInfo> list =
+//                [
+//                    Field.create "Name" Left (fun p -> p.Name)
+//                    Field.create "Process Id" Right (fun p -> p.ProcessId)
+//                    Field.create "Status" Left (fun p -> p.ProcessState)
+//                    Field.create "#Workers" Right (fun p -> p.Workers)
+//                    Field.create "#Tasks" Right (fun p -> p.Workers)
+//                    Field.create "Start Time" Left (fun p -> p.InitTime)
+//                    Field.create "Execution Time" Left (fun p -> p.ExecutionTime)
+//                    Field.create "Result Type" Left (fun p -> p.TypeName)
+//                ]
+//
+//            Record.prettyPrint3 template None
 
     [<AbstractClass>]
     type Process internal (processId : ProcessId, returnType : Type, processManager : ProcessManager) =
@@ -87,7 +99,7 @@
         member p.ReturnType : Type = returnType
         member internal p.ProcessInfo : ProcessInfo = processInfo.Value
         member p.ExecutionTime : TimeSpan = processInfo.Value.ExecutionTime
-        member p.Complete : bool = processInfo.Value.Result.IsSome
+        member p.Complete : bool = processInfo.Value.ResultRaw <> ProcessResultImage.Pending
         member p.InitTime : DateTime = processInfo.Value.InitTime
         member p.Workers : int = processInfo.Value.Workers
         member p.Tasks : int = processInfo.Value.Tasks
@@ -103,10 +115,8 @@
 
             existential.Apply ctor
 
-        // TODO : only printable in shell mode
-        member p.ShowInfo (?useBorders) =
-            let useBorders = defaultArg useBorders false
-            [processInfo.Value] |> ProcessInfo.prettyPrint useBorders |> printfn "%s"
+        // TODO : should only be printable in shell mode
+        member p.ShowInfo (?useBorders) = MBraceProcessReporter.Report [processInfo.Value]
 
         member p.Kill () : unit = processManager.Kill processId |> Async.RunSynchronously
         member p.GetLogs () : CloudLogEntry [] = p.GetLogsAsync () |> Async.RunSynchronously
@@ -165,7 +175,7 @@
 
         member p.Result : ProcessResult<'T> =
             let info = base.ProcessInfo
-            ProcessInfo.getResult<'T> info
+            ProcessResult<'T>.OfProcessInfo info
 
         member p.TryGetResult () : 'T option = p.Result.TryGetValue()
         member p.AwaitResultAsync(?pollingInterval) : Async<'T> = async {
@@ -195,16 +205,14 @@
             |> Async.RunSynchronously
 
 
-    and internal ProcessManager (runtime: ActorRef<ClientRuntimeProxy>, storeInfo : StoreInfo) =
+    and internal ProcessManager (processManagerF : unit -> ActorRef<ProcessManagerMsg>, storeInfo : StoreInfo) =
         
         // keep track of process id's handled by process manager
         let processes = Atom.atom Set.empty<ProcessId>
 
-        let processManagerActor = CacheAtom.Create(fun () -> runtime <!= (RemoteMsg << GetProcessManager))
-
         let post (msg : ProcessManagerMsg) =
             try
-                do processManagerActor.Value.Post msg
+                do processManagerF().Post msg
             with
             | MBraceExn e -> reraise' e
             | :? CommunicationException as e -> mfailwithInner e "Cannot communicate with runtime."
@@ -212,7 +220,7 @@
 
         let postWithReply (msgB : IReplyChannel<'R> -> ProcessManagerMsg) = async {
             try
-                return! processManagerActor.Value <!- msgB
+                return! processManagerF() <!- msgB
             with
             | MBraceExn e -> return reraise' e
             | :? CommunicationException as e -> return mfailwithInner e "Cannot communicate with runtime."
@@ -254,8 +262,8 @@
 
         member pm.GetProcess (pid : ProcessId) = async {
             do! pm.DownloadProcessDependencies pid
-            let! info = processManagerActor.Value <!- fun ch -> GetProcessInfo(ch, pid)
-            let returnType = ProcessInfo.getReturnType info
+            let! info = postWithReply <| fun ch -> GetProcessInfo(ch, pid)
+            let returnType = info.Type
 
             return Process.CreateUntyped(returnType, pid, pm)
         }
@@ -273,7 +281,7 @@
         member pm.ClearAllProcessInfo () = postWithReply ClearAllProcessInfo
 
         member pm.CreateProcess<'T> (comp : CloudComputation<'T>) : Async<Process<'T>> = async {
-            let requestId = RequestId.NewGuid()
+            let requestId = Guid.NewGuid()
 
             let dependencyUploader =
                 {
@@ -288,7 +296,7 @@
             // serialization errors for dynamic assemblies
             let! errors = MBraceSettings.Vagrant.SubmitAssemblies(dependencyUploader, comp.Dependencies)
 
-            let rawImage = comp.GetRawImage()
+            let rawImage = MBraceSettings.CloudCompiler.GetRawImage comp
 
             let! info = postWithReply <| fun ch -> CreateDynamicProcess(ch, requestId, rawImage)
 
@@ -299,11 +307,8 @@
 
         member pm.Kill (pid : ProcessId) = postWithReply <| fun ch -> KillProcess(ch, pid)
 
-        // TODO : only printable in shell mode!!
+        // TODO : should only be printable in shell mode
         member pm.ShowInfo (?useBorders) =
-            let useBorders = defaultArg useBorders false
-            postWithReply GetAllProcessInfo
-            |> Async.RunSynchronously
-            |> Array.toList
-            |> ProcessInfo.prettyPrint useBorders 
-            |> printfn "%s"
+            let info = postWithReply GetAllProcessInfo |> Async.RunSynchronously |> Array.toList
+            MBraceProcessReporter.Report(info, ?showBorder = useBorders)
+            |> Console.WriteLine

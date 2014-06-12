@@ -16,7 +16,7 @@ open Nessos.MBrace.Runtime.Logging
 open Nessos.MBrace.Runtime.Store
 
 // updated state event
-let internal StateChangeEvent = new Event<NodeType>()
+let internal StateChangeEvent = new Event<NodeState>()
 /// node state observable
 let stateChangeObservable = StateChangeEvent.Publish
 
@@ -35,7 +35,7 @@ type State =
 with
     static member Empty = { DeploymentId = Guid.Empty; Permissions = IoC.Resolve<Permissions>() }
 
-let private initMultiNodeRuntime (ctx: BehaviorContext<_>) (configuration: Configuration) nodes = 
+let private initMultiNodeRuntime (ctx: BehaviorContext<_>) (configuration: BootConfiguration) nodes = 
     async {
         let isInMemory = nodes |> Seq.forall ActorRef.isCollocated
 
@@ -72,7 +72,7 @@ let private initMultiNodeRuntime (ctx: BehaviorContext<_>) (configuration: Confi
         let alts = altAddresses |> Array.map (fun addr -> Remote.TcpProtocol.ActorRef.fromUri (sprintf' "btcp://%O/*/runtime/%s" addr serializerName) : ActorRef<MBraceNode>)
 
         return alts
-    }
+    }    
 
 let private addressToRuntime (address: Address): ActorRef<MBraceNode> =
     let serializerName = Nessos.Thespian.Serialization.SerializerRegistry.GetDefaultSerializer().Name
@@ -80,6 +80,42 @@ let private addressToRuntime (address: Address): ActorRef<MBraceNode> =
     
 type private LogLevel = Nessos.Thespian.LogLevel
 type private NodeType = Nessos.Thespian.Cluster.Common.NodeType
+
+
+let private getNodeDeploymentInfo self nodeType permissions includePerfCounters =
+    let nodeState =
+        match nodeType with
+        // TODO : AltMaster is not properly reported here
+        | NodeType.Master -> NodeState.Master
+        | NodeType.Slave -> NodeState.Slave
+        | NodeType.Idle -> NodeState.Idle
+
+    NodeDeploymentInfo.CreateLocal(permissions, nodeState, self, includePerfCounters)
+
+let private getClusterDeploymentInfo deploymentId self nodeType permissions includePerfCounters (restNodes : ActorRef<MBraceNode> []) = async {
+    
+    let gatherThisNode = async { return getNodeDeploymentInfo self nodeType permissions includePerfCounters }
+    let gatherOthers = restNodes |> Array.map (fun n -> n <!- fun ch -> GetNodeDeploymentInfo(ch, includePerfCounters))
+
+    let! nodeInfo = seq { yield gatherThisNode ; yield! gatherOthers } |> Async.Parallel
+
+    let! r = Cluster.ClusterManager <!- fun ch -> ResolveActivationRefs(ch, empDef/"master"/"processManager" |> ActivationReference.FromPath)
+                    
+    //Throws
+    //KeyNotFoundException => allow to fall through;; SYSTEM FAULT
+    //InvalidCastException => allow to fall through;; SYSTEM FAULT
+    let processManager = r.[0] :?> ActorRef<ProcessManager>
+    
+    return
+        {
+            DeploymentId = deploymentId
+            MasterNode = nodeInfo |> Array.find (fun n -> n.State = Master)
+            Nodes = nodeInfo
+            StoreId = StoreRegistry.DefaultStoreInfo.Id
+            ProcessManager = processManager
+        }
+}
+
 
 let rec private triggerNodeFailure (innerException: exn) (ctx: BehaviorContext<_>) (state: State) (msg: MBraceNodeManager) =
     let reply r = 
@@ -95,21 +131,15 @@ let rec private triggerNodeFailure (innerException: exn) (ctx: BehaviorContext<_
     async {
         match msg with
         | MasterBoot(RR ctx r, _) -> reply r 
-        | GetProcessManager(RR ctx r) -> reply r
-        | GetMasterAndAlts(RR ctx r) -> reply r
-        | GetDeploymentId(RR ctx r) -> reply r
-        | GetStoreId(RR ctx r) -> reply r
-        | GetAllNodes(RR ctx r) -> reply r
         | GetLogDump(RR ctx r) -> reply r
         | Attach(RR ctx r, _) -> reply r
         | Detach(RR ctx r) -> reply r
-//        | GetNodeState(RR ctx r) -> reply r
-//        | GetNodePermissions(RR ctx r) -> reply r
-        | GetNodeDeploymentInfo(RR ctx r) -> reply r
-        | Ping(RR ctx r, _) -> reply r
-        | GetNodePerformanceCounters(RR ctx r) -> reply r
+        | GetNodeDeploymentInfo(RR ctx r,_) -> reply r
+        | GetClusterDeploymentInfo(RR ctx r,_) -> reply r
+        | Ping(RR ctx r) -> reply r
         | GetInternals(RR ctx r) -> reply r
         | ShutdownSync(RR ctx r) -> reply r
+        | ResetNodeState(RR ctx r) -> reply r
         | SetNodePermissions _
         | Shutdown -> warning()
 
@@ -150,7 +180,7 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
             | MasterBoot(RR ctx reply, configuration) when nodeType = NodeType.Idle ->
                 try
                     // preactively trigger state change on master boot
-                    do StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeType.Master)
+                    do StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeState.Master)
                 
                     ctx.LogInfo "MASTER BOOT..."
                     ctx.LogInfo "---------------------"
@@ -183,7 +213,8 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
 
                     ctx.LogInfo "BOOT COMPLETE."
 
-                    reply <| Value (ctx.Self, alts)
+                    let! info = getClusterDeploymentInfo deploymentId ctx.Self NodeType.Master state.Permissions false nodes
+                    reply <| Value info
 
                     return stay { state with DeploymentId = deploymentId }
                 with e ->
@@ -194,103 +225,137 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
 
                 return stay state
 
-            | GetProcessManager(RR ctx reply) when nodeType <> NodeType.Idle ->
-                try
-                    //FaultPoint
-                    //-
-                    let! r = Cluster.ClusterManager <!- fun ch -> ResolveActivationRefs(ch, empDef/"master"/"processManager" |> ActivationReference.FromPath)
-                    
-                    //Throws
-                    //KeyNotFoundException => allow to fall through;; SYSTEM FAULT
-                    //InvalidCastException => allow to fall through;; SYSTEM FAULT
-                    let processManager = r.[0] :?> ActorRef<ProcessManager>
-
-                    reply (Value processManager)
-
-                    return stay state
-                with FailureException _ as e ->
-                        reply (Exception e)
-                        return stay state  
-                    | e -> return! triggerNodeFailure e ctx state msg
-
-            | GetProcessManager(RR ctx reply) ->
-                reply <| Exception(new InvalidOperationException("Node is idle."))
-
-                return stay state
-
-            | GetStoreId(RR ctx reply) ->
-                try
-                    reply <| Value StoreRegistry.DefaultStoreInfo.Id
-
-                    return stay state
-                with e ->
-                    return! triggerNodeFailure e ctx state msg
-
-            | GetMasterAndAlts(RR ctx reply) when nodeType <> NodeType.Idle ->
-                try
-                    //FaultPoint
-                    //-
-                    let! altNodes = Cluster.ClusterManager <!- GetAltNodes
-                    
-                    let masterAddress = Cluster.ClusterManager |> ActorRef.toUniTcpAddress |> Option.get
-                    let masterRuntime = addressToRuntime masterAddress
-
-                    let alts =
-                        altNodes
-                        |> Seq.map (fun altNodeManager -> altNodeManager |> ActorRef.toUniTcpAddress)
-                        |> Seq.choose id
-                        |> Seq.map addressToRuntime
-                        |> Seq.toArray
-
-                    reply <| Value (masterRuntime, alts)
-
-                    return stay state
-                with FailureException _ as e ->
-                        reply (Exception e)
-                        return stay state
-                    | e -> 
-                        return! triggerNodeFailure e ctx state msg
-
-            | GetMasterAndAlts(RR ctx reply) ->
-                reply <| Exception(new InvalidOperationException("Node is idle."))
-
-                return stay state
-
-            | GetDeploymentId(RR ctx reply) when nodeType <> NodeType.Idle ->
-                reply (Value state.DeploymentId)
-
-                return stay state
-
-            | GetDeploymentId(RR ctx reply) ->
-                reply <| Exception(new InvalidOperationException("Node is idle."))
-
-                return stay state
-
-            | GetAllNodes(RR ctx reply) when nodeType <> NodeType.Idle ->
+            | GetClusterDeploymentInfo(RR ctx reply, includePerfMetrics) when nodeType <> NodeType.Idle ->
                 try
                     //FaultPoint
                     //-
                     let! nodes = Cluster.ClusterManager <!- ClusterManager.GetAllNodes
 
-                    let mbraceNodes =
+                    let otherNodes =
                         nodes
-                        |> Seq.map ActorRef.toUniTcpAddress
-                        |> Seq.choose id
+                        |> Seq.choose ActorRef.toUniTcpAddress
                         |> Seq.map addressToRuntime
+                        |> Seq.filter (fun n -> n <> ctx.Self)
                         |> Seq.toArray
 
-                    reply (Value mbraceNodes)
+                    //FaultPoint
+                    //-
+                    let! info = getClusterDeploymentInfo state.DeploymentId ctx.Self NodeType.Master state.Permissions includePerfMetrics otherNodes
+
+                    reply <| Value info
 
                     return stay state
+
                 with FailureException _ as e ->
                         reply (Exception e)
-                        return stay state
+                        return stay state  
                     | e -> return! triggerNodeFailure e ctx state msg
 
-            | GetAllNodes(RR ctx reply) ->
-                reply <| Exception(new InvalidOperationException("Node is idle."))
-
+            | ResetNodeState(RR ctx reply) ->
+                reply <| Exception(NotImplementedException())
                 return stay state
+
+            | GetClusterDeploymentInfo(RR ctx reply, _) -> 
+                reply <| Exception(new InvalidOperationException("Node is idle."))
+                return stay state
+
+//            | GetProcessManager(RR ctx reply) when nodeType <> NodeType.Idle ->
+//                try
+//                    //FaultPoint
+//                    //-
+//                    let! r = Cluster.ClusterManager <!- fun ch -> ResolveActivationRefs(ch, empDef/"master"/"processManager" |> ActivationReference.FromPath)
+//                    
+//                    //Throws
+//                    //KeyNotFoundException => allow to fall through;; SYSTEM FAULT
+//                    //InvalidCastException => allow to fall through;; SYSTEM FAULT
+//                    let processManager = r.[0] :?> ActorRef<ProcessManager>
+//
+//                    reply (Value processManager)
+//
+//                    return stay state
+//                with FailureException _ as e ->
+//                        reply (Exception e)
+//                        return stay state  
+//                    | e -> return! triggerNodeFailure e ctx state msg
+//
+//            | GetProcessManager(RR ctx reply) ->
+//                reply <| Exception(new InvalidOperationException("Node is idle."))
+//
+//                return stay state
+//
+//            | GetStoreId(RR ctx reply) ->
+//                try
+//                    reply <| Value StoreRegistry.DefaultStoreInfo.Id
+//
+//                    return stay state
+//                with e ->
+//                    return! triggerNodeFailure e ctx state msg
+//
+//            | GetMasterAndAlts(RR ctx reply) when nodeType <> NodeType.Idle ->
+//                try
+//                    //FaultPoint
+//                    //-
+//                    let! altNodes = Cluster.ClusterManager <!- GetAltNodes
+//                    
+//                    let masterAddress = Cluster.ClusterManager |> ActorRef.toUniTcpAddress |> Option.get
+//                    let masterRuntime = addressToRuntime masterAddress
+//
+//                    let alts =
+//                        altNodes
+//                        |> Seq.map (fun altNodeManager -> altNodeManager |> ActorRef.toUniTcpAddress)
+//                        |> Seq.choose id
+//                        |> Seq.map addressToRuntime
+//                        |> Seq.toArray
+//
+//                    reply <| Value (masterRuntime, alts)
+//
+//                    return stay state
+//                with FailureException _ as e ->
+//                        reply (Exception e)
+//                        return stay state
+//                    | e -> 
+//                        return! triggerNodeFailure e ctx state msg
+//
+//            | GetMasterAndAlts(RR ctx reply) ->
+//                reply <| Exception(new InvalidOperationException("Node is idle."))
+//
+//                return stay state
+//
+//            | GetDeploymentId(RR ctx reply) when nodeType <> NodeType.Idle ->
+//                reply (Value state.DeploymentId)
+//
+//                return stay state
+//
+//            | GetDeploymentId(RR ctx reply) ->
+//                reply <| Exception(new InvalidOperationException("Node is idle."))
+//
+//                return stay state
+//
+//            | GetAllNodes(RR ctx reply) when nodeType <> NodeType.Idle ->
+//                try
+//                    //FaultPoint
+//                    //-
+//                    let! nodes = Cluster.ClusterManager <!- ClusterManager.GetAllNodes
+//
+//                    let mbraceNodes =
+//                        nodes
+//                        |> Seq.map ActorRef.toUniTcpAddress
+//                        |> Seq.choose id
+//                        |> Seq.map addressToRuntime
+//                        |> Seq.toArray
+//
+//                    reply (Value mbraceNodes)
+//
+//                    return stay state
+//                with FailureException _ as e ->
+//                        reply (Exception e)
+//                        return stay state
+//                    | e -> return! triggerNodeFailure e ctx state msg
+//
+//            | GetAllNodes(RR ctx reply) ->
+//                reply <| Exception(new InvalidOperationException("Node is idle."))
+//
+//                return stay state
 
             | GetLogDump(RR ctx reply) ->
                 try
@@ -351,34 +416,22 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
             | SetNodePermissions perms ->
                 return stay { state with Permissions = perms }
 
-            | Ping(RR ctx reply, silence) ->
-                if not silence then ctx.LogInfo "PING"
+            | Ping(RR ctx reply) ->
+                ctx.LogInfo "PING"
 
                 reply nothing
 
                 return stay state
 
-            | GetNodeDeploymentInfo(RR ctx reply) ->
-                let nodeType =
-                    match nodeType with
-                    | Nessos.Thespian.Cluster.Common.NodeType.Master -> Nessos.MBrace.Runtime.NodeType.Master
-                    | Nessos.Thespian.Cluster.Common.NodeType.Slave -> Nessos.MBrace.Runtime.NodeType.Slave
-                    | Nessos.Thespian.Cluster.Common.NodeType.Idle -> Nessos.MBrace.Runtime.NodeType.Idle
+            | GetNodeDeploymentInfo(RR ctx reply, includePerfCounters) ->
+                try
+                    let info = getNodeDeploymentInfo ctx.Self nodeType state.Permissions includePerfCounters
 
-                let info = Utils.mkNodeDeploymentInfo state.Permissions nodeType
-
-                reply <| Value info
-
-                return stay state
-
-            | GetNodePerformanceCounters(RR ctx reply) ->
-                try          
-                    PerformanceMonitor.getCounters ()
-                    |> Value
-                    |> reply
+                    reply <| Value info
 
                     return stay state
-                with e -> 
+
+                with e ->
                     return! triggerNodeFailure e ctx state msg
 
             | Shutdown when nodeType <> NodeType.Idle ->
@@ -438,11 +491,11 @@ and mbraceNodeManagerBehaviorFailed (ctx: BehaviorContext<_>) (state: State) (ms
         match msg with
         | ShutdownSync(RR ctx r) -> reply r
         | MasterBoot(RR ctx r, _) -> reply r
-        | GetProcessManager(RR ctx r) -> reply r
-        | GetMasterAndAlts(RR ctx r) -> reply r
-        | GetDeploymentId(RR ctx r) -> reply r
-        | GetStoreId(RR ctx r) -> reply r
-        | GetAllNodes(RR ctx r) -> reply r
+//        | GetProcessManager(RR ctx r) -> reply r
+//        | GetMasterAndAlts(RR ctx r) -> reply r
+//        | GetDeploymentId(RR ctx r) -> reply r
+//        | GetStoreId(RR ctx r) -> reply r
+//        | GetAllNodes(RR ctx r) -> reply r
         | GetLogDump(RR ctx r) ->
             try
                 let entries = readEntriesFromMasterLogFile ()
@@ -453,16 +506,19 @@ and mbraceNodeManagerBehaviorFailed (ctx: BehaviorContext<_>) (state: State) (ms
         | Detach(RR ctx r) -> reply r
 //        | GetNodeState(RR ctx r) -> reply r //TODO!!! Return a failed state.
 //        | GetNodePermissions(RR ctx r) -> r (Value Nessos.MBrace.Runtime.CommonAPI.Permissions.All)
-        | Ping(RR ctx reply, silence) ->
+        | Ping(RR ctx reply) ->
             try
-                if not silence then ctx.LogInfo "PING"
-
+                ctx.LogInfo "PING"
                 reply nothing
             with e -> ctx.LogError e
-        | GetNodeDeploymentInfo(RR ctx r) ->
+        | GetClusterDeploymentInfo(RR ctx r,_) ->
             try reply r
             with e -> ctx.LogError e
-        | GetNodePerformanceCounters(RR ctx r) -> reply r
+        | GetNodeDeploymentInfo(RR ctx r,_) ->
+            try reply r
+            with e -> ctx.LogError e
+        | ResetNodeState(RR ctx r) -> reply r
+//        | GetNodePerformanceCounters(RR ctx r) -> reply r
         | GetInternals(RR ctx r) -> reply r
         | SetNodePermissions _
         | Shutdown -> warning()

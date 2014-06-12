@@ -184,6 +184,10 @@ namespace Nessos.MBrace.Core
 
     type CloudCompiler (?vagrant : VagrantServer) =
 
+        let compilerId = Guid.NewGuid()
+
+        member __.CompilerId = compilerId
+
         member __.Compile(expr : Expr<Cloud<'T>>, ?name : string) =
 
             let dependencies = 
@@ -204,3 +208,38 @@ namespace Nessos.MBrace.Core
                 | None -> VagrantUtils.ComputeAssemblyDependencies block
 
             new BareCloudComputation<'T>(name, block, dependencies) :> CloudComputation<'T>
+
+        member __.GetRawImage(cc : CloudComputation) =
+            {
+                CompilerId = compilerId
+                Name = cc.Name
+                ComputationRaw = Serialization.Serialize cc
+                ReturnTypeRaw = Serialization.Serialize cc.ReturnType
+                TypeName = Type.prettyPrint cc.ReturnType
+                Dependencies = cc.Dependencies |> List.map VagrantUtils.ComputeAssemblyId
+            }
+
+    /// Raw image of process to be submitted to the runtime for computation
+    and CloudComputationImage = 
+        {
+            /// Unique identifier for generating client
+            CompilerId : Guid
+
+            /// Cloud computation name
+            Name : string
+
+            /// Serialized cloud computation ; to be deserialized after dependency load
+            ComputationRaw : byte []
+
+            /// Serialized return System.Type for computation
+            ReturnTypeRaw : byte []
+
+            /// Pretty printed type
+            TypeName : string
+
+            /// assembly id's dependent on computation
+            Dependencies : AssemblyId list
+        }
+    with
+        member ci.ReturnType = Serialization.Deserialize<Type> ci.ReturnTypeRaw
+        member ci.Computation = Serialization.Deserialize<CloudComputation> ci.ComputationRaw

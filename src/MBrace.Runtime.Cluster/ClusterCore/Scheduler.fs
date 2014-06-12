@@ -62,7 +62,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                          
                     ctx.LogInfo "Scheduler: Deserialization error. Process not started."
 
-                    do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ProcessInitError e))
+                    do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, InitError e))
             with e ->
                 ctx.LogError e
                 reply (Exception e)
@@ -177,19 +177,19 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                                 
                             if resultType = valueType || resultType.IsInstanceOfType(value) then
                                 ctx.LogInfo "Completing process with value result..."
-                                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ValueResult(box value) |> Serialization.Serialize |> ProcessSuccess))
+                                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ValueResult(box value) |> ProcessResultImage.OfResult))
                             else
                                 ctx.LogInfo "Completing process with invalid result type..."
                                 let e = new SystemException("Failed to recognise result. Severe system error. Contact M-Brace support.")
-                                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, e :> exn |> ProcessFault))
+                                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, e :> exn |> Fault))
 
                         | ProcessBody(_, [_], _, Dump([(ValueExpr (Exc (exn, context)))])) ->
                             ctx.LogInfo "Completing process with exception result..."
-                            do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ExceptionResult (CloudException (exn, processId, ?context = context) :> exn, None) |> Serialization.Serialize |> ProcessSuccess))
+                            do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ExceptionResult (CloudException (exn, processId, ?context = context) :> exn, None) |> ProcessResultImage.OfResult))
                         | _ ->
                                 
                             let msg = "Failed to recognise result. Severe system error. Contact M-Brace support."
-                            do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, new SystemException(msg) :> exn |> ProcessFault))
+                            do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, new SystemException(msg) :> exn |> Fault))
 
                         do! taskManager <!- fun ch -> FinalTaskComplete(ch, taskId)
 
@@ -200,7 +200,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                 | value -> 
                     ctx.LogEvent(Nessos.Thespian.LogLevel.Error, "Scheduler: Unreckognized result. Terminating...")
                         
-                    do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, new SystemException("Scheduler state corrupted. Severe system error. Contact M-Brace support.") :> exn |> ProcessFault))
+                    do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, new SystemException("Scheduler state corrupted. Severe system error. Contact M-Brace support.") :> exn |> Fault))
 
                     processMonitor <-- Singular(Choice1Of2 <| ProcessMonitor.DestroyProcess processId)
                 
@@ -248,14 +248,14 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                 let processBody = ProcessBody(resultType, thunkIdsStack, functions, Dump ((ValueExpr (Obj (ObjValue workerCount, typeof<int>))) :: stack))
                 do! taskManager <!- fun ch -> CreateTasks(ch, taskHeader, [processBody])
             | value -> 
-                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, new SystemException("Scheduler state corrupted. Severe system error. Contact M-Brace support.") :> exn |> ProcessFault))
+                do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, new SystemException("Scheduler state corrupted. Severe system error. Contact M-Brace support.") :> exn |> Fault))
                 throwInvalidState value
 
             return state
 
         | Scheduler.TaskResult((processId, taskId), TaskFailure taskFailureException) ->
             ctx.LogInfo <| sprintf' "(%A, %A) has failed. Terminating process." processId taskId
-            do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, ProcessFault taskFailureException)) //if this message send fails, then there is a total fail
+            do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, Fault taskFailureException)) //if this message send fails, then there is a total fail
 
             processMonitor <-- Singular(Choice1Of2 <| ProcessMonitor.DestroyProcess processId)
 

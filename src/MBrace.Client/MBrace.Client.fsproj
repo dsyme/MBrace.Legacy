@@ -53,12 +53,14 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="ClientSettings.fs" />
+    <Compile Include="Reporting.fs" />
     <Compile Include="CloudComputation.fs" />
     <Compile Include="StoreClient.fs" />
     <None Include="MBraceNode.fsi" />
     <Compile Include="MBraceNode.fs" />
     <None Include="CloudProcess.fsi" />
     <Compile Include="CloudProcess.fs" />
+    <Compile Include="RuntimeProxy.fs" />
     <None Include="MBraceRuntime.fsi" />
     <Compile Include="MBraceRuntime.fs" />
     <Compile Include="ExtensionMethods.fs" />

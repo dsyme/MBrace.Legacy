@@ -12,6 +12,7 @@ open Nessos.Vagrant
 
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Runtime
+//open Nessos.MBrace.Runtime.PerformanceMonitor
 open Nessos.MBrace.Runtime.Logging
 
 //type aliases to resolve conficts with non-cluster types
@@ -121,16 +122,16 @@ type LoggerActorDefinition(parent: DefinitionPath) =
         return Behavior.stateless (Logger.loggerActorBehaviour logger)
     }
 
-type PerformanceMonitorDefinition(parent: DefinitionPath) =
-    inherit BaseActorDefinition<IReplyChannel<NodePerformanceInfo>>(parent)
-
-    override __.Name = "performanceMonitor"
-    override __.Configuration = ActivationConfiguration.Empty
-    override __.Dependencies = []
-    override __.PublishProtocols = []
-    override __.Actor(_, _) = async {
-        return PerformanceMonitor.init()
-    }
+//type PerformanceMonitorDefinition(parent: DefinitionPath) =
+//    inherit BaseActorDefinition<IReplyChannel<NodePerformanceInfo>>(parent)
+//
+//    override __.Name = "performanceMonitor"
+//    override __.Configuration = ActivationConfiguration.Empty
+//    override __.Dependencies = []
+//    override __.PublishProtocols = []
+//    override __.Actor(_, _) = async {
+//        return PerformanceMonitor.init()
+//    }
 
 //MASTER NODE DEFINITIONS
 
@@ -292,7 +293,7 @@ type internal ProcessMonitorProxyDefinition(parent: DefinitionPath) =
                        | NotifyProcessInitialized _ -> fun e -> ctx.LogEvent(Nessos.Thespian.LogLevel.Error, sprintf' "NotifyProcessInitialized Exception :: %A" e)
                        | NotifyProcessStarted _ -> fun e -> ctx.LogEvent(Nessos.Thespian.LogLevel.Error, sprintf' "NotifyProcessStarted Exception :: %A" e)
                        | NotifyProcessTaskRecovery _ -> fun e -> ctx.LogEvent(Nessos.Thespian.LogLevel.Error, sprintf' "NotifyProcessTaskRecovery Exception :: %A" e)
-                       | NotifyRecoverState _ -> fun e -> ctx.LogEvent(Nessos.Thespian.LogLevel.Error, sprintf' "NotifyRecoverState Exception :: %A" e)
+//                       | NotifyRecoverState _ -> fun e -> ctx.LogEvent(Nessos.Thespian.LogLevel.Error, sprintf' "NotifyRecoverState Exception :: %A" e)
                        | TryGetProcessInfo(RR ctx reply, _) -> reply << Exception
                        | TryGetProcessInfoByRequestId(RR ctx reply, _) -> reply << Exception
                        | TryGetProcessResult(RR ctx reply, _) -> reply << Exception
@@ -407,9 +408,9 @@ type internal CommonGroupDefinition(parent: DefinitionPath, inMemory: bool) =
         let loggerActorDef = new LoggerActorDefinition(def.Path)
         let assemblyManagerDef = new AssemblyManagerDefinition(def.Path)
         let processDomainManagerDef = new ProcessDomainManagerDefinition(def.Path, inMemory)
-        let performanceMonitorDef = new PerformanceMonitorDefinition(def.Path)
+//        let performanceMonitorDef = new PerformanceMonitorDefinition(def.Path)
 
-        [loggerActorDef; assemblyManagerDef; processDomainManagerDef; performanceMonitorDef]
+        [loggerActorDef; assemblyManagerDef; processDomainManagerDef;] //performanceMonitorDef]
 
 type internal MasterGroupDefinition(parent: DefinitionPath) =
     inherit GroupDefinition(parent)
@@ -611,14 +612,14 @@ type MBraceNodeEventManager() =
 
     override __.OnMaster(clusterId: ClusterId) = async {
         if clusterId = "HEAD" then
-            do MBraceNode.StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeType.Master)
+            do MBraceNode.StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeState.Master)
     }
 
     override __.OnAddToCluster(clusterId: ClusterId, clusterManager: ReliableActorRef<ClusterManager>) = async {
         if clusterId = "HEAD" then
             try
                 if not (ActorRef.isCollocated Cluster.ClusterManager) then
-                    do MBraceNode.StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeType.Slave)
+                    do MBraceNode.StateChangeEvent.Trigger(Nessos.MBrace.Runtime.NodeState.Slave)
 
                 Log.logInfo "OnAddToCluster :: Initializing ProcessDomain cluster..."
 
