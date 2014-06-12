@@ -21,7 +21,7 @@
             member self.Size = provider.GetLength self |> Async.RunSynchronously
             member self.Container = container
             member self.Dispose () = provider.Delete self
-            member self.Read (reader) = provider.Read(self, reader)
+            member self.Read () = provider.Read(self)
 
         override self.ToString() = sprintf' "cloudfile:%s/%s" container id
 
@@ -46,11 +46,8 @@
 
         member __.StoreId = id
 
-        member __.Read(file : CloudFile, reader : Stream -> Async<'T>) : Async<'T> = 
-            async {
-                let! stream = cache.Read(file.Container, file.Name)
-                return! reader stream
-            } |> onDereferenceError file
+        member __.Read(file : CloudFile) = 
+            cache.Read(file.Container, file.Name) |> onDereferenceError file
 
         member __.Delete(cfile : CloudFile) =
             store.Delete(cfile.Container, cfile.Name)

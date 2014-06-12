@@ -153,8 +153,8 @@ for i in 1 .. 100 do
     printfn "Sending bin 10"
     let ps = runtime.CreateProcess <@ bin 10 @>
     ps.AwaitResult() |> ignore
-
-
+    
+    
 
 let r = MBrace.InitLocal 3
 for i = 1 to 100 do

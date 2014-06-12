@@ -66,6 +66,7 @@
     <Compile Include="Helpers.fs" />
     <Compile Include="CloudTestDefinitions.fs" />
     <Compile Include="CompilerTests.fs" />
+    <Compile Include="ChaosMonkeyTests.fs" />
     <Compile Include="CloudTests.fs" />
     <Compile Include="LocalCloudTests.fs" />
     <Compile Include="ClusterCloudTests.fs" />
@@ -96,6 +97,10 @@
       <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="FsCheck">
+      <HintPath>..\..\packages\FsCheck.0.9.4.0\lib\net40-Client\FsCheck.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FsPickler">
       <HintPath>..\..\packages\FsPickler.0.8.6.2\lib\net45\FsPickler.dll</HintPath>
       <Private>True</Private>
