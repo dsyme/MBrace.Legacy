@@ -110,6 +110,11 @@ let private getClusterDeploymentInfo deploymentId self nodeType permissions incl
         {
             DeploymentId = deploymentId
             MasterNode = nodeInfo |> Array.find (fun n -> n.State = Master)
+
+            // TODO
+            ReplicationFactor = 0
+            FailoverFactor = 0
+
             Nodes = nodeInfo
             StoreId = StoreRegistry.DefaultStoreInfo.Id
             ProcessManager = processManager

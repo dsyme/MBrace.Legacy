@@ -67,6 +67,12 @@
             /// Runtime store Identifier
             StoreId : StoreId
 
+            /// Number of additional nodes replicating cloud process states.
+            ReplicationFactor : int
+
+            /// Number of alternative master nodes used in the runtime.
+            FailoverFactor : int
+
             /// Cluster Master node
             MasterNode : NodeDeploymentInfo
 
