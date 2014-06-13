@@ -6,9 +6,9 @@ open Nessos.MBrace.Client
 let rt = MBrace.InitLocal 3
 
 
-let [node] = Node.SpawnMultiple 1
 
 
-rt.ShowInfo(true)
-node.GetPerformanceCounters()
-node.ShowPerformanceCounters()
+rt.Nodes.Length
+let ns = Node.SpawnMultiple 1
+rt.Attach ns
+rt.Nodes.Length

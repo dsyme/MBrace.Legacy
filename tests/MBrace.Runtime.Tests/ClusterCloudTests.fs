@@ -272,11 +272,10 @@ namespace Nessos.MBrace.Runtime.Tests
             let n = __.Runtime.Nodes |> List.length
             __.Runtime.AttachLocal 1 
 
-            wait 1000
+            wait 500
 
             let n' = __.Runtime.Nodes |> List.length 
             n' - n |> should equal 1
-            Assert.Inconclusive("Attach is not synchronous")
 
         [<Test; Category("Runtime Administration")>]
         member __.``Detach Node`` () =
@@ -285,11 +284,10 @@ namespace Nessos.MBrace.Runtime.Tests
             let node2 = nodes.[1] 
             __.Runtime.Detach node2 
 
-            wait 1000
+            wait 500
 
             let n' =__.Runtime.Nodes |> List.length
             n - n' |> should equal 1
-            Assert.Inconclusive("Detach is not synchronous")
 
         [<Test; Category("Runtime Administration")>]
         member __.``Node Permissions`` () =
