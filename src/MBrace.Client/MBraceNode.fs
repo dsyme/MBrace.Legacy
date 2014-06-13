@@ -33,8 +33,9 @@
 
         let handleError (e : exn) : 'T =
             match e with
-            | :? CommunicationException
-            | :? TimeoutException -> mfailwith "Timed out while connecting to '%O'." self
+            | MessageHandlingExceptionRec (MBraceExn e)
+            | MBraceExn e -> reraise' e
+            | CommunicationExceptionRec e -> mfailwithfInner e "Error communicating with node '%O'." self
             | MessageHandlingExceptionRec e -> mfailwithfInner e "Node '%O' has replied with exception." self
             | _ -> reraise' e
 

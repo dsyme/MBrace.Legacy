@@ -188,6 +188,12 @@
 
             aux 0 e
 
+        let rec (|CommunicationExceptionRec|_|) (e : exn) =
+            match e with
+            | :? CommunicationException as e -> Some e
+            | MessageHandlingExceptionRec e -> (|CommunicationExceptionRec|_|) e
+            | _ -> None
+
 //        let nodeUsesCompatibleStore (node : NodeRef) =
 //            try (node <!= GetStoreId) = StoreRegistry.DefaultStoreInfo.Id
 //            with _ -> false

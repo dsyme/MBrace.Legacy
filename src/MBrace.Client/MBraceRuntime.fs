@@ -25,6 +25,7 @@ namespace Nessos.MBrace.Client
 
         static let handleError (e : exn) =
             match e with
+            | CommunicationExceptionRec e -> mfailwithInner e.InnerException "Error communicating with runtime."
             | MBraceExn e -> reraise' e
             | MessageHandlingExceptionRec(MBraceExn e) -> reraise' e
             | MessageHandlingExceptionRec e -> mfailwithInner e "Runtime replied with exception."

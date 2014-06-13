@@ -100,14 +100,6 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="Thespian">
-      <HintPath>..\..\packages\Thespian.0.0.4-alpha\lib\net45\Thespian.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Thespian.Cluster">
-      <HintPath>..\..\packages\Thespian.0.0.4-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <ProjectReference Include="..\MBrace.Client\MBrace.Client.fsproj">
       <Name>MBrace.Client</Name>
       <Project>{a303fe2d-ebac-42af-aad3-3700bdd996bd}</Project>
@@ -128,8 +120,16 @@
       <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="Thespian">
+      <HintPath>..\..\packages\Thespian.0.0.5-alpha\lib\net45\Thespian.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Thespian.Cluster">
+      <HintPath>..\..\packages\Thespian.0.0.5-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="UnionArgParser">
-      <HintPath>..\..\packages\UnionArgParser.0.6.4\lib\net40\UnionArgParser.dll</HintPath>
+      <HintPath>..\..\packages\UnionArgParser.0.6.5\lib\net40\UnionArgParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">

@@ -14,3 +14,5 @@ runtime.Nodes
 runtime.Master
 
 runtime.Reboot()
+
+runtime.Ping()
