@@ -141,49 +141,49 @@ namespace Nessos.MBrace.Client
     /// The object representing the {m}brace client settings.
     type MBraceSettings private () =
 
-        static let config = Atom.atom <| initConfiguration ()
+        static let config = lazy (Atom.atom <| initConfiguration ())
         
         /// Gets the client's unique identifier.
-        static member ClientId = config.Value.ClientId
+        static member ClientId = config.Value.Value.ClientId
 
         /// The (relative/absolute) path to the mbraced.exe.
         static member MBracedExecutablePath 
             with get () = 
-                match config.Value.MBracedPath with 
+                match config.Value.Value.MBracedPath with 
                 | None -> mfailwith "No mbrace daemon executable defined." 
                 | Some p -> p
             and set p = 
                 if File.Exists p then
-                    config.Swap(fun c -> { c with MBracedPath = Some p })
+                    config.Value.Swap(fun c -> { c with MBracedPath = Some p })
                 else
                     mfailwithf "Invalid path '%s'." p
 
-        static member internal DefaultStoreInfo = config.Value.StoreInfo
+        static member internal DefaultStoreInfo = config.Value.Value.StoreInfo
 
-        static member internal CloudCompiler = config.Value.CloudCompiler
+        static member internal CloudCompiler = config.Value.Value.CloudCompiler
 
         /// Gets or sets the logger used by the client.
         static member Logger
-            with get () = config.Value.Logger
+            with get () = config.Value.Value.Logger
             and set l = 
                 lock config (fun () ->
                     registerLogger l
-                    config.Swap(fun c -> { c with Logger = l })
+                    config.Value.Swap(fun c -> { c with Logger = l })
                 )
 
         /// Gets or sets the StoreProvider used by the client.
         static member StoreProvider
-            with get () = config.Value.StoreInfo.Provider
+            with get () = config.Value.Value.StoreInfo.Provider
 
             and set p =
                 // store activation has side-effects ; use lock instead of swap
                 lock config (fun () ->
                     let storeInfo = StoreRegistry.Activate(p, makeDefault = true)
-                    config.Swap(fun c -> { c with StoreInfo = storeInfo })
+                    config.Value.Swap(fun c -> { c with StoreInfo = storeInfo })
                 )
 
         /// Gets the path used by the client as a working directory.
-        static member WorkingDirectory = config.Value.WorkingDirectory
+        static member WorkingDirectory = config.Value.Value.WorkingDirectory
 
-        static member internal Vagrant = config.Value.Vagrant
-        static member internal StoreInfo = config.Value.StoreInfo
+        static member internal Vagrant = config.Value.Value.Vagrant
+        static member internal StoreInfo = config.Value.Value.StoreInfo

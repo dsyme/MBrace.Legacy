@@ -16,14 +16,12 @@ namespace Nessos.MBrace.Client
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Store
-    open Nessos.MBrace.Runtime.Utils
+    open Nessos.MBrace.Client.Reporting
 
     open Nessos.MBrace.Client
 
     [<NoEquality ; NoComparison ; AutoSerializable(false)>]
     type MBraceRuntime private (runtime : ActorRef<MBraceNodeMsg>, disposables : IDisposable list) =
-
-        static do MBraceSettings.ClientId |> ignore
 
         static let handleError (e : exn) =
             match e with
@@ -55,30 +53,13 @@ namespace Nessos.MBrace.Client
 
         let processManager = new Nessos.MBrace.Client.ProcessManager((fun () -> clusterConfiguration.Value.ProcessManager), StoreRegistry.DefaultStoreInfo)
 
+        //
+        //  Runtime Boot/Connect methods
+        //
 
         static let initOfProxyActor(actor : Actor<MBraceNodeMsg>) = 
             do actor.Start()
             new MBraceRuntime(actor.Ref, [actor :> IDisposable])
-//        //
-//        // construction
-//        //
-//
-//        let runtime = runtimeActor.Ref
-//        let processManager = new Nessos.MBrace.Client.ProcessManager(runtime, StoreRegistry.DefaultStoreInfo)
-//
-
-//            
-
-//
-//        let configuration = CacheAtom.Create(fun () -> postWithReply GetAllNodes |> NodeInfo.Create)
-//
-//        member internal __.ActorRef = runtime
-//        member internal __.PostWithReply m = postWithReply m
-//        member internal __.PostWithReplyAsync m = postWithReplyAsync m
-
-        //
-        //  Runtime Boot/Connect methods
-        //
 
         static member ConnectAsync(uri: Uri): Async<MBraceRuntime> =
             async {
@@ -297,4 +278,5 @@ namespace Nessos.MBrace.Client
         member __.ClearProcessInfo (pid : ProcessId) : unit = processManager.ClearProcessInfo pid |> Async.RunSynchronously
         member __.ClearAllProcessInfo () : unit = processManager.ClearAllProcessInfo () |> Async.RunSynchronously
 
-        member __.ShowProcessInfo (?useBorders) : unit = processManager.ShowInfo (?useBorders = useBorders)
+        member __.ShowProcessInfo () : unit = processManager.GetInfo () |> Console.WriteLine
+        member __.GetProcessInfo () : unit = processManager.GetInfo () |> Console.WriteLine

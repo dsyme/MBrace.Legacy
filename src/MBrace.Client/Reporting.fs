@@ -18,6 +18,21 @@
             |> printfn "%s"
 
 
+    type CloudComputation =
+
+        static member Compile (block : Cloud<'T>, ?name : string) =
+            let cc = MBraceSettings.CloudCompiler.Compile(block, ?name = name)
+            for w in cc.Warnings do
+                MBraceSettings.Logger.LogWarning w
+            cc
+
+        static member Compile (expr : Quotations.Expr<Cloud<'T>>, ?name : string) =
+            let cc = MBraceSettings.CloudCompiler.Compile(expr, ?name = name)
+            for w in cc.Warnings do
+                MBraceSettings.Logger.LogWarning w
+            cc
+
+
     type MBraceNodeReporter private () =
 
         static let nodeReportTemplate : Field<NodeDeploymentInfo> list =
@@ -77,70 +92,3 @@
             let showBorder = defaultArg showBorder false
 
             Record.prettyPrint3 template title showBorder processes
-
-//        Record.prettyPrint3 template None
-
-//    //
-//    // Node & Runtime information display types
-//    //
-//
-//    and internal NodeInfo (nodes : seq<MBraceNode>) =
-//
-
-//
-//        let master = match getByRole Master with [] -> None | h :: _ -> Some h
-//
-
-//
-//            Record.prettyPrint template
-//
-//        static member Create (nrefs : NodeRef seq) = NodeInfo (nrefs |> Seq.map (fun n -> MBraceNode n))
-//
-//        static member internal PrettyPrint(nodes : MBraceNode list list, ?displayPerfCounters, ?header, ?useBorders) =
-//            let useBorders = defaultArg useBorders false
-//            let displayPerfCounter = defaultArg displayPerfCounters false
-//
-//            let parMap (f : 'T -> 'S) (inputs : 'T list list) = 
-//                inputs 
-//                |> List.toArray
-//                |> Array.Parallel.map (Array.ofList >> Array.Parallel.map f >> Array.toList)
-//                |> List.ofArray
-//
-//            if displayPerfCounter then
-//                // force lookup of nodes in parallel
-//                let info = nodes |> parMap (fun n -> n, n.GetPerformanceCounters())
-//                prettyPrintPerf header useBorders info
-//            else
-//                prettyPrint header useBorders nodes
-//
-//        member __.Master = master
-//        member __.Slaves = getByRole Slave
-//        member __.Alts = getByRole Alt
-//        member __.Idle = getByRole Idle
-//
-//        member conf.Nodes =
-//            [
-//                yield! conf.Master |> Option.toList
-//                yield! conf.Alts
-//                yield! conf.Slaves
-//                yield! conf.Idle
-//            ]
-//
-//        member conf.Display(?displayPerfCounters, ?useBorders) =
-//            let title =
-//                if master.IsSome then "{m}brace runtime information (active)"
-//                else "{m}brace runtime information (inactive)"
-//
-//            let nodes =
-//                [
-//                    yield master |> Option.toList
-//                    yield getByRole Alt 
-//                    yield getByRole Slave
-//                    yield getByRole Idle
-//                ]
-//
-//            NodeInfo.PrettyPrint(nodes, ?displayPerfCounters = displayPerfCounters, header = title, ?useBorders = useBorders)
-//
-//
-//
-//    type Node = MBraceNode
