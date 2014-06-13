@@ -16,3 +16,6 @@ runtime.Master
 runtime.Reboot()
 
 runtime.Ping()
+
+let n = Node.Spawn()
+n.ShowInfo(true)

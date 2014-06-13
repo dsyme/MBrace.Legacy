@@ -118,10 +118,14 @@
             let info = __.GetNodeInfoAsync true |> Async.RunSynchronously
             info.PerformanceInfo |> Option.get
 
-        member __.ShowPerformanceCounters () =
-                let info = __.GetNodeInfoAsync true |> Async.RunSynchronously
-                Reporting.MBraceNodeReporter.Report(Seq.singleton info, showPerf = true, showBorder = false)
-                |> Console.WriteLine
+        member __.GetInfo (?includePerformanceCounters) : string =
+            let showPerf = defaultArg includePerformanceCounters false
+            let info = __.GetNodeInfoAsync(showPerf) |> Async.RunSynchronously
+            Reporting.MBraceNodeReporter.Report(Seq.singleton info, showPerf = showPerf, showBorder = false)
+
+        member __.ShowInfo(?includePerformanceCounters) : unit =
+            __.GetInfo(?includePerformanceCounters = includePerformanceCounters)
+            |> Console.WriteLine
 
         member n.GetSystemLogs () : SystemLogEntry [] =
             try nodeRef <!= GetLogDump
