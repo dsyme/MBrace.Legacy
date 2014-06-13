@@ -192,6 +192,7 @@
         let registerPerfMonitor () =
             let monitor = new Nessos.MBrace.Runtime.PerformanceMonitor()
             IoC.RegisterValue<_>(monitor)
+            monitor.Start()
             monitor
 
 

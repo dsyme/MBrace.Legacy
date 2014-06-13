@@ -14,6 +14,7 @@
 
     type private PerfCounter = System.Diagnostics.PerformanceCounter
 
+    /// Represents measurements on resources usage.
     type PerformanceCounter = single option
 
     /// Some node metrics, such as CPU, memory usage, etc
@@ -26,20 +27,8 @@
             NetworkUsageUp      : PerformanceCounter
             NetworkUsageDown    : PerformanceCounter
         } 
-        with 
-            /// Represents failure in retrieving performance counters.
-            static member NotAvailable = 
-                {
-                    CpuUsage            = None
-                    CpuUsageAverage     = None 
-                    TotalMemory         = None
-                    MemoryUsage         = None
-                    NetworkUsageUp      = None
-                    NetworkUsageDown    = None
-                }
 
     type private Counter = TotalCpu | TotalMemoryUsage 
-    type private PerformanceCounterType = PerformanceCounter of (unit -> PerformanceCounter)
     type private Message = Info of AsyncReplyChannel<NodePerformanceInfo> | Stop of AsyncReplyChannel<unit>
 
     /// Collects statistics on CPU, memory, network, etc.
@@ -51,130 +40,131 @@
         let updateInterval = defaultArg updateInterval 500
         let maxSamplesCount = defaultArg maxSamplesCount 20
     
+        let perfCounters = new List<PerfCounter>()
+
         // Performance counters 
         let cpuUsage =
             if PerformanceCounterCategory.Exists("Processor") then 
                 let pc = new PerfCounter("Processor", "% Processor Time", "_Total",true)
-                Some <| PerformanceCounter (fun () -> Some (pc.NextValue()))
+                perfCounters.Add(pc)
+                Some <| fun () -> pc.NextValue()
             else None
     
         let totalMemory = 
             if onMono then
                 if PerformanceCounterCategory.Exists("Mono Memory") then 
                     let pc = new PerfCounter("Mono Memory", "Total Physical Memory")
-                    Some <| PerformanceCounter (fun () -> Some (pc.NextValue()))
+                    perfCounters.Add(pc)
+                    Some <| fun () -> pc.NextValue()
                 else None
             else
-                let ci = Microsoft.VisualBasic.Devices.ComputerInfo() // DAFUQ? maybe use wmi?
-                Some <| PerformanceCounter( let mb = ci.TotalPhysicalMemory / (uint64 (1 <<< 20))
-                                            fun () -> Some (single mb) )
+                let ci = Microsoft.VisualBasic.Devices.ComputerInfo () // TODO: Maybe use WMI
+                let mb = ci.TotalPhysicalMemory / uint64 (1 <<< 20) |> single
+                Some(fun () -> mb)
     
         let memoryUsage = 
             if PerformanceCounterCategory.Exists("Memory") 
-            then match totalMemory with
-                    | None -> None
-                    | Some(PerformanceCounter(getNext)) ->
+            then 
+                match totalMemory with
+                | None -> None
+                | Some(getNext) ->
                     let pc = new PerfCounter("Memory", "Available Mbytes",true)
-                    match getNext() with
-                    | None -> None
-                    | Some totalMemory -> Some <| PerformanceCounter (fun () -> Some (100.f - 100.f * pc.NextValue() / totalMemory))
+                    perfCounters.Add(pc)
+                    let totalMemory = getNext()
+                    Some <| (fun () -> 100.f - 100.f * pc.NextValue() / totalMemory)
             else None
     
         let networkSentUsage =
             if PerformanceCounterCategory.Exists("Network Interface") then 
                 let inst = (new PerformanceCounterCategory("Network Interface")).GetInstanceNames()
                 let pc = 
-                    inst |> Array.map (fun nic ->
-                                new PerfCounter("Network Interface", "Bytes Sent/sec", nic))
-    
-                Some <| PerformanceCounter(fun () -> 
-                        Some(pc |> Array.fold (fun sAcc s ->     
-                                                    sAcc + 8.f * s.NextValue () / 1024.f)
-                                                    0.f))
+                    inst |> Array.map (fun nic -> new PerfCounter("Network Interface", "Bytes Sent/sec", nic))
+                Seq.iter perfCounters.Add pc
+                Some(fun () -> pc |> Array.fold (fun sAcc s -> sAcc + 8.f * s.NextValue () / 1024.f) 0.f) // kbps
             else None
     
         let networkReceivedUsage =
             if PerformanceCounterCategory.Exists("Network Interface") then 
                 let inst = (new PerformanceCounterCategory("Network Interface")).GetInstanceNames()
                 let pc = 
-                    inst |> Array.map (fun nic ->
-                                new PerfCounter("Network Interface", "Bytes Received/sec",nic))
-    
-                Some <| PerformanceCounter(fun () -> 
-                        Some(pc |> Array.fold (fun rAcc r ->     
-                                                    rAcc + 8.f * r.NextValue () / 1024.f )
-                                                    0.f))
+                    inst |> Array.map (fun nic -> new PerfCounter("Network Interface", "Bytes Received/sec",nic))
+                Seq.iter perfCounters.Add pc
+                Some(fun () -> pc |> Array.fold (fun rAcc r -> rAcc + 8.f * r.NextValue () / 1024.f ) 0.f) // kbps
             else None
     
-        let getPerfValue : PerformanceCounterType option -> PerformanceCounter = function
+        let getPerfValue : (unit -> single) option -> PerformanceCounter = function
             | None -> None
-            | Some(PerformanceCounter(getNext)) -> getNext()
+            | Some(getNext) -> Some <| getNext()
     
         let getAverage (values : PerformanceCounter seq) =
             if Seq.exists ((=) None) values then None
-            else values |> Seq.map (function (Some v) -> v | v -> failwithf "invalid state '%A'" v)
+            else values |> Seq.map (function (Some v) -> v | v -> failwithf "Invalid state '%A'" v)
                         |> Seq.average
                         |> Some
     
+        let queues = dict [ TotalCpu, Queue<PerformanceCounter>()
+                            TotalMemoryUsage, Queue<PerformanceCounter>() ]
     
-        let perfCounterActor = new MailboxProcessor<Message>(fun inbox ->
+        let newValue cnt : PerformanceCounter = 
+            match cnt with
+            | TotalCpu -> cpuUsage
+            | TotalMemoryUsage -> memoryUsage
+            |> getPerfValue
     
-            let queues = dict [ TotalCpu, Queue<PerformanceCounter>()
-                                TotalMemoryUsage, Queue<PerformanceCounter>()
-                                ]
+        let updateQueues () =
+            queues
+            |> Seq.iter (fun (KeyValue (cnt, q)) ->
+                let newVal = newValue cnt
     
-            let newValue cnt = 
-                match cnt with
-                | TotalCpu -> cpuUsage
-                | TotalMemoryUsage -> memoryUsage
-                |> getPerfValue
+                if q.Count < maxSamplesCount then q.Enqueue newVal
+                else q.Dequeue() |> ignore; q.Enqueue newVal)
     
-            let updateQueues () =
-                [TotalCpu; TotalMemoryUsage]
-                |> List.iter (fun cnt ->
-                    let q = queues.[cnt]
-                    let newVal = newValue cnt
-    
-                    if q.Count < maxSamplesCount then q.Enqueue newVal
-                    else q.Dequeue() |> ignore; q.Enqueue newVal)
-    
-            let newNodePerformanceInfo () : NodePerformanceInfo =
-                {
-                    CpuUsage = queues.[TotalCpu].Peek()
-                    CpuUsageAverage = queues.[TotalCpu] |> getAverage
-                    TotalMemory = totalMemory |> getPerfValue
-                    MemoryUsage = queues.[TotalMemoryUsage].Peek()
-                    NetworkUsageUp = networkSentUsage |> getPerfValue
-                    NetworkUsageDown = networkReceivedUsage |> getPerfValue
-                }
-    
-            let rec agentLoop () : Async<unit> = async {
-                updateQueues ()
-    
-                while inbox.CurrentQueueLength <> 0 do
-                    let! msg = inbox.Receive()
-                    match msg with
-                    | Stop ch -> ch.Reply (); return ()
-                    | Info ch -> newNodePerformanceInfo () |> ch.Reply
-    
-                do! Async.Sleep updateInterval
-    
-                return! agentLoop ()
+        let newNodePerformanceInfo () : NodePerformanceInfo =
+            {
+                CpuUsage            = queues.[TotalCpu].Peek()
+                CpuUsageAverage     = queues.[TotalCpu] |> getAverage
+                TotalMemory         = totalMemory       |> getPerfValue
+                MemoryUsage         = queues.[TotalMemoryUsage].Peek()
+                NetworkUsageUp      = networkSentUsage      |> getPerfValue
+                NetworkUsageDown    = networkReceivedUsage  |> getPerfValue
             }
+
+        let perfCounterActor = 
+            new MailboxProcessor<Message>(fun inbox ->    
+                let rec agentLoop () : Async<unit> = async {
+                    updateQueues ()
     
-            agentLoop ())
+                    while inbox.CurrentQueueLength <> 0 do
+                        let! msg = inbox.Receive()
+                        match msg with
+                        | Stop ch -> ch.Reply (); return ()
+                        | Info ch -> newNodePerformanceInfo () |> ch.Reply
+    
+                    do! Async.Sleep updateInterval
+    
+                    return! agentLoop ()
+                }
+                agentLoop ())
+
+        let monitored =
+             let l = new List<string>()
+             if cpuUsage.IsSome then l.Add("%Cpu")
+             if totalMemory.IsSome then l.Add("Total Memory")
+             if memoryUsage.IsSome then l.Add("%Memory")
+             if networkSentUsage.IsSome then l.Add("Network (sent)")
+             if networkReceivedUsage.IsSome then l.Add("Network (received)")
+             l
 
         member this.GetCounters () : NodePerformanceInfo =
-            try
-                perfCounterActor.PostAndReply(fun ch -> Info ch)
-            with _ -> NodePerformanceInfo.NotAvailable // TODO : revise
+            perfCounterActor.PostAndReply(fun ch -> Info ch)
 
         member this.Start () =
             perfCounterActor.Start()
             this.GetCounters() |> ignore // first value always 0
 
-        member this.Stop () =
-            perfCounterActor.PostAndReply(fun ch -> Stop ch)
+        member this.MonitoredCategories : string seq = monitored :> _
 
         interface System.IDisposable with
-            member this.Dispose () = this.Stop()
+            member this.Dispose () = 
+                perfCounterActor.PostAndReply(fun ch -> Stop ch)
+                perfCounters |> Seq.iter (fun c -> c.Dispose())  
