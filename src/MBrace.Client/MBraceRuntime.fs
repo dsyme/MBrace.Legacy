@@ -115,29 +115,35 @@ namespace Nessos.MBrace.Client
                 if nodeConfiguration.Value.State <> Idle then
                     mfailwith "Cannot boot; runtime is already active."
                 else
-                    let nodes = clusterConfiguration.Value.Nodes |> Array.map (fun n -> n.Reference)
-                    let config =
-                        {
-                            Nodes = nodes
-                            ReplicationFactor =  defaultArg replicationFactor <| min (nodes.Length - 1) 2
-                            FailoverFactor = defaultArg failoverFactor <| min (nodes.Length - 1) 2
-                        }
+                    match clusterConfiguration.TryGetLastSuccessfulValue () with
+                    | None -> mfailwith "Cannot boot; insufficient cluster information."
+                    | Some info ->
+                        let nodes = info.Nodes |> Array.map (fun n -> n.Reference)
+                        let config =
+                            {
+                                Nodes = nodes
+                                ReplicationFactor = defaultArg replicationFactor info.ReplicationFactor
+                                FailoverFactor = defaultArg failoverFactor info.FailoverFactor
+                            }
 
-                    let! _ = postWithReplyAsync <| fun ch -> MasterBoot(ch,config)
+                        let! _ = postWithReplyAsync <| fun ch -> MasterBoot(ch,config)
 
-                    return ()
+                        return ()
             }
+
+        member r.ShutdownAsync () : Async<unit> = async {
+            // force clusterConfiguration evaluation
+            do clusterConfiguration.TryGetValue() |> ignore
+
+            return! postWithReplyAsync ShutdownSync
+        }
 
         member internal r.RebootAsync (?replicationFactor, ?failoverFactor) : Async<unit> =
             async {
-                do! postWithReplyAsync ShutdownSync
+                do! r.ShutdownAsync()
 
                 return! r.BootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor)
             }
-
-        member r.BootAsync () : Async<unit> = r.BootAsync(?replicationFactor = None, ?failoverFactor = None)
-        member r.RebootAsync () : Async<unit> = r.RebootAsync(?replicationFactor = None, ?failoverFactor = None)
-        member r.ShutdownAsync () : Async<unit> = postWithReplyAsync ShutdownSync
 
         member r.AttachAsync (nodes : seq<MBraceNode>) : Async<unit> =
             async {
@@ -157,9 +163,13 @@ namespace Nessos.MBrace.Client
                 | MessageHandlingExceptionRec e -> return mfailwithInner e "Node %A replied with exception." node.Uri
             }
 
-        member r.Boot () : unit = r.BootAsync(?replicationFactor = None, ?failoverFactor = None) |> Async.RunSynchronously
+        member r.Boot (?replicationFactor, ?failoverFactor) : unit = 
+            r.BootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor) |> Async.RunSynchronously
+
         member r.Shutdown() : unit = r.ShutdownAsync() |> Async.RunSynchronously
-        member r.Reboot() : unit = r.RebootAsync(?replicationFactor = None, ?failoverFactor = None) |> Async.RunSynchronously
+        member r.Reboot(?replicationFactor, ?failoverFactor) : unit = 
+            r.RebootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor) |> Async.RunSynchronously
+
         member r.Attach (nodes : seq<MBraceNode>) : unit = r.AttachAsync nodes |> Async.RunSynchronously
         member r.Detach (node : MBraceNode) : unit = r.DetachAsync node |> Async.RunSynchronously
 
@@ -185,16 +195,22 @@ namespace Nessos.MBrace.Client
             int timer.ElapsedMilliseconds
 
         member r.Id : Guid = clusterConfiguration.Value.DeploymentId
-        member r.Nodes : MBraceNode list = clusterConfiguration.Value.Nodes |> Seq.map (fun n -> MBraceNode(n)) |> Seq.toList
+        member r.Nodes : MBraceNode list = 
+            match clusterConfiguration.TryGetLastSuccessfulValue() with
+            | None -> mfailwith "Cannot extract runtime information." 
+            | Some info -> info.Nodes |> Seq.map (fun n -> MBraceNode(n)) |> Seq.toList
+
+        member r.LocalNodes : MBraceNode list = r.Nodes |> List.filter (fun node -> node.IsLocal)
+
+        member r.Master : MBraceNode = let nI = clusterConfiguration.Value.MasterNode in MBraceNode(nI)
         member r.Alts : MBraceNode list = 
             clusterConfiguration.Value.Nodes 
             |> Seq.filter(fun nI -> nI.State = AltMaster) 
             |> Seq.map (fun n -> MBraceNode(n)) 
             |> Seq.toList
 
-        member r.Master : MBraceNode = let nI = clusterConfiguration.Value.MasterNode in MBraceNode(nI)
         member r.Active : bool = nodeConfiguration.Value.State <> Idle
-        member r.LocalNodes : MBraceNode list = r.Nodes |> List.filter (fun node -> node.IsLocal)
+
         member r.ShowInfo (?showPerformanceCounters : bool) : unit = 
             try
                 let showPerformanceCounters = defaultArg showPerformanceCounters false

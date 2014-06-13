@@ -9,7 +9,7 @@ namespace Nessos.MBrace.Utils
     /// thread safe cache with expiry semantics
     type CacheAtom<'T> internal (provider : 'T option -> 'T, ?interval : int, ?initial : 'T) =
 
-        let interval = defaultArg interval 1000 |> float |> TimeSpan.FromMilliseconds
+        let interval = defaultArg interval 500 |> float |> TimeSpan.FromMilliseconds
         let initial = match initial with None -> Undefined | Some t -> Success(t, DateTime.Now)
         let container = Atom.atom<CacheState<'T>> initial
 
@@ -34,7 +34,22 @@ namespace Nessos.MBrace.Utils
         member __.Value =
             match container.Transact update with
             | Choice1Of2 v -> v
-            | Choice2Of2 e -> raise e
+            | Choice2Of2 e -> reraise' e
+
+        member __.TryGetValue () =
+            match container.Transact update with
+            | Choice1Of2 v -> Some v
+            | Choice2Of2 _ -> None
+
+        member __.TryGetLastSuccessfulValue () =
+            match __.TryGetValue () with
+            | Some _ as v -> v
+            | None ->
+                // failed, try extracting the latest recorded value
+                match container.Value with
+                | Success(t,_)
+                | Error(_,_,Some t) -> Some t
+                | _ -> None
 
     and private CacheState<'T> =
         | Undefined

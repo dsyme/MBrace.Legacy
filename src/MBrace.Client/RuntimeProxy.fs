@@ -9,6 +9,7 @@
     open Nessos.MBrace.Runtime
 
     let rec private runtimeProxyBehaviour (state : ClusterDeploymentInfo) (message : MBraceNode) = async {
+
         // get updated deployment info from any of the cluster nodes
         let rec tryGetUpdatedState (nodes : NodeDeploymentInfo list) = async {
             match nodes with
