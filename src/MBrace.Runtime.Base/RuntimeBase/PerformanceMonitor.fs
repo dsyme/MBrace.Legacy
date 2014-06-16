@@ -1,8 +1,9 @@
 ﻿namespace Nessos.MBrace.Runtime
 
     open System
-    open System.Diagnostics
     open System.Net
+    open System.Management
+    open System.Diagnostics
     open System.Collections.Generic
 
     open Nessos.Thespian
@@ -58,8 +59,12 @@
                     Some <| fun () -> pc.NextValue()
                 else None
             else
-                let ci = Microsoft.VisualBasic.Devices.ComputerInfo () // TODO: Maybe use WMI
-                let mb = ci.TotalPhysicalMemory / uint64 (1 <<< 20) |> single
+                use searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT TotalPhysicalMemory FROM Win32_ComputerSystem")
+                use qObj = searcher.Get() 
+                           |> Seq.cast<ManagementBaseObject> 
+                           |> Seq.exactlyOne
+                let totalBytes = qObj.["TotalPhysicalMemory"] :?> uint64
+                let mb = totalBytes / uint64 (1 <<< 20) |> single // size in MB
                 Some(fun () -> mb)
     
         let memoryUsage = 
