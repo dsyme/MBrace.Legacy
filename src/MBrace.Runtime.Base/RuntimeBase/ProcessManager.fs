@@ -43,7 +43,7 @@
             | Success bytes -> Serialization.Deserialize<obj> bytes
             | _ -> invalidOp "not a value branch"
 
-    /// Cloud process info with serialized entries
+    /// Cloud process info with serialized entries.
     and ProcessInfo =
         {
             Name : string

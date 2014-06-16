@@ -25,11 +25,9 @@
     type NodePerformanceInfo = Nessos.MBrace.Runtime.NodePerformanceInfo
     type Permissions = Nessos.MBrace.Runtime.Permissions
 
-    ///The type representing a {m}brace node.
+    /// The type representing a {m}brace node.
     [<Sealed; NoEquality; NoComparison; AutoSerializable(false)>]
     type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri : Uri) as self =
-
-        static do MBraceSettings.ClientId |> ignore
 
         let handleError (e : exn) : 'T =
             match e with
@@ -89,10 +87,20 @@
             with get () = n.Permissions.HasFlag Permissions.Slave
             and  set (x: bool) = n.Permissions <- Permissions.switch x Permissions.Slave n.Permissions 
 
+        /// Gets the current node's state.
         member n.State : NodeState = (fst nodeInfo.Value).State
+
+        /// Gets a Guid that identifies this deployment.
         member n.DeploymentId = (fst nodeInfo.Value).DeploymentId
+
+        /// Gets whether the node is active or idle.
         member n.IsActive = n.State <> Idle
 
+        /// <summary>
+        /// Sends a ping message to the node and returns the duration of the roundtrip.
+        /// </summary>
+        /// <param name="silent">Do not show a Ping message on the node's logs.</param>
+        /// <param name="timeout">The amount of time in milliseconds to wait for a reply from the node (default is 3 seconds).</param>
         member n.Ping(?silent: bool, ?timeout: int) : int =
             try
                 let silent = defaultArg silent false
@@ -114,27 +122,40 @@
                 return handleError e
         }
 
+        /// Returns statistics about resources usage (CPU, Memory, etc) collected in this node.
         member __.GetPerformanceCounters () : NodePerformanceInfo =
             let info = __.GetNodeInfoAsync true |> Async.RunSynchronously
             info.PerformanceInfo |> Option.get
 
+        /// <summary>
+        /// Returns information about the current node deployment.
+        /// </summary>
+        /// <param name="includePerformanceCounters">Include the performance statistics.</param>
         member __.GetInfo (?includePerformanceCounters) : string =
             let showPerf = defaultArg includePerformanceCounters false
             let info = __.GetNodeInfoAsync(showPerf) |> Async.RunSynchronously
             Reporting.MBraceNodeReporter.Report(Seq.singleton info, showPerf = showPerf, showBorder = false)
 
+        /// <summary>
+        /// Prints information about the current node deployment.
+        /// </summary>
+        /// <param name="includePerformanceCounters">Include the performance statistics.</param>
         member __.ShowInfo(?includePerformanceCounters) : unit =
             __.GetInfo(?includePerformanceCounters = includePerformanceCounters)
             |> Console.WriteLine
 
+        /// Gets a dump of all logs printed by the node.
         member n.GetSystemLogs () : SystemLogEntry [] =
             try nodeRef <!= GetLogDump
             with e -> handleError e
 
+        /// Prints a dump of all logs printed by the node.
         member n.ShowSystemLogs () : unit = n.GetSystemLogs () |> Logs.show
 
+        /// Returns whether this node corresponds to a local process.
         member n.IsLocal : bool = n.Process.IsSome
 
+        /// Kills violently the node. This method works only on local nodes.
         member n.Kill() : unit =
             match n.Process with
             | None -> invalidOp "Node %A is not local and cannot be killed." self
@@ -201,6 +222,11 @@
                 | e -> return mfailwithInner e "Error spawning local {m}brace daemon."
             }
 
+        /// <summary>
+        /// Spawns a new {m}brace daemon (node).
+        /// </summary>
+        /// <param name="arguments">The command line arguments.</param>
+        /// <param name="background">Spawn in the background (without a console window).</param>
         static member Spawn(arguments : string [], ?background) : MBraceNode =
             async {
                 let arguments = 
@@ -210,6 +236,20 @@
                 return! MBraceNode.SpawnAsync(arguments, ?background = background)
             } |> Async.RunSynchronously
 
+        /// <summary>
+        /// Spawns a new {m}brace daemon (node).
+        /// </summary>
+        /// <param name="hostname">The hostname to be used by the node and the runtime.</param>
+        /// <param name="primaryPort">The port the node listens to.</param>
+        /// <param name="workerPorts">The ports pool use by the {m}brace workers.</param>
+        /// <param name="logFiles">Paths to file to use for logging.</param>
+        /// <param name="logLevel">The level of entries to be logged.</param>
+        /// <param name="permissions">Permissions for this node.</param>
+        /// <param name="debug">Run in debug mode.</param>
+        /// <param name="workingDirectory">The path to be used as a working directory.</param>
+        /// <param name="useTemporaryWorkDir">Use a temporary folder as a working directory.</param>
+        /// <param name="background">Spawn in the background (without a console window).</param>
+        /// <param name="storeProvider">The StoreProvider to be used as the node's default.</param>
         static member SpawnAsync(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
                                     ?background : bool, ?storeProvider : StoreProvider) : Async<MBraceNode> = 
@@ -243,6 +283,20 @@
                 return! MBraceNode.SpawnAsync(args, ?background = background)
             }
 
+        /// <summary>
+        /// Spawns a new {m}brace daemon (node).
+        /// </summary>
+        /// <param name="hostname">The hostname to be used by the node and the runtime.</param>
+        /// <param name="primaryPort">The port the node listens to.</param>
+        /// <param name="workerPorts">The ports pool use by the {m}brace workers.</param>
+        /// <param name="logFiles">Paths to file to use for logging.</param>
+        /// <param name="logLevel">The level of entries to be logged.</param>
+        /// <param name="permissions">Permissions for this node.</param>
+        /// <param name="debug">Run in debug mode.</param>
+        /// <param name="workingDirectory">The path to be used as a working directory.</param>
+        /// <param name="useTemporaryWorkDir">Use a temporary folder as a working directory.</param>
+        /// <param name="background">Spawn in the background (without a console window).</param>
+        /// <param name="storeProvider">The StoreProvider to be used as the node's default.</param>
         static member Spawn(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
                                     ?background : bool, ?storeProvider : StoreProvider) : MBraceNode =
@@ -252,6 +306,18 @@
                                         ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?storeProvider = storeProvider)
             |> Async.RunSynchronously
 
+        /// <summary>
+        /// Spawns multiple {m}brace daemons.
+        /// </summary>
+        /// <param name="nodeCount">The number of nodes to spawn.</param>
+        /// <param name="workerPortsPerNode">The number of worker ports to be used by each {m}brace node.</param>
+        /// <param name="hostname">The hostname to be used by each node.</param>
+        /// <param name="logFiles">Paths to file to use for logging.</param>
+        /// <param name="logLevel">The level of entries to be logged.</param>
+        /// <param name="permissions">Permissions for all nodes.</param>
+        /// <param name="debug">Run in debug mode.</param>
+        /// <param name="background">Spawn in the background (without a console window).</param>
+        /// <param name="storeProvider">The StoreProvider to be used as the nodes' default.</param>
         static member SpawnMultiple(nodeCount : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeProvider : StoreProvider) : MBraceNode list =
         
@@ -278,13 +344,26 @@
 
             } |> Async.RunSynchronously
 
-
+        /// <summary>
+        /// Prints a report about the given collection of nodes.
+        /// </summary>
+        /// <param name="nodes">The nodes.</param>
+        /// <param name="displayPerfCounters">Also display performance statistics.</param>
+        /// <param name="title">A title for the report.</param>
+        /// <param name="useBorders">Use fancy borders.</param>
         static member PrettyPrintAsync(nodes : seq<MBraceNode>, ?displayPerfCounters, ?title, ?useBorders) : Async<string> = async {
             let displayPerfCounters = defaultArg displayPerfCounters false
             let! nodeInfo = nodes |> Seq.map (fun n -> n.GetNodeInfoAsync(displayPerfCounters)) |> Async.Parallel
             return MBraceNodeReporter.Report(nodeInfo, displayPerfCounters, ?title = title, ?showBorder = useBorders)
         }
 
+        /// <summary>
+        /// Prints a report about the given collection of nodes.
+        /// </summary>
+        /// <param name="nodes">The nodes.</param>
+        /// <param name="displayPerfCounters">Also display performance statistics.</param>
+        /// <param name="title">A title for the report.</param>
+        /// <param name="useBorders">Use fancy borders.</param>
         static member PrettyPrint(nodes : seq<MBraceNode>, ?displayPerfCounters, ?title, ?useBorders) =
             MBraceNode.PrettyPrintAsync(nodes, ?displayPerfCounters = displayPerfCounters, ?title = title, ?useBorders = useBorders)
             |> Async.RunSynchronously

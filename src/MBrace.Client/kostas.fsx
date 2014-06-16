@@ -3,12 +3,17 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
+
 let rt = MBrace.InitLocal 3
 
 
 
 
 rt.Nodes.Length
-let ns = Node.SpawnMultiple 1
+
+let ns = Node.SpawnMultiple 2
+ns |> Seq.map (fun n -> n.DeploymentId)
+
+
 rt.Attach ns
 rt.Nodes.Length
