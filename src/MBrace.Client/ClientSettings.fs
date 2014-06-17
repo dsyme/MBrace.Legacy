@@ -166,7 +166,7 @@ namespace Nessos.MBrace.Client
         static member Logger
             with get () = config.Value.Value.Logger
             and set l = 
-                lock config (fun () ->
+                lock config.Value (fun () ->
                     registerLogger l
                     config.Value.Swap(fun c -> { c with Logger = l })
                 )
@@ -177,7 +177,7 @@ namespace Nessos.MBrace.Client
 
             and set p =
                 // store activation has side-effects ; use lock instead of swap
-                lock config (fun () ->
+                lock config.Value (fun () ->
                     let storeInfo = StoreRegistry.Activate(p, makeDefault = true)
                     config.Value.Swap(fun c -> { c with StoreInfo = storeInfo })
                 )

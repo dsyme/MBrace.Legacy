@@ -14,7 +14,7 @@
     /// or any custom provider that implements the ICloudStore interface.
     type StoreProvider private (factoryType : Type, connectionString : string) =
 
-        member __.StoreFactoryQualifiedName = factoryType.FullName
+        member __.StoreFactoryQualifiedName = factoryType.AssemblyQualifiedName
         member __.StoreFactoryType = factoryType
         member __.ConnectionString = connectionString
 
