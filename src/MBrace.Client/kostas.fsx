@@ -18,7 +18,3 @@ ns |> Seq.map (fun n -> n.DeploymentId)
 rt.Attach ns
 rt.Nodes.Length
 
-
-#r "System.Management"
-open System
-open System.Management
