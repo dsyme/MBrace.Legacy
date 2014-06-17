@@ -9,7 +9,7 @@
         let blob  = ImmutableBlobStoreProvider (conn)
         let table = ImmutableTableStoreProvider(conn)
         
-        member this.Name = sprintf "Paired store : %s, %s" blob.Name table.Name
+        member this.Name = sprintf "Blob/Table store : %s/%s" blob.Name table.Name
 
         member this.Create(folder, file, serialize : Stream -> Async<unit>, asFile : bool) : Async<unit> =
             async {
