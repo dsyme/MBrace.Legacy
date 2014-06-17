@@ -1,6 +1,7 @@
 ﻿namespace Nessos.MBrace.Client
 
     open System
+    open System.Reflection
     open System.IO
 
     open Nessos.MBrace.Runtime.Store
@@ -14,7 +15,7 @@
     /// or any custom provider that implements the ICloudStore interface.
     type StoreProvider private (factoryType : Type, connectionString : string) =
 
-        member __.StoreFactoryQualifiedName = factoryType.FullName
+        member __.StoreFactoryQualifiedName = factoryType.AssemblyQualifiedName
         member __.StoreFactoryType = factoryType
         member __.ConnectionString = connectionString
 
@@ -78,11 +79,21 @@ namespace Nessos.MBrace.Runtime.Store
         }
 
     [<AutoSerializable(false)>]
-    type StoreInfo internal (id : StoreId, provider : StoreProvider, store : ICloudStore, primitives : PrimitiveConfiguration) =
-        member __.Id = id
-        member __.Provider = provider
-        member __.Store = store
-        member __.Primitives = primitives
+    type StoreInfo = 
+        {
+            Id : StoreId
+            Provider : StoreProvider
+            Dependencies : Assembly list
+            Store : ICloudStore
+            Primitives : PrimitiveConfiguration
+        }
+
+//    [<Serializable>]
+//    type StoreActivator internal (id : StoreId, dependencies : AssemblyId list, provider : StoreProvider) =
+//        
+//        member __.Id = id
+//        member __.Dependencies = dependencies
+//        member __.Provider = provider
 
     // TODO : handle all dependent assemblies
     and StoreRegistry private () =
@@ -94,10 +105,32 @@ namespace Nessos.MBrace.Runtime.Store
         static let hashAlgorithm = SHA256Managed.Create() :> HashAlgorithm
         static let computeHash (txt : string) = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes txt)
 
+//        static member SetVagrantServer(server : VagrantServer) = 
+//            lock vagrantServer (fun () -> vagrantServer := Choice2Of3 server)
+//
+//        static member SetVagrantCache(cache : VagrantCache) =
+//            lock vagrantServer (fun () -> vagrantServer := Choice3Of3 cache)
+
+//        static member TryGetStoreActivator(id : StoreId) =
+//            match registry.TryFind id with
+//            | None -> None
+//            | Some info ->
+//                let dependencies =
+//                    match vagrantServer.Value with
+//                    | None -> VagrantUtils.ComputeAssemblyDependencies info.Provider
+//                    | Some v -> v.ComputeObjectDependencies(info.Provider, permitCompilation = true)
+//                    |> List.map VagrantUtils.ComputeAssemblyId
+//
+//                let sa = new StoreActivator(id, dependencies, info.Provider)
+//                Some sa
+
+        static member IsAvailableStoreProvider(id : StoreId) =
+            Type.GetType(id.AssemblyQualifiedName, throwOnError = false) <> null
+
         static member internal InitStore(provider : StoreProvider) =
             let factory = Activator.CreateInstance provider.StoreFactoryType :?> ICloudStoreFactory
             let store = factory.CreateStoreFromConnectionString provider.ConnectionString
-            let id = { AssemblyQualifiedName = store.GetType().FullName ; UUID = computeHash store.UUID }
+            let id = { AssemblyQualifiedName = store.GetType().AssemblyQualifiedName ; UUID = computeHash store.UUID }
             id, store
 
         static member internal Register(store : StoreInfo, ?makeDefault) : bool =

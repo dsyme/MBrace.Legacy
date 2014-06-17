@@ -115,7 +115,7 @@ namespace Nessos.MBrace.Client
             do StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem(localCacheDir))
 
             // activate store provider
-            let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
+            let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true, server = vagrant)
 
             // initialize connection pool
             do ConnectionPool.TcpConnectionPool.Init()
@@ -178,7 +178,7 @@ namespace Nessos.MBrace.Client
             and set p =
                 // store activation has side-effects ; use lock instead of swap
                 lock config (fun () ->
-                    let storeInfo = StoreRegistry.Activate(p, makeDefault = true)
+                    let storeInfo = StoreRegistry.Activate(p, makeDefault = true, server = config.Value.Value.Vagrant)
                     config.Value.Swap(fun c -> { c with StoreInfo = storeInfo })
                 )
 

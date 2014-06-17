@@ -88,6 +88,7 @@
     <Compile Include="RuntimeBase\SystemLog.fs" />
     <Compile Include="RuntimeBase\CloudProcessLog.fs" />
     <Compile Include="RuntimeBase\PerformanceMonitor.fs" />
+    <Compile Include="RuntimeBase\StoreManager.fs" />
     <Compile Include="RuntimeBase\ProcessManager.fs" />
     <Compile Include="RuntimeBase\MBraceNode.fs" />
     <Compile Include="RuntimeBase\Utils.fs" />

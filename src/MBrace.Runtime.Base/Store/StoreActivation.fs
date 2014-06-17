@@ -5,11 +5,13 @@
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Client
 
+    open Nessos.Vagrant
+
     [<AutoOpen>]
     module StoreActivation =
     
         type StoreRegistry with
-            static member Activate(provider : StoreProvider, ?makeDefault) =
+            static member Activate(provider : StoreProvider, ?makeDefault, ?server : VagrantServer) =
                 let id, store = StoreRegistry.InitStore(provider)
                 match StoreRegistry.TryGetStoreInfo id with
                 | Some info -> info
@@ -32,7 +34,19 @@
                             MutableCloudRefProvider = mrefStore   :> IMutableCloudRefProvider
                         }
 
-                    let info = new StoreInfo(id, provider, store, primitives)
+                    let dependencies =
+                        match server with
+                        | None -> VagrantUtils.ComputeAssemblyDependencies(provider)
+                        | Some s -> s.ComputeObjectDependencies(provider, permitCompilation = true)
+
+                    let info =
+                        {
+                            Id = id
+                            Provider = provider
+                            Dependencies = dependencies
+                            Store = store
+                            Primitives = primitives
+                        }
 
                     StoreRegistry.Register(info, ?makeDefault = makeDefault) |> ignore
 
