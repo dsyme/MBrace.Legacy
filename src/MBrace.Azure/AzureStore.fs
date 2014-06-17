@@ -82,8 +82,12 @@
 
             member this.Delete(folder, file) =
                 //let folder = Helpers.prefix folder
-                try mutableStore.Delete(folder, file)
-                with _ -> generalStore.Delete(folder, file)
+                async {
+                    try do! 
+                        mutableStore.Delete(folder, file)
+                    with _ -> 
+                        do! generalStore.Delete(folder, file)
+                }
 
     type AzureStoreFactory () =
         interface ICloudStoreFactory with
