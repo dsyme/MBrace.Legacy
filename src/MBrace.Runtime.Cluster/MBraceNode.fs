@@ -128,10 +128,10 @@ let rec private triggerNodeFailure (innerException: exn) (ctx: BehaviorContext<_
         match innerException with
         | SystemCorruptionException _ as e -> 
             //r <| Exception(new MBrace.SystemCorruptedException(e.Message, e.InnerException))
-            r <| Exception(new SystemCorruptedException(e.Message))
+            r <| Exception(new SystemCorruptedException(e.Message, innerException))
         | e -> 
             //r <| Exception(new MBrace.SystemCorruptedException("Unexpected exception occurred.", e))
-            r <| Exception(new SystemCorruptedException("Unexpected exception occurred."))
+            r <| Exception(new SystemCorruptedException("Unexpected exception occurred.", innerException))
     let warning () = ctx.LogEvent(LogLevel.Error, sprintf' "Unexpected exception occurred: %A" innerException)
     async {
         match msg with
