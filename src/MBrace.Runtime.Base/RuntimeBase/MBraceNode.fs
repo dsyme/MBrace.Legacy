@@ -88,6 +88,8 @@
         | GetNodeDeploymentInfo of IReplyChannel<NodeDeploymentInfo> * includePerfCounters:bool
         /// Returns cluster-specific information
         | GetClusterDeploymentInfo of IReplyChannel<ClusterDeploymentInfo> * includePerfCounters:bool
+        /// Returns the store manager for given node
+        | GetStoreManager of IReplyChannel<ActorRef<StoreManager>>
         /// Receive a dump of all logs printed by the node
         | GetLogDump of IReplyChannel<SystemLogEntry []>
         /// Boots the runtime. The node receiving this message becomes the Master Node

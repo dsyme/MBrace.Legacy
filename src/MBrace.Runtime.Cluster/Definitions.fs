@@ -34,6 +34,17 @@ type internal AssemblyManagerDefinition(parent: DefinitionPath) =
         return Behavior.stateless AssemblyManager.assemblyManagerBehavior
     }
 
+//type internal StoreManagerDefinition(parent : DefinitionPath) =
+//    inherit ActorDefinition<StoreManager>(parent)
+//
+//    override __.Name = "assemblyManager"
+//
+//    override __.Dependencies = []
+//
+//    override __.Behavior(configuration: ActivationConfiguration, instanceId: int) = async {
+//        return Behavior.stateless StoreManager.storeManagerBehavior
+//    }
+
 type internal ProcessDomainManagerDefinition(parent: DefinitionPath, inMemory: bool) =
     inherit ActorDefinition<ProcessDomainManager>(parent)
 
@@ -563,7 +574,15 @@ type MBraceNodeEventManager() =
 
     ///On node initialization, start the node's Runtime actor.
     override __.OnInit() = async {
+
         Log.logInfo "Node init:: Initializing client interfaces."
+
+        let storeManager =
+            Actor.bind <| Behavior.stateless StoreManager.storeManagerBehavior
+            |> Actor.subscribeLog (Default.actorEventHandler Default.fatalActorFailure System.String.Empty)
+            |> Actor.rename "storeManager"
+            |> Actor.publish [Remote.TcpProtocol.Bidirectional.BTcp()] //TODO!!! Also add UTcp() ?
+            |> Actor.start
 
         let initState = MBraceNode.State.Empty
         
@@ -575,6 +594,7 @@ type MBraceNodeEventManager() =
             |> Actor.start
         
         Cluster.Set("MBraceNode", mbraceNode)
+        Cluster.Set("StoreManager", storeManager)
 
         Log.logInfo "Node init:: Client interfaces ready."
     }
@@ -805,6 +825,7 @@ module DefinitionRegistry =
             .Register(new ProcessGroupDefinition(empDef))
             .Register(new WorkerDefinition(empDef/"process"))
             .Register(new ProcessMonitorProxyDefinition(empDef/"process"))
+//            .Register(new StoreManagerDefinition(empDef/"storeManager"))
 
     let inMemoryDefinitionRegistry =
         DefinitionRegistry.Empty
