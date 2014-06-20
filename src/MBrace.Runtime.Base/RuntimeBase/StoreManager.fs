@@ -4,14 +4,15 @@
     open Nessos.Vagrant
 
     open Nessos.MBrace.Runtime.Store
-    open Nessos.MBrace.Client
+
+    type StoreLoadResponse =
+        | Success
+        | MissingAssemblies of AssemblyId list
 
     type StoreManager =
-        | GetStoreStatus of IReplyChannel<StoreStatus> * StoreId
-        | SetDefaultStorageProvider of IReplyChannel<unit> * StoreProvider
-        | GetDefaultStorageProvider of IReplyChannel<StoreProvider>
-        | GetDefaultStoreInfo of IReplyChannel<StoreId * AssemblyId list>
-        | GetAssemblyLoadInfo of IReplyChannel<AssemblyLoadInfo list> * AssemblyId list
+        | ActivateStore of IReplyChannel<StoreLoadResponse> * StoreActivationInfo
+        | GetDefaultStore of IReplyChannel<StoreActivationInfo>
+
         | UploadAssemblies of IReplyChannel<AssemblyLoadInfo list> * PortableAssembly list
         | DownloadAssemblies of IReplyChannel<PortableAssembly list> * AssemblyId list
 
@@ -19,50 +20,58 @@
     [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
     module StoreManager =
 
-        let uploadStore (server : VagrantServer option) (storeInfo : StoreInfo) (remote : ActorRef<StoreManager>) = async {
-            let! state = remote <!- fun ch -> GetStoreStatus(ch, storeInfo.Id)
+        let uploadStore (storeInfo : StoreInfo) (remote : ActorRef<StoreManager>) = async {
+            let! result = remote <!- fun ch -> ActivateStore(ch, storeInfo.ActivationInfo)
 
-            match state with
-            | Activated -> return ()
-            | Installed | Available -> 
-                do! remote <!- fun ch -> SetDefaultStorageProvider(ch, storeInfo.Provider)
+            match result with
+            | Success -> return ()
+            | MissingAssemblies ids ->
+                let pas = ids |> List.map (fun id -> storeInfo.Dependencies.[id] |> VagrantUtils.CreatePortableAssembly)
+                let! info = remote <!- fun ch -> UploadAssemblies(ch, pas)
 
-            | UnAvailable ->
-                let map = storeInfo.Dependencies |> Seq.map (fun d -> VagrantUtils.ComputeAssemblyId d, d) |> Map.ofSeq
-                let! info = remote <!- fun ch -> GetAssemblyLoadInfo(ch, map |> Map.toList |> List.map fst)
-                let portableAssemblies =
-                    info
-                    |> List.choose (function Loaded _ -> None | info -> Some info.Id)
-                    |> List.map (fun id ->
-                        let a = map.[id]
-                        match server with 
-                        | None -> VagrantUtils.CreatePortableAssembly(a)
-                        | Some s -> s.MakePortableAssembly(a, includeAssemblyImage = true))
+                match info |> List.tryFind (function Loaded _ -> true | _ -> false) with
+                | None -> ()
+                | Some info -> invalidOp <| sprintf "Failed to upload store '%O' to remote party." storeInfo.Store
 
-                let! info = remote <!- fun ch -> UploadAssemblies(ch, portableAssemblies)
-                do! remote <!- fun ch -> SetDefaultStorageProvider(ch, storeInfo.Provider)
+                let! result = remote <!- fun ch -> ActivateStore(ch, storeInfo.ActivationInfo)
+                match result with
+                | Success -> return ()
+                | MissingAssemblies _ ->
+                    return invalidOp <| sprintf "Failed to upload store '%O' to remote party." storeInfo.Store
+
         }
 
-        let downloadStore (isLoaded : AssemblyId -> bool) (loadF : PortableAssembly -> unit) (remote : ActorRef<StoreManager>) = 
-            async {
-            
-                let! id, dependencies = remote <!- GetDefaultStoreInfo
+//        let tryActivateStore (isLoaded : AssemblyId -> bool) (loadF : PortableAssembly -> unit) (activationInfo : StoreActivationInfo) =
+//            match StoreRegistry.TryActivate(activationInfo, makeDefault = true)
+//            match StoreRegistry.TryGetStoreProvider activationInfo with
+//            | None ->
+//                let missing = activationInfo.Dependencies |> List.filter (not << isLoaded)
+//                MissingAssemblies missing
+//
+//            | Some p ->
+//                let info = StoreRegistry.Activate(p, makeDefault = true)
+//                Success
+//
+//        let downloadStore (isLoaded : AssemblyId -> bool) (loadF : PortableAssembly -> unit) (remote : ActorRef<StoreManager>) = 
+//            async {
+//            
+//                let! activationInfo = remote <!- GetDefaultStore
+//
+//                match tryActivateStore isLoaded loadF remote with
+//                | Success -> return ()
+//                | MissingAssemblies ids ->
 
-                match StoreRegistry.GetStoreLoadStatus id with
-                | UnAvailable ->
-                    // download missing dependencies, if any.
-                    let missing = dependencies |> List.filter isLoaded
-                    let! pas = remote <!- fun ch -> DownloadAssemblies(ch, missing)
-                    for pa in pas do loadF pa
 
-                    // get provider and activate
-                    let! provider = remote <!- GetDefaultStorageProvider
-                    return StoreRegistry.Activate(provider, makeDefault = true)
-
-                | Available ->
-                    let! provider = remote <!- GetDefaultStorageProvider    
-                    return StoreRegistry.Activate(provider, makeDefault = true)
-
-                | Installed -> return StoreRegistry.SetDefault(id)
-                | Activated -> return StoreRegistry.DefaultStoreInfo
-            }
+//                match StoreRegistry.GetStoreLoadStatus activator.Id with
+//                | UnAvailable ->
+//                    // download missing dependencies, if any.
+//                    let missing = activator.Dependencies |> List.filter isLoaded
+//                    let! pas = remote <!- fun ch -> DownloadAssemblies(ch, missing)
+//                    for pa in pas do loadF pa
+//
+//                    return StoreRegistry.Activate(activator, makeDefault = true)
+//
+//                | Available -> return StoreRegistry.Activate(activator, makeDefault = true)
+//                | Installed -> return StoreRegistry.SetDefault(activator.Id)
+//                | Activated -> return StoreRegistry.DefaultStoreInfo
+//            }

@@ -73,10 +73,10 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
         let processExecutable = IoC.Resolve<string> "MBraceProcessExe"
         let debugMode = defaultArg (IoC.TryResolve<bool> "debugMode") false
 
-        let storeProvider = Store.StoreRegistry.DefaultStoreInfo.Provider
+        let storeInfo = Store.StoreRegistry.DefaultStoreInfo.ActivationInfo
         // TODO : currently passing only connection string since local cache is FileSystem
         // should probably pass entire provider info to arguments
-        let cacheStoreEndpoint = Store.StoreRegistry.LocalCache.Provider.ConnectionString
+        let cacheStoreEndpoint = Store.StoreRegistry.LocalCache.ActivationInfo.ConnectionString
 
         // protocol specific! should be changed
         let primaryAddr = IoC.Resolve<Address> "primaryAddress"
@@ -87,8 +87,8 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                 yield Process_Domain_Id processDomainId
                 yield Assembly_Cache <| IoC.Resolve<Nessos.Vagrant.VagrantCache>().CacheDirectory
                 yield Parent_Address <| primaryAddr.ToString ()
-                yield Store_Provider storeProvider.StoreFactoryQualifiedName
-                yield Store_EndPoint storeProvider.ConnectionString
+                yield Store_Provider storeInfo.FactoryQualifiedName
+                yield Store_EndPoint storeInfo.ConnectionString
                 yield Debug debugMode
                 match portOpt with
                 | Some selectedPort ->

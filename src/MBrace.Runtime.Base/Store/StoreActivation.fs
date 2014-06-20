@@ -11,20 +11,20 @@
     module StoreActivation =
     
         type StoreRegistry with
-            static member Activate(provider : StoreProvider, ?makeDefault, ?server : VagrantServer) =
-                let id, store = StoreRegistry.InitStore(provider)
-                match StoreRegistry.TryGetStoreInfo id with
+            static member Activate(provider : StoreProvider, ?makeDefault) =
+                let activationInfo, dependencies, store = StoreRegistry.InitStore(provider)
+                match StoreRegistry.TryGetStoreInfo activationInfo.Id with
                 | Some info -> info
                 | None ->
 
                     // TODO : move cache stuff to StoreRegistry
                     let cacheInfo = StoreRegistry.LocalCache
-                    let localCache = new LocalCache(sprintf "fscache-%d" <| hash id, cacheInfo.Store, store)
+                    let localCache = new LocalCache(sprintf "fscache-%d" <| hash activationInfo.Id, cacheInfo.Store, store)
 
-                    let crefStore  = new CloudRefProvider(id, store, cacheInfo.InMemoryCache, localCache) 
-                    let cseqStore  = new CloudSeqProvider(id, store, localCache)                          
-                    let mrefStore  = new MutableCloudRefProvider(id, store)                               
-                    let cfileStore = new CloudFileProvider(id, store, localCache)                         
+                    let crefStore  = new CloudRefProvider(activationInfo.Id, store, cacheInfo.InMemoryCache, localCache) 
+                    let cseqStore  = new CloudSeqProvider(activationInfo.Id, store, localCache)                          
+                    let mrefStore  = new MutableCloudRefProvider(activationInfo.Id, store)                               
+                    let cfileStore = new CloudFileProvider(activationInfo.Id, store, localCache)
 
                     let primitives =
                         {
@@ -34,20 +34,23 @@
                             MutableCloudRefProvider = mrefStore   :> IMutableCloudRefProvider
                         }
 
-                    let dependencies =
-                        match server with
-                        | None -> VagrantUtils.ComputeAssemblyDependencies(provider)
-                        | Some s -> s.ComputeObjectDependencies(provider, permitCompilation = true)
-
                     let info =
                         {
-                            Id = id
+                            ActivationInfo = activationInfo
+                            Store = store
                             Provider = provider
                             Dependencies = dependencies
-                            Store = store
                             Primitives = primitives
                         }
 
                     StoreRegistry.Register(info, ?makeDefault = makeDefault) |> ignore
 
                     info
+
+            static member TryActivate(activationInfo : StoreActivationInfo, ?makeDefault) =
+                match StoreRegistry.TryGetStoreInfo activationInfo.Id with
+                | Some info as r -> StoreRegistry.Register(info, ?makeDefault = makeDefault) ; r
+                | None ->
+                    match StoreRegistry.TryGetStoreProvider activationInfo with
+                    | Some p -> StoreRegistry.Activate(p, ?makeDefault = makeDefault) |> Some
+                    | None -> None

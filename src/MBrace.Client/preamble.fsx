@@ -8,3 +8,7 @@
 #r "MBrace.Runtime.Base.dll"
 #r "MBrace.Client.dll"
 
+open System.IO
+open Nessos.MBrace.Client
+
+MBraceSettings.MBracedExecutablePath <- Path.Combine(__SOURCE_DIRECTORY__, "../../bin/mbraced.exe")

@@ -116,7 +116,7 @@ let private getClusterDeploymentInfo deploymentId self nodeType permissions incl
             FailoverFactor = 0
 
             Nodes = nodeInfo
-            StoreId = StoreRegistry.DefaultStoreInfo.Id
+            StoreId = StoreRegistry.DefaultStoreInfo.ActivationInfo.Id
             ProcessManager = processManager
         }
 }

@@ -61,7 +61,7 @@
         return initRuntimeProxy state
     }
 
-    let bootNodes (nodes : ActorRef<MBraceNode> [], replicationFactor, failoverFactor) = async {
+    let bootNodes (nodes : ActorRef<MBraceNode> [], replicationFactor, failoverFactor, storeProvider) = async {
         if nodes.Length < 3 then invalidArg "nodes" "insufficient amount of nodes."
 
         let! nodeInfo = nodes |> Array.map (fun n -> n <!- fun ch -> GetNodeDeploymentInfo(ch, false)) |> Async.Parallel
@@ -80,7 +80,13 @@
             invalidArg "nodes" "A cluster with failover should specify a replication factor of at least one."
 
         let master = masterCandidates.[0].Reference
-        let config = { Nodes = nodes ; ReplicationFactor = replicationFactor ; FailoverFactor = failoverFactor }
+        let config = 
+            { 
+                Nodes = nodes ; 
+                ReplicationFactor = replicationFactor ; 
+                FailoverFactor = failoverFactor ; 
+                StoreId = storeProvider;
+            }
 
         return! boot(master, config)
     }

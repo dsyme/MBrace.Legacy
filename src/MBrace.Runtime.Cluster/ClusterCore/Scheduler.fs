@@ -9,7 +9,6 @@ open Nessos.MBrace
 open Nessos.MBrace.Runtime
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Core
-open Nessos.MBrace.Client
 
 //type alias to prevent conflicts with non-cluster types
 type private ProcessMonitorDb = CommonTypes.ProcessMonitorDb

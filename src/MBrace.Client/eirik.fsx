@@ -19,3 +19,5 @@ runtime.Ping()
 
 let n = Node.Spawn()
 n.ShowInfo(true)
+
+runtime.Run <@ cloud { return 42 } @>

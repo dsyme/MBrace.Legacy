@@ -7,7 +7,6 @@ open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.ReplicatedState
 
 open Nessos.MBrace
-open Nessos.MBrace.Client
 open Nessos.MBrace.Core
 open Nessos.MBrace.Utils
 

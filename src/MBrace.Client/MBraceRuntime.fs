@@ -82,7 +82,7 @@ namespace Nessos.MBrace.Client
             let failoverFactor = defaultArg failoverFactor 2
             let replicationFactor = defaultArg replicationFactor (if failoverFactor = 0 then 0 else 2)
             let nodes = nodes |> Seq.map (fun n -> n.Ref) |> Seq.toArray
-            let! proxy = RuntimeProxy.bootNodes(nodes, replicationFactor, failoverFactor)
+            let! proxy = RuntimeProxy.bootNodes(nodes, replicationFactor, failoverFactor, None)
             return initOfProxyActor proxy
         }
 
@@ -120,11 +120,13 @@ namespace Nessos.MBrace.Client
                     | None -> mfailwith "Cannot boot; insufficient cluster information."
                     | Some info ->
                         let nodes = info.Nodes |> Array.map (fun n -> n.Reference)
+                        let storeInfo = StoreRegistry.TryGetStoreInfo info.StoreId |> Option.get
                         let config =
                             {
                                 Nodes = nodes
                                 ReplicationFactor = defaultArg replicationFactor info.ReplicationFactor
                                 FailoverFactor = defaultArg failoverFactor info.FailoverFactor
+                                StoreId = None
                             }
 
                         let! _ = postWithReplyAsync <| fun ch -> MasterBoot(ch,config)

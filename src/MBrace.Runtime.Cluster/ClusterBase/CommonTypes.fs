@@ -16,7 +16,6 @@
 
         open Nessos.MBrace
         open Nessos.MBrace.Core
-        open Nessos.MBrace.Client
         open Nessos.MBrace.Runtime
         open Nessos.MBrace.Utils
 

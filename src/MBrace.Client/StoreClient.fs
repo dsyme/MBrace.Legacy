@@ -23,11 +23,11 @@
         static member Default 
             with get () = 
                 let info = MBraceSettings.DefaultStoreInfo
-                match registry.Value.TryFind info.Id with
+                match registry.Value.TryFind info.ActivationInfo.Id with
                 | Some sc -> sc
                 | None ->
-                    registry.Swap(fun m -> m.Add(info.Id, new StoreClient(info)))
-                    registry.Value.Item info.Id
+                    registry.Swap(fun m -> m.Add(info.ActivationInfo.Id, new StoreClient(info)))
+                    registry.Value.Item info.ActivationInfo.Id
 
         //---------------------------------------------------------------------------------
         // CloudRef

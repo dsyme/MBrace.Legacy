@@ -15,44 +15,27 @@
     let storeManagerBehavior (ctx: BehaviorContext<_>) (msg: StoreManager) = async {
         
         match msg with
-        | GetStoreStatus(RR ctx reply, id) ->
+        | ActivateStore(RR ctx reply, info) ->
             try
-                let info = StoreRegistry.GetStoreLoadStatus id
-                reply <| Value info
+                let response =
+                    match StoreRegistry.TryActivate(info, makeDefault = true) with
+                    | Some _ -> StoreLoadResponse.Success
+                    | None ->
+                        info.Dependencies 
+                        |> loader.Value.GetAssemblyLoadInfo
+                        |> List.choose (function Loaded _ -> None | info -> Some info.Id)
+                        |> MissingAssemblies
+
+                reply <| Value response
 
             with e ->
                 ctx.LogError e
                 reply <| Exception e
 
-        | SetDefaultStorageProvider (RR ctx reply, provider) ->
-            try
-                let info = StoreRegistry.Activate(provider, makeDefault = true, ?server = None)
-                reply nothing
-            with e ->
-                ctx.LogError e
-                reply <| Exception e
-
-        | GetDefaultStorageProvider (RR ctx reply) ->
+        | GetDefaultStore (RR ctx reply) ->
             try
                 let info = StoreRegistry.DefaultStoreInfo
-                reply <| Value info.Provider
-            with e ->
-                ctx.LogError e
-                reply <| Exception e
-
-        | GetDefaultStoreInfo (RR ctx reply) ->
-            try
-                let info = StoreRegistry.DefaultStoreInfo
-                reply <| Value (info.Id, info.Dependencies |> List.map VagrantUtils.ComputeAssemblyId)
-            with e ->
-                ctx.LogError e
-                reply <| Exception e
-
-        | StoreManager.GetAssemblyLoadInfo (RR ctx reply, ids) ->
-            try
-                let loadInfo = loader.Value.GetAssemblyLoadInfo ids
-                reply <| Value loadInfo
-
+                reply <| Value info.ActivationInfo
             with e ->
                 ctx.LogError e
                 reply <| Exception e

@@ -32,6 +32,7 @@
             Nodes : ActorRef<MBraceNode> []
             ReplicationFactor : int
             FailoverFactor : int
+            StoreId : StoreId option
         }
 
     and NodeDeploymentInfo =

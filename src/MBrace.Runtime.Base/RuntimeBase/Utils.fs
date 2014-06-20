@@ -150,6 +150,7 @@
             | Ping r -> r :> IReplyChannel |> Some
             | GetLogDump r -> r :> IReplyChannel |> Some
             | GetNodeDeploymentInfo (r,_) -> r :> IReplyChannel |> Some
+            | GetStoreManager r -> r :> IReplyChannel |> Some
             | GetClusterDeploymentInfo (r,_) -> r :> IReplyChannel |> Some
             | GetInternals r -> r :> IReplyChannel |> Some
             | ResetNodeState r -> r :> IReplyChannel |> Some
