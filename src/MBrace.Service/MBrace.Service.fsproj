@@ -95,11 +95,11 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="Thespian">
-      <HintPath>..\..\packages\Thespian.0.0.5-alpha\lib\net45\Thespian.dll</HintPath>
+      <HintPath>..\..\packages\Thespian.0.0.6-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Thespian.Cluster">
-      <HintPath>..\..\packages\Thespian.0.0.5-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
+      <HintPath>..\..\packages\Thespian.0.0.6-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="UnionArgParser">
