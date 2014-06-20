@@ -6,11 +6,6 @@
     open Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Client
 
-    type StoreStatus =
-        | Uninstalled
-        | Installed
-        | Activated
-
     type StoreManager =
         | GetStoreStatus of IReplyChannel<StoreStatus> * StoreId
         | SetDefaultStorageProvider of IReplyChannel<unit> * StoreProvider
@@ -29,10 +24,10 @@
 
             match state with
             | Activated -> return ()
-            | Installed -> 
+            | Installed | Available -> 
                 do! remote <!- fun ch -> SetDefaultStorageProvider(ch, storeInfo.Provider)
 
-            | Uninstalled ->
+            | UnAvailable ->
                 let map = storeInfo.Dependencies |> Seq.map (fun d -> VagrantUtils.ComputeAssemblyId d, d) |> Map.ofSeq
                 let! info = remote <!- fun ch -> GetAssemblyLoadInfo(ch, map |> Map.toList |> List.map fst)
                 let portableAssemblies =
@@ -53,11 +48,21 @@
             
                 let! id, dependencies = remote <!- GetDefaultStoreInfo
 
-                if StoreRegistry.IsAvailableStoreProvider id then
+                match StoreRegistry.GetStoreLoadStatus id with
+                | UnAvailable ->
+                    // download missing dependencies, if any.
                     let missing = dependencies |> List.filter isLoaded
                     let! pas = remote <!- fun ch -> DownloadAssemblies(ch, missing)
                     for pa in pas do loadF pa
-                    
-                let! provider = remote <!- GetDefaultStorageProvider    
-                return StoreRegistry.Activate(provider, makeDefault = true)
+
+                    // get provider and activate
+                    let! provider = remote <!- GetDefaultStorageProvider
+                    return StoreRegistry.Activate(provider, makeDefault = true)
+
+                | Available ->
+                    let! provider = remote <!- GetDefaultStorageProvider    
+                    return StoreRegistry.Activate(provider, makeDefault = true)
+
+                | Installed -> return StoreRegistry.SetDefault(id)
+                | Activated -> return StoreRegistry.DefaultStoreInfo
             }

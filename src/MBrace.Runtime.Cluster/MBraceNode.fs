@@ -140,6 +140,7 @@ let rec private triggerNodeFailure (innerException: exn) (ctx: BehaviorContext<_
         | Attach(RR ctx r, _) -> reply r
         | Detach(RR ctx r) -> reply r
         | GetNodeDeploymentInfo(RR ctx r,_) -> reply r
+        | GetStoreManager(RR ctx r) -> reply r
         | GetClusterDeploymentInfo(RR ctx r,_) -> reply r
         | Ping(RR ctx r) -> reply r
         | GetInternals(RR ctx r) -> reply r
@@ -163,16 +164,6 @@ let rec private triggerNodeFailure (innerException: exn) (ctx: BehaviorContext<_
 
         return goto mbraceNodeManagerBehaviorFailed state
     }
-
-//and private getLogDump reply clear =
-//    async {
-//        match imemLogger with
-//        | None -> SystemException("Log dumping not supported in this runtime.") :> exn |> Exception |> reply
-//        | Some logger ->
-//            logger.Dump() |> Value |> reply
-//
-//            if clear then logger.Clear()
-//    } 
 
 and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBraceNodeManager) =
     async {
@@ -255,6 +246,23 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
                         reply (Exception e)
                         return stay state  
                     | e -> return! triggerNodeFailure e ctx state msg
+
+            | GetStoreManager(RR ctx reply) ->
+                try
+                    //Throws
+                    //KeyNotFoundException => allow to fall through;; SYSTEM FAULT
+                    //InvalidCastException => allow to fall through;; SYSTEM FAULT
+                    let sm = Cluster.Get<Actor<StoreManager>>("StoreManager")
+
+                    reply <| Value sm.Ref
+
+                    return stay state
+
+                with FailureException _ as e ->
+                        reply (Exception e)
+                        return stay state  
+                    | e -> return! triggerNodeFailure e ctx state msg
+
 
             | ResetNodeState(RR ctx reply) ->
                 reply <| Exception(NotImplementedException())
@@ -496,11 +504,7 @@ and mbraceNodeManagerBehaviorFailed (ctx: BehaviorContext<_>) (state: State) (ms
         match msg with
         | ShutdownSync(RR ctx r) -> reply r
         | MasterBoot(RR ctx r, _) -> reply r
-//        | GetProcessManager(RR ctx r) -> reply r
-//        | GetMasterAndAlts(RR ctx r) -> reply r
-//        | GetDeploymentId(RR ctx r) -> reply r
-//        | GetStoreId(RR ctx r) -> reply r
-//        | GetAllNodes(RR ctx r) -> reply r
+        | GetStoreManager(RR ctx r) -> reply r
         | GetLogDump(RR ctx r) ->
             try
                 let entries = readEntriesFromMasterLogFile ()
@@ -509,8 +513,6 @@ and mbraceNodeManagerBehaviorFailed (ctx: BehaviorContext<_>) (state: State) (ms
             with e -> ctx.LogError e
         | Attach(RR ctx r, _) -> reply r
         | Detach(RR ctx r) -> reply r
-//        | GetNodeState(RR ctx r) -> reply r //TODO!!! Return a failed state.
-//        | GetNodePermissions(RR ctx r) -> r (Value Nessos.MBrace.Runtime.CommonAPI.Permissions.All)
         | Ping(RR ctx reply) ->
             try
                 ctx.LogInfo "PING"
@@ -523,7 +525,6 @@ and mbraceNodeManagerBehaviorFailed (ctx: BehaviorContext<_>) (state: State) (ms
             try reply r
             with e -> ctx.LogError e
         | ResetNodeState(RR ctx r) -> reply r
-//        | GetNodePerformanceCounters(RR ctx r) -> reply r
         | GetInternals(RR ctx r) -> reply r
         | SetNodePermissions _
         | Shutdown -> warning()

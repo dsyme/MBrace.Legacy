@@ -88,12 +88,11 @@ namespace Nessos.MBrace.Runtime.Store
             Primitives : PrimitiveConfiguration
         }
 
-//    [<Serializable>]
-//    type StoreActivator internal (id : StoreId, dependencies : AssemblyId list, provider : StoreProvider) =
-//        
-//        member __.Id = id
-//        member __.Dependencies = dependencies
-//        member __.Provider = provider
+    type StoreStatus =
+        | UnAvailable
+        | Available
+        | Installed
+        | Activated
 
     // TODO : handle all dependent assemblies
     and StoreRegistry private () =
@@ -105,27 +104,22 @@ namespace Nessos.MBrace.Runtime.Store
         static let hashAlgorithm = SHA256Managed.Create() :> HashAlgorithm
         static let computeHash (txt : string) = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes txt)
 
-//        static member SetVagrantServer(server : VagrantServer) = 
-//            lock vagrantServer (fun () -> vagrantServer := Choice2Of3 server)
-//
-//        static member SetVagrantCache(cache : VagrantCache) =
-//            lock vagrantServer (fun () -> vagrantServer := Choice3Of3 cache)
+        static member GetStoreLoadStatus(id : StoreId) =
+            let isDefault =
+                match defaultStore.Value with
+                | Some info when info.Id = id -> true
+                | _ -> false
 
-//        static member TryGetStoreActivator(id : StoreId) =
-//            match registry.TryFind id with
-//            | None -> None
-//            | Some info ->
-//                let dependencies =
-//                    match vagrantServer.Value with
-//                    | None -> VagrantUtils.ComputeAssemblyDependencies info.Provider
-//                    | Some v -> v.ComputeObjectDependencies(info.Provider, permitCompilation = true)
-//                    |> List.map VagrantUtils.ComputeAssemblyId
-//
-//                let sa = new StoreActivator(id, dependencies, info.Provider)
-//                Some sa
+            if isDefault then Activated
+            elif registry.ContainsKey id then Installed
+            elif Type.GetType(id.AssemblyQualifiedName, throwOnError = false) <> null then Available
+            else
+                UnAvailable
 
-        static member IsAvailableStoreProvider(id : StoreId) =
-            Type.GetType(id.AssemblyQualifiedName, throwOnError = false) <> null
+        static member SetDefault(id : StoreId) =
+            match registry.TryFind id with
+            | None -> invalidArg "id" "store id is not installed in registry."
+            | Some info -> defaultStore := Some info ; info
 
         static member internal InitStore(provider : StoreProvider) =
             let factory = Activator.CreateInstance provider.StoreFactoryType :?> ICloudStoreFactory

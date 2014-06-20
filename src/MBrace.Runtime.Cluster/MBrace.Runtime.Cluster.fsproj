@@ -62,6 +62,7 @@
     <Compile Include="ClusterBase\CommonTypes.fs" />
     <Compile Include="ClusterBase\ContinuationMap.fs" />
     <Compile Include="ClusterBase\Logger.fs" />
+    <Compile Include="ClusterBase\StoreManager.fs" />
     <Compile Include="ClusterBase\AssemblyManager.fs" />
     <Compile Include="ClusterBase\TaskLog.fs" />
     <Compile Include="ClusterBase\ProcessMonitorForCluster.fs" />
