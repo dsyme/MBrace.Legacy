@@ -135,7 +135,12 @@
             }
 
         member self.DeleteLogs () : Async<unit> =
-            store.DeleteContainer(container)
+            async {
+                let! exists = store.ContainerExists(container)
+                if exists then
+                    do! store.DeleteContainer(container)
+            }
+            
 
 
     type StreamingLogReader<'LogEntry>(store : ICloudStore, container, ct : CancellationToken, ?pollingInterval : int) as this =
