@@ -5,7 +5,8 @@ open Nessos.MBrace.Client
 
 let aqn  = "Nessos.MBrace.Azure.AzureStoreFactory, MBrace.Azure, Version=0.5.0.0, Culture=neutral, PublicKeyToken=null"
 let conn = "DefaultEndpointsProtocol=https;AccountName=mbraceclusterstorage;AccountKey=cq2knJyPSCP9uNcyDPbFAgHyiPpJVMcR/59yN2RW9uNmrHJyT4ZwdLYxCXuUo6w5xJ7iMjKy0+WxQQ+f2nSseQ=="
-MBraceSettings.StoreProvider <- StoreProvider.Parse(aqn,conn)
+let azureProvider = StoreProvider.Parse(aqn, conn)
+MBraceSettings.StoreProvider <- azureProvider
 
 open System.IO
 [<Cloud>]
