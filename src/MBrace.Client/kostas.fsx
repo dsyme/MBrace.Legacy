@@ -24,7 +24,7 @@ cr.Dispose() |> Async.RunSynchronously
 
 
 let rt = MBrace.InitLocal 3
-let it = rt.Run <@ cloud { return 42  } @>
+let it = rt.Run <@ writeString "folder" "foo.txt" "hello world" @>
 it.Read() |> Async.RunSynchronously
 
 rt.Nodes.Length
@@ -58,9 +58,9 @@ rt.ShowInfo(true)
 
 
 let nodes = 
-    [   Node("mbrace://10.0.1.4:54072/")
-        Node("mbrace://10.0.1.4:54080/")
-        Node("mbrace://10.0.1.4:54088/") ]
+    [   Node("mbrace://10.0.1.4:56914/")
+        Node("mbrace://10.0.1.4:56922/")
+        Node("mbrace://10.0.1.4:56930/")]
 
 nodes |> List.map (fun n -> n.Ping())
 
@@ -68,4 +68,43 @@ let rt = MBrace.Boot nodes
 rt.ShowInfo(true)
 
 let ps = rt.Run <@ cloud { return 42 } @>
+
+rt.Run <@ cloud { return 42 } @>
+
+
+//------------------------------------------------------------
+
+//#I "../../bin/"
+#I @"C:\Users\krontogiannis\Desktop\workspace\node1"
+
+#r "Thespian.dll"
+#r "Vagrant.dll"
+#r "MBrace.Core.dll"
+#r "MBrace.Lib.dll"
+#r "MBrace.Runtime.Base.dll"
+#r "MBrace.Client.dll"
+
+open System.IO
+open Nessos.MBrace
+open Nessos.MBrace.Client
+
+let aqn  = "Nessos.MBrace.Azure.AzureStoreFactory, MBrace.Azure, Version=0.5.0.0, Culture=neutral, PublicKeyToken=null"
+let conn = "DefaultEndpointsProtocol=https;AccountName=mbraceclusterstorage;AccountKey=cq2knJyPSCP9uNcyDPbFAgHyiPpJVMcR/59yN2RW9uNmrHJyT4ZwdLYxCXuUo6w5xJ7iMjKy0+WxQQ+f2nSseQ=="
+MBraceSettings.StoreProvider <- StoreProvider.Parse(aqn,conn)
+
+let nodes = [ Node("mbrace://10.0.1.4:50963/");Node("mbrace://10.0.1.4:50971/");Node("mbrace://10.0.1.4:50979/");Node("mbrace://10.0.1.4:50987/") ]
+
+//[1..4] |> List.map (fun i -> Node("xdinos-pc", 3000 + 100 * i))
+nodes |> List.map (fun n -> n.Ping())
+
+let rt = MBrace.Boot nodes
+
+rt.ShowInfo(true)
+
+let ps = rt.CreateProcess <@ cloud { return 42 } @>
+
+rt.Run <@ writeString "folder" "file.txt" "hello world" @>
+
+rt.Shutdown()
+
 
