@@ -73,17 +73,25 @@
             |> async.Return
 
         member this.Delete(folder) =
-            async {                
-                do! immblob.Delete(folder)
-                do! immtable.Delete(folder)
+            async {   
+                let! b1 = immtable.Exists(folder)
+                if b1 then 
+                    do! immblob.Delete(folder)
+                let! b2 = immblob.Exists(folder) 
+                if b2 then 
+                    do! immtable.Delete(folder)
+                if not b1 && not b2 then 
+                    raise <| ArgumentException(sprintf "Non-existent %s" folder)
             }
 
         member this.Delete(folder, file) =
             async {
                 let! b1 = immtable.Exists(folder, file)
-                if b1 then do! immtable.Delete(folder, file)
-                else
-                    let! b2 = immblob.Exists(folder, file) 
-                    if b2 then do! immblob.Delete(folder, file)
-                    else raise <| ArgumentException(sprintf "Non-existent %s - %s" folder file)
+                if b1 then 
+                    do! immtable.Delete(folder, file)
+                let! b2 = immblob.Exists(folder, file) 
+                if b2 then 
+                    do! immblob.Delete(folder, file)
+                if not b1 && not b2 then
+                    raise <| ArgumentException(sprintf "Non-existent %s - %s" folder file)
             }
