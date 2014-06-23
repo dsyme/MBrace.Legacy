@@ -82,14 +82,14 @@
                 let! entity = read(folder, file)
                 let deleteOp = TableOperation.Delete(entity :?> FatEntity)
                 let table = getTable folder
-                let! r = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, deleteOp)
+                let! r = Async.AwaitTask(table.ExecuteAsync(deleteOp))
                 r.Result |> ignore
             }
 
         member self.Delete(folder) =
             async {
                 let table = getTable folder
-                do! Async.FromBeginEndCancellable(table.BeginDeleteIfExists, table.EndDeleteIfExists)
+                do! Async.AwaitTask(table.DeleteIfExistsAsync())
                     |> Async.Ignore
             }
 

@@ -77,16 +77,19 @@
                 //|> Array.map Helpers.removePrefix
 
             member this.DeleteContainer(folder) =
-                //let folder = Helpers.prefix folder
-                generalStore.Delete(folder)
+                async {
+                    try
+                        do! generalStore.Delete(folder)
+                    with ex ->
+                        raise <| Exception(sprintf "Cannot delete container %s" folder, ex)
+                }
 
             member this.Delete(folder, file) =
-                //let folder = Helpers.prefix folder
                 async {
-                    try do! 
-                        mutableStore.Delete(folder, file)
-                    with _ -> 
+                    try
                         do! generalStore.Delete(folder, file)
+                    with ex ->
+                        raise <| Exception(sprintf "Cannot delete %s - %s" folder file, ex)
                 }
 
     type AzureStoreFactory () =

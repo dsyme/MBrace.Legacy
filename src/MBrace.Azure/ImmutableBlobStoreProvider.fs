@@ -66,7 +66,7 @@
         member this.Exists(folder) =
             async { 
                 let container = (getClient()).GetContainerReference(folder)
-                return! Async.FromBeginEndCancellable(container.BeginExists, container.EndExists)
+                return! Async.AwaitTask<_>(container.ExistsAsync()) //Async.FromBeginEndCancellable(container.BeginExists, container.EndExists)
             }
         
         member this.GetFiles(folder) =
@@ -106,6 +106,6 @@
         member self.Delete(folder : string) =
             async {
                 let cont = (getClient()).GetContainerReference(folder)
-                do! Async.FromBeginEndCancellable(cont.BeginDeleteIfExists, cont.EndDeleteIfExists)
+                do! Async.AwaitTask<_>(cont.DeleteIfExistsAsync())
                     |> Async.Ignore
             }
