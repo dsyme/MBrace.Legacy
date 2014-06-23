@@ -75,8 +75,8 @@ rt.Run <@ cloud { return 42 } @>
 
 //------------------------------------------------------------
 
-//#I "../../bin/"
-#I @"C:\Users\krontogiannis\Desktop\workspace\node1"
+#I "../../bin/"
+//#I @"C:\Users\krontogiannis\Desktop\workspace\node1"
 
 #r "Thespian.dll"
 #r "Vagrant.dll"
@@ -93,12 +93,12 @@ let aqn  = "Nessos.MBrace.Azure.AzureStoreFactory, MBrace.Azure, Version=0.5.0.0
 let conn = "DefaultEndpointsProtocol=https;AccountName=mbraceclusterstorage;AccountKey=cq2knJyPSCP9uNcyDPbFAgHyiPpJVMcR/59yN2RW9uNmrHJyT4ZwdLYxCXuUo6w5xJ7iMjKy0+WxQQ+f2nSseQ=="
 MBraceSettings.StoreProvider <- StoreProvider.Parse(aqn,conn)
 
-let nodes = [ Node("mbrace://10.0.1.4:50963/");Node("mbrace://10.0.1.4:50971/");Node("mbrace://10.0.1.4:50979/");Node("mbrace://10.0.1.4:50987/") ]
+let nodes = [Node("mbrace://10.0.1.4:53459/");Node("mbrace://10.0.1.4:53467/");Node("mbrace://10.0.1.4:53475/");Node("mbrace://10.0.1.4:53483/")]
 
 //[1..4] |> List.map (fun i -> Node("xdinos-pc", 3000 + 100 * i))
 nodes |> List.map (fun n -> n.Ping())
 
-let rt = MBrace.Boot nodes
+let rt = MBrace.Connect("10.0.1.4", 53877 ) //MBrace.Boot nodes
 
 rt.ShowInfo(true)
 
