@@ -276,7 +276,6 @@
                                 if processInfo.ClientId = MBraceSettings.ClientId then []
                                 else
                                     processInfo.Dependencies
-                                    |> List.filter (fun id -> id.FullName.StartsWith "MBrace" )
                         }
 
                         member __.PullAssemblies (ids : AssemblyId list) = 
@@ -315,10 +314,7 @@
                 {
                     new IRemoteAssemblyReceiver with
                         member __.GetLoadedAssemblyInfo (ids : AssemblyId list) =
-                            async {
-                                let ids = ids |> List.filter (fun id -> id.FullName.StartsWith "MBrace" )
-                                return! postWithReply <| fun ch -> GetAssemblyLoadInfo(ch, requestId, ids)
-                            }
+                            postWithReply <| fun ch -> GetAssemblyLoadInfo(ch, requestId, ids)
 
                         member __.PushAssemblies (pas : PortableAssembly list) =
                             postWithReply <| fun ch -> LoadAssemblies(ch, requestId, pas)
