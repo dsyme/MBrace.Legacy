@@ -178,8 +178,7 @@
         /// Deletes the container used by this process in the store.
         member p.DeleteContainerAsync() : Async<unit> =
             async {
-                let store = MBraceSettings.StoreInfo.Store
-                return! store.DeleteContainer(sprintf' "process%d" p.ProcessId)
+                return! processManager.RuntimeStore.DeleteContainer(sprintf' "process%d" p.ProcessId)
             }
 
     /// The type representing a process submitted to the runtime.
@@ -233,7 +232,7 @@
             |> Async.RunSynchronously
 
 
-    and internal ProcessManager (processManagerF : unit -> ActorRef<ProcessManagerMsg>, storeInfo : StoreInfo) =
+    and internal ProcessManager (processManagerF : unit -> ActorRef<ProcessManagerMsg>, storeInfoF : unit -> StoreInfo) =
         
         // keep track of process id's handled by process manager
         let processes = Atom.atom Set.empty<ProcessId>
@@ -257,7 +256,7 @@
 
         }
 
-        member pm.RuntimeStore = storeInfo.Store
+        member pm.RuntimeStore = storeInfoF().Store
 
         member pm.GetProcessInfo (pid : ProcessId) : Async<ProcessInfo> = 
             postWithReply(fun ch -> GetProcessInfo(ch, pid))

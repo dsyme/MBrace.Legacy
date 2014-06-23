@@ -46,13 +46,15 @@ namespace Nessos.MBrace.Client
 
         let clusterConfiguration = CacheAtom.Create(fun () -> postWithReply(fun ch -> GetClusterDeploymentInfo(ch, false)))
         let nodeConfiguration = CacheAtom.Create(fun () -> postWithReply(fun ch -> GetNodeDeploymentInfo(ch, false)))
+        let storeInfo = 
+            CacheAtom.Create((fun () -> 
+                let info = clusterConfiguration.Value in StoreRegistry.TryGetStoreInfo info.StoreId |> Option.get), 
+                interval = 2000)
 
-        // temporary store sanity check ; replace with store load protocol
-        do 
-            if clusterConfiguration.Value.StoreId <> MBraceSettings.StoreInfo.Id then
-                mfailwith "Connecting to runtime with incompatible store configuration."
-
-        let processManager = new Nessos.MBrace.Client.ProcessManager((fun () -> clusterConfiguration.Value.ProcessManager), StoreRegistry.DefaultStoreInfo)
+        let processManager = 
+            new Nessos.MBrace.Client.ProcessManager(
+                    (fun () -> clusterConfiguration.Value.ProcessManager), 
+                    (fun () -> storeInfo.Value))
 
         //
         //  Runtime Boot/Connect methods
@@ -78,11 +80,16 @@ namespace Nessos.MBrace.Client
                 return initOfProxyActor proxy
             }
 
-        static member BootAsync(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor) : Async<MBraceRuntime> = async {
+        static member BootAsync(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?provider : StoreProvider) : Async<MBraceRuntime> = async {
             let failoverFactor = defaultArg failoverFactor 2
             let replicationFactor = defaultArg replicationFactor (if failoverFactor = 0 then 0 else 2)
+            let storeId = 
+                match provider with 
+                | None -> MBraceSettings.DefaultStoreInfo.Id
+                | Some p -> let info = StoreRegistry.Activate(p, makeDefault = false) in info.Id
+
             let nodes = nodes |> Seq.map (fun n -> n.Ref) |> Seq.toArray
-            let! proxy = RuntimeProxy.bootNodes(nodes, replicationFactor, failoverFactor, None)
+            let! proxy = RuntimeProxy.bootNodes(nodes, replicationFactor, failoverFactor, Some storeId)
             return initOfProxyActor proxy
         }
 
@@ -120,7 +127,6 @@ namespace Nessos.MBrace.Client
                     | None -> mfailwith "Cannot boot; insufficient cluster information."
                     | Some info ->
                         let nodes = info.Nodes |> Array.map (fun n -> n.Reference)
-                        let storeInfo = StoreRegistry.TryGetStoreInfo info.StoreId |> Option.get
                         let config =
                             {
                                 Nodes = nodes
@@ -241,10 +247,7 @@ namespace Nessos.MBrace.Client
 
             (r :> IDisposable).Dispose()
 
-        interface IDisposable with
-            member r.Dispose() = for d in disposables do d.Dispose()
-
-        member r.StoreClient : StoreClient = StoreClient.Default
+        member r.GetStoreClient() : StoreClient = new StoreClient(storeInfo.Value)
 
         //
         //  Computation Section
@@ -299,3 +302,7 @@ namespace Nessos.MBrace.Client
 
         member __.ShowProcessInfo () : unit = processManager.GetInfo () |> Console.WriteLine
         member __.GetProcessInfo () : unit = processManager.GetInfo () |> Console.WriteLine
+
+
+        interface IDisposable with
+            member r.Dispose() = for d in disposables do d.Dispose()

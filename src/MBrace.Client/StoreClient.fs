@@ -19,6 +19,8 @@
 
         static let registry = Atom.atom Map.empty<StoreId, StoreClient>
 
+        member __.StoreProvider = info.Provider
+
         /// Gets the default StoreClient that corresponds to the current StoreProvider.
         static member Default 
             with get () = 

@@ -21,3 +21,15 @@ let n = Node.Spawn()
 n.ShowInfo(true)
 
 runtime.Run <@ cloud { return 42 } @>
+
+let nodes = runtime.Nodes
+
+runtime.Shutdown()
+let runtime' = MBrace.Boot nodes
+
+let client = runtime'.GetStoreClient()
+client.StoreProvider
+
+let n0 = MBraceNode.Spawn()
+
+runtime.Attach [n0]

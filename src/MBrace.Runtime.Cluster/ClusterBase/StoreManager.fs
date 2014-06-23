@@ -18,15 +18,19 @@
         | ActivateStore(RR ctx reply, info) ->
             try
                 let response =
-                    match StoreRegistry.TryActivate(info, makeDefault = true) with
-                    | Some _ -> StoreLoadResponse.Success
-                    | None ->
-                        info.Dependencies 
-                        |> loader.Value.GetAssemblyLoadInfo
-                        |> List.choose (function Loaded _ -> None | info -> Some info.Id)
-                        |> MissingAssemblies
+                    if StoreRegistry.DefaultStoreInfo.Id = info.Id then
+                        StoreLoadResponse.Success
+                    else
+                        match StoreRegistry.TryActivate(info, makeDefault = true) with
+                        | Some _ -> 
+                            ctx.LogInfo <| sprintf "switching to store '%s'." info.Id.AssemblyQualifiedName
+                            StoreLoadResponse.Success
 
-                ctx.LogInfo <| sprintf "switching to store '%s'." info.Id.AssemblyQualifiedName
+                        | None ->
+                            info.Dependencies 
+                            |> loader.Value.GetAssemblyLoadInfo
+                            |> List.choose (function Loaded _ -> None | info -> Some info.Id)
+                            |> MissingAssemblies
 
                 reply <| Value response
 

@@ -12,10 +12,11 @@
     
         type StoreRegistry with
             static member Activate(provider : StoreProvider, ?makeDefault) =
-                let activationInfo, dependencies, store = StoreRegistry.InitStore(provider)
-                match StoreRegistry.TryGetStoreInfo activationInfo.Id with
+                
+                match provider.Id |> Option.bind StoreRegistry.TryGetStoreInfo with
                 | Some info -> info
                 | None ->
+                    let activationInfo, dependencies, store = StoreRegistry.InitStore(provider)
 
                     // TODO : move cache stuff to StoreRegistry
                     let cacheInfo = StoreRegistry.LocalCache

@@ -41,37 +41,21 @@
 
         }
 
-//        let tryActivateStore (isLoaded : AssemblyId -> bool) (loadF : PortableAssembly -> unit) (activationInfo : StoreActivationInfo) =
-//            match StoreRegistry.TryActivate(activationInfo, makeDefault = true)
-//            match StoreRegistry.TryGetStoreProvider activationInfo with
-//            | None ->
-//                let missing = activationInfo.Dependencies |> List.filter (not << isLoaded)
-//                MissingAssemblies missing
-//
-//            | Some p ->
-//                let info = StoreRegistry.Activate(p, makeDefault = true)
-//                Success
-//
-//        let downloadStore (isLoaded : AssemblyId -> bool) (loadF : PortableAssembly -> unit) (remote : ActorRef<StoreManager>) = 
-//            async {
-//            
-//                let! activationInfo = remote <!- GetDefaultStore
-//
-//                match tryActivateStore isLoaded loadF remote with
-//                | Success -> return ()
-//                | MissingAssemblies ids ->
+        let downloadStore (client : VagrantClient) makeDefault (remote : ActorRef<StoreManager>) = async {
+            let! info = remote <!- GetDefaultStore
 
+            let missing = 
+                info.Dependencies 
+                |> client.GetAssemblyLoadInfo 
+                |> List.filter (function Loaded _ | LoadedWithStaticIntialization _ -> false | _ -> true)
+                |> List.map (fun l -> l.Id)
 
-//                match StoreRegistry.GetStoreLoadStatus activator.Id with
-//                | UnAvailable ->
-//                    // download missing dependencies, if any.
-//                    let missing = activator.Dependencies |> List.filter isLoaded
-//                    let! pas = remote <!- fun ch -> DownloadAssemblies(ch, missing)
-//                    for pa in pas do loadF pa
-//
-//                    return StoreRegistry.Activate(activator, makeDefault = true)
-//
-//                | Available -> return StoreRegistry.Activate(activator, makeDefault = true)
-//                | Installed -> return StoreRegistry.SetDefault(activator.Id)
-//                | Activated -> return StoreRegistry.DefaultStoreInfo
-//            }
+            let! pas = remote <!- fun ch -> DownloadAssemblies(ch, missing)
+
+            let results = client.LoadPortableAssemblies pas
+
+            return
+                match StoreRegistry.TryActivate(info, makeDefault = makeDefault) with
+                | None -> invalidOp <| sprintf "Failed to activate store '%s'" info.Id.AssemblyQualifiedName
+                | Some info -> info
+        }

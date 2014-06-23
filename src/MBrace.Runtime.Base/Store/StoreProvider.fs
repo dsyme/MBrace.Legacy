@@ -12,6 +12,8 @@
     [<AutoSerializable(false) ; NoEquality ; NoComparison>]
     type StoreProvider private (factoryType : Type, connectionString : string) =
 
+        member val internal Id : StoreId option = None with get,set
+
         member __.StoreFactoryQualifiedName = factoryType.AssemblyQualifiedName
         member __.StoreFactoryType = factoryType
         member __.ConnectionString = connectionString

@@ -5,6 +5,15 @@
 
     type Tag = string
 
+    [<AutoSerializable(true) ; StructuralEquality ; StructuralComparison>]
+    type StoreId = 
+        {
+            AssemblyQualifiedName : string
+            UUID                  : byte []
+        }
+    with 
+        override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
+
     /// Cloud filesystem abstraction
     type ICloudStore =
 

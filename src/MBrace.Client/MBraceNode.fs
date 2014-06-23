@@ -15,6 +15,7 @@
 
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Utils
+    open Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Daemon.Configuration
     
@@ -114,6 +115,23 @@
 
                 int timer.ElapsedMilliseconds
             with e -> handleError e
+
+        member __.SetStoreConfigurationAsync (provider : StoreProvider) = async {
+            let info = StoreRegistry.Activate(provider, makeDefault = false)
+            let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
+            return! StoreManager.uploadStore info storeManager
+        }
+
+        member __.SetStoreConfiguration (provider : StoreProvider) = 
+            __.SetStoreConfigurationAsync(provider) |> Async.RunSynchronously
+
+        member __.GetStoreManagerAsync () = async {
+            let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
+            let! info = StoreManager.downloadStore MBraceSettings.Vagrant.Client false storeManager
+            return new StoreClient(info)
+        }
+
+        member __.GetStoreManager () = __.GetStoreManagerAsync() |> Async.RunSynchronously
 
         member internal __.GetNodeInfoAsync getPerformanceCounters = async {
             try
@@ -276,11 +294,15 @@
                         match workingDirectory with Some w -> yield Working_Directory w | _ -> ()
                         match logLevel with Some l -> yield Log_Level l.Value | _ -> ()
 
-                        yield Store_Provider storeProvider.StoreFactoryQualifiedName
-                        yield Store_EndPoint storeProvider.ConnectionString
+//                        yield Store_Provider storeProvider.StoreFactoryQualifiedName
+//                        yield Store_EndPoint storeProvider.ConnectionString
                     ]
         
-                return! MBraceNode.SpawnAsync(args, ?background = background)
+                let! node = MBraceNode.SpawnAsync(args, ?background = background)
+
+                do! node.SetStoreConfigurationAsync storeProvider
+
+                return node
             }
 
         /// <summary>

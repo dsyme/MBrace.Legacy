@@ -15,15 +15,6 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Client
 
-    [<AutoSerializable(true) ; StructuralEquality ; StructuralComparison>]
-    type StoreId = 
-        {
-            AssemblyQualifiedName : string
-            UUID                  : byte []
-        }
-    with 
-        override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
-
     [<AutoSerializable(true) ; NoEquality ; NoComparison>]
     type StoreActivationInfo =
         {
@@ -67,6 +58,7 @@
         static member internal InitStore(provider : StoreProvider) =
             let store = provider.InitStore()
             let id = { AssemblyQualifiedName = store.GetType().AssemblyQualifiedName ; UUID = computeHash store.UUID }
+            provider.Id <- Some id
             let assemblies = VagrantUtils.ComputeAssemblyDependencies provider.StoreFactoryType
             let ids = assemblies |> List.map VagrantUtils.ComputeAssemblyId
             let dependencies = Seq.zip ids assemblies |> Map.ofSeq

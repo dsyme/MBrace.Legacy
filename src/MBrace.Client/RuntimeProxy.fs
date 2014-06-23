@@ -7,6 +7,7 @@
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Store
 
     let rec private runtimeProxyBehaviour (state : ClusterDeploymentInfo) (message : MBraceNode) = async {
 
@@ -53,10 +54,29 @@
 
     let connect (node : ActorRef<MBraceNode>) = async {
         let! state = node.PostWithReplyRetriable((fun ch -> GetClusterDeploymentInfo(ch, false)), 2)
+
+        // download store activation info if required
+        let! info = async {
+
+            match StoreRegistry.TryGetStoreInfo state.StoreId with
+            | Some info -> return info
+            | None ->
+                let! storeManager = node.PostWithReplyRetriable (GetStoreManager, 2)
+                return! StoreManager.downloadStore MBraceSettings.Vagrant.Client false storeManager
+        }
+
         return initRuntimeProxy state
     }
 
     let boot (master : ActorRef<MBraceNode>, config : BootConfiguration) = async {
+        // upload store activation info if specified
+        match config.StoreId with
+        | None -> ()
+        | Some id ->
+            let storeInfo = Store.StoreRegistry.TryGetStoreInfo id |> Option.get
+            let! storeMan = master.PostWithReplyRetriable (GetStoreManager, 2)
+            do! StoreManager.uploadStore storeInfo storeMan
+
         let! state = master.PostWithReplyRetriable((fun ch -> MasterBoot(ch, config)), 2)
         return initRuntimeProxy state
     }

@@ -259,7 +259,7 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test; Category("Runtime Administration"); ExpectedException(typeof<Nessos.MBrace.NonExistentObjectStoreException>)>]
         member __.``Delete container`` () =
             let s = __.Runtime.Run <@ CloudSeq.New([1..10]) @> 
-            __.Runtime.StoreClient.DeleteContainer(s.Container) 
+            __.Runtime.GetStoreClient().DeleteContainer(s.Container) 
             Seq.toList s |> ignore
 
         [<Test; Repeat 4; Category("Runtime Administration")>]
