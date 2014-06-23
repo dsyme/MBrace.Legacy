@@ -60,7 +60,7 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Worker.fs" />
+    <Compile Include="main.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
@@ -121,7 +121,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="UnionArgParser">
-      <HintPath>..\..\packages\UnionArgParser.0.6.6\lib\net40\UnionArgParser.dll</HintPath>
+      <HintPath>..\..\packages\UnionArgParser.0.7.0\lib\net40\UnionArgParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">

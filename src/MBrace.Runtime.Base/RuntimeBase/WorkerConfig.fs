@@ -5,6 +5,7 @@
     open Nessos.UnionArgParser
 
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Runtime.Store
 
     module Configuration =
 
@@ -17,8 +18,7 @@
             | Assembly_Cache of string
             | HostName of string
             | Port of int
-            | Store_EndPoint of string
-            | Store_Provider of string
+            | [<EncodeBase64>] Store_Activator of StoreActivationInfo
             | Cache_Store_Endpoint of string
         with
             interface IArgParserTemplate with
@@ -31,8 +31,10 @@
                     | Assembly_Cache _ -> "Cloud process assembly dependencies."
                     | HostName _ -> "Hostname, must be the same as for parent daemon."
                     | Port _ -> "Port argument."
-                    | Store_EndPoint _ -> "Cloud store endpoint."
-                    | Store_Provider _ -> "Storage provider : FileSystem, AzureStorage."
+                    | Store_Activator _ -> "Store activation info."
+//                    | Assembly_Id _ -> "Specifies an assembly id for loading."
+//                    | Store_EndPoint _ -> "Cloud store endpoint."
+//                    | Store_Provider _ -> "Storage provider : FileSystem, AzureStorage."
                     | Cache_Store_Endpoint _ -> "Local caching path."
 
         let workerConfig = new UnionArgParser<WorkerConfig>("WARNING: not intended for manual use.")

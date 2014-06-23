@@ -87,8 +87,8 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                 yield Process_Domain_Id processDomainId
                 yield Assembly_Cache <| IoC.Resolve<Nessos.Vagrant.VagrantCache>().CacheDirectory
                 yield Parent_Address <| primaryAddr.ToString ()
-                yield Store_Provider storeInfo.FactoryQualifiedName
-                yield Store_EndPoint storeInfo.ConnectionString
+                yield Store_Activator storeInfo
+
                 yield Debug debugMode
                 match portOpt with
                 | Some selectedPort ->
