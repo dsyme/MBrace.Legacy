@@ -80,11 +80,11 @@ namespace Nessos.MBrace.Client
                 return initOfProxyActor proxy
             }
 
-        static member BootAsync(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?provider : StoreProvider) : Async<MBraceRuntime> = async {
+        static member BootAsync(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?storeProvider : StoreProvider) : Async<MBraceRuntime> = async {
             let failoverFactor = defaultArg failoverFactor 2
             let replicationFactor = defaultArg replicationFactor (if failoverFactor = 0 then 0 else 2)
             let storeId = 
-                match provider with 
+                match storeProvider with 
                 | None -> MBraceSettings.DefaultStoreInfo.Id
                 | Some p -> let info = StoreRegistry.Activate(p, makeDefault = false) in info.Id
 
@@ -99,18 +99,17 @@ namespace Nessos.MBrace.Client
         static member ConnectAsync(uri: string): Async<MBraceRuntime> = MBraceRuntime.ConnectAsync(Uri(uri))
 
 
-        static member Boot(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor) : MBraceRuntime = 
-            MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor)
+        static member Boot(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?storeProvider) : MBraceRuntime = 
+            MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeProvider = storeProvider)
             |> Async.RunSynchronously
 
         static member InitLocal(totalNodes : int, ?hostname, ?replicationFactor : int, ?storeProvider,
                                          ?failoverFactor : int, ?debug, ?background) : MBraceRuntime =
 
             if totalNodes < 3 then invalidArg "totalNodes" "should have at least 3 nodes."
-            let nodes = MBraceNode.SpawnMultiple(totalNodes, ?hostname = hostname, ?debug = debug,
-                                                    ?storeProvider = storeProvider, ?background = background)
+            let nodes = MBraceNode.SpawnMultiple(totalNodes, ?hostname = hostname, ?debug = debug, ?background = background)
             
-            MBraceRuntime.Boot(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor)
+            MBraceRuntime.Boot(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeProvider = storeProvider)
 
         static member FromActorRef(ref : ActorRef<MBraceNodeMsg>) = new MBraceRuntime(ref, [])
 
