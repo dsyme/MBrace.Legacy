@@ -121,6 +121,23 @@ let private getClusterDeploymentInfo deploymentId self nodeType permissions incl
         }
 }
 
+let storeActivationProtocol (config : BootConfiguration) (restNodes : ActorRef<MBraceNode> []) = async {
+    
+    let negotiateUpload (storeInfo : StoreInfo) (node : ActorRef<MBraceNode>) = async {
+        let! storeManager = node <!- GetStoreManager
+        return! StoreManager.uploadStore storeInfo storeManager
+    }
+
+    let defaultStore = StoreRegistry.DefaultStoreInfo
+
+    match config.StoreId with
+    | Some id when defaultStore.Id <> id -> 
+        invalidOp <| sprintf "Attempting to boot with incompatible store configuration '%s'" id.AssemblyQualifiedName
+    | _ -> ()
+
+    do! restNodes |> Seq.map (negotiateUpload defaultStore) |> Async.Parallel |> Async.Ignore
+}
+
 
 let rec private triggerNodeFailure (innerException: exn) (ctx: BehaviorContext<_>) (state: State) (msg: MBraceNodeManager) =
     let reply r = 
@@ -197,6 +214,8 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
                     ctx.LogInfo "Preparing..."
 
                     let nodes = configuration.Nodes |> Array.filter (fun node' -> node' <> ctx.Self)
+
+                    do! storeActivationProtocol configuration nodes
 
                     let! alts = async {
                         if nodes.Length = 0 then
@@ -382,6 +401,9 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
 
             | Attach(RR ctx reply, mbraceNode) when nodeType <> NodeType.Idle ->
                 try
+                    let! storeManager = mbraceNode <!- GetStoreManager
+                    do! StoreManager.uploadStore StoreRegistry.DefaultStoreInfo storeManager
+
                     let nodeManager =
                         let addr = ActorRef.toEndPoint mbraceNode
                                    |> Address.FromEndPoint

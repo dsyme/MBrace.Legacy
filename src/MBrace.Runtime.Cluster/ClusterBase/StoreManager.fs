@@ -9,7 +9,7 @@
     open Nessos.MBrace.Runtime.Store
 
     // Vagrant's cache & assembly loader are thread safe, but this should probably be moved inside the actor state.
-    let private cache = lazy IoC.Resolve<VagrantCache>()
+    let private cache = lazy IoC.Resolve<VagrantCache> ()
     let private loader = lazy IoC.Resolve<VagrantClient> ()
 
     let storeManagerBehavior (ctx: BehaviorContext<_>) (msg: StoreManager) = async {
@@ -25,6 +25,8 @@
                         |> loader.Value.GetAssemblyLoadInfo
                         |> List.choose (function Loaded _ -> None | info -> Some info.Id)
                         |> MissingAssemblies
+
+                ctx.LogInfo <| sprintf "switching to store '%s'." info.Id.AssemblyQualifiedName
 
                 reply <| Value response
 
