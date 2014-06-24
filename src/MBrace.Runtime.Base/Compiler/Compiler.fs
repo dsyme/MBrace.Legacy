@@ -39,7 +39,7 @@ namespace Nessos.MBrace.Core
 
         let isMBraceAssembly (asm : Assembly) =
             let name = asm.GetName()
-            name.Name.StartsWith "MBrace" || ignoredPublicKeyTokens.Contains <| name.GetPublicKeyToken()
+            name.Name.StartsWith "MBrace" || ignoredPublicKeyTokens.Contains <| name.GetPublicKeyToken() || name.Name.StartsWith "Vagrant"
 
         /// specifies if given MemberInfo is prohibited for use within cloud workflows
         let isProhibitedMember (m : MemberInfo) =
