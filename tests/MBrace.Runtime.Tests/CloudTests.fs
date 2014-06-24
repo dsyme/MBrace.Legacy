@@ -884,13 +884,15 @@ namespace Nessos.MBrace.Runtime.Tests
             let cr' = sc.GetCloudFile(c, cr.Name) 
             let l' = cr.Read() |> Async.RunSynchronously
             l'.AsyncRead(a.Length) |> Async.RunSynchronously |> should equal a
+            sc.GetContainers() |> Seq.exists (fun n -> n = c) |> should equal true
+            sc.ContainerExists(c) |> should equal true
             sc.DeleteContainer(c)
 
         [<Test>]
         member test.``StoreClient MutableCloudRef`` () =
             let sc = StoreClient.Default
             let c = Guid.NewGuid().ToString("N")
-            let cr = sc.CreateMutableCloudRef(c, "cloudfile", -1)
+            let cr = sc.CreateMutableCloudRef(c, "mutablecloudref", -1)
             cr.Value |> should equal -1
             let cr' = sc.GetMutableCloudRef(c, cr.Name) :?> IMutableCloudRef<int>
             cr'.Value |> should equal -1

@@ -223,3 +223,22 @@
         /// <param name="container">The folder to delete.</param>
         member this.DeleteContainer(container : string) : unit =
             Async.RunSynchronously <| this.DeleteContainerAsync(container)
+
+        /// Retrieves the name of all containers from store.
+        member this.GetContainersAsync() : Async<string []> =
+            info.Store.GetAllContainers()
+
+        /// Retrieves the name of all containers from store.
+        member this.GetContainers() : string [] =
+            Async.RunSynchronously <| this.GetContainersAsync()
+            
+        /// <summary>Checks if container exists in the given path.</summary>
+        /// <param name="container">The container to search for.</param>
+        member this.ContainerExistsAsync(container : string) : Async<bool> =
+            info.Store.ContainerExists(container)
+
+        /// <summary>Checks if container exists in the given path.</summary>
+        /// <param name="container">The container to search for.</param>
+        member this.ContainerExists(container : string) : bool =
+            Async.RunSynchronously <| this.ContainerExistsAsync(container)
+        
