@@ -13,14 +13,14 @@
         let getReadBlob (folder, file) = async { 
             let container = (getClient()).GetContainerReference(folder)
 
-            let! exists = Async.FromBeginEndCancellable(container.BeginExists, container.EndExists)
+            let! exists = Async.AwaitTask(container.ExistsAsync())
 
             if not exists 
             then failwith "Trying to read from non-existent container"
                 
             let blob = container.GetBlockBlobReference(file)
             
-            let! exists = Async.FromBeginEndCancellable(blob.BeginExists, blob.EndExists)
+            let! exists = Async.AwaitTask(blob.ExistsAsync())
 
             if not exists
             then failwith "Trying to read from non-existent blob"
@@ -31,7 +31,7 @@
         let getWriteBlob(folder, file) = async {
                 let container = (getClient()).GetContainerReference(folder)
 
-                do! Async.FromBeginEndCancellable(container.BeginCreateIfNotExists, container.EndCreateIfNotExists)
+                do! Async.AwaitTask(container.CreateIfNotExistsAsync())
                     |> Async.Ignore
 
                 return container.GetBlockBlobReference(file)
@@ -42,7 +42,7 @@
         member this.Create (folder, file, serialize : Stream -> Async<unit>) : Async<unit> =
             async {
                 let! blob = getWriteBlob(folder, file)
-                use! s = Async.FromBeginEndCancellable(blob.BeginOpenWrite, blob.EndOpenWrite)
+                use! s = Async.AwaitTask(blob.OpenWriteAsync())
                 return! serialize(s)
             }
 
@@ -56,9 +56,9 @@
             async {
                 let container = (getClient()).GetContainerReference(folder)
                 
-                let b1 = Async.FromBeginEndCancellable(container.BeginExists, container.EndExists)
+                let b1 = Async.AwaitTask(container.ExistsAsync())
                 let blob = container.GetBlockBlobReference(file)
-                let b2 = Async.FromBeginEndCancellable(blob.BeginExists, blob.EndExists)
+                let b2 = Async.AwaitTask(blob.ExistsAsync())
                 
                 return! Async.And(b1, b2)
             }
@@ -66,13 +66,13 @@
         member this.Exists(folder) =
             async { 
                 let container = (getClient()).GetContainerReference(folder)
-                return! Async.AwaitTask<_>(container.ExistsAsync()) //Async.FromBeginEndCancellable(container.BeginExists, container.EndExists)
+                return! Async.AwaitTask<_>(container.ExistsAsync()) 
             }
         
         member this.GetFiles(folder) =
             async {
                 let container = (getClient()).GetContainerReference(folder)
-                let! exists = Async.FromBeginEndCancellable(container.BeginExists, container.EndExists)
+                let! exists = Async.AwaitTask(container.ExistsAsync())
                 if exists then
                     return 
                         container.ListBlobs()
@@ -85,20 +85,20 @@
         member self.CopyTo(folder : string, file : string, target : Stream) = 
             async {
                 let! blob = getReadBlob(folder,file)
-                do! Async.FromBeginEndCancellable(blob.BeginDownloadToStream, blob.EndDownloadToStream, target)
+                do! Async.AwaitTask(blob.DownloadToStreamAsync(target).ContinueWith(ignore))
             }
 
         member self.CopyFrom(folder : string, file : string, source : Stream) =
             async {
                 let! blob = getWriteBlob(folder, file)
-                do! Async.FromBeginEndCancellable(blob.BeginUploadFromStream, blob.EndUploadFromStream, source)
+                do! Async.AwaitTask(blob.UploadFromStreamAsync(source).ContinueWith(ignore))
             }
 
 
         member self.Delete(folder : string, file : string) =
             async {
                 let! blob = getReadBlob(folder, file)
-                do! Async.FromBeginEndCancellable(blob.BeginDeleteIfExists, blob.EndDeleteIfExists)
+                do! Async.AwaitTask(blob.DeleteIfExistsAsync())
                     |> Async.Ignore
             }
 

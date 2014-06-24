@@ -151,11 +151,11 @@
     [<AutoOpen>]
     module AsyncEx =
         type Async with
-            static member FromBeginEndCancellable(beginAction, endAction) =
-                Async.FromBeginEnd((fun (c,s) -> beginAction(c,s) :> System.IAsyncResult), endAction)
-            
-            static member FromBeginEndCancellable(beginAction, endAction, o) =
-                Async.FromBeginEnd((fun (c,s) -> beginAction(o, c, s) :> System.IAsyncResult), endAction)
+//            static member FromBeginEndCancellable(beginAction, endAction) =
+//                Async.FromBeginEnd((fun (c,s) -> beginAction(c,s) :> System.IAsyncResult), endAction)
+//            
+//            static member FromBeginEndCancellable(beginAction, endAction, o) =
+//                Async.FromBeginEnd((fun (c,s) -> beginAction(o, c, s) :> System.IAsyncResult), endAction)
 
             static member And(left, right) = async {
                 let! left = left

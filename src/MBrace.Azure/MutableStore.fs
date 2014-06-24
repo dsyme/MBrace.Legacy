@@ -18,13 +18,13 @@
         let getReadBlob (folder, file)  = async {
                 let container = (blobClient()).GetContainerReference(folder)
 
-                let! exists = Async.FromBeginEndCancellable(container.BeginExists, container.EndExists)
+                let! exists = Async.AwaitTask(container.ExistsAsync())
                 if not exists
                 then failwith "Trying to read from non-existent container"
             
                 let blob = container.GetBlockBlobReference(file)
 
-                let! exists = Async.FromBeginEndCancellable(blob.BeginExists, blob.EndExists)
+                let! exists = Async.AwaitTask(blob.ExistsAsync())
 
                 if not exists
                 then failwith "Trying to read from non-existent blob"
@@ -35,7 +35,7 @@
         let getWriteBlob(folder, file) = async {
                 let container = (blobClient()).GetContainerReference(folder)
 
-                do! Async.FromBeginEndCancellable(container.BeginCreateIfNotExists, container.EndCreateIfNotExists)
+                do! Async.AwaitTask(container.CreateIfNotExistsAsync())
                     |> Async.Ignore
 
                 return container.GetBlockBlobReference(file)
@@ -44,14 +44,14 @@
         let readEntity (folder, file) = async {
                 let table = getTable folder
                 let retrieveOp = TableOperation.Retrieve<MutableFatEntity>(file, String.Empty)
-                let! result = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, retrieveOp)
+                let! result = Async.AwaitTask(table.ExecuteAsync(retrieveOp))
                 return result.Result, result.Etag  
             }
 
         let deleteBlob(folder, file) = async {
                 try
                     let! blob = getReadBlob(folder, file)
-                    do! Async.FromBeginEndCancellable(blob.BeginDeleteIfExists, blob.EndDeleteIfExists)
+                    do! Async.AwaitTask(blob.DeleteIfExistsAsync())
                         |> Async.Ignore
                 with _ -> ()
             }
@@ -60,7 +60,7 @@
             async {
                 let table = getTable folder
 
-                do! Async.FromBeginEndCancellable(table.BeginCreateIfNotExists, table.EndCreateIfNotExists)
+                do! Async.AwaitTask(table.CreateIfNotExistsAsync())
                     |> Async.Ignore
 
                 let! isFat = Helpers.isFatEntity serialize
@@ -71,18 +71,18 @@
                     let entity = MutableFatEntity(file, false, null, bin)
 
                     let insertOp = TableOperation.Insert(entity)
-                    let! result = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, insertOp)
+                    let! result = Async.AwaitTask(table.ExecuteAsync(insertOp))
                     return result.Etag
                 | false -> 
                     let refName = sprintf "%s.version.%s" file <| Guid.NewGuid().ToString()
                     let! blob = getWriteBlob(folder, refName)
-                    use! stream = Async.FromBeginEndCancellable(blob.BeginOpenWrite, blob.EndOpenWrite)
+                    use! stream = Async.AwaitTask(blob.OpenWriteAsync())
                     do! serialize stream
                     stream.Dispose()
 
                     let entity = MutableFatEntity(file, true, refName, Array.empty)
                     let insertOp = TableOperation.Insert(entity)
-                    let! result = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, insertOp)
+                    let! result = Async.AwaitTask(table.ExecuteAsync(insertOp))
                     return result.Etag
             }
 
@@ -107,12 +107,12 @@
             async {
                 let retrieveOp = TableOperation.Retrieve<MutableFatEntity>(file, String.Empty)
                 let table = getTable folder
-                let! result = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, retrieveOp)
+                let! result = Async.AwaitTask(table.ExecuteAsync(retrieveOp))
                 let oldRef = (result.Result :?> MutableFatEntity).Reference
                 let wasRef = (result.Result :?> MutableFatEntity).IsReference
                 (result.Result :?> MutableFatEntity).ETag <- "*"
                 let op = TableOperation.Delete(result.Result :?> MutableFatEntity)
-                do! Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, op)
+                do! Async.AwaitTask(table.ExecuteAsync(op))
                     |> Async.Ignore
                 if wasRef then do! deleteBlob(folder, oldRef)                
             }
@@ -123,7 +123,7 @@
                 let table = getTable folder
 
                 let retrieveOp = TableOperation.Retrieve<MutableFatEntity>(file, String.Empty)
-                let! result = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, retrieveOp)
+                let! result = Async.AwaitTask(table.ExecuteAsync(retrieveOp))
             
                 if result.Result = null then raise <| Exception(sprintf "Non-existent %A - %A" folder file)
             
@@ -139,7 +139,7 @@
                     let mergeOp = TableOperation.Merge(entity)
                 
                     try
-                        let! result = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, mergeOp)
+                        let! result = Async.AwaitTask(table.ExecuteAsync(mergeOp))
                         if oldEntity.IsReference then
                             do! deleteBlob(folder, oldEntity.Reference)
                         return true, result.Etag
@@ -154,14 +154,14 @@
                     else
                         let refName = sprintf "%s.version.%s" file <| Guid.NewGuid().ToString()
                         let! blob = getWriteBlob(folder, refName)
-                        use! stream = Async.FromBeginEndCancellable(blob.BeginOpenWrite, blob.EndOpenWrite)
+                        use! stream = Async.AwaitTask(blob.OpenWriteAsync())
                         do! serialize stream
                         stream.Dispose()
 
                         let entity = MutableFatEntity(file, true, refName, Array.empty, ETag = etag)
                         let insertOp = TableOperation.Merge(entity)
                         try
-                            let! result = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, insertOp)
+                            let! result = Async.AwaitTask(table.ExecuteAsync(insertOp))
                             if oldEntity.IsReference then 
                                 do! deleteBlob(folder, oldEntity.Reference)
                             return true, result.Etag

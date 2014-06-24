@@ -19,7 +19,7 @@
             async {
                 let table = getTable folder
                 let retrieveOp = TableOperation.Retrieve<FatEntity>(file, String.Empty)
-                let! result = Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, retrieveOp)
+                let! result = Async.AwaitTask(table.ExecuteAsync(retrieveOp))
                 return result.Result
             }
 
@@ -33,11 +33,11 @@
                 let bin = ms.ToArray()
             
                 let table = getTable folder
-                do! Async.FromBeginEndCancellable(table.BeginCreateIfNotExists, table.EndCreateIfNotExists)
+                do! Async.AwaitTask(table.CreateIfNotExistsAsync())
                     |> Async.Ignore
                 let insertOp = TableOperation.Insert(FatEntity(file, bin))
 
-                do! Async.FromBeginEndCancellable(table.BeginExecute, table.EndExecute, insertOp)
+                do! Async.AwaitTask(table.ExecuteAsync(insertOp))
                     |> Async.Ignore
             }
 
@@ -60,14 +60,14 @@
         member this.Exists(folder) =
             async {
                 let table = getClient().GetTableReference(folder)
-                return! Async.FromBeginEndCancellable(table.BeginExists, table.EndExists)
+                return! Async.AwaitTask(table.ExistsAsync())
             }
 
 
         member this.GetFiles(folder) =
             async {
                 let table = getTable folder
-                let! exists = Async.FromBeginEndCancellable(table.BeginExists, table.EndExists)
+                let! exists = Async.AwaitTask(table.ExistsAsync())
                 if exists then
                     let rangeQuery = TableQuery<DynamicTableEntity>().Select([|"PartitionKey"|])
                     let resolver = EntityResolver(fun pk rk ts props etag -> pk)
