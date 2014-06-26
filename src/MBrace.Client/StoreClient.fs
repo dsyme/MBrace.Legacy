@@ -224,11 +224,13 @@
         member this.DeleteContainer(container : string) : unit =
             Async.RunSynchronously <| this.DeleteContainerAsync(container)
 
-        /// Retrieves the name of all containers from store.
+        ///<summary>Retrieves the name of all containers from store.</summary>
+        ///<remarks>This method lists all existing containers whether they were created from mbrace or not.</remarks>
         member this.GetContainersAsync() : Async<string []> =
             info.Store.GetAllContainers()
 
-        /// Retrieves the name of all containers from store.
+        ///<summary>Retrieves the name of all containers from store.</summary>
+        ///<remarks>This method lists all existing containers whether they were created from mbrace or not.</remarks>
         member this.GetContainers() : string [] =
             Async.RunSynchronously <| this.GetContainersAsync()
             
