@@ -143,8 +143,8 @@
                         if oldEntity.IsReference then
                             do! deleteBlob(folder, oldEntity.Reference)
                         return true, result.Etag
-                    with :? StorageException as e ->
-                        match e with
+                    with :? AggregateException as e ->
+                        match e.InnerException with 
                         | UpdateConditionNotSatisfied _ -> return false, etag
                         | _ -> return raise e
 
@@ -165,8 +165,8 @@
                             if oldEntity.IsReference then 
                                 do! deleteBlob(folder, oldEntity.Reference)
                             return true, result.Etag
-                        with :? StorageException as e ->
-                            match e with
+                        with :? AggregateException as e ->
+                            match e.InnerException with
                             | UpdateConditionNotSatisfied _ -> 
                                 do! deleteBlob(folder, refName)
                                 return false, etag
