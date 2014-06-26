@@ -70,8 +70,15 @@
     <Compile Include="CloudTests.fs" />
     <Compile Include="LocalCloudTests.fs" />
     <Compile Include="ClusterCloudTests.fs" />
+    <Compile Include="AzureClusterTests.fs" />
+    <None Include="connections.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MBrace.Azure\MBrace.Azure.fsproj">
+      <Name>MBrace.Azure</Name>
+      <Project>{1ff00f82-1102-44c4-b73f-39aee6bc1635}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\MBrace.Core\MBrace.Core.fsproj">
       <Name>MBrace.Core</Name>
       <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
@@ -146,6 +153,8 @@
       <Project>{c737f3e4-0d61-49d2-8d80-48d062e1dcdc}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="Thespian">
       <HintPath>..\..\packages\Thespian.0.0.6-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>

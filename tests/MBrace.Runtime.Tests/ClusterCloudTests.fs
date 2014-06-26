@@ -29,8 +29,9 @@ namespace Nessos.MBrace.Runtime.Tests
             | None -> invalidOp "No runtime specified in test fixture."
             | Some r -> r
 
+        abstract InitRuntime : unit -> unit
         [<TestFixtureSetUp>]
-        member test.InitRuntime() =
+        default test.InitRuntime() =
             lock currentRuntime (fun () ->
                 match currentRuntime.Value with
                 | Some runtime -> runtime.Kill()
@@ -40,8 +41,9 @@ namespace Nessos.MBrace.Runtime.Tests
                 let runtime = MBraceRuntime.InitLocal(3, debug = true)
                 currentRuntime := Some runtime)
         
+        abstract FiniRuntime : unit -> unit
         [<TestFixtureTearDown>]
-        member test.FiniRuntime() =
+        default test.FiniRuntime() =
             lock currentRuntime (fun () -> 
                 match currentRuntime.Value with
                 | None -> invalidOp "No runtime specified in test fixture."
