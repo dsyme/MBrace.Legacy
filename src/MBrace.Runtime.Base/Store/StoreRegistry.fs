@@ -14,6 +14,7 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Client
+    open Nessos.MBrace.Runtime
 
     [<AutoSerializable(true) ; NoEquality ; NoComparison>]
     type StoreActivationInfo =
@@ -59,7 +60,11 @@
             let store = provider.InitStore()
             let id = { AssemblyQualifiedName = store.GetType().AssemblyQualifiedName ; UUID = computeHash store.UUID }
             provider.Id <- Some id
-            let assemblies = VagrantUtils.ComputeAssemblyDependencies provider.StoreFactoryType
+
+            let assemblies = 
+                VagrantUtils.ComputeAssemblyDependencies provider.StoreFactoryType 
+                |> List.filter (not << AssemblyFilter.isMBraceAssembly)
+
             let ids = assemblies |> List.map VagrantUtils.ComputeAssemblyId
             let dependencies = Seq.zip ids assemblies |> Map.ofSeq
 

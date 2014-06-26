@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Serialization.fs" />
+    <Compile Include="AssemblyFilter.fs" />
     <Compile Include="Store\StoreUtils.fs" />
     <Compile Include="Store\ICloudStore.fs" />
     <Compile Include="Store\InMemCache.fs" />

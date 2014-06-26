@@ -30,17 +30,6 @@ namespace Nessos.MBrace.Core
         with
             member i.Message = match i with Warning m -> m | Error m -> m
 
-
-        let private ignoredPublicKeyTokens =
-            [ typeof<int>.Assembly
-              typeof<int option>.Assembly ]
-            |> List.map (fun asm -> asm.GetName().GetPublicKeyToken())
-            |> set
-
-        let isMBraceAssembly (asm : Assembly) =
-            let name = asm.GetName()
-            name.Name.StartsWith "MBrace" || ignoredPublicKeyTokens.Contains <| name.GetPublicKeyToken() || name.Name.StartsWith "Vagrant"
-
         /// specifies if given MemberInfo is prohibited for use within cloud workflows
         let isProhibitedMember (m : MemberInfo) =
             if m = null then false else
@@ -205,7 +194,7 @@ namespace Nessos.MBrace.Core
                 match vagrant with
                 | Some v -> v.ComputeObjectDependencies(expr, permitCompilation = true)
                 | None -> VagrantUtils.ComputeAssemblyDependencies expr
-                |> List.filter (not << isMBraceAssembly)
+                |> List.filter (not << AssemblyFilter.isMBraceAssembly)
 
             let name, functions, warnings = compile name expr
 
@@ -218,7 +207,7 @@ namespace Nessos.MBrace.Core
                 match vagrant with
                 | Some v -> v.ComputeObjectDependencies(block, permitCompilation = true)
                 | None -> VagrantUtils.ComputeAssemblyDependencies block
-                |> List.filter (not << isMBraceAssembly)
+                |> List.filter (not << AssemblyFilter.isMBraceAssembly)
 
             new BareCloudComputation<'T>(name, block, dependencies) :> CloudComputation<'T>
 
