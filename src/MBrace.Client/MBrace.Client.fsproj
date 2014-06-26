@@ -62,7 +62,6 @@
     <Compile Include="Extensions.fs" />
     <None Include="preamble.fsx" />
     <None Include="eirik.fsx" />
-    <None Include="kostas.fsx" />
     <None Include="jan.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
