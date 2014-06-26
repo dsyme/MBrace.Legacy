@@ -76,10 +76,10 @@
             async {   
                 let! b1 = immtable.Exists(folder)
                 if b1 then 
-                    do! immblob.Delete(folder)
+                    do! immtable.Delete(folder)
                 let! b2 = immblob.Exists(folder) 
                 if b2 then 
-                    do! immtable.Delete(folder)
+                    do! immblob.Delete(folder)
                 if not b1 && not b2 then 
                     raise <| ArgumentException(sprintf "Non-existent %s" folder)
             }
