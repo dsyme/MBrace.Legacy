@@ -4,8 +4,9 @@
     open System.IO
     open System.Threading
 
+    open Nessos.FsPickler
+
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Utils.Json
 
     open Nessos.MBrace
     open Nessos.MBrace.Core
@@ -21,15 +22,16 @@
         let getNewLogfileName logPrefix counter = sprintf "%s_%d.log" logPrefix counter
         let isLogFile (f : string) = f.EndsWith(".log")
 
-        let serializeLogs (entries : seq<'LogEntry>) (stream : Stream) = async { 
-            do
-                let jss = JsonSequence.CreateSerializer<'LogEntry>(stream, newLine = true)
-                for e in entries do jss.WriteNext e
+        let serializeLogs (entries : seq<'LogEntry>) (stream : Stream) = async {
+            use sw = new StreamWriter(stream)
+            let length = JsonLogPickler.WriteEntries(sw, entries, leaveOpen = false)
+            return ()
         }
 
-        let deserializeLogs (stream : Stream) = async {
-            let jsd = JsonSequence.CreateDeserializer<'LogEntry>(stream)
-            return Seq.toArray jsd
+        let deserializeLogs<'LogEntry> (stream : Stream) = async {
+            use sr = new StreamReader(stream)
+            let seq = JsonLogPickler.ReadEntries<'LogEntry>(sr)
+            return Seq.toArray seq
         }
 
     type LogStore<'LogEntry>(store : ICloudStore, container : string, logPrefix : string, ?minInterval : int, ?maxInterval : int, ?minEntries : int) =
