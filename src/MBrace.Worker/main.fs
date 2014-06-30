@@ -100,20 +100,17 @@
             ThespianLogger.Register(logger)
 
             // Register Store
-            try
-                StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem cacheStoreEndpoint)
+            StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem cacheStoreEndpoint)
 
-                // load store dependencies from cache
-                activator.Dependencies
-                |> vagrantClient.GetAssemblyLoadInfo
-                |> List.filter (function Loaded _ | LoadedWithStaticIntialization _ -> false | _ -> true)
-                |> List.map (fun l -> vagrantCache.GetCachedAssembly(l.Id, includeImage = true))
-                |> List.iter (vagrantClient.LoadPortableAssembly >> ignore)
+            // load store dependencies from cache
+            activator.Dependencies
+            |> vagrantClient.GetAssemblyLoadInfo
+            |> List.filter (function Loaded _ | LoadedWithStaticIntialization _ -> false | _ -> true)
+            |> List.map (fun l -> vagrantCache.GetCachedAssembly(l.Id, includeImage = true))
+            |> List.iter (vagrantClient.LoadPortableAssembly >> ignore)
 
                 
-                let storeInfo = StoreRegistry.TryActivate(activator, makeDefault = true)
-                ()
-            with e -> results.Raise (sprintf "Error connecting to store: %s" e.Message, 2)
+            let storeInfo = StoreRegistry.TryActivate(activator, makeDefault = true)
 
             // Register listeners
             TcpListenerPool.DefaultHostname <- hostname

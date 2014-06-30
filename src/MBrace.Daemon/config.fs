@@ -121,7 +121,7 @@
 
                 do lockWorkingDir wd
 
-            Directory.SetCurrentDirectory wd
+            retry (RetryPolicy.Retry(2, 0.5<sec>)) (fun () -> Directory.SetCurrentDirectory wd)
 
             // populate subdirectories
             let create subdir registrar =
