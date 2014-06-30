@@ -85,7 +85,7 @@
             do IoC.RegisterValue(vagrantClient)
 
             // Register Serialization
-            do Nessos.MBrace.Runtime.Serialization.Register(new FsPickler())
+            do Nessos.MBrace.Runtime.Serialization.Register(FsPickler.CreateBinary())
 
             // Register Logger
             let logger =

@@ -80,23 +80,24 @@
         static let postfix s = sprintf' "%s.%s" s extension
 
         static let serialize (value : obj) (ty : Type) (stream : Stream) = async {
-            Serialization.DefaultPickler.Serialize<Type>(stream, ty)
-            Serialization.DefaultPickler.Serialize<obj>(stream, value)
+            Serialization.DefaultPickler.Serialize<Type>(stream, ty, leaveOpen = true)
+            // it is essential that stream is left open after write, since store provides needs to annotate stream with tag
+            Serialization.DefaultPickler.Serialize<obj>(stream, value, leaveOpen = true)
         }
 
         let read container id : Async<Type * obj * Tag> = async {
             let id = postfix id
             let! stream, tag = store.ReadMutable(container, id)
-            let t = Serialization.DefaultPickler.Deserialize<Type> stream
-            let o = Serialization.DefaultPickler.Deserialize<obj> stream
-            stream.Dispose()
+            let t = Serialization.DefaultPickler.Deserialize<Type>(stream, leaveOpen = true)
+            // it is essential that stream is closed after read, either with leaveOpen = false or explicit disposal
+            let o = Serialization.DefaultPickler.Deserialize<obj>(stream, leaveOpen = false)
             return t, o, tag
         }
 
         let readInfo container id = async {
-            let! stream, tag = store.ReadMutable(container, id)        
-            let t = Serialization.DefaultPickler.Deserialize<Type> stream
-            stream.Dispose()
+            let! stream, tag = store.ReadMutable(container, id)
+            // it is essential that stream is closed after read, either with leaveOpen = false or explicit disposal
+            let t = Serialization.DefaultPickler.Deserialize<Type>(stream, leaveOpen = false)
             return t, tag
         }
 

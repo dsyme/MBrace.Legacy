@@ -186,7 +186,7 @@
             ) |> ignore
 
         let registerSerializers () =
-            Nessos.MBrace.Runtime.Serialization.Register(new FsPickler())
+            Nessos.MBrace.Runtime.Serialization.Register(FsPickler.CreateBinary())
 
 
         let registerPerfMonitor () =

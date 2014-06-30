@@ -10,9 +10,9 @@ open FsUnit
 
 [<AutoOpen>]
 module private PicklerHelper =
-    let private pickler = Nessos.FsPickler.FsPickler()
-    let serialize<'T>   (value : 'T) (stream : Stream) = async { do pickler.Serialize<'T>(stream, value) }
-    let deserialize<'T> (stream : Stream) = pickler.Deserialize<'T>(stream)
+    let private pickler = Nessos.FsPickler.FsPickler.CreateBinary()
+    let serialize<'T>   (value : 'T) (stream : Stream) = async { do pickler.Serialize<'T>(stream, value, leaveOpen = true) }
+    let deserialize<'T> (stream : Stream) = pickler.Deserialize<'T>(stream, leaveOpen = true)
 
 
 [<TestFixture>]

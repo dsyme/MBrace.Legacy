@@ -85,7 +85,7 @@
             stream.Seek(int64 -sizeof<int> - int64 headerSize, SeekOrigin.End) |> ignore
             
             let count = br.ReadInt32()
-            let ty = Serialization.DefaultPickler.Deserialize<Type> stream
+            let ty = Serialization.DefaultPickler.Deserialize<Type>(stream, leaveOpen = true)
             let size = br.ReadInt64()
 
             stream.Position <- pos
@@ -96,7 +96,7 @@
             let headerStart = stream.Position
             
             bw.Write(info.Count)
-            Serialization.DefaultPickler.Serialize(stream, info.Type)
+            Serialization.DefaultPickler.Serialize(stream, info.Type, leaveOpen = true)
             bw.Write(stream.Position + 2L * int64 sizeof<int>)
             
             let headerEnd = stream.Position
@@ -137,7 +137,8 @@
                     let msg = sprintf' "CloudSeq type mismatch. Internal type '%s', expected '%s'." info.Type.FullName typeof<'T>.FullName
                     return raise <| MBraceException(msg)
 
-                return Serialization.DefaultPickler.DeserializeSequence<'T>(stream, info.Count)
+                let sequence = Serialization.DefaultPickler.DeserializeSequence<'T>(stream)
+                return sequence.GetEnumerator()
             } |> onDereferenceError cseq
 
         member __.Delete<'T> (cseq : CloudSeq<'T>) : Async<unit> = 

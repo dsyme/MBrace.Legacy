@@ -106,7 +106,8 @@ namespace Nessos.MBrace.Client
             let compiler = new CloudCompiler(vagrant)
 
             // register serializer
-            Serialization.Register vagrant.Pickler
+            let p = FsPickler.CreateBinary(typeConverter = vagrant.TypeConverter)
+            Serialization.Register p
 
             let logger = Logger.createConsoleLogger()
             do registerLogger logger

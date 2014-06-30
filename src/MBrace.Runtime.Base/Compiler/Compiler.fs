@@ -10,6 +10,7 @@ namespace Nessos.MBrace.Core
     open Microsoft.FSharp.Quotations.DerivedPatterns
     open Microsoft.FSharp.Quotations.ExprShape
 
+    open Nessos.FsPickler
     open Nessos.Vagrant
 
     open Nessos.MBrace
@@ -80,7 +81,7 @@ namespace Nessos.MBrace.Core
                 | CloudBuilderExpr body ->
                     let bindings = gatherTopLevelCloudBindings body
                     for v, metadata in bindings do
-                        if not <| Serialization.DefaultPickler.IsSerializableType v.Type then
+                        if not <| FsPickler.IsSerializableType v.Type then
                             log Error e "%s has binding '%s' of type '%s' that is not serializable." blockName v.Name <| Type.prettyPrint v.Type
                 
                 // let! x = cloudExpr

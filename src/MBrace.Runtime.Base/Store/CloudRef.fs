@@ -70,7 +70,7 @@
         // TODO 2 : decide if file is cloud ref by reading header, not file extension.
 
         static let serialize (value:obj) (t:Type) (stream:Stream) = async {
-            Serialization.DefaultPickler.Serialize<Type>(stream, t)
+            Serialization.DefaultPickler.Serialize<Type>(stream, t, leaveOpen = true)
             Serialization.DefaultPickler.Serialize<obj>(stream, value)
         }
 
@@ -78,14 +78,14 @@
 
         let read container id : Async<Type * obj> = async {
             use! stream = fscache.Read(container, id) 
-            let t = Serialization.DefaultPickler.Deserialize<Type> stream
-            let o = Serialization.DefaultPickler.Deserialize<obj> stream
+            let t = Serialization.DefaultPickler.Deserialize<Type>(stream, leaveOpen = true)
+            let o = Serialization.DefaultPickler.Deserialize<obj>(stream)
             return t, o
         }
 
         let readType container id  = async {
             use! stream = store.ReadImmutable(container, id) // force cache loading?
-            let t = Serialization.DefaultPickler.Deserialize<Type> stream
+            let t = Serialization.DefaultPickler.Deserialize<Type>(stream)
             return t
         }
 
