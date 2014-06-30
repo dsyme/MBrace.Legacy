@@ -152,13 +152,13 @@
                 agentLoop ())
 
         let monitored =
-             let l = new List<string>()
-             if cpuUsage.IsSome then l.Add("%Cpu")
-             if totalMemory.IsSome then l.Add("Total Memory")
-             if memoryUsage.IsSome then l.Add("%Memory")
-             if networkSentUsage.IsSome then l.Add("Network (sent)")
-             if networkReceivedUsage.IsSome then l.Add("Network (received)")
-             l
+            let l = new List<string>()
+            if cpuUsage.IsSome then l.Add("%Cpu")
+            if totalMemory.IsSome then l.Add("Total Memory")
+            if memoryUsage.IsSome then l.Add("%Memory")
+            if networkSentUsage.IsSome then l.Add("Network (sent)")
+            if networkReceivedUsage.IsSome then l.Add("Network (received)")
+            l
 
         member this.GetCounters () : NodePerformanceInfo =
             perfCounterActor.PostAndReply(fun ch -> Info ch)

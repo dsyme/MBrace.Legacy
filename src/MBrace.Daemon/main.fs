@@ -28,6 +28,9 @@
             //
 
             if runsOnMono then exiter.Exit("mono not supported... yet!", 1)
+
+            // init performance monitor
+            let perfMonTask = Async.StartAsTask(registerPerfMonitorAsync())
             
             // register serialization
             do registerSerializers ()
@@ -100,8 +103,6 @@
 
             IoC.RegisterValue<Permissions>(defaultPermissions)
 
-            let perfMon = registerPerfMonitor() 
-
             // TODO : remove?
             IoC.RegisterValue(debugMode, "debugMode")
 
@@ -113,9 +114,6 @@
 
             // register mbrace.process executable
             registerProcessDomainExecutable mbraceProc
-            
-//            // TODO : move to app.config ?
-//            IoC.RegisterValue(true, "IsolateProcesses")
 
             // Register Exiter
             IoC.RegisterValue<IExiter>(exiter)
@@ -123,7 +121,6 @@
             // Register Store
             let info = registerStore storeProvider storeEndpoint workingDirectory
 
-            //IoC.RegisterValue(clProcPorts, "mbrace.process.portPool")
             //TODO!!!! THIS IS WRONG
             IoC.RegisterValue(evalPorts workerPorts, "mbrace.process.portPool")
 
@@ -139,9 +136,13 @@
             logger.Logf Info "Default Serializer = %s" Serialization.SerializerRegistry.DefaultName
             logger.Logf Info "Working Directory = %s" workingDirectory
             logger.Logf Info "StoreProvider = %s" info.Store.Name
-            logger.Logf Info "Performance Monitor active on %s" <| String.concat "," perfMon.MonitoredCategories
 
-            if debugMode then logger.LogInfo "Running in DEBUG mode."
+            let perfMon = perfMonTask.Result
+            IoC.RegisterValue perfMon
+
+            logger.Logf Info "Performance Monitor active"
+
+            if debugMode then logger.LogInfo "Running in DEBUG mode"
             if isWindowed then registerFancyConsoleEvent debugMode address
 
             try

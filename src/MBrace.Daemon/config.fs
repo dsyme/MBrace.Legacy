@@ -189,11 +189,11 @@
             Nessos.MBrace.Runtime.Serialization.Register(FsPickler.CreateBinary())
 
 
-        let registerPerfMonitor () =
+        let registerPerfMonitorAsync () = async {
             let monitor = new Nessos.MBrace.Runtime.PerformanceMonitor()
-            IoC.RegisterValue<_>(monitor)
             monitor.Start()
-            monitor
+            return monitor
+        }
 
 
         let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =
