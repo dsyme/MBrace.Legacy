@@ -208,7 +208,7 @@
             create (fun e -> if filterP e then logEntry e logger)
 
         let maxLogLevel (lvl : LogLevel) (logger : ISystemLogger) = 
-            filter (fun e -> e.Level <= lvl) logger
+            filter (fun e -> e.Level >= lvl) logger
 
 
     [<AutoOpen>]
