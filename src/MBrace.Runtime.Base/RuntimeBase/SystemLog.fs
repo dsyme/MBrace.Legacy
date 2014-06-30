@@ -6,9 +6,13 @@
 
     open Microsoft.FSharp.Control
 
+    open Nessos.FsPickler
+
     open Nessos.Thespian
 
     open Nessos.MBrace.Utils.Json
+
+    open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Store
 
 
@@ -105,10 +109,11 @@
 
     /// A logger that serializes to JSON ; NOT thread safe
     type JsonLogger (stream : Stream) =
-        let writer = JsonSequence.CreateSerializer<SystemLogEntry>(stream, newLine = true)
+
+        let writer = new StreamWriter(stream)
 
         interface ISystemLogger with
-            member __.LogEntry e = writer.WriteNext e
+            member __.LogEntry e = JsonLogPickler.WriteSingleEntry (writer, e)
 
         interface IDisposable with  
             member __.Dispose () = (writer :> IDisposable).Dispose()
@@ -123,7 +128,8 @@
 
         static member ReadLogs(path : string) =
             use fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            let d = JsonSequence.CreateDeserializer<SystemLogEntry>(fs)
+            use sr = new StreamReader(fs)
+            let d = JsonLogPickler.ReadEntries(sr)
             Seq.toArray d
 
     /// A logger that serializes to store

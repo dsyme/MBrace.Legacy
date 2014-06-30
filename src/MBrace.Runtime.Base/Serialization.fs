@@ -41,3 +41,19 @@
                 new IObjectCloner with
                     member __.Clone (t : 'T) = FsPickler.Clone t
             }
+
+
+    type JsonLogPickler private () =
+
+        static let jsonLogPickler = FsPickler.CreateJson(omitHeader = true, indent = false)
+        static do
+            jsonLogPickler.UseCustomTopLevelSequenceSeparator <- true
+            jsonLogPickler.SequenceSeparator <- System.Environment.NewLine
+
+        static member WriteSingleEntry<'Entry>(w : TextWriter, e : 'Entry) = 
+            jsonLogPickler.Serialize(w, e, leaveOpen = true) ; w.WriteLine() ; w.Flush()
+
+        static member WriteEntries<'Entry>(w : TextWriter, es : seq<'Entry>, ?leaveOpen) = 
+            jsonLogPickler.SerializeSequence(w, es, ?leaveOpen = leaveOpen)
+
+        static member ReadEntries<'Entry>(r : TextReader) = jsonLogPickler.DeserializeSequence<'Entry>(r)
