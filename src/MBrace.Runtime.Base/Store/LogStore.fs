@@ -166,14 +166,14 @@
                 if not <| Seq.isEmpty files then
                     let readEntries file : Async<'LogEntry []> = async { 
                         use! stream = store.ReadImmutable(container, file)
-                                      |> onDereferenceError(sprintf "%s %s" container f)
+                                      |> onDereferenceError(sprintf "%s %s" container file)
                         return! deserializeLogs stream
                     }
 
                     let! entries =
                         files |> Seq.sort
-                                |> Seq.map readEntries
-                                |> Async.Parallel
+                              |> Seq.map readEntries
+                              |> Async.Parallel
 
                     files |> Seq.iter (logsRead.Add >> ignore)
 
