@@ -43,6 +43,8 @@ namespace Nessos.MBrace.Core
             | "MBrace.Client" -> true
             | _ -> false
 
+        let isProhibitedType (t : Type) = Type.traverse t |> Seq.exists isProhibitedMember
+
         let printLocation (metadata : ExprMetadata) =
             sprintf "%s(%d,%d)" metadata.File metadata.StartRow metadata.StartCol
 
@@ -118,7 +120,7 @@ namespace Nessos.MBrace.Core
                         log Error e "%s references a closure. All cloud blocks should be top-level let bindings." blockName
                 
                 // typeof<_> literal
-                | TypeOf t when isProhibitedMember t ->
+                | TypeOf t when isProhibitedType t ->
                     log Error e "%s references prohibited type '%s'." blockName <| Type.prettyPrint t
                     
                 // generic Call/PropertyGet/PropertySet
@@ -126,11 +128,12 @@ namespace Nessos.MBrace.Core
                     // check if cloud expression references inappropriate MBrace libraries
                     if isProhibitedMember m then
                         log Error e "%s references prohibited method '%s'." blockName <| printMemberInfo m
-                    elif isProhibitedMember returnType then
+
+                    elif isProhibitedType returnType then
                         log Error e "%s references member '%s' of prohibited type '%s'." blockName <| printMemberInfo m <| Type.prettyPrint returnType
 
                 // values captured in closure
-                | Value(_,t) when isProhibitedMember t -> log Error e "%s references prohibited type '%s'." blockName <| Type.prettyPrint t
+                | Value(_,t) when isProhibitedType t -> log Error e "%s references prohibited type '%s'." blockName <| Type.prettyPrint t
                 | _ -> ()
 
 

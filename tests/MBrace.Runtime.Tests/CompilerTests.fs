@@ -101,6 +101,14 @@
             return dummyRuntime.Nodes
         }
 
+        let invalidBinding = Unchecked.defaultof<int * Nessos.MBrace.Client.MBraceRuntime list option>
+
+        [<Cloud>]
+        let blockThatReferencesCompositeExpressionOfInvalidType = cloud {
+            let foo = fst invalidBinding
+            return foo.GetHashCode()
+        }
+
 
         [<Test>]
         let ``Cloud value missing [<Cloud>] attribute`` () =
@@ -169,3 +177,7 @@
         let ``Cloud block that references function closure`` () =
             let f x = cloud { return x + 15 }
             shouldFailCompilation <@ f 27 @>
+
+        [<Test>]
+        let ``Cloud block that references value with invalid binding`` () =
+            shouldFailCompilation <@ blockThatReferencesCompositeExpressionOfInvalidType @>
