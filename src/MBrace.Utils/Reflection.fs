@@ -94,6 +94,25 @@
                 traverse m
 
     [<RequireQualifiedAccess>]
+    module Type =
+        
+        let rec traverse (t : Type) = seq {
+
+            if t.IsArray || t.IsByRef || t.IsPointer then
+                yield! traverse <| t.GetElementType()
+
+            elif t.IsGenericType && not t.IsGenericTypeDefinition then
+                yield t.GetGenericTypeDefinition()
+                for ga in t.GetGenericArguments() do
+                    yield! traverse ga
+
+            elif t.IsGenericParameter then ()
+            else
+                yield t
+        }
+
+
+    [<RequireQualifiedAccess>]
     module Expr =
 
         /// erases reflected type information from expression
