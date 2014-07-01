@@ -44,7 +44,7 @@ open Nessos.MBrace.Utils.String
 //where the hosted process count is descreased by priority percent. The first process domain
 //and strategy is chosen in the generated order.
 
-type private ProcessCreationStrategy = Reuse | Extend of Set<AssemblyId> | Create
+type private ProcessCreationStrategy = Reuse | Extend of AssemblyId list | Create
 //priorities for process creation strategy; use 0 to 100, 100 meaning highest priority
 let private reusePriority = 60
 let private extendPriority = 50
@@ -62,6 +62,11 @@ type State = {
         //ProcessMonitor = ReliableActorRef.FromRef <| ActorRef.empty()
         PortPool = defaultArg portPool []
     }
+
+type private AssemblyLoadState =
+    | NotLoaded
+    | Loaded
+    | InCompatible
 
 //TODO!!! Handle failures
 let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager processDomainId preloadAssemblies portOpt =
@@ -232,7 +237,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
                             Db = state.Db |> Database.insert <@ fun db -> db.ProcessDomain @> {
                                 Id = processDomainId
                                 NodeManager = ReliableActorRef.FromRef processDomainNodeManager
-                                LoadedAssemblies = preloadAssemblies |> Set.ofList
+                                LoadedAssemblies = preloadAssemblies
                                 Port = portOpt
                                 ClusterProxyManager = clusterProxyManager
                                 ClusterProxyMap = proxyMap
@@ -351,22 +356,45 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
                     // This might need to be updated even in the case where the assembly itself is already loaded in the processdomain.
                     // Therefore, need to interface with AssemblyManager in every new process, even when process domain matches completely.
 
-                    //Case 1: the required assemblies are already loaded
-                    //in this case assemblyIds is a subset of the loaded assemblies in
-                    //the candidate process domain.
-                    //Case 2: a subset of the required assemblies is already loaded
-                    //in this case the loaded assemblies are a subset of the required assemblies
-                    //Case 3: Something is different. Create a new process domain.
-                    let requestedAssemblies = assemblyIds |> Set.ofList
+
+                    // ProcessDomain reuse determination algorithm:
+                    // A dependent assembly is compatible with a process domain iff
+                    //   1. No assembly with identical qualified name is already loaded in it, OR
+                    //   2. If an assembly with identical qualified name is already loaded, it should either
+                    //      a) be a signed assembly qualified name
+                    //      b) be an assembly image of identical SHA256 hashcode.
+                    //
+                    // A process domain can be reused by a new cloud process iff all its dependencies are compatible with said domain.
+                    // If part of the process dependencies are missing from the process domain then the AppDomain is marked for extension.
+                    //
+
                     let selected = 
-                        candidateDomains 
+                        candidateDomains
                         |> Seq.map (fun (pdid, pidCount) -> 
                             let { NodeManager = processDomainNodeManager; LoadedAssemblies = loadedAssemblies; Port = port; ClusterProxyManager = clusterProxyManager; ClusterProxyMap = clusterProxyMap } = state.Db.ProcessDomain.DataMap.[pdid]
-                            if Set.isSubset requestedAssemblies loadedAssemblies then
-                                pdid, processDomainNodeManager, clusterProxyManager, clusterProxyMap, Reuse, pidCount - ((pidCount * reusePriority)/100), port
-                            else if Set.isSubset loadedAssemblies requestedAssemblies then
-                                pdid, processDomainNodeManager, clusterProxyManager, clusterProxyMap, Extend(Set.difference requestedAssemblies loadedAssemblies), pidCount - ((pidCount * extendPriority)/100), port
-                            else pdid, processDomainNodeManager, clusterProxyManager, clusterProxyMap, Create, pidCount - ((pidCount * createPriority)/100), port
+
+                            let loadedAssemblies = assemblyIds |> Seq.map (fun id -> id.FullName, id) |> Map.ofSeq
+                            let assemblyCompatibility =
+                                assemblyIds 
+                                |> Seq.groupBy (fun id -> 
+                                    match loadedAssemblies.TryFind id.FullName with 
+                                    | Some id' when id.IsStrongAssembly -> Loaded
+                                    | Some id' when id.ImageHash = id'.ImageHash -> Loaded
+                                    | Some _ -> InCompatible
+                                    | None -> NotLoaded)
+                                |> Map.ofSeq
+
+                            let lookup p = match assemblyCompatibility.TryFind p with None -> [] | Some s -> Seq.toList s
+
+                            let extensionStatus = 
+                                match lookup InCompatible with
+                                | [] -> 
+                                    match lookup NotLoaded with
+                                    | [] -> Reuse
+                                    | missing -> Extend missing
+                                | _ -> Create
+
+                            pdid, processDomainNodeManager, clusterProxyManager, clusterProxyMap, extensionStatus, pidCount - ((pidCount * reusePriority)/100), port
                         )
                         |> Seq.sortBy (fun (_, _, _, _, _, priority, _) -> priority)
                         |> Seq.map (fun (processDomainId, processDomainNodeManager, clusterProxyManager, clusterProxyMap, strategy, _, port) -> processDomainId, processDomainNodeManager, clusterProxyManager, clusterProxyMap, strategy, port)
@@ -415,8 +443,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
 
                         return { state with
                                     Db = state.Db |> Database.insert <@ fun db -> db.ProcessDomain @> 
-                                                        { processDomain with LoadedAssemblies = requestedAssemblies }
-//                                                        { processDomain with LoadedAssemblies = extendedAssemblies }
+                                                        { processDomain with LoadedAssemblies = assemblyIds }
                                                   |> Database.insert <@ fun db -> db.Process @> { Id = processId; ProcessDomain = processDomainId }
                                 }
                     | _, _, _, _, Create, _ ->
@@ -460,7 +487,7 @@ let rec processDomainManagerBehavior (processDomainClusterManager: ActorRef<Clus
 
                         return { state' with 
                                     Db = state.Db |> Database.insert <@ fun db -> db.ProcessDomain @>
-                                                        { Id = newProcessDomainId; NodeManager = processDomainNodeManager'; LoadedAssemblies = assemblyIds |> Set.ofList; Port = portOpt; KillF = killF; ClusterProxyManager = clusterProxyManager; ClusterProxyMap = proxyMap }
+                                                        { Id = newProcessDomainId; NodeManager = processDomainNodeManager'; LoadedAssemblies = assemblyIds ; Port = portOpt; KillF = killF; ClusterProxyManager = clusterProxyManager; ClusterProxyMap = proxyMap }
                                                   |> Database.insert <@ fun db -> db.Process @> { Id = processId; ProcessDomain = newProcessDomainId }
                                }
                 | Some processDomain ->

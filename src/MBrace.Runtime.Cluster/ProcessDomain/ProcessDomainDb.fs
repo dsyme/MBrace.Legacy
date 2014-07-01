@@ -21,7 +21,7 @@ open Nessos.MBrace.Utils.String
 type ProcessDomain = {
     Id: ProcessDomainId
     NodeManager: ReliableActorRef<NodeManager>
-    LoadedAssemblies: Set<AssemblyId>
+    LoadedAssemblies: AssemblyId list
     Port: int option
     ClusterProxyManager: Actor<ClusterProxyManager> option
     // Atom generated as part of Thespian.Cluster's public API ; should be fixed
