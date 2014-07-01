@@ -11,6 +11,7 @@
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Store.Utils
 
     [<AutoOpen>]
     module private LogStoreUtils =
@@ -48,7 +49,8 @@
             let file = getNewLogfileName logPrefix cnt.Value
             ThreadSafe.incr cnt
             do! store.CreateImmutable(container, file, serializeLogs entries, asFile = true)
-        }
+                |> onCreateError container file
+        } 
 
         let cts = new CancellationTokenSource()
         let gatheredLogs = new ResizeArray<'LogEntry> ()
@@ -115,7 +117,7 @@
             async {
                 let filterF = defaultArg filterF (fun _ -> true)
                 let! containerExists = store.ContainerExists container
-
+                                       
                 if not containerExists then
                     return [||]
                 else   
@@ -123,6 +125,7 @@
 
                     let readEntries (f : string) : Async<'LogEntry []> = async {
                         use! stream = store.ReadImmutable(container, f)
+                                      |> onDereferenceError(sprintf "%s %s" container f)
                         return! deserializeLogs stream
                     }
 
@@ -141,7 +144,7 @@
                 let! exists = store.ContainerExists(container)
                 if exists then
                     do! store.DeleteContainer(container)
-            }
+            } |> onDeleteError container
             
 
 
@@ -163,6 +166,7 @@
                 if not <| Seq.isEmpty files then
                     let readEntries file : Async<'LogEntry []> = async { 
                         use! stream = store.ReadImmutable(container, file)
+                                      |> onDereferenceError(sprintf "%s %s" container f)
                         return! deserializeLogs stream
                     }
 
