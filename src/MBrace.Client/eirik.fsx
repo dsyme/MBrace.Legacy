@@ -4,14 +4,12 @@ open Nessos.MBrace
 open Nessos.MBrace.Client
 
 #r "MBrace.Azure.dll"
+
 open Nessos.MBrace.Azure
+
 let conn = System.IO.File.ReadAllText("/mbrace/azure.txt")
 let azureProvider = StoreProvider.Define<AzureStoreFactory>(conn)
 
-let n = Node("mbrace://grothendieck:2675")
-n.Ping()
-
-n.SetStoreConfiguration azureProvider
 
 let runtime = MBrace.InitLocal(3, storeProvider = azureProvider)
 
