@@ -79,7 +79,7 @@
             // Register Things
             //
 
-            let vagrantCache = new VagrantCache(assemblyPath, lookupAppDomain = true)
+            let vagrantCache = new VagrantCache(assemblyPath)
             let vagrantClient = new VagrantClient()
             do IoC.RegisterValue(vagrantCache)
             do IoC.RegisterValue(vagrantClient)
@@ -106,8 +106,8 @@
             activator.Dependencies
             |> vagrantClient.GetAssemblyLoadInfo
             |> List.filter (function Loaded _ | LoadedWithStaticIntialization _ -> false | _ -> true)
-            |> List.map (fun l -> vagrantCache.GetCachedAssembly(l.Id, includeImage = true))
-            |> List.iter (vagrantClient.LoadPortableAssembly >> ignore)
+            |> List.map (fun l -> vagrantCache.GetCachedAssembly(l.Id, includeImage = true, requireIdentical = false, loadPolicy = AssemblyLocalResolutionPolicy.All))
+            |> List.iter (fun pa -> vagrantClient.LoadPortableAssembly(pa, requireIdentical = false, loadPolicy = AssemblyLocalResolutionPolicy.All) |> ignore)
 
                 
             let storeInfo = StoreRegistry.TryActivate(activator, makeDefault = true)

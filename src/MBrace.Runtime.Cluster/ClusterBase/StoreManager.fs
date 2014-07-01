@@ -17,23 +17,22 @@
         match msg with
         | ActivateStore(RR ctx reply, info) ->
             try
-                let response =
-                    if StoreRegistry.DefaultStoreInfo.Id = info.Id then
-                        StoreLoadResponse.Success
+                if StoreRegistry.DefaultStoreInfo.Id = info.Id then
+                    reply <| Value StoreLoadResponse.Success
+                else
+                    let missingDependencies =
+                        loader.Value.GetAssemblyLoadInfo(info.Dependencies, requireIdentical = false, loadPolicy = AssemblyLocalResolutionPolicy.All)
+                        |> List.choose (function Loaded _ -> None | info -> Some info.Id)
+
+                    if missingDependencies.Length > 0 then
+                        reply <| Value (MissingAssemblies missingDependencies)
                     else
                         match StoreRegistry.TryActivate(info, makeDefault = true) with
                         | Some _ -> 
                             ctx.LogInfo <| sprintf "switching to store '%s'." info.Id.AssemblyQualifiedName
-                            StoreLoadResponse.Success
+                            reply <| Value StoreLoadResponse.Success
 
-                        | None ->
-                            info.Dependencies 
-                            |> loader.Value.GetAssemblyLoadInfo
-                            |> List.choose (function Loaded _ -> None | info -> Some info.Id)
-                            |> MissingAssemblies
-
-                reply <| Value response
-
+                        | None -> failwith "could not activate store '%s'." info.Id.AssemblyQualifiedName
             with e ->
                 ctx.LogError e
                 reply <| Exception e
@@ -49,9 +48,9 @@
         | UploadAssemblies (RR ctx reply, pas) ->
             try
                 // load in current app domain
-                let loadInfo = loader.Value.LoadPortableAssemblies pas
+                let loadInfo = loader.Value.LoadPortableAssemblies(pas, loadPolicy = AssemblyLocalResolutionPolicy.All, requireIdentical = false)
                 // save in cache
-                let _ = cache.Value.Cache pas
+                let _ = cache.Value.Cache(pas, loadPolicy = AssemblyLocalResolutionPolicy.All, requireIdentical = false)
                 reply <| Value loadInfo
 
             with e ->
@@ -60,7 +59,7 @@
 
         | DownloadAssemblies (RR ctx reply, ids) ->
             try
-                let pas = ids |> List.map (fun id -> cache.Value.GetCachedAssembly(id, includeImage = true))
+                let pas = ids |> List.map (fun id -> cache.Value.GetCachedAssembly(id, includeImage = true, requireIdentical = false, loadPolicy = AssemblyLocalResolutionPolicy.All))
                 reply <| Value pas
 
             with e ->

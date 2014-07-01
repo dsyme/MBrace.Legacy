@@ -105,23 +105,21 @@
 
         // "None" denotes using a disposable tmp folder
         let registerWorkingDirectory cleanup (wd : string) =
-            if cleanup then
-                try
-                    retry (RetryPolicy.Retry(2, 0.5<sec>)) 
-                        (fun () ->
-                            if Directory.Exists wd then Directory.Delete(wd, true)
-                            Directory.CreateDirectory wd |> ignore)
-                with e ->
-                    exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s'." wd, 1)
-            else
-                if not <| Directory.Exists wd then
-                    try retry (RetryPolicy.Retry(2, 0.5<sec>)) (fun () -> Directory.CreateDirectory wd |> ignore)
-                    with e ->    
-                        exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s'." wd, 1)
+            try
+                retry (RetryPolicy.Retry(3, 0.5<sec>)) (fun () ->
+                    if cleanup then
+                        if Directory.Exists wd then Directory.Delete(wd, true)
+                        Directory.CreateDirectory wd |> ignore
+
+                    elif not <| Directory.Exists wd then
+                            Directory.CreateDirectory wd |> ignore
+
+                    Directory.SetCurrentDirectory wd)
 
                 do lockWorkingDir wd
 
-            retry (RetryPolicy.Retry(2, 0.5<sec>)) (fun () -> Directory.SetCurrentDirectory wd)
+            with e ->
+                exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s'." wd, 1)
 
             // populate subdirectories
             let create subdir registrar =
@@ -137,7 +135,7 @@
             // temporary solution; revise later
             do create "AssemblyCache" <| 
                 fun cacheDir -> 
-                    let vcache = new VagrantCache(cacheDir, lookupAppDomain = true)
+                    let vcache = new VagrantCache(cacheDir)
                     let vclient = new VagrantClient()
                     IoC.RegisterValue vcache
                     IoC.RegisterValue vclient
