@@ -46,13 +46,14 @@
 //        let removePrefix (str : string) = str.Substring(containerPrefix.Length)
 
     module Validation =
-        let private letters = set {'a'..'z'} + set {'A'..'z'}
+        let private lowercase = set {'a'..'z'}
+        let private letters = lowercase + set {'A'..'z'}
         let private numbers = set {'0'..'9'}
         let private partition_key_black_list = set [ '/'; '\\'; '#'; '?' ]
 
         let checkFolder (name : string) =
             if  not (String.IsNullOrEmpty name) &&
-                String.forall (fun c -> letters.Contains c || numbers.Contains c ) name &&
+                String.forall (fun c -> lowercase.Contains c || numbers.Contains c ) name &&
                 not (numbers.Contains name.[0] )
             then ()
             else raise <| Exception(sprintf "Invalid folder name %s. Folder name must : contain only alphanumeric characters, start with a letter, have length >= 3." name)
