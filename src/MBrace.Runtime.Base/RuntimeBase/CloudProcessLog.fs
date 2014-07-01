@@ -46,13 +46,13 @@
     /// Store interface for cloud process logs
 
     type StoreCloudLogger(store : ICloudStore, processId : ProcessId, taskId : TaskId) =
-        inherit LogStore<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, logPrefix = sprintf "task_%s" taskId)
+        inherit LogStore<CloudLogEntry>(store, container = sprintf "cloudproc%d" processId, logPrefix = sprintf "task_%s" taskId)
 
         static member GetReader(store : ICloudStore, processId : ProcessId) =
-            new LogStoreReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId)
+            new LogStoreReader<CloudLogEntry>(store, container = sprintf "cloudproc%d" processId)
 
         static member GetStreamingReader(store : ICloudStore, processId : ProcessId, ct : Threading.CancellationToken) =
-            new StreamingLogReader<CloudLogEntry>(store, container = sprintf "cloudProc%d" processId, ct = ct)
+            new StreamingLogReader<CloudLogEntry>(store, container = sprintf "cloudproc%d" processId, ct = ct)
 
     /// The runtime ICloudLogger implementation
 
