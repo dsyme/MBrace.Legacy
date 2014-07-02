@@ -20,13 +20,13 @@
     [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
     module StoreManager =
 
-        let uploadStore (storeInfo : StoreInfo) (remote : ActorRef<StoreManager>) = async {
+        let uploadStore (getPortableAssembly : AssemblyId -> PortableAssembly) (storeInfo : StoreInfo) (remote : ActorRef<StoreManager>) = async {
             let! result = remote <!- fun ch -> ActivateStore(ch, storeInfo.ActivationInfo)
 
             match result with
             | Success -> return ()
             | MissingAssemblies ids ->
-                let pas = ids |> List.map (fun id -> storeInfo.Dependencies.[id] |> VagrantUtils.CreatePortableAssembly)
+                let pas = ids |> List.map getPortableAssembly
                 let! info = remote <!- fun ch -> UploadAssemblies(ch, pas)
 
                 match info |> List.tryFind (function Loaded _ -> false | _ -> true) with

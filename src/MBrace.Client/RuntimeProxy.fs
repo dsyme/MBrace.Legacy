@@ -75,7 +75,7 @@
         | Some id ->
             let storeInfo = Store.StoreRegistry.TryGetStoreInfo id |> Option.get
             let! storeMan = master.PostWithReplyRetriable (GetStoreManager, 2)
-            do! StoreManager.uploadStore storeInfo storeMan
+            do! StoreManager.uploadStore (fun id -> Nessos.Vagrant.VagrantUtils.CreatePortableAssembly(storeInfo.Dependencies.[id])) storeInfo storeMan
 
         let! state = master.PostWithReplyRetriable((fun ch -> MasterBoot(ch, config)), 2)
         return initRuntimeProxy state
