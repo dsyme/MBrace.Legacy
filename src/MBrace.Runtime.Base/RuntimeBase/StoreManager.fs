@@ -29,7 +29,7 @@
                 let pas = ids |> List.map (fun id -> storeInfo.Dependencies.[id] |> VagrantUtils.CreatePortableAssembly)
                 let! info = remote <!- fun ch -> UploadAssemblies(ch, pas)
 
-                match info |> List.tryFind (function Loaded _ -> true | _ -> false) with
+                match info |> List.tryFind (function Loaded _ -> false | _ -> true) with
                 | None -> ()
                 | Some info -> invalidOp <| sprintf "Failed to upload store '%O' to remote party." storeInfo.Store
 

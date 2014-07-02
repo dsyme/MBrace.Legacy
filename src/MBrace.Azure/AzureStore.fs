@@ -7,6 +7,9 @@
 
 
     type AzureStore (conn) =
+        do Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(conn)
+           |> ignore
+        
         let immutableStore = ImmutableStore(conn)
         let mutableStore = MutableStore(conn)
         let generalStore = GeneralPurpose(conn)
