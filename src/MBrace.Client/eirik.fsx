@@ -10,7 +10,7 @@ open Nessos.MBrace.Azure
 let conn = System.IO.File.ReadAllText("/mbrace/azure.txt")
 let azureProvider = StoreProvider.Define<AzureStoreFactory>(conn)
 
-
+//let runtime = MBrace.InitLocal(3)
 let runtime = MBrace.InitLocal(3, storeProvider = azureProvider)
 
 runtime.Shutdown()

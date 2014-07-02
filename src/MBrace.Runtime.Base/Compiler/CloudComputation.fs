@@ -81,7 +81,7 @@
 
             e.Errors
             |> String.concat "\n"
-            |> sprintf "Cloud workflow %s of type '%s' contains errors:\n%s" name (Type.prettyPrint e.Type)
+            |> sprintf "Cloud workflow %sof type '%s' contains errors:\n%s" name (Type.prettyPrint e.Type)
 
         val public Name : string
         val public Type : Type
