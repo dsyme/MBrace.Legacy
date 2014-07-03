@@ -56,11 +56,12 @@
             async {
                 let container = (getClient()).GetContainerReference(folder)
                 
-                let b1 = Async.AwaitTask(container.ExistsAsync())
-                let blob = container.GetBlockBlobReference(file)
-                let b2 = Async.AwaitTask(blob.ExistsAsync())
-                
-                return! Async.And(b1, b2)
+                let! b1 = Async.AwaitTask(container.ExistsAsync())
+                if b1 then
+                    let blob = container.GetBlockBlobReference(file)
+                    return! Async.AwaitTask(blob.ExistsAsync())
+                else 
+                    return false
             }
 
         member this.Exists(folder) =

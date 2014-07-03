@@ -40,11 +40,6 @@
 
         let ofBinary (bin : byte []) = new MemoryStream(bin) :> Stream
 
-//        let containerPrefix = "mbrace"
-//        let prefix = sprintf "%s%s" containerPrefix
-//
-//        let removePrefix (str : string) = str.Substring(containerPrefix.Length)
-
     module Validation =
         let private lowercase = set {'a'..'z'}
         let private letters = lowercase + set {'A'..'z'}
@@ -127,40 +122,3 @@
         member val Reference = reference with get, set
 
         new () = MutableFatEntity(null, false, null, null)
-
-//    type OnDesposeStream (stream : Stream, onDispose : unit -> unit) =
-//        inherit Stream () with
-//            override __.CanSeek = stream.CanSeek            
-//            override __.CanRead = stream.CanRead
-//            override __.CanWrite = stream.CanWrite
-//            override __.Write(b,o,c) = stream.Write(b,o,c)
-//            override __.Read(b,o,c) = stream.Read(b,o,c)
-//            override __.SetLength(l) = stream.SetLength(l)
-//            override __.Length = stream.Length
-//            override __.Position with get () = stream.Position
-//                                 and  set p  = stream.Position <- p
-//            override __.Flush () = stream.Flush()
-//            override __.Seek(a,b) = stream.Seek(a,b)
-//            override __.Dispose(disposing) = 
-//                onDispose ()
-//                stream.Dispose(disposing)
-//
-//            
-////        interface IDisposable with
-////            member  __.Dispose () = onDispose (); stream.Dispose()
-
-    [<AutoOpen>]
-    module AsyncEx =
-        type Async with
-//            static member FromBeginEndCancellable(beginAction, endAction) =
-//                Async.FromBeginEnd((fun (c,s) -> beginAction(c,s) :> System.IAsyncResult), endAction)
-//            
-//            static member FromBeginEndCancellable(beginAction, endAction, o) =
-//                Async.FromBeginEnd((fun (c,s) -> beginAction(o, c, s) :> System.IAsyncResult), endAction)
-
-            static member And(left, right) = async {
-                let! left = left
-                if left then return! right
-                else return false
-            }
-

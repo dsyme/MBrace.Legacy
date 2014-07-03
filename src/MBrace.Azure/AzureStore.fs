@@ -7,8 +7,15 @@
 
 
     type AzureStore (conn) =
-        do Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(conn)
-           |> ignore
+        
+        // Check connection string and connectivity
+        do  
+            try
+                Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(conn) |> ignore
+                (Clients.getBlobClient  conn).GetContainerReference("azurestorecheck").Exists() |> ignore
+                (Clients.getTableClient conn).GetTableReference("azurestorecheck").Exists() |> ignore
+            with ex ->
+                raise <| new Exception("Failed to create AzureStore", ex)
         
         let immutableStore = ImmutableStore(conn)
         let mutableStore = MutableStore(conn)
@@ -20,43 +27,35 @@
 
             // Immutable
             member this.CreateImmutable(folder, file, serialize, asFile) =
-                //let folder = Helpers.prefix folder
                 Validation.checkFolder folder
                 Validation.checkFile file
                 immutableStore.Create(folder, file, serialize, asFile)
 
             member this.ReadImmutable(folder, file) : Async<Stream> =
-                //let folder = Helpers.prefix folder
                 immutableStore.Read(folder, file)
 
             member this.CopyFrom(folder, file, source, asFile) =
-                //let folder = Helpers.prefix folder
                 Validation.checkFolder folder
                 Validation.checkFile file
                 immutableStore.CopyFrom(folder, file, source, asFile)
 
             member this.CopyTo(folder, file, target) =
-                //let folder = Helpers.prefix folder
                 immutableStore.CopyTo(folder, file, target)
 
             // Mutable
             member this.CreateMutable(folder, file, serialize) =
-                //let folder = Helpers.prefix folder
                 Validation.checkFolder folder
                 Validation.checkFile file
                 mutableStore.Create(folder, file, serialize)
 
             member this.ReadMutable(folder, file) =
-                //let folder = Helpers.prefix folder
                 mutableStore.Read(folder, file)
 
             member this.TryUpdateMutable(folder, file, serialize, etag) : Async<bool * Tag> =
-                //let folder = Helpers.prefix folder
                 mutableStore.Update(folder, file, serialize, etag)
 
             member this.ForceUpdateMutable(folder, file, serialize) : Async<Tag> =
                 async {
-                    //let folder = Helpers.prefix folder
                     let! success, newTag = mutableStore.Update(folder, file, serialize)
                     if success then return newTag
                     else return failwithf "Cannot force update %s - %s" folder file
@@ -64,20 +63,16 @@
 
             // General purpose
             member this.Exists(folder, file) =
-                //let folder = Helpers.prefix folder
                 generalStore.Exists(folder, file)
 
             member this.ContainerExists(folder) =
-                //let folder = Helpers.prefix folder
                 generalStore.Exists(folder)
 
             member this.GetAllFiles(folder) =
-                //let folder = Helpers.prefix folder
                 generalStore.GetFiles(folder)
 
             member this.GetAllContainers () =
                 generalStore.GetFolders ()
-                //|> Array.map Helpers.removePrefix
 
             member this.DeleteContainer(folder) =
                 async {
