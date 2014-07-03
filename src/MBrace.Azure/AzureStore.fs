@@ -12,8 +12,8 @@
         do  
             try
                 Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(conn) |> ignore
-                (Clients.getBlobClient  conn).GetContainerReference("azurestorecheck").Exists() |> ignore
-                (Clients.getTableClient conn).GetTableReference("azurestorecheck").Exists() |> ignore
+                //(Clients.getBlobClient  conn).GetContainerReference("azurestorecheck").Exists() |> ignore
+                //(Clients.getTableClient conn).GetTableReference("azurestorecheck").Exists() |> ignore
             with ex ->
                 raise <| new Exception("Failed to create AzureStore", ex)
         
