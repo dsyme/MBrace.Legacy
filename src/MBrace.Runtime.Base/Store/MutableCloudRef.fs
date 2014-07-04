@@ -12,7 +12,13 @@
     open Nessos.MBrace.Runtime.Store.Utils
 
 
-    type MutableCloudRef<'T> internal (id : string, container : string, tag : Tag, provider : MutableCloudRefProvider) =
+    type MutableCloudRef<'T> internal (id : string, container : string, tag : Tag, storeId : StoreId) =
+
+        let provider =
+            lazy
+                match StoreRegistry.TryGetStoreInfo storeId with
+                | None -> raise <| new StoreException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
+                | Some info -> info.Primitives.MutableCloudRefProvider :?> MutableCloudRefProvider
 
         // These methods are used to synchronize tag updates in the case of multithreaded parallelism.
         // In cloud execution there is no need to sync, as no threads share the same mutablecloudref instance.
@@ -27,6 +33,7 @@
         member __.Name = id
         member __.Container = container
 
+
         override self.ToString() = sprintf' "mutablecloudref:%s/%s" container id
 
         interface IMutableCloudRef<'T> with
@@ -34,44 +41,40 @@
             member self.Container = container
             member self.Type = typeof<'T>
 
-            member self.ReadValue () = provider.Dereference self
-            member self.ReadValue () = async { let! t = provider.Dereference self in return t :> obj }
+            member self.ReadValue () = provider.Value.Dereference self
+            member self.ReadValue () = async { let! t = provider.Value.Dereference self in return t :> obj }
 
-            member self.TryUpdate (value : 'T) = provider.TryUpdate(self, value)
+            member self.TryUpdate (value : 'T) = provider.Value.TryUpdate(self, value)
             member self.TryUpdate (value : obj) = async {
                 match value with
-                | :? 'T as t -> return! provider.TryUpdate(self, t)
+                | :? 'T as t -> return! provider.Value.TryUpdate(self, t)
                 | _ -> return invalidArg "value" <| sprintf "update value not of type '%O'" typeof<'T>
             }
 
-            member self.ForceUpdate (value : 'T) = provider.ForceUpdate(self, value)
+            member self.ForceUpdate (value : 'T) = provider.Value.ForceUpdate(self, value)
             member self.ForceUpdate (value : obj) = async {
                 match value with
-                | :? 'T as t -> return! provider.ForceUpdate(self, t)
+                | :? 'T as t -> return! provider.Value.ForceUpdate(self, t)
                 | _ -> return invalidArg "value" <| sprintf "update value not of type '%O'" typeof<'T>
             }
 
-            member self.Dispose () = provider.Delete self
-            member self.Value = provider.Dereference self |> Async.RunSynchronously
+            member self.Dispose () = provider.Value.Delete self
+            member self.Value = provider.Value.Dereference self |> Async.RunSynchronously
 
         new (info : SerializationInfo, context : StreamingContext) = 
             let id          = info.GetString("id")
             let container   = info.GetString("container")
             let tag         = info.GetString("tag")
             let storeId     = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
-            let config =
-                match StoreRegistry.TryGetStoreInfo storeId with
-                | None -> raise <| new StoreException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some info -> info.Primitives.MutableCloudRefProvider :?> MutableCloudRefProvider
 
-            new MutableCloudRef<'T>(id, container, tag, config)
+            new MutableCloudRef<'T>(id, container, tag, storeId)
         
         interface ISerializable with 
             member self.GetObjectData(info : SerializationInfo, _ : StreamingContext) =
                 info.AddValue("id", id)
                 info.AddValue("container", container)
                 info.AddValue("tag", tag)
-                info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
+                info.AddValue("storeId", storeId, typeof<StoreId>)
 
 
     and internal MutableCloudRefProvider(id : StoreId, store : ICloudStore) as self =
@@ -114,7 +117,7 @@
             let ctor =
                 {
                     new IFunc<IMutableCloudRef> with
-                        member __.Invoke<'T> () = new MutableCloudRef<'T>(id, container, tag, self) :> IMutableCloudRef
+                        member __.Invoke<'T> () = new MutableCloudRef<'T>(id, container, tag, self.StoreId) :> IMutableCloudRef
                 }
 
             existential.Apply ctor
@@ -175,7 +178,7 @@
                 async {
                     let! tag = store.CreateMutable(container, postfix id, serialize value typeof<'T>)
 
-                    return new MutableCloudRef<'T>(id, container, tag, self) :> IMutableCloudRef<_>
+                    return new MutableCloudRef<'T>(id, container, tag, self.StoreId) :> IMutableCloudRef<_>
                 } |> onCreateError container id
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<IMutableCloudRef> = 

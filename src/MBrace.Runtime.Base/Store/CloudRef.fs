@@ -13,17 +13,22 @@
     open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime.Store.Utils
 
-    type CloudRef<'T> internal (id : string, container : string, provider : CloudRefProvider) as self =
+    type CloudRef<'T> internal (id : string, container : string, storeId : StoreId) as self =
+
+        let provider =
+            lazy
+                match StoreRegistry.TryGetStoreInfo storeId with
+                | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
+                | Some info -> info.Primitives.CloudRefProvider :?> CloudRefProvider
 
         let mutable value : 'T option = None
         let valueLazy () =
             match value with
             | Some v -> v
             | None ->                
-                let v = provider.Dereference self |> Async.RunSynchronously
+                let v = provider.Value.Dereference self |> Async.RunSynchronously
                 value <- Some v
                 v
-
         member __.Name = id
         member __.Container = container
 
@@ -31,7 +36,7 @@
 
         interface ICloudDisposable with
             member self.Dispose () = async {
-                do! provider.Delete self
+                do! provider.Value.Delete self
                 do value <- None // remove cached value to force exceptions for current ref instance
             }
 
@@ -47,18 +52,14 @@
             let id = info.GetString("id")
             let container = info.GetString("container")
             let storeId = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
-            let provider =
-                match StoreRegistry.TryGetStoreInfo storeId with
-                | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some info -> info.Primitives.CloudRefProvider :?> CloudRefProvider
             
-            new CloudRef<'T>(id, container, provider)
+            new CloudRef<'T>(id, container, storeId)
                     
         interface ISerializable with
             override self.GetObjectData(info : SerializationInfo, _ : StreamingContext) =
                 info.AddValue("id", id)
                 info.AddValue("container", container)
-                info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
+                info.AddValue("storeId",storeId, typeof<StoreId>)
     
 
     and internal CloudRefProvider(id : StoreId, store : ICloudStore, inmem : InMemCache, fscache : LocalCache) as self =
@@ -103,7 +104,7 @@
             let ctor =
                 {
                     new IFunc<ICloudRef> with
-                        member __.Invoke<'T> () = new CloudRef<'T>(id, container, self) :> ICloudRef
+                        member __.Invoke<'T> () = new CloudRef<'T>(id, container, self.StoreId) :> ICloudRef
                 }
 
             existential.Apply ctor
@@ -142,7 +143,7 @@
             member self.Create (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
                 async {
                     do! fscache.Create(container, postfix id, serialize value typeof<'T>, false)
-                    return new CloudRef<'T>(id, container, self) :> ICloudRef<_>
+                    return new CloudRef<'T>(id, container, self.StoreId) :> ICloudRef<_>
                 } |> onCreateError container id
 
             member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 

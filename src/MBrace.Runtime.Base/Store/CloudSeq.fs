@@ -18,14 +18,20 @@
     type internal CloudSeqInfo = { Size : int64; Count : int; Type : Type }
 
     [<StructuredFormatDisplay("{StructuredFormatDisplay}")>]
-    type CloudSeq<'T> internal (id : string, container : string, provider : CloudSeqProvider) as self =
+    type CloudSeq<'T> internal (id : string, container : string, storeId : StoreId) as self =
+
+        let provider =
+            lazy
+                match StoreRegistry.TryGetStoreInfo storeId with
+                | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
+                | Some info -> info.Primitives.CloudSeqProvider :?> CloudSeqProvider    
 
         let mutable info = None
         let getInfoLazy () =
             match info with
             | Some i -> i
             | None ->
-                let i = provider.GetCloudSeqInfo self |> Async.RunSynchronously
+                let i = provider.Value.GetCloudSeqInfo self |> Async.RunSynchronously
                 info <- Some i
                 i
 
@@ -42,35 +48,30 @@
             member this.Type = typeof<'T>
             member this.Count = getInfoLazy().Count
             member this.Size = getInfoLazy().Size
-            member this.Dispose () = provider.Delete this
+            member this.Dispose () = provider.Value.Delete this
 
         interface IEnumerable with
             member this.GetEnumerator () = 
-                provider.GetEnumerator(this)
+                provider.Value.GetEnumerator(this)
                 |> Async.RunSynchronously :> IEnumerator
 
         interface IEnumerable<'T> with
             member this.GetEnumerator () = 
-                provider.GetEnumerator(this)  
+                provider.Value.GetEnumerator(this)  
                 |> Async.RunSynchronously
             
         interface ISerializable with
             member this.GetObjectData (info : SerializationInfo , context : StreamingContext) =
                 info.AddValue("id", (this :> ICloudSeq<'T>).Name)
                 info.AddValue("container", (this :> ICloudSeq<'T>).Container)
-                info.AddValue("storeId", provider.StoreId, typeof<StoreId>)
+                info.AddValue("storeId", storeId, typeof<StoreId>)
 
         new (info : SerializationInfo , context : StreamingContext) =
             let id        = info.GetString "id"
             let container = info.GetString "container"
             let storeId   = info.GetValue ("storeId", typeof<StoreId>) :?> StoreId
 
-            let provider =
-                match StoreRegistry.TryGetStoreInfo storeId with
-                | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some info -> info.Primitives.CloudSeqProvider :?> CloudSeqProvider
-
-            new CloudSeq<'T>(id, container, provider)
+            new CloudSeq<'T>(id, container, storeId)
     
     and internal CloudSeqProvider (id : StoreId, store : ICloudStore, cacheStore : LocalCache) as self = 
 
@@ -114,7 +115,7 @@
             let ctor =
                 {
                     new IFunc<ICloudSeq> with
-                        member __.Invoke<'T> () = new CloudSeq<'T>(id, container, self) :> ICloudSeq
+                        member __.Invoke<'T> () = new CloudSeq<'T>(id, container, self.StoreId) :> ICloudSeq
                 }
 
             existential.Apply ctor
@@ -155,7 +156,7 @@
                         return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
                     }
                     do! cacheStore.Create(container, postfix id, serializeTo, false)
-                    return CloudSeq<'T>(id, container, this) :> ICloudSeq<'T>
+                    return CloudSeq<'T>(id, container, this.StoreId) :> ICloudSeq<'T>
                 } |> onCreateError container id
 
             member this.Create (container : string, id : string, ty : Type, values : IEnumerable) : Async<ICloudSeq> =
