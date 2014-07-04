@@ -9,7 +9,6 @@
     open System.Text
 
     open Nessos.Vagrant
-    open Nessos.Thespian.ConcurrencyTools
 
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
@@ -61,9 +60,7 @@
             let id = { AssemblyQualifiedName = store.GetType().AssemblyQualifiedName ; UUID = computeHash store.UUID }
             provider.Id <- Some id
 
-            let assemblies = 
-                VagrantUtils.ComputeAssemblyDependencies provider.StoreFactoryType 
-                |> List.filter (not << AssemblyFilter.isMBraceAssembly)
+            let assemblies = VagrantRegistry.ComputeDependencies provider.StoreFactoryType
 
             let ids = assemblies |> List.map VagrantUtils.ComputeAssemblyId
             let dependencies = Seq.zip ids assemblies |> Map.ofSeq

@@ -32,8 +32,6 @@ namespace Nessos.MBrace.Client
                 LocalCacheDirectory : string
 
                 Logger : ISystemLogger
-                Vagrant : VagrantServer
-                CloudCompiler : CloudCompiler
 
                 StoreInfo : StoreInfo
             }
@@ -88,26 +86,23 @@ namespace Nessos.MBrace.Client
                     StoreProvider.Parse(sp, endpoint)
 
             // Populate working directory
-            let vagrantDir = Path.Combine(workingDirectory, "Vagrant")
             let assemblyCacheDir = Path.Combine(workingDirectory, "AssemblyCache")
-            let localCacheDir = Path.Combine(workingDirectory, "LocalCache")
+            let localCacheDir = Path.Combine(workingDirectory, "StoreCache")
 
             let populate () =
                 if Directory.Exists workingDirectory then Directory.Delete(workingDirectory, true)
                 Directory.CreateDirectory workingDirectory |> ignore
-                Directory.CreateDirectory vagrantDir |> ignore
                 Directory.CreateDirectory assemblyCacheDir |> ignore
                 Directory.CreateDirectory localCacheDir |> ignore
 
             do retry (RetryPolicy.Retry(2, 0.1<sec>)) populate
 
             // activate vagrant
-            let vagrant = new VagrantServer(outpath = vagrantDir)
-            let compiler = new CloudCompiler(vagrant)
+            let vagrant = new Vagrant(cacheDirectory = assemblyCacheDir)
+            VagrantRegistry.Register vagrant
 
             // register serializer
-            let p = FsPickler.CreateBinary(typeConverter = vagrant.TypeConverter)
-            Serialization.Register p
+            Serialization.Register vagrant.Pickler
 
             let logger = Logger.createConsoleLogger()
             do registerLogger logger
@@ -130,8 +125,6 @@ namespace Nessos.MBrace.Client
                 LocalCacheDirectory = localCacheDir
 
                 Logger = logger
-                Vagrant = vagrant
-                CloudCompiler = compiler
 
                 StoreInfo = storeInfo
             }
@@ -161,8 +154,6 @@ namespace Nessos.MBrace.Client
 
         static member internal DefaultStoreInfo = config.Value.Value.StoreInfo
 
-        static member internal CloudCompiler = config.Value.Value.CloudCompiler
-
         /// Gets or sets the logger used by the client.
         static member Logger
             with get () = config.Value.Value.Logger
@@ -186,5 +177,4 @@ namespace Nessos.MBrace.Client
         /// Gets the path used by the client as a working directory.
         static member WorkingDirectory = config.Value.Value.WorkingDirectory
 
-        static member internal Vagrant = config.Value.Value.Vagrant
         static member internal StoreInfo = config.Value.Value.StoreInfo

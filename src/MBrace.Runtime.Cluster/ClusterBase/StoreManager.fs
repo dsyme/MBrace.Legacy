@@ -8,10 +8,6 @@
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Store
 
-    // Vagrant's cache & assembly loader are thread safe, but this should probably be moved inside the actor state.
-    let private cache = lazy IoC.Resolve<VagrantCache> ()
-    let private loader = lazy IoC.Resolve<VagrantClient> ()
-
     let storeManagerBehavior (ctx: BehaviorContext<_>) (msg: StoreManager) = async {
         
         match msg with
@@ -21,7 +17,7 @@
                     reply <| Value StoreLoadResponse.Success
                 else
                     let missingDependencies =
-                        loader.Value.GetAssemblyLoadInfo(info.Dependencies, requireIdentical = false, loadPolicy = AssemblyLocalResolutionPolicy.All)
+                        VagrantRegistry.Instance.GetAssemblyLoadInfo(info.Dependencies, loadPolicy = AssemblyLoadPolicy.ResolveAll)
                         |> List.choose (function Loaded _ -> None | info -> Some info.Id)
 
                     if missingDependencies.Length > 0 then
@@ -48,9 +44,8 @@
         | UploadAssemblies (RR ctx reply, pas) ->
             try
                 // load in current app domain
-                let loadInfo = loader.Value.LoadPortableAssemblies(pas, loadPolicy = AssemblyLocalResolutionPolicy.All, requireIdentical = false)
-                // save in cache
-                let _ = cache.Value.Cache(pas, loadPolicy = AssemblyLocalResolutionPolicy.All, requireIdentical = false)
+                let loadInfo = VagrantRegistry.Instance.LoadPortableAssemblies(pas, loadPolicy = AssemblyLoadPolicy.ResolveAll)
+
                 reply <| Value loadInfo
 
             with e ->
@@ -59,7 +54,7 @@
 
         | DownloadAssemblies (RR ctx reply, ids) ->
             try
-                let pas = ids |> List.map (fun id -> cache.Value.GetCachedAssembly(id, includeImage = true, requireIdentical = false, loadPolicy = AssemblyLocalResolutionPolicy.All))
+                let pas = VagrantRegistry.Instance.CreatePortableAssemblies(ids, includeAssemblyImage = true, loadPolicy = AssemblyLoadPolicy.ResolveAll)
                 reply <| Value pas
 
             with e ->

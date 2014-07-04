@@ -13,11 +13,10 @@
 
         // force FsPickler initialization
         do MBraceSettings.ClientId |> ignore
-        let compiler = Nessos.MBrace.Core.CloudCompiler()
 
         let compile (expr : Quotations.Expr<Cloud<'T>>) = 
             try 
-                let c = compiler.Compile expr
+                let c = CloudCompiler.Compile expr
                 match c.Warnings with
                 | [] -> printfn "compilation successful."
                 | ws -> printfn "compilation with warnings:\n%s" <| String.concat "\n" ws

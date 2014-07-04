@@ -25,8 +25,6 @@ let private readEntriesFromMasterLogFile () =
     let file = IoC.Resolve<string>("jsonLogFile")
     JsonFileLogger.ReadLogs file
 
-let cache = lazy(IoC.Resolve<Nessos.Vagrant.VagrantCache>())
-
 type internal MBraceNodeManager = MBraceNode
 
 type State = 
@@ -127,8 +125,7 @@ let storeActivationProtocol (config : BootConfiguration) (restNodes : ActorRef<M
     
     let negotiateUpload (storeInfo : StoreInfo) (node : ActorRef<MBraceNode>) = async {
         let! storeManager = node <!- GetStoreManager
-        return! StoreManager.uploadStore (fun id -> cache.Value.GetCachedAssembly(id, includeImage = true, requireIdentical = false)) 
-                    storeInfo storeManager
+        return! StoreManager.uploadStore storeInfo storeManager
     }
 
     let defaultStore = StoreRegistry.DefaultStoreInfo
@@ -405,8 +402,7 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
             | Attach(RR ctx reply, mbraceNode) when nodeType <> NodeType.Idle ->
                 try
                     let! storeManager = mbraceNode <!- GetStoreManager
-                    do! StoreManager.uploadStore (fun id -> cache.Value.GetCachedAssembly(id, includeImage = true, requireIdentical = false))
-                            StoreRegistry.DefaultStoreInfo storeManager
+                    do! StoreManager.uploadStore StoreRegistry.DefaultStoreInfo storeManager
 
                     let nodeManager =
                         let addr = ActorRef.toEndPoint mbraceNode

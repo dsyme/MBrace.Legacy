@@ -119,7 +119,7 @@
         member __.SetStoreConfigurationAsync (provider : StoreProvider) = async {
             let info = StoreRegistry.Activate(provider, makeDefault = false)
             let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
-            return! StoreManager.uploadStore (fun id -> Nessos.Vagrant.VagrantUtils.CreatePortableAssembly(info.Dependencies.[id])) info storeManager
+            return! StoreManager.uploadStore info storeManager
         }
 
         member __.SetStoreConfiguration (provider : StoreProvider) = 
@@ -127,7 +127,7 @@
 
         member __.GetStoreManagerAsync () = async {
             let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
-            let! info = StoreManager.downloadStore MBraceSettings.Vagrant.Client false storeManager
+            let! info = StoreManager.downloadStore false storeManager
             return new StoreClient(info)
         }
 

@@ -11,102 +11,105 @@ open Nessos.Thespian.Cluster.ActorExtensions
 
 open Nessos.MBrace.Core
 open Nessos.MBrace.Utils
-open Nessos.MBrace.Utils.Reflection
+open Nessos.MBrace.Runtime
 
-// Vagrant's cache & assembly loader are thread safe, but this should probably be moved inside the actor state.
-let private cache = lazy IoC.Resolve<VagrantCache>()
-let private loader = lazy IoC.Resolve<VagrantClient> ()
-
-let assemblyManagerBehavior (ctx: BehaviorContext<_>) (msg: AssemblyManager) = 
+let assemblyManagerBehavior (ctx: BehaviorContext<_>) (cachedAssemblies : Set<AssemblyId>) (msg: AssemblyManager) = 
 
     let loadAssemblies (ids : AssemblyId list) =
         let loadAssembly (id : AssemblyId) =
-            let info = loader.Value.GetAssemblyLoadInfo id
-            let loadResult =
-                match info with
-                | Loaded _ -> info
-                | LoadedWithStaticIntialization _ ->
-                    let pa = cache.Value.GetCachedAssembly(id, includeImage = false)
-                    loader.Value.LoadPortableAssembly pa
-                | LoadFault _ | NotLoaded _ ->
-                    let pa = cache.Value.GetCachedAssembly(id, includeImage = true)
-                    loader.Value.LoadPortableAssembly pa
+            match VagrantRegistry.Instance.LoadCachedAssembly(id, AssemblyLoadPolicy.ResolveStrongNames) with
+            | Loaded(isAppDomainLoaded = true) -> ()
+            | _ -> failwithf "Failed to load assembly '%s'." id.FullName
 
-            match loadResult with
-            | Loaded _ | LoadedWithStaticIntialization _ -> ()
-            | LoadFault(_,e) -> raise e
-            | NotLoaded(id) -> failwithf "Failed to load assembly '%s'." id.FullName
+        for id in ids do loadAssembly id
 
-        for id in ids do
-            loadAssembly id
+    let cachePolicy = AssemblyLoadPolicy.ResolveStrongNames ||| AssemblyLoadPolicy.CacheOnly
 
     async {
         match msg with
         | CacheAssemblies(RR ctx reply, assemblies) -> 
             //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
             try
-                let results = cache.Value.Cache assemblies
+                let results = VagrantRegistry.Instance.LoadPortableAssemblies(assemblies, cachePolicy)
 
                 results |> Value |> reply
+
+                return cachedAssemblies |> Set.addMany (results |> List.choose(function Loaded(id,_,_) -> Some id | _ -> None))
 
             with e ->
                 ctx.LogError e //"AssemblyManager: Failed to cache assemblies."
                 reply (Exception e)
+                return cachedAssemblies
 
         | GetImages(RR ctx reply, assemblies) ->
             try
-                let results = assemblies |> List.map (fun (includeImg,id) -> cache.Value.GetCachedAssembly(id, includeImage = includeImg))
-
+                let results = assemblies |> List.map (fun (includeImg,id) -> VagrantRegistry.Instance.CreatePortableAssembly(id, includeAssemblyImage = includeImg, loadPolicy = cachePolicy))
                 results |> Value |> reply
+                return cachedAssemblies
 
             with e ->
                 ctx.LogError e //"AssemblyManager: Failed to get cached images."
                 reply <| Exception e
+                return cachedAssemblies
 
         | GetAllImages(RR ctx reply) ->
             try
-                let assemblies = 
-                    cache.Value.CachedAssemblies 
-                    |> List.map (fun info -> cache.Value.GetCachedAssembly(info.Id, includeImage = true))
+                let assemblies = VagrantRegistry.Instance.CreatePortableAssemblies(cachedAssemblies, includeAssemblyImage = true, loadPolicy = cachePolicy)
 
                 assemblies |> Value |> reply
 
+                return cachedAssemblies
+
             with e ->
                 ctx.LogError e
                 reply <| Exception e
+                return cachedAssemblies
 
         | GetInfo (RR ctx reply, ids) ->
             try
-                let info = cache.Value.GetCachedAssemblyInfo ids
+                let info = VagrantRegistry.Instance.GetAssemblyLoadInfo(ids, cachePolicy)
 
                 info |> Value |> reply
 
+                return cachedAssemblies
+
             with e ->
                 ctx.LogError e
                 reply <| Exception e
+                return cachedAssemblies
 
         | GetAllInfo(RR ctx reply) ->
             try
-                let ids = cache.Value.CachedAssemblies
+                let ids = VagrantRegistry.Instance.GetAssemblyLoadInfo(cachedAssemblies, cachePolicy)
 
                 ids |> Value |> reply
+
+                return cachedAssemblies
 
             with e ->
                 ctx.LogError e
                 reply <| Exception e
+                return cachedAssemblies
 
-        | LoadAssemblies ids ->
-            try loadAssemblies ids
-            with e -> ctx.LogError e
+        | AssemblyManager.LoadAssemblies ids ->
+            try 
+                loadAssemblies ids
+                return cachedAssemblies
+
+            with e -> 
+                ctx.LogError e
+                return cachedAssemblies
 
         | LoadAssembliesSync(RR ctx reply, ids) ->
             try 
                 loadAssemblies ids
                 reply nothing
+                return cachedAssemblies
 
             with e -> 
                 ctx.LogError e
                 reply <| Exception e
+                return cachedAssemblies
     }
 
 
@@ -140,84 +143,3 @@ let masterAssemblyManagerBehavior (localAssemblyManager: ActorRef<AssemblyManage
 
         | _ -> localAssemblyManager <-- msg
     }
-
-//    //Throws ;; nothing
-//    let assemblyUploadProtocol (initial : PortableAssembly list) (assemblyManagers : #seq<ActorRef<AssemblyManager>>) =
-                
-//        // memoize getter for broadcast
-//        let tryGetImage = memoize tryGetPacket
-
-//        let printMessageOnce =    
-//            fun () -> ctx.LogInfo "Uploading Assemblies to nodes..."
-//            |> runOnce
-
-//        //Throws
-//        //FailureException => node failure
-//        let sendAssemblies assemblies assemblyManager =
-//            async {
-////                if Array.exists (fun (packet : AssemblyPacket) -> packet.Image.IsSome) assemblies then
-////                    printMessageOnce ()
-//
-//                //return! worker <!- fun ch -> LoadAssemblies(ch, assemblies)
-//                //FaultPoint
-//                //FailureException => node failure;; do nothing
-//                return! ReliableActorRef.FromRef assemblyManager <!- fun ch -> CacheAssemblies(ch, assemblies)
-//            }
-                
-//        let uploaderProtocol (assemblyManager : ActorRef<AssemblyManager>) =
-//            async {
-//                //Throws
-//                //FailureException => node failure;; do nothing
-//                let! missingAssemblies = sendAssemblies initial assemblyManager
-//
-//                if missingAssemblies.Length <> 0 then
-//                    let missingImages = missingAssemblies |> Array.choose tryGetImage
-//                    // assemblyMemoizer.ReplaceHashesWithImages missingAssemblies
-//
-//                    // should report back an empty missing assembly array.
-//                    // if that is not the case, something has gone horribly wrong
-//                    //FailureException => node failure;; do nothing
-//                    let! _ = sendAssemblies missingImages assemblyManager 
-//
-//                    return ()
-//            }
-//
-//        async {
-//            for assemblyManager in assemblyManagers do
-//                //Throws
-//                //FailureException => node failure;; ignore;; allow later mechanisms to handle
-//                try
-//                    do! uploaderProtocol assemblyManager
-//                with (FailureException _ as e) -> ctx.LogWarning e
-//        }
-//
-//    async {
-//        match msg with
-//        | CacheAssemblies(RR ctx reply, assemblyPackets) ->
-//            //ASSUME ALL EXCEPTIONS PROPERLY HANDLED AND DOCUMENTED
-//            try
-//                //TODO!
-//                //Broadcast in general and report any missing.
-//
-//                //Throws ;; nothing
-//                let! missingAssemblies = localAssemblyManager <!- fun ch -> CacheAssemblies(ch, assemblyPackets)
-//
-//                if missingAssemblies.Length <> 0 then
-//                    //logger.LogInfo "ProcessManager: Assemblies missing. Requesting transmission from client."
-//                    reply <| Value missingAssemblies
-//
-//                else
-//                    let! slaveAssemblyManagers = slaveAssemblyManagerProvider
-//                    ctx.LogInfo <| sprintf' "Caching assemblies to slave assembly managers: %A" (Seq.toList slaveAssemblyManagers)
-//                    //Throws;; nothing
-//                    do! assemblyUploadProtocol assemblyPackets slaveAssemblyManagers
-//
-//                    reply <| Value Array.empty
-//            with e ->
-//                ctx.LogError e
-//                reply (Exception e)
-//
-//        | _ ->
-//            localAssemblyManager <-- msg
-//    }
-

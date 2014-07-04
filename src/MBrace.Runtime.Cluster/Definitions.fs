@@ -31,7 +31,7 @@ type internal AssemblyManagerDefinition(parent: DefinitionPath) =
     override __.Dependencies = []
 
     override __.Behavior(configuration: ActivationConfiguration, instanceId: int) = async {
-        return Behavior.stateless AssemblyManager.assemblyManagerBehavior
+        return Behavior.stateful Set.empty AssemblyManager.assemblyManagerBehavior
     }
 
 //type internal StoreManagerDefinition(parent : DefinitionPath) =

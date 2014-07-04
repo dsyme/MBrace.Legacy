@@ -20,13 +20,13 @@
     [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
     module StoreManager =
 
-        let uploadStore (getPortableAssembly : AssemblyId -> PortableAssembly) (storeInfo : StoreInfo) (remote : ActorRef<StoreManager>) = async {
+        let uploadStore (storeInfo : StoreInfo) (remote : ActorRef<StoreManager>) = async {
             let! result = remote <!- fun ch -> ActivateStore(ch, storeInfo.ActivationInfo)
 
             match result with
             | Success -> return ()
             | MissingAssemblies ids ->
-                let pas = ids |> List.map getPortableAssembly
+                let pas = VagrantRegistry.Instance.CreatePortableAssemblies(ids, includeAssemblyImage = true, loadPolicy = AssemblyLoadPolicy.ResolveAll)
                 let! info = remote <!- fun ch -> UploadAssemblies(ch, pas)
 
                 match info |> List.tryFind (function Loaded _ -> false | _ -> true) with
@@ -41,18 +41,17 @@
 
         }
 
-        let downloadStore (client : VagrantClient) makeDefault (remote : ActorRef<StoreManager>) = async {
+        let downloadStore makeDefault (remote : ActorRef<StoreManager>) = async {
             let! info = remote <!- GetDefaultStore
 
             let missing = 
-                info.Dependencies 
-                |> client.GetAssemblyLoadInfo 
-                |> List.filter (function Loaded _ | LoadedWithStaticIntialization _ -> false | _ -> true)
+                VagrantRegistry.Instance.GetAssemblyLoadInfo(info.Dependencies, loadPolicy = AssemblyLoadPolicy.ResolveAll)
+                |> List.filter (function Loaded _ -> false | _ -> true)
                 |> List.map (fun l -> l.Id)
 
             let! pas = remote <!- fun ch -> DownloadAssemblies(ch, missing)
 
-            let results = client.LoadPortableAssemblies pas
+            let results = VagrantRegistry.Instance.LoadPortableAssemblies(pas, loadPolicy = AssemblyLoadPolicy.ResolveAll)
 
             return
                 match StoreRegistry.TryActivate(info, makeDefault = makeDefault) with

@@ -282,7 +282,7 @@
                             postWithReply <| fun ch -> RequestDependencies(ch, ids)
                 }
 
-            do! MBraceSettings.Vagrant.Client.ReceiveDependencies dependencyDownloader
+            do! VagrantRegistry.Instance.ReceiveDependencies dependencyDownloader
 
             processes.Swap(fun ps -> ps.Add pid)
         }
@@ -321,9 +321,9 @@
                 }
 
             // serialization errors for dynamic assemblies
-            let! errors = MBraceSettings.Vagrant.SubmitAssemblies(dependencyUploader, comp.Dependencies)
+            let! errors = VagrantRegistry.Instance.SubmitAssemblies(dependencyUploader, comp.Dependencies)
 
-            let rawImage = MBraceSettings.CloudCompiler.GetRawImage comp
+            let rawImage = CloudCompiler.GetRawImage comp
 
             let! info = postWithReply <| fun ch -> CreateDynamicProcess(ch, requestId, rawImage)
 

@@ -186,36 +186,28 @@ namespace Nessos.MBrace.Core
             | [] -> name, functions, warnings
 
 
-    type CloudCompiler (?vagrant : VagrantServer) =
+    type CloudCompiler private () =
 
-        let compilerId = Guid.NewGuid()
+        static let compilerId = Guid.NewGuid()
 
-        member __.CompilerId = compilerId
+        static member CompilerId = compilerId
 
-        member __.Compile(expr : Expr<Cloud<'T>>, ?name : string) =
+        static member Compile(expr : Expr<Cloud<'T>>, ?name : string) =
 
-            let dependencies = 
-                match vagrant with
-                | Some v -> v.ComputeObjectDependencies(expr, permitCompilation = true)
-                | None -> VagrantUtils.ComputeAssemblyDependencies expr
-                |> List.filter (not << AssemblyFilter.isMBraceAssembly)
+            let dependencies = VagrantRegistry.ComputeDependencies expr
 
             let name, functions, warnings = compile name expr
 
             new QuotedCloudComputation<'T>(name, expr, dependencies, functions, warnings) :> CloudComputation<'T>
 
-        member __.Compile(block : Cloud<'T>, ?name : string) =
+        static member Compile(block : Cloud<'T>, ?name : string) =
             let name = defaultArg name ""
 
-            let dependencies = 
-                match vagrant with
-                | Some v -> v.ComputeObjectDependencies(block, permitCompilation = true)
-                | None -> VagrantUtils.ComputeAssemblyDependencies block
-                |> List.filter (not << AssemblyFilter.isMBraceAssembly)
+            let dependencies = VagrantRegistry.ComputeDependencies block
 
             new BareCloudComputation<'T>(name, block, dependencies) :> CloudComputation<'T>
 
-        member __.GetRawImage(cc : CloudComputation) =
+        static member GetRawImage(cc : CloudComputation) =
             {
                 CompilerId = compilerId
                 Name = cc.Name

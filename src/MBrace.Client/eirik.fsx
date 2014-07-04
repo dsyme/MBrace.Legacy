@@ -31,6 +31,13 @@ runtime.ShowInfo(true)
 
 runtime.Run <@ cloud { return 42 } @>
 
+runtime.Run (cloud { return 42 })
+
 let p = runtime.CreateProcess <@ Cloud.Log "hi" @>
 
 p.ShowLogs()
+
+
+let x = ref 42
+
+runtime.Run <@ cloud { return x.Value } @>

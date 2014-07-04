@@ -56,7 +56,7 @@
 
                 let createFileLogger (file: string) =
                     let logger = new FileLogger(file, showDate = true, append = true)
-                    logger.LogInfo ">>> M-BRACE DAEMON STARTUP <<<"
+                    logger.LogInfo "M-BRACE DAEMON STARTUP"
                     logger :> ISystemLogger
 
                 let fileLoggers =
@@ -135,12 +135,10 @@
             // temporary solution; revise later
             do create "AssemblyCache" <| 
                 fun cacheDir -> 
-                    let vcache = new VagrantCache(cacheDir)
-                    let vclient = new VagrantClient()
-                    IoC.RegisterValue vcache
-                    IoC.RegisterValue vclient
+                    let vagrant = new Vagrant(cacheDirectory = cacheDir)
+                    VagrantRegistry.Register(vagrant)
 
-            do create "LocalCache" (fun endpoint -> StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem(endpoint)))
+            do create "StoreCache" (fun endpoint -> StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem(endpoint)))
 
         let registerProcessDomainExecutable (path : string) =
             let path =
