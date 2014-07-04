@@ -38,6 +38,8 @@ let p = runtime.CreateProcess <@ Cloud.Log "hi" @>
 p.ShowLogs()
 
 
-let x = ref 42
+let x = ref 0
+for i in 1 .. 2 do
+    x := runtime.Run <@ cloud { return !x + 1 } @>
 
-runtime.Run <@ cloud { return x.Value } @>
+x.Value
