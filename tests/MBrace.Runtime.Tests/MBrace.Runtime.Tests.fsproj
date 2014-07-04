@@ -70,7 +70,6 @@
     <Compile Include="CloudTests.fs" />
     <Compile Include="LocalCloudTests.fs" />
     <Compile Include="ClusterCloudTests.fs" />
-    <Compile Include="AzureClusterTests.fs" />
     <None Include="connections.config" />
   </ItemGroup>
   <ItemGroup>
