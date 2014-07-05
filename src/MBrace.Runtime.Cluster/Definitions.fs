@@ -810,7 +810,7 @@ type MBraceNodeEventManager() =
 
     override __.OnRemoveFromCluster(clusterId: ClusterId) =
         async {
-            
+            do MBraceNode.StateChangeEvent.Trigger Nessos.MBrace.Runtime.NodeState.Idle
             return ()
         }
 
