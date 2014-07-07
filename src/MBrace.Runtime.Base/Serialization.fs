@@ -4,6 +4,7 @@
     open System.Runtime.Serialization
 
     open Nessos.FsPickler
+    open Nessos.FsPickler.Json
 
     open Nessos.Thespian.Serialization
 
@@ -14,7 +15,7 @@
         static let lockObj = obj()
         static let mutable picklerSingleton = None
 
-        static member Register(pickler : BasePickler) =
+        static member Register(pickler : FsPicklerBase) =
             lock lockObj (fun () ->
                 if picklerSingleton.IsSome then
                     invalidOp "An instance of FsPickler has been registered."

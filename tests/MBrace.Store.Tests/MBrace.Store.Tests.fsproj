@@ -67,7 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">
-      <HintPath>..\..\packages\FsPickler.0.9.5.1-alpha\lib\net45\FsPickler.dll</HintPath>
+      <HintPath>..\..\packages\FsPickler.0.9.6\lib\net45\FsPickler.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsUnit.NUnit">
@@ -104,11 +104,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Vagrant">
-      <HintPath>..\..\packages\Vagrant.0.2.0\lib\net45\Vagrant.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.2.1\lib\net45\Vagrant.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant.Cecil">
-      <HintPath>..\..\packages\Vagrant.0.2.0\lib\net45\Vagrant.Cecil.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.2.1\lib\net45\Vagrant.Cecil.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
