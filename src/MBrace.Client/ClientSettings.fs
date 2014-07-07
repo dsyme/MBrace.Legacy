@@ -95,7 +95,7 @@ namespace Nessos.MBrace.Client
                 Directory.CreateDirectory assemblyCacheDir |> ignore
                 Directory.CreateDirectory localCacheDir |> ignore
 
-            do retry (RetryPolicy.Retry(2, 0.1<sec>)) populate
+            do retry (RetryPolicy.Retry(3, 0.5<sec>)) populate
 
             // activate vagrant
             let vagrant = new Vagrant(cacheDirectory = assemblyCacheDir)
