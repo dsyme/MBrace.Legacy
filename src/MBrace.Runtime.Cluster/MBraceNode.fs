@@ -283,7 +283,7 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
                     | e -> return! triggerNodeFailure e ctx state msg
 
             | GetStoreManager(RR ctx reply) ->
-                reply <| Exception(new InvalidOperationException("Cannot change store configuration; node must be ide."))
+                reply <| Exception(new InvalidOperationException("Cannot change store configuration; node must be idle."))
 
                 return stay state
 
