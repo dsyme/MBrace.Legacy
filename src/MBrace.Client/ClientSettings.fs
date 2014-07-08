@@ -147,6 +147,7 @@ namespace Nessos.MBrace.Client
                 | None -> mfailwith "No mbrace daemon executable defined." 
                 | Some p -> p
             and set p = 
+                let p = Path.GetFullPath p
                 if File.Exists p then
                     config.Value.Swap(fun c -> { c with MBracedPath = Some p })
                 else
