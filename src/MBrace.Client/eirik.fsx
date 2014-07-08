@@ -10,9 +10,14 @@ open Nessos.MBrace.Azure
 let conn = System.IO.File.ReadAllText("/mbrace/azure.txt")
 let azureProvider = StoreProvider.Define<AzureStoreFactory>(conn)
 
+MBraceSettings.MBracedExecutablePath <- "/Users/eirik/Desktop/bin/mbraced.exe"
+
+
 let runtime = MBrace.InitLocal(3, masterPort = 2675)
 //let runtime = MBrace.InitLocal(3, masterPort = 2675, storeProvider = azureProvider)
 //let nodes = Node.SpawnMultiple(3, masterPort = 2675)
+let n = MBraceNode.Spawn()
+n.SetStoreConfiguration azureProvider
 
 
 runtime.Shutdown()
@@ -45,3 +50,9 @@ for i in 1 .. 2 do
     x := runtime.Run <@ cloud { return !x + 1 } @>
 
 x.Value
+
+#r "Microsoft.Data.Edm"
+
+typeof<Microsoft.Data.Edm.Expressions.EdmExpressionKind>.Assembly.FullName
+
+let ass = System.Reflection.Assembly.Load("Microsoft.Data.Edm, Version=5.6.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35")
