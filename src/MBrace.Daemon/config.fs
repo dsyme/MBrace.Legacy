@@ -119,7 +119,7 @@
                 do lockWorkingDir wd
 
             with e ->
-                exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s'." wd, 1)
+                exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s' : %A" wd e.Message, 1)
 
             // populate subdirectories
             let create subdir registrar =
@@ -130,7 +130,7 @@
 
                     do registrar path
                 with e ->
-                    exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s'." path)
+                    exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s': %A" path e.Message)
 
             // temporary solution; revise later
             do create "AssemblyCache" <| 
