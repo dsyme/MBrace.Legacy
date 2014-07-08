@@ -12,6 +12,8 @@ let azureProvider = StoreProvider.Define<AzureStoreFactory>(conn)
 
 let runtime = MBrace.InitLocal(3, masterPort = 2675)
 //let runtime = MBrace.InitLocal(3, masterPort = 2675, storeProvider = azureProvider)
+//let nodes = Node.SpawnMultiple(3, masterPort = 2675)
+
 
 runtime.Shutdown()
 

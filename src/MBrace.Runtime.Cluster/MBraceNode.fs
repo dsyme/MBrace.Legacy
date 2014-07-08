@@ -266,7 +266,7 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
                         return stay state  
                     | e -> return! triggerNodeFailure e ctx state msg
 
-            | GetStoreManager(RR ctx reply) ->
+            | GetStoreManager(RR ctx reply) when nodeType = NodeType.Idle ->
                 try
                     //Throws
                     //KeyNotFoundException => allow to fall through;; SYSTEM FAULT
@@ -282,6 +282,10 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
                         return stay state  
                     | e -> return! triggerNodeFailure e ctx state msg
 
+            | GetStoreManager(RR ctx reply) ->
+                reply <| Exception(new InvalidOperationException("Cannot change store configuration; node must be ide."))
+
+                return stay state
 
             | ResetNodeState(RR ctx reply) ->
                 reply <| Exception(NotImplementedException())
