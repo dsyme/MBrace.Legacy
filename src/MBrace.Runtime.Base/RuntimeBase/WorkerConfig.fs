@@ -32,9 +32,6 @@
                     | HostName _ -> "Hostname, must be the same as for parent daemon."
                     | Port _ -> "Port argument."
                     | Store_Activator _ -> "Store activation info."
-//                    | Assembly_Id _ -> "Specifies an assembly id for loading."
-//                    | Store_EndPoint _ -> "Cloud store endpoint."
-//                    | Store_Provider _ -> "Storage provider : FileSystem, AzureStorage."
                     | Cache_Store_Endpoint _ -> "Local caching path."
 
         let workerConfig = new UnionArgParser<WorkerConfig>("WARNING: not intended for manual use.")

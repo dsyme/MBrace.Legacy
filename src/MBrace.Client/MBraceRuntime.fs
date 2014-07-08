@@ -103,11 +103,11 @@ namespace Nessos.MBrace.Client
             MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeProvider = storeProvider)
             |> Async.RunSynchronously
 
-        static member InitLocal(totalNodes : int, ?hostname, ?replicationFactor : int, ?storeProvider,
+        static member InitLocal(totalNodes : int, ?masterPort, ?hostname, ?replicationFactor : int, ?storeProvider,
                                          ?failoverFactor : int, ?debug, ?background) : MBraceRuntime =
 
             if totalNodes < 3 then invalidArg "totalNodes" "should have at least 3 nodes."
-            let nodes = MBraceNode.SpawnMultiple(totalNodes, ?hostname = hostname, ?debug = debug, ?background = background)
+            let nodes = MBraceNode.SpawnMultiple(totalNodes, ?masterPort = masterPort, ?hostname = hostname, ?debug = debug, ?background = background)
             
             MBraceRuntime.Boot(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeProvider = storeProvider)
 

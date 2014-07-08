@@ -332,6 +332,7 @@
         /// Spawns multiple {m}brace daemons.
         /// </summary>
         /// <param name="nodeCount">The number of nodes to spawn.</param>
+        /// <param name="masterPort">Force a specific master port to the first node in the list.</param>
         /// <param name="workerPortsPerNode">The number of worker ports to be used by each {m}brace node.</param>
         /// <param name="hostname">The hostname to be used by each node.</param>
         /// <param name="logFiles">Paths to file to use for logging.</param>
@@ -340,7 +341,7 @@
         /// <param name="debug">Run in debug mode.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
         /// <param name="storeProvider">The StoreProvider to be used as the nodes' default.</param>
-        static member SpawnMultiple(nodeCount : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
+        static member SpawnMultiple(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeProvider : StoreProvider) : MBraceNode list =
         
             let spawnSingle primary pool =
@@ -358,8 +359,13 @@
 
                     let! nodes =
                         [0..nodeCount-1] 
-                        |> Seq.map (fun i -> ports.[i * n .. (i+1) * n - 1] |> Array.toList)
-                        |> Seq.map (function h :: t -> spawnSingle h t | _ -> failwith "impossible")
+                        |> Seq.map (fun i ->
+                            let nodePorts = ports.[i * n .. (i+1) * n - 1] |> Array.toList
+                            match nodePorts, masterPort with
+                            | h :: t, Some pp when i = 0 -> spawnSingle pp t
+                            | h :: t, _ -> spawnSingle h t
+                            | _ -> failwith "impossible")
+
                         |> Async.Parallel
 
                     return Array.toList nodes
