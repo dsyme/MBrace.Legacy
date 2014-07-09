@@ -104,10 +104,10 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Cloud>] 
         let reduceF left right = cloud { return left + right }
 
-        [<Cloud>] 
-        let add a b = cloud { return a + b }
-        [<Cloud>] 
-        let addUnCurry (a, b) = cloud { return a + b }
+//        [<Cloud>] 
+//        let add a b = cloud { return a + b }
+//        [<Cloud>] 
+//        let addUnCurry (a, b) = cloud { return a + b }
 
         [<Cloud>] 
         let parallelIncrements () = 
@@ -212,14 +212,14 @@ namespace Nessos.MBrace.Runtime.Tests
                 | n -> return "Boring"
             }
 
-        [<Cloud>]
-        let testSequential = 
-            cloud {
-                let list = new List<int>()
-                list.Add 1
-                list.Add 2
-                return list.Count
-            }
+//        [<Cloud>]
+//        let testSequential = 
+//            cloud {
+//                let list = new List<int>()
+//                list.Add 1
+//                list.Add 2
+//                return list.Count
+//            }
 
         [<Cloud>]
         let testForLoop = 
@@ -271,25 +271,16 @@ namespace Nessos.MBrace.Runtime.Tests
                     return false
                 else
                     return! even (number - 1)
-            }
-
-        [<Cloud>]
-        let getRandomNumber () = cloud { return (new Random()).Next() }
+            } 
 
         [<Cloud>]
         let randomSumParallel () =
             cloud {
+                let getRandomNumber () = cloud { return (new Random()).Next() }
+
                 let! (first, second) = getRandomNumber() <||> getRandomNumber()
 
                 return first + second
-            }
-
-        [<Cloud>]
-        let testAmbiguousParallelException () =
-            cloud {
-                let! (first, second) = (cloud { failwith "Wrong"; return 1 :> obj } : Cloud<obj>) <||> (cloud { failwith "Wrong"; return 2 :> obj } : Cloud<obj>)
-
-                return 0
             }
 
         [<Cloud>]
@@ -504,26 +495,3 @@ namespace Nessos.MBrace.Runtime.Tests
                 let! values = Cloud.Parallel(prepareCloudPrimes n numberOfPartitions)
                 return values |> Array.concat |> Seq.skip 1 |> Seq.toArray
             }
-            
-
-//    module Defaults =
-//
-//        let mbracedExe = Path.GetTempPath
-////#if DEBUG
-////            "../../../Nessos.MBrace.Runtime.Daemon/bin/Debug/mbraced.exe" |> Path.GetFullPath
-////#else
-////            "../../../Nessos.MBrace.Runtime.Daemon/bin/Release/mbraced.exe" |> Path.GetFullPath
-////#endif
-//
-//        let setCachingDirectory =
-//            fun () ->
-//                let name = sprintf "nunit.%d" <| System.Diagnostics.Process.GetCurrentProcess().Id
-//                let workingDir = Path.Combine(Path.GetTempPath(), name)
-//                if not <| Directory.Exists workingDir then Directory.CreateDirectory workingDir |> ignore
-//
-//                do 
-//                    Directory.SetCurrentDirectory workingDir
-//                    AssemblyCache.SetCacheDir workingDir
-////                IoC.RegisterValue(Override,workingDir,"AssemblyCachePath")
-//            |> runOnce
-    
