@@ -14,20 +14,19 @@ open System.IO
 
 
 let project = "MBrace"
-let testAssemblies = ["bin/MBrace.Runtime.Tests.dll"
-                      "bin/MBrace.Shell.Tests.dll"
-                      "bin/MBrace.Store.Tests.dll"
-                     ]
+let authors = [ "Jan Dzik" ; "Nick Palladinos" ; "Kostas Rontogiannis" ; "Eirik Tsarpalis" ]
 
-Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
+let description = """
+    An open source framework for large-scale distributed computation and data processing written in F#.
+"""
 
-let excludedStoresCategory = "CustomStores"
-
-
+let tags = "F# cloud mapreduce distributed"
 
 // --------------------------------------------------------------------------------------
 // Read release notes & version info from RELEASE_NOTES.md
+Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let release = parseReleaseNotes (IO.File.ReadAllLines "RELEASE_NOTES.md") 
+let nugetVersion = release.NugetVersion
 
 // Generate assembly info files with the right version & up-to-date information
 Target "AssemblyInfo" (fun _ ->
@@ -80,6 +79,15 @@ Target "Build" (fun _ ->
 // Run the unit tests using test runner & kill test runner when complete
 
 
+let testAssemblies = 
+    [
+        "bin/MBrace.Runtime.Tests.dll"
+        "bin/MBrace.Shell.Tests.dll"
+        "bin/MBrace.Store.Tests.dll"
+    ]
+
+let excludedStoresCategory = "CustomStores"
+
 Target "RunTestsExcludingCustomStores" (fun _ ->
     let nunitVersion = GetPackageVersion "packages" "NUnit.Runners"
     let nunitPath = sprintf "packages/NUnit.Runners.%s/tools" nunitVersion
@@ -115,16 +123,99 @@ FinalTarget "CloseTestRunner" (fun _ ->
     ProcessHelper.killProcess "nunit-agent.exe"
 )
 
+// Nuget packages
+
+let addAssembly (target : string) assembly =
+    let includeFile force file =
+        let file = file
+        if File.Exists (Path.Combine("nuget", file)) then [(file, Some target, None)]
+        elif force then raise <| new FileNotFoundException(file)
+        else []
+
+    seq {
+        yield! includeFile true assembly
+        yield! includeFile true <| Path.ChangeExtension(assembly, "pdb")
+        yield! includeFile false <| Path.ChangeExtension(assembly, "xml")
+        yield! includeFile false <| assembly + ".config"
+    }
+
+Target "NuGet -- MBrace.Core" (fun _ ->
+    let nugetPath = ".nuget/NuGet.exe"
+    NuGet (fun p -> 
+        { p with   
+            Authors = authors
+            Project = "MBrace.Core"
+            Summary = "Core libraries for the MBrace programming model."
+            Description = description
+            Version = nugetVersion
+            ReleaseNotes = String.concat " " release.Notes
+            Tags = tags
+            OutputPath = "bin"
+            ToolPath = nugetPath
+            AccessKey = getBuildParamOrDefault "nugetkey" ""
+            Publish = hasBuildParam "nugetkey"
+            Dependencies = []
+            Files =
+                [
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Core.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Lib.dll"
+                ]
+        })
+        ("nuget/MBrace.nuspec")
+)
+
+Target "Nuget -- MBrace.Runtime" (fun _ ->
+    let nugetPath = ".nuget/NuGet.exe"
+    NuGet (fun p -> 
+        { p with   
+            Authors = authors
+            Project = "MBrace.Runtime"
+            Summary = "Libraries and tools for setting up an MBrace runtime."
+            Description = description
+            Version = nugetVersion
+            ReleaseNotes = String.concat " " release.Notes
+            Tags = tags
+            OutputPath = "bin"
+            ToolPath = nugetPath
+            AccessKey = getBuildParamOrDefault "nugetkey" ""
+            Publish = hasBuildParam "nugetkey"
+            Dependencies = 
+                [
+                    "FsPickler", "0.9.6"
+                    "FsPickler.Json", "0.9.6"
+                    "Thespian", "0.0.8"
+                    "UnionArgParser", "0.7.0"
+                    "Unquote", "2.2.2"
+                    "Vagrant", "0.2.1"
+                    "MBrace.Core", RequireExactly nugetVersion
+                ]
+            Files =
+                [
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Utils.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Runtime.Base.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Runtime.Cluster.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Client.dll"
+                    yield! addAssembly @"tools" @"..\bin\mbraced.exe"
+                    yield! addAssembly @"tools" @"..\bin\mbrace.worker.exe"
+                    yield! addAssembly @"tools" @"..\bin\mbracesvc.exe"
+                    yield! addAssembly @"tools" @"..\bin\mbracectl.exe"
+                ]
+        })
+        ("nuget/MBrace.nuspec")
+)
+
 // --------------------------------------------------------------------------------------
 // Run all targets by default. Invoke 'build <Target>' to override
 Target "Default" DoNothing
 Target "DefaultWithStores" DoNothing
+Target "Release" DoNothing
+Target "PrepareRelease" DoNothing
 
 "Clean"
   ==> "RestorePackages"
   ==> "AssemblyInfo"
   ==> "Build"
-  ==> "RunTestsExcludingCustomStores"
+//  ==> "RunTestsExcludingCustomStores"
   ==> "Default"
 
 "Clean"
@@ -134,5 +225,12 @@ Target "DefaultWithStores" DoNothing
   ==> "RunTests"
   ==> "DefaultWithStores"
 
+"Default"
+  ==> "PrepareRelease"
+  ==> "NuGet -- MBrace.Core"
+  ==> "Nuget -- MBrace.Runtime"
+  ==> "Release"
+
 // start build
+//RunTargetOrDefault "Release"
 RunTargetOrDefault "Default"
