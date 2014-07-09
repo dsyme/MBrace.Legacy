@@ -65,9 +65,12 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Shell.Tests", "tests
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Store.Tests", "tests\MBrace.Store.Tests\MBrace.Store.Tests.fsproj", "{CD5BE4E0-3D03-4EB1-886C-942F3A4B5396}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{6E315C67-9D30-4500-A80E-EEEAECAD46C6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{6E315C67-9D30-4500-A80E-EEEAECAD46C6}"
 	ProjectSection(SolutionItems) = preProject
+		nuget\init.ps1 = nuget\init.ps1
+		nuget\install.ps1 = nuget\install.ps1
 		nuget\MBrace.nuspec = nuget\MBrace.nuspec
+		nuget\uninstall.ps1 = nuget\uninstall.ps1
 	EndProjectSection
 EndProject
 Global
