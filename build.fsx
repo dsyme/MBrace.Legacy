@@ -125,6 +125,10 @@ FinalTarget "CloseTestRunner" (fun _ ->
 
 // Nuget packages
 
+let addFile (target : string) (file : string) =
+    if File.Exists (Path.Combine("nuget", file)) then (file, Some target, None)
+    else raise <| new FileNotFoundException(file)
+
 let addAssembly (target : string) assembly =
     let includeFile force file =
         let file = file
@@ -190,15 +194,19 @@ Target "Nuget -- MBrace.Runtime" (fun _ ->
                     "MBrace.Core", RequireExactly nugetVersion
                 ]
             Files =
-                [
-                    yield! addAssembly @"tools" @"..\bin\MBrace.Utils.dll"
-                    yield! addAssembly @"tools" @"..\bin\MBrace.Runtime.Base.dll"
-                    yield! addAssembly @"tools" @"..\bin\MBrace.Runtime.Cluster.dll"
-                    yield! addAssembly @"tools" @"..\bin\MBrace.Client.dll"
-                    yield! addAssembly @"tools" @"..\bin\mbraced.exe"
-                    yield! addAssembly @"tools" @"..\bin\mbrace.worker.exe"
-                    yield! addAssembly @"tools" @"..\bin\mbracesvc.exe"
-                    yield! addAssembly @"tools" @"..\bin\mbracectl.exe"
+                [   
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Utils.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Base.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Cluster.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Client.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\mbraced.exe"
+                    yield! addAssembly @"lib\net45" @"..\bin\mbrace.worker.exe"
+                    yield! addAssembly @"lib\net45" @"..\bin\mbracesvc.exe"
+                    yield! addAssembly @"lib\net45" @"..\bin\mbracectl.exe"
+                    
+                    yield  addFile "tools" "init.ps1"     
+                    yield  addFile "tools" "install.ps1"  
+                    yield  addFile "tools" "uninstall.ps1"
                 ]
         })
         ("nuget/MBrace.nuspec")
@@ -232,5 +240,4 @@ Target "PrepareRelease" DoNothing
   ==> "Release"
 
 // start build
-//RunTargetOrDefault "Release"
 RunTargetOrDefault "Default"
