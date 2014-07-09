@@ -57,7 +57,9 @@
     type internal QuotedCloudComputation<'T> internal (name : string, expr : Expr<Cloud<'T>>, dependencies, functions, warnings) =
         inherit CloudComputation<'T> ()
 
-        let getValue () = Swensen.Unquote.Operators.eval expr
+        let getValue () = 
+            try Swensen.Unquote.Operators.eval expr 
+            with e -> raise <| MBraceException("Quotation evaluation failed.", e)
 
         override __.Name = name
         override __.IsVerifiedComputation = true
