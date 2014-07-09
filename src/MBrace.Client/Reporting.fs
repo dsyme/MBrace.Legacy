@@ -88,7 +88,7 @@
                 Field.create "Process Id" Right (fun p -> p.ProcessId)
                 Field.create "Status" Left (fun p -> p.State)
                 Field.create "#Workers" Right (fun p -> p.Workers)
-                Field.create "#Tasks" Right (fun p -> p.Workers)
+                Field.create "#Tasks" Right (fun p -> p.Tasks)
                 Field.create "Start Time" Left (fun p -> p.InitTime)
                 Field.create "Execution Time" Left (fun p -> p.ExecutionTime)
                 Field.create "Result Type" Left (fun p -> p.TypeName)
