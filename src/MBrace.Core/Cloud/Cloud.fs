@@ -37,11 +37,14 @@
             Printf.ksprintf (LogExpr >> Cloud.wrapExpr) fmt
 
         static member OfAsync<'T>(asyncComputation : Async<'T>) : Cloud<'T> =
-            let cloudAsync = 
-                { new ICloudAsync with
-                    member self.UnPack (polyMorpInvoker : IPolyMorphicMethodAsync) =
-                        polyMorpInvoker.Invoke<'T>(asyncComputation) }
-            Cloud.wrapExpr <| OfAsyncExpr cloudAsync
+            let asyncContainer = 
+                {
+                    new IAsyncContainer with
+                        member self.Unpack<'R> (c : IAsyncConsumer<'R>) =
+                            c.Invoke<'T>(asyncComputation) 
+                }
+
+            Cloud.wrapExpr <| OfAsyncExpr asyncContainer
                     
         static member ToLocal<'T>(cloudComputation : Cloud<'T>) : Cloud<'T> =
             Cloud.wrapExpr <| LocalExpr (Cloud.unwrapExpr cloudComputation)

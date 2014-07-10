@@ -62,22 +62,20 @@ namespace Nessos.MBrace.Core
                         return! eval traceEnabled <| firstExpr :: DoCombineExpr secondExpr :: rest
                     | DisposableBindExpr (value, t, bindF, objF) :: rest ->
                         return! eval traceEnabled <| ValueExpr (Obj (ObjValue (value :> obj), t)) :: DoBindExpr (bindF, objF) :: DoDisposableBindExpr value :: rest
-                    | OfAsyncExpr cloudAsync :: rest ->
-                        let asyncCompRef : Async<CloudExpr> ref = ref Unchecked.defaultof<_>
-                        let polyMorphicMethodAsync =
-                                {   new IPolyMorphicMethodAsync with
-                                        member self.Invoke<'T>(asyncComputation : Async<'T>) = 
-                                            asyncCompRef :=    
-                                                async {
-                                                    try
-                                                        let! value = asyncComputation
-                                                        return ValueExpr (Obj (ObjValue value, typeof<'T>))
-                                                    with ex -> return ValueExpr (Exc (ex, None))
-                                                } 
-                                }
-                        
-                        cloudAsync.UnPack polyMorphicMethodAsync
-                        let! cloudExpr = asyncCompRef.Value
+                    | OfAsyncExpr asyncContainer :: rest ->
+                        let invoker =
+                            {   
+                                new IAsyncConsumer<Async<CloudExpr>> with
+                                    member self.Invoke<'T>(asyncComputation : Async<'T>) = 
+                                        async {
+                                            try
+                                                let! value = asyncComputation
+                                                return ValueExpr (Obj (ObjValue value, typeof<'T>))
+                                            with ex -> return ValueExpr (Exc (ex, None))
+                                        } 
+                            }
+
+                        let! cloudExpr = asyncContainer.Unpack invoker
                         return! eval traceEnabled <| cloudExpr  :: rest
 
                     | NewRefByNameExpr (container, value, t) :: rest ->

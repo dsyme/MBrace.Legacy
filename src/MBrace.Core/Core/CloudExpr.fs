@@ -22,7 +22,7 @@
         | GetProcessIdExpr 
         | GetTaskIdExpr 
         | LocalExpr of CloudExpr 
-        | OfAsyncExpr of ICloudAsync
+        | OfAsyncExpr of IAsyncContainer
         | ParallelExpr of CloudExpr [] * Type
         | ChoiceExpr of CloudExpr [] * Type
         | LogExpr of string
@@ -92,11 +92,11 @@
 
     and ThunkValue = Thunk of CloudExpr | ThunkId of string
 
-    and ICloudAsync = 
-        abstract UnPack : IPolyMorphicMethodAsync -> unit
+    and IAsyncContainer = 
+        abstract Unpack<'R> : IAsyncConsumer<'R> -> 'R
 
-    and IPolyMorphicMethodAsync = 
-        abstract Invoke<'T> : Async<'T> -> unit
+    and IAsyncConsumer<'R> = 
+        abstract Invoke<'T> : Async<'T> -> 'R
 
     and CloudDumpContext =
         {
