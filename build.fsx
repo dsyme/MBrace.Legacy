@@ -168,7 +168,7 @@ Target "NuGet -- MBrace.Core" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "Nuget -- MBrace.Runtime" (fun _ ->
+Target "NuGet -- MBrace.Runtime" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -187,7 +187,7 @@ Target "Nuget -- MBrace.Runtime" (fun _ ->
                 [
                     "FsPickler", "0.9.6"
                     "FsPickler.Json", "0.9.6"
-                    "Thespian", "0.0.8"
+                    "Thespian", "0.0.7"
                     "UnionArgParser", "0.7.0"
                     "Unquote", "2.2.2"
                     "Vagrant", "0.2.1"
@@ -204,9 +204,9 @@ Target "Nuget -- MBrace.Runtime" (fun _ ->
                     yield! addAssembly @"lib\net45" @"..\bin\mbracesvc.exe"
                     yield! addAssembly @"lib\net45" @"..\bin\mbracectl.exe"
                     
-                    yield  addFile "tools" "init.ps1"     
+                    //yield  addFile "tools" "init.ps1"     
                     yield  addFile "tools" "install.ps1"  
-                    yield  addFile "tools" "uninstall.ps1"
+                    //yield  addFile "tools" "uninstall.ps1"
                 ]
         })
         ("nuget/MBrace.nuspec")
@@ -236,7 +236,7 @@ Target "PrepareRelease" DoNothing
 "Default"
   ==> "PrepareRelease"
   ==> "NuGet -- MBrace.Core"
-  ==> "Nuget -- MBrace.Runtime"
+  ==> "NuGet -- MBrace.Runtime"
   ==> "Release"
 
 // start build

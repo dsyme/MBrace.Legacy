@@ -1,47 +1,94 @@
+# install.ps1 based on json.net's install script
+
 param($installPath, $toolsPath, $package, $project)
 
-$tempDir = $env:TEMP
-$tempDir = [System.IO.Path]::Combine($tempDir,"NuGetPSVariables")
-if (![System.IO.Directory]::Exists($tempDir)) {[System.IO.Directory]::CreateDirectory($tempDir)}
-$file = [System.IO.Path]::Combine($tempDir, "nuget.variables.install.ps1.log")
-write-host ===================================================
-write-host install.ps1
-write-host ===================================================
-'===================================================' | out-file $file
-'install.ps1' | out-file $file -append 
-'===================================================' | out-file $file -append 
+# open splash page on package install
+# don't open if package is installed as a dependency
 
-write-host '$installPath' variable = $installPath
-'$installPath'  | out-file $file -append 
-'=============='  | out-file $file -append 
-$installPath | format-list | out-file $file -append
-'=============='  | out-file $file -append 
+try
+{
+  $url = "http://m-brace.net/"
+  $packageId = $package.Id.ToLower()
+  $dte2 = Get-Interface $dte ([EnvDTE80.DTE2])
 
-write-host '$toolsPath' variable = $toolsPath
-'$toolsPath'  | out-file $file -append 
-'=============='  | out-file $file -append 
-$toolsPath | format-list | out-file $file -append
-'=============='  | out-file $file -append 
+  if ($dte2.ActiveWindow.Caption -eq "Package Manager Console")
+  {
+    # user is installing from VS NuGet console
+    # get reference to the window, the console host and the input history
+    # show webpage if "install-package $package" was last input
 
-write-host '$package' variable = $package
-'$package'  | out-file $file -append 
-'=============='  | out-file $file -append 
-$package | format-list | out-file $file -append
-'=============='  | out-file $file -append 
+    $consoleWindow = $(Get-VSComponentModel).GetService([NuGetConsole.IPowerConsoleWindow])
 
-write-host '$project' variable = $project
-'$project'  | out-file $file -append 
-'=============='  | out-file $file -append 
-$project | format-list | out-file $file -append
-'=============='  | out-file $file -append 
+    $props = $consoleWindow.GetType().GetProperties([System.Reflection.BindingFlags]::Instance -bor `
+      [System.Reflection.BindingFlags]::NonPublic)
 
-write-host Writing output to $file
-write-host ===================================================
+    $prop = $props | ? { $_.Name -eq "ActiveHostInfo" } | select -first 1
+    if ($prop -eq $null) { return }
+  
+    $hostInfo = $prop.GetValue($consoleWindow)
+    if ($hostInfo -eq $null) { return }
 
-write-host Removing this package...
-#uninstall-package $package.Name -ProjectName $project.Name
-uninstall-package NuGetPSVariables -ProjectName $project.Name
+    $history = $hostInfo.WpfConsole.InputHistory.History
 
-#$project | Get-Member -View Adapted | foreach {write-host $_.Name : $_.Value}
-#$project | Get-Member | foreach {write-host $_.name}
-#thanks Keith: $project | Get-Member -MemberType Property | foreach {write-host "$($_.Name) : $($project.$($_.Name))"}
+    $lastCommand = $history | select -last 1
+
+    if ($lastCommand)
+    {
+      $lastCommand = $lastCommand.Trim().ToLower()
+      if ($lastCommand.StartsWith("install-package") -and $lastCommand.Contains($packageId))
+      {
+        $dte2.ItemOperations.Navigate($url) | Out-Null
+      }
+    }
+  }
+  else
+  {
+    # user is installing from VS NuGet dialog
+    # get reference to the window, then smart output console provider
+    # show webpage if messages in buffered console contains "installing...$package" in last operation
+
+    $instanceField = [NuGet.Dialog.PackageManagerWindow].GetField("CurrentInstance", [System.Reflection.BindingFlags]::Static -bor `
+      [System.Reflection.BindingFlags]::NonPublic)
+    $consoleField = [NuGet.Dialog.PackageManagerWindow].GetField("_smartOutputConsoleProvider", [System.Reflection.BindingFlags]::Instance -bor `
+      [System.Reflection.BindingFlags]::NonPublic)
+    if ($instanceField -eq $null -or $consoleField -eq $null) { return }
+
+    $instance = $instanceField.GetValue($null)
+    if ($instance -eq $null) { return }
+
+    $consoleProvider = $consoleField.GetValue($instance)
+    if ($consoleProvider -eq $null) { return }
+
+    $console = $consoleProvider.CreateOutputConsole($false)
+
+    $messagesField = $console.GetType().GetField("_messages", [System.Reflection.BindingFlags]::Instance -bor `
+      [System.Reflection.BindingFlags]::NonPublic)
+    if ($messagesField -eq $null) { return }
+
+    $messages = $messagesField.GetValue($console)
+    if ($messages -eq $null) { return }
+
+    $operations = $messages -split "=============================="
+
+    $lastOperation = $operations | select -last 1
+
+    if ($lastOperation)
+    {
+      $lastOperation = $lastOperation.ToLower()
+
+      $lines = $lastOperation -split "`r`n"
+
+      $installMatch = $lines | ? { $_.StartsWith("------- installing...$packageId ") } | select -first 1
+
+      if ($installMatch)
+      {
+        $dte2.ItemOperations.Navigate($url) | Out-Null
+      }
+    }
+  }
+}
+catch
+{
+  # stop potential errors from bubbling up
+  # worst case the splash page won't open
+}
