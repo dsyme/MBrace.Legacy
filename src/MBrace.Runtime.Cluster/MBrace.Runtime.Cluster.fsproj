@@ -86,7 +86,6 @@
       <HintPath>..\..\packages\FsPickler.0.9.6\lib\net45\FsPickler.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Mono.Cecil">
       <HintPath>..\..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.dll</HintPath>
       <Private>True</Private>
