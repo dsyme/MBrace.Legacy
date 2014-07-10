@@ -64,19 +64,31 @@ namespace Nessos.MBrace.Runtime.Tests
             (dumps |> Seq.head).Message |> should equal msg
 
         [<Test>] 
-        member t.``Cloud Logf - multiple`` () = 
-            let array = [|1..100|]
-            let ps = <@ cloud { for i in array do 
-                                    do! Cloud.OfAsync <| Async.Sleep 100
-                                    do! Cloud.Logf "i = %d" i } 
-                      @> |> t.Runtime.CreateProcess
+        member t.``Cloud Logf - multiple`` () =
+            let ps =
+                <@
+                    cloud {
+                        let taskF (_ : int) = cloud {
+                            for i in [1 .. 20] do
+                                do! Cloud.Sleep 10
+                                do! Cloud.Logf "msg = %d" i
+                        }
+
+                        do!
+                            [1..5]
+                            |> Seq.map taskF
+                            |> Cloud.Parallel
+                            |> Cloud.Ignore
+
+                        do! Cloud.Sleep 100
+                    }
+                @> |> t.Runtime.CreateProcess
+
             ps.AwaitResult()
-            let dumps = ps.GetLogs() |> Seq.sortBy (fun d -> d.Date)
-                                     |> Seq.map (fun d -> d.Message)
-                                     |> Seq.toArray
-            let expected = array |> Seq.map (sprintf "i = %d")
-                                 |> Seq.toArray
-            should equal expected dumps 
+
+            let logs = ps.GetLogs()
+
+            logs.Length |> should equal 100
 
         [<Test>] 
         member t.``Cloud Log - delete`` () = 
