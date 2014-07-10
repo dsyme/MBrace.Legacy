@@ -207,6 +207,7 @@ Target "NuGet -- MBrace.Runtime" (fun _ ->
                     //yield  addFile "tools" "init.ps1"     
                     yield  addFile "tools" "install.ps1"  
                     //yield  addFile "tools" "uninstall.ps1"
+                    yield  addFile "content" "preamble.fsx"
                 ]
         })
         ("nuget/MBrace.nuspec")

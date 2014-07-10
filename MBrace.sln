@@ -70,6 +70,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{6E315C67
 		nuget\init.ps1 = nuget\init.ps1
 		nuget\install.ps1 = nuget\install.ps1
 		nuget\MBrace.nuspec = nuget\MBrace.nuspec
+		nuget\preamble.fsx = nuget\preamble.fsx
 		nuget\uninstall.ps1 = nuget\uninstall.ps1
 	EndProjectSection
 EndProject
