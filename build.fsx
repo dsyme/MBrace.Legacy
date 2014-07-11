@@ -138,7 +138,7 @@ let addAssembly (target : string) assembly =
 
     seq {
         yield! includeFile true assembly
-        yield! includeFile true <| Path.ChangeExtension(assembly, "pdb")
+        yield! includeFile false <| Path.ChangeExtension(assembly, "pdb")
         yield! includeFile false <| Path.ChangeExtension(assembly, "xml")
         yield! includeFile false <| assembly + ".config"
     }
@@ -183,18 +183,36 @@ Target "NuGet -- MBrace.Runtime" (fun _ ->
             ToolPath = nugetPath
             AccessKey = getBuildParamOrDefault "nugetkey" ""
             Publish = hasBuildParam "nugetkey"
-            Dependencies = 
-                [
-                    "FsPickler", "0.9.6"
-                    "FsPickler.Json", "0.9.6"
-                    "Thespian", "0.0.7"
-                    "UnionArgParser", "0.7.0"
-                    "Unquote", "2.2.2"
-                    "Vagrant", "0.2.1"
-                    "MBrace.Core", RequireExactly nugetVersion
-                ]
+//            Dependencies = //Json.net missing
+//                [
+//                    "FsPickler", "0.9.6"
+//                    "FsPickler.Json", "0.9.6"
+//                    "Thespian", "0.0.7"
+//                    "UnionArgParser", "0.7.0"
+//                    "Unquote", "2.2.2"
+//                    "Vagrant", "0.2.1"
+//                    "MBrace.Core", RequireExactly nugetVersion
+//                ]
             Files =
-                [   
+                [  
+                    yield! addAssembly @"lib\net45" @"..\bin\Newtonsoft.Json.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\FSharp.Compiler.Service.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Mono.Cecil.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Mono.Cecil.Mdb.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Mono.Cecil.Pdb.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Mono.Cecil.Rocks.dll"
+
+                    yield! addAssembly @"lib\net45" @"..\bin\FsPickler.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\FsPickler.Json.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Thespian.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Thespian.Cluster.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\UnionArgParser.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Unquote.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Vagrant.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Vagrant.Cecil.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Core.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Lib.dll"
+                 
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Utils.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Base.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Cluster.dll"
@@ -204,10 +222,10 @@ Target "NuGet -- MBrace.Runtime" (fun _ ->
                     yield! addAssembly @"lib\net45" @"..\bin\mbracesvc.exe"
                     yield! addAssembly @"lib\net45" @"..\bin\mbracectl.exe"
                     
-                    //yield  addFile "tools" "init.ps1"     
                     yield  addFile "tools" "install.ps1"  
-                    //yield  addFile "tools" "uninstall.ps1"
                     yield  addFile "content" "preamble.fsx"
+                    //yield  addFile "tools" "init.ps1"     
+                    //yield  addFile "tools" "uninstall.ps1"
                 ]
         })
         ("nuget/MBrace.nuspec")
