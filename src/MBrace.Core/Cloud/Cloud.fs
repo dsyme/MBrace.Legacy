@@ -2,10 +2,10 @@
 
     open System
 
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
 
     type CloudAttribute = ReflectedDefinitionAttribute
-    type ProcessId = Nessos.MBrace.Core.ProcessId
+    type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
 
     [<Sealed>]
     [<System.AttributeUsage(AttributeTargets.Class ||| AttributeTargets.Method ||| AttributeTargets.Property, AllowMultiple = false)>]
@@ -20,7 +20,7 @@
     [<Sealed>]
     type Cloud<'T> internal (cloudExpr : CloudExpr) =
         member __.Type = typeof<'T>
-        member __.CloudExpr = cloudExpr
+        member internal __.CloudExpr = cloudExpr
 
     type Cloud =
 

@@ -1,44 +1,46 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.Runtime.Interpreter
 
     open System
     open System.Reflection
-    open System.Collections.Concurrent
-    open System.Text.RegularExpressions
+
+    open Nessos.MBrace.Utils
+//    open System.Collections.Concurrent
+//    open System.Text.RegularExpressions
 
     module internal Utils =
 
-        let memoize (f : 'T -> 'U) : 'T -> 'U =
-            let cache = new ConcurrentDictionary<'T,'U>()
-            fun x -> cache.GetOrAdd(x, f)
+//        let memoize (f : 'T -> 'U) : 'T -> 'U =
+//            let cache = new ConcurrentDictionary<'T,'U>()
+//            fun x -> cache.GetOrAdd(x, f)
+//
+//        /// memoized regex active pattern
+//        let (|RegexMatch|_|) =
+//            let regex = memoize(fun pattern -> Regex(pattern))
+//            
+//            fun (pat : string) (inp : string) ->
+//                let m = (regex pat).Match inp in
+//                if m.Success 
+//                then Some (List.tail [ for g in m.Groups -> g.Value ])
+//                else None
+//
+//        let private remoteStackTraceField =
+//            let getField name = typeof<System.Exception>.GetField(name, BindingFlags.Instance ||| BindingFlags.NonPublic)
+//            match getField "remote_stack_trace" with
+//            | null ->
+//                match getField "_remoteStackTraceString" with
+//                | null -> failwith "a piece of unreliable code has just failed."
+//                | f -> f
+//            | f -> f
+//
+//        let inline reraise' (e : #exn) =
+//            remoteStackTraceField.SetValue(e, e.StackTrace + System.Environment.NewLine)
+//            raise e
 
-        /// memoized regex active pattern
-        let (|RegexMatch|_|) =
-            let regex = memoize(fun pattern -> Regex(pattern))
-            
-            fun (pat : string) (inp : string) ->
-                let m = (regex pat).Match inp in
-                if m.Success 
-                then Some (List.tail [ for g in m.Groups -> g.Value ])
-                else None
-
-        let private remoteStackTraceField =
-            let getField name = typeof<System.Exception>.GetField(name, BindingFlags.Instance ||| BindingFlags.NonPublic)
-            match getField "remote_stack_trace" with
-            | null ->
-                match getField "_remoteStackTraceString" with
-                | null -> failwith "a piece of unreliable code has just failed."
-                | f -> f
-            | f -> f
-
-        let inline reraise' (e : #exn) =
-            remoteStackTraceField.SetValue(e, e.StackTrace + System.Environment.NewLine)
-            raise e
-
-        type MethodInfo with
-            member m.GuardedInvoke(instance : obj, parameters : obj []) =
-                try m.Invoke(instance, parameters)
-                with :? TargetInvocationException as e when e.InnerException <> null ->
-                    reraise' e.InnerException
+//        type MethodInfo with
+//            member m.GuardedInvoke(instance : obj, parameters : obj []) =
+//                try m.Invoke(instance, parameters)
+//                with :? TargetInvocationException as e when e.InnerException <> null ->
+//                    reraise' e.InnerException
 
         let (|TargetInvocationException|_|) (e : exn) =
             let rec aux depth (e : exn) =

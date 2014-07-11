@@ -15,7 +15,7 @@
         static let lockObj = obj()
         static let mutable picklerSingleton = None
 
-        static member Register(pickler : FsPicklerBase) =
+        static member internal Register(pickler : FsPicklerBase) =
             lock lockObj (fun () ->
                 if picklerSingleton.IsSome then
                     invalidOp "An instance of FsPickler has been registered."
@@ -37,11 +37,11 @@
         static member Serialize (x : 'T) = Serialization.DefaultPickler.Pickle<obj>(x)
         static member Deserialize<'T> (data : byte []) = Serialization.DefaultPickler.UnPickle<obj>(data) :?> 'T
 
-        static member DeepClone =
-            {
-                new IObjectCloner with
-                    member __.Clone (t : 'T) = FsPickler.Clone t
-            }
+//        static member DeepClone =
+//            {
+//                new IObjectCloner with
+//                    member __.Clone (t : 'T) = FsPickler.Clone t
+//            }
 
 
     type JsonLogPickler private () =

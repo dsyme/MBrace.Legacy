@@ -1,4 +1,4 @@
-namespace Nessos.MBrace.Core
+namespace Nessos.MBrace.Runtime.Interpreter
 
     open System
     open System.Collections
@@ -9,16 +9,16 @@ namespace Nessos.MBrace.Core
     open Microsoft.FSharp.Quotations.Patterns
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core.Utils
-    open Nessos.MBrace.Core.DebugInfo
+    open Nessos.MBrace.Utils
+    open Nessos.MBrace.CloudExpr
+    open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Interpreter.Utils
+    open Nessos.MBrace.Runtime.Interpreter.DebugInfo
 
     module Interpreter =
 
         /// raise exception with given object
         let inline internal throwInvalidState (value : 'T) = invalidOp <| sprintf "invalid state %A" value
-
-        /// extract the untyped cloud tree
-        let extractCloudExpr (cloud : Cloud<'T>) : CloudExpr = cloud.CloudExpr
 
         /// <summary>
         ///     evalutes the symbolic stack sequentially until a cloud primitive is encountered.
@@ -347,13 +347,13 @@ namespace Nessos.MBrace.Core
         /// <param name="traceEnabled"></param>
         /// <param name="stack"></param>
         let evaluateLocal (primitiveConfig : PrimitiveConfiguration) (taskConfig : TaskConfiguration)
-                                (getCurrentTask : unit -> TaskId) (cloner : IObjectCloner)
+                                (getCurrentTask : unit -> TaskId)
                                 (traceEnabled : bool)  (stack : CloudExpr list) : Async<Value> =
             
             /// Serialize and deserialize a CloudExpr to force ``call by value`` semantics
             /// on parallel/choice expressions and ensure consistency between distributed execution
             /// and local/shared-memory scenarios
-            let deepClone (expr : CloudExpr) = cloner.Clone expr
+            let deepClone (expr : CloudExpr) = Nessos.FsPickler.FsPickler.Clone expr
             
             let rec eval (traceEnabled : bool) (stack : CloudExpr list) = 
                 async {
@@ -419,8 +419,8 @@ namespace Nessos.MBrace.Core
         /// <param name="processId"></param>
         /// <param name="logger"></param>
         /// <param name="computation"></param>
-        let evaluateLocalWrapped (primitiveConfig : PrimitiveConfiguration) (cloner : IObjectCloner) 
-                                    (logger : ICloudLogger) (processId : ProcessId) (computation : Cloud<'T>) =
+        let evaluateLocalWrapped (primitiveConfig : PrimitiveConfiguration) (logger : ICloudLogger) 
+                                                        (processId : ProcessId) (computation : Cloud<'T>) =
             async {
 
                 let getCurrentTaskId () = string System.Threading.Thread.CurrentThread.ManagedThreadId
@@ -432,7 +432,7 @@ namespace Nessos.MBrace.Core
                         Functions = []
                     }
                 
-                let! result = evaluateLocal primitiveConfig taskConfig getCurrentTaskId cloner false [Cloud.unwrapExpr computation]
+                let! result = evaluateLocal primitiveConfig taskConfig getCurrentTaskId false [CloudExprHelper.Unwrap computation]
 
                 return
                     match result with

@@ -2,7 +2,7 @@
     
     open System
 
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
 
     type MutableCloudRef = 
         // loop (possibly forever) 

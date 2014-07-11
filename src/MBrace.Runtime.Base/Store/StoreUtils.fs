@@ -1,10 +1,10 @@
-﻿namespace Nessos.MBrace.Runtime.Store
+﻿namespace Nessos.MBrace.Runtime
 
     open Nessos.Thespian.ConcurrencyTools
 
     open Nessos.MBrace
 
-    module internal Utils =
+    module internal StoreUtils =
         
         let inline private onError<'T> (message : string) (block : Async<'T>) =
             async {

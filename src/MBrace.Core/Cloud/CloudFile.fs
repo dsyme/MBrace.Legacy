@@ -6,7 +6,7 @@
     open System.Collections.Generic
     open System.Runtime.Serialization
 
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
 
     type CloudFile = 
 

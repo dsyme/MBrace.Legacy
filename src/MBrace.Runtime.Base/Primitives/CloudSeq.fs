@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Runtime.Store
+﻿namespace Nessos.MBrace.Runtime
 
     open System
     open System.IO
@@ -12,19 +12,15 @@
     open Nessos.MBrace
     open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.Store.Utils
+    open Nessos.MBrace.Store
+    open Nessos.MBrace.Runtime.StoreUtils
 
     type internal CloudSeqInfo = { Size : int64; Count : int; Type : Type }
 
     [<StructuredFormatDisplay("{StructuredFormatDisplay}")>]
     type CloudSeq<'T> internal (id : string, container : string, storeId : StoreId) as self =
 
-        let provider =
-            lazy
-                match StoreRegistry.TryGetStoreInfo storeId with
-                | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some info -> info.Primitives.CloudSeqProvider :?> CloudSeqProvider    
+        let provider : Lazy<CloudSeqProvider> = lazy CloudSeqProvider.GetById storeId  
 
         let mutable info = None
         let getInfoLazy () =
@@ -73,10 +69,12 @@
 
             new CloudSeq<'T>(id, container, storeId)
     
-    and internal CloudSeqProvider (id : StoreId, store : ICloudStore, cacheStore : LocalCache) as self = 
+    and CloudSeqProvider private (storeId : StoreId, store : ICloudStore, cacheStore : LocalCache) =
 
-        let extension = "seq"
-        let postfix = fun s -> sprintf' "%s.%s" s extension
+        static let extension = "seq"
+        static let postfix s = sprintf' "%s.%s" s extension
+
+        static let providers = new System.Collections.Concurrent.ConcurrentDictionary<StoreId, CloudSeqProvider>()
 
         let getInfo (stream : Stream) : CloudSeqInfo =
             let pos = stream.Position
@@ -115,14 +113,22 @@
             let ctor =
                 {
                     new IFunc<ICloudSeq> with
-                        member __.Invoke<'T> () = new CloudSeq<'T>(id, container, self.StoreId) :> ICloudSeq
+                        member __.Invoke<'T> () = new CloudSeq<'T>(id, container, storeId) :> ICloudSeq
                 }
 
             existential.Apply ctor
 
-        member __.StoreId = id
+        static member internal Create (storeId : StoreId, store : ICloudStore, cacheStore : LocalCache) =
+            providers.GetOrAdd(storeId, fun id -> new CloudSeqProvider(id, store, cacheStore))
 
-        member __.GetCloudSeqInfo<'T> (cseq : CloudSeq<'T>) : Async<CloudSeqInfo> =
+        static member internal GetById (storeId : StoreId) =
+            let ok, provider = providers.TryGetValue storeId
+            if ok then provider
+            else
+                let msg = sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName
+                raise <| new StoreException(msg)
+
+        member internal __.GetCloudSeqInfo<'T> (cseq : CloudSeq<'T>) : Async<CloudSeqInfo> =
             getCloudSeqInfo cseq.Container cseq.Name
             |> onDereferenceError cseq
 
@@ -147,49 +153,47 @@
             store.Delete(cseq.Container, postfix cseq.Name)
             |> onDeleteError cseq
 
-        interface ICloudSeqProvider with
+        member this.Create<'T>(container, id, values : seq<'T>) = 
+            async {
+                let serializeTo stream = async {
+                    let length = Serialization.DefaultPickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
+                    return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
+                }
+                do! cacheStore.Create(container, postfix id, serializeTo, false)
+                return CloudSeq<'T>(id, container, storeId) :> ICloudSeq<'T>
+            } |> onCreateError container id
 
-            member this.Create<'T>(container, id, values : seq<'T>) = 
-                async {
-                    let serializeTo stream = async {
-                        let length = Serialization.DefaultPickler.SerializeSequence(typeof<'T>, stream, values, leaveOpen = true)
-                        return setInfo stream { Size = -1L; Count = length; Type = typeof<'T> }
-                    }
-                    do! cacheStore.Create(container, postfix id, serializeTo, false)
-                    return CloudSeq<'T>(id, container, this.StoreId) :> ICloudSeq<'T>
-                } |> onCreateError container id
+        member this.Create (container : string, id : string, ty : Type, values : IEnumerable) : Async<ICloudSeq> =
+            async {
+                let serializeTo stream = async {
+                    let length = Serialization.DefaultPickler.SerializeSequence(ty, stream, values, leaveOpen = true)
+                    return setInfo stream { Size = -1L; Count = length; Type = ty }
+                }
+                do! cacheStore.Create(container, postfix id, serializeTo, false)
+                return defineUntyped(ty, container, id)
+            } |> onCreateError container id
 
-            member this.Create (container : string, id : string, ty : Type, values : IEnumerable) : Async<ICloudSeq> =
-                async {
-                    let serializeTo stream = async {
-                        let length = Serialization.DefaultPickler.SerializeSequence(ty, stream, values, leaveOpen = true)
-                        return setInfo stream { Size = -1L; Count = length; Type = ty }
-                    }
-                    do! cacheStore.Create(container, postfix id, serializeTo, false)
-                    return defineUntyped(ty, container, id)
-                } |> onCreateError container id
+        member this.GetExisting (container, id) = 
+            async {
+                let! cseqInfo = getCloudSeqInfo container id
+                return defineUntyped(cseqInfo.Type, container, id)
+            } |> onGetError container id
 
-            member this.GetExisting (container, id) = 
-                async {
-                    let! cseqInfo = getCloudSeqInfo container id
-                    return defineUntyped(cseqInfo.Type, container, id)
-                } |> onGetError container id
-
-            member this.GetContainedSeqs(container : string) : Async<ICloudSeq []> =
-                async {
-                    let! files = store.GetAllFiles(container)
+        member this.GetContainedSeqs(container : string) : Async<ICloudSeq []> =
+            async {
+                let! files = store.GetAllFiles(container)
                     
-                    // TODO : find a better heuristic?
-                    let cseqIds =
-                        files
-                        |> Array.choose (fun f ->
-                            if f.EndsWith <| sprintf' ".%s" extension then 
-                                Some <| f.Substring(0, f.Length - extension.Length - 1)
-                            else
-                                None)
+                // TODO : find a better heuristic?
+                let cseqIds =
+                    files
+                    |> Array.choose (fun f ->
+                        if f.EndsWith <| sprintf' ".%s" extension then 
+                            Some <| f.Substring(0, f.Length - extension.Length - 1)
+                        else
+                            None)
 
-                    return!
-                        cseqIds 
-                        |> Array.map (fun id -> (this :> ICloudSeqProvider).GetExisting(container, id))
-                        |> Async.Parallel
-                } |> onListError container
+                return!
+                    cseqIds 
+                    |> Array.map (fun id -> this.GetExisting(container, id))
+                    |> Async.Parallel
+            } |> onListError container

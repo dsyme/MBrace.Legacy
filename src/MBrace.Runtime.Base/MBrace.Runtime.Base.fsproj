@@ -72,18 +72,18 @@
     <Compile Include="Serialization.fs" />
     <Compile Include="Vagrant.fs" />
     <Compile Include="Store\StoreUtils.fs" />
-    <Compile Include="Store\ICloudStore.fs" />
-    <Compile Include="Store\InMemCache.fs" />
-    <Compile Include="Store\LocalCache.fs" />
-    <Compile Include="Store\FileSystemStore.fs" />
     <Compile Include="Store\LogStore.fs" />
-    <Compile Include="Store\StoreProvider.fs" />
     <Compile Include="Store\StoreRegistry.fs" />
-    <Compile Include="Store\CloudRef.fs" />
-    <Compile Include="Store\MutableCloudRef.fs" />
-    <Compile Include="Store\CloudSeq.fs" />
-    <Compile Include="Store\CloudFile.fs" />
     <Compile Include="Store\StoreActivation.fs" />
+    <Compile Include="Primitives\CloudRef.fs" />
+    <Compile Include="Primitives\MutableCloudRef.fs" />
+    <Compile Include="Primitives\CloudSeq.fs" />
+    <Compile Include="Primitives\CloudFile.fs" />
+    <Compile Include="Primitives\PrimitiveConfiguration.fs" />
+    <Compile Include="Interpreter\InterpreterUtils.fs" />
+    <Compile Include="Interpreter\Types.fs" />
+    <Compile Include="Interpreter\DebugInfo.fs" />
+    <Compile Include="Interpreter\Interpreter.fs" />
     <Compile Include="Compiler\CloudComputation.fs" />
     <Compile Include="Compiler\CloudUtils.fs" />
     <Compile Include="Compiler\Compiler.fs" />
@@ -137,7 +137,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Caching" />
     <Reference Include="Thespian">
       <HintPath>..\..\packages\Thespian.0.0.8-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>
@@ -167,6 +166,11 @@
     <ProjectReference Include="..\MBrace.Core\MBrace.Core.fsproj">
       <Name>MBrace.Core</Name>
       <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Store\MBrace.Store.fsproj">
+      <Name>MBrace.Store</Name>
+      <Project>{5ed53545-4f89-4a52-9400-dc0bd9e7e864}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">

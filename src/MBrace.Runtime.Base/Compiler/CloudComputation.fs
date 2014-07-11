@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.Runtime.Compiler
 
     open System
     open System.Reflection

@@ -1,14 +1,10 @@
-﻿namespace Nessos.MBrace.Runtime.Store
+﻿namespace Nessos.MBrace.Store
 
     open System
     open System.IO
     open System.Security.AccessControl
+    open System.Runtime.CompilerServices
 
-    open Nessos.Thespian.ConcurrencyTools
-
-    open Nessos.MBrace
-    open Nessos.MBrace.Core
-    open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
 
     type FileSystemStore(path : string, ?name) =
@@ -22,7 +18,7 @@
         let uuid =
             let uri = Uri(path)
             if uri.IsUnc then uri.ToString()
-            else sprintf' "file://%s/%s" (System.Net.Dns.GetHostName()) uri.AbsolutePath
+            else sprintf "file://%s/%s" (System.Net.Dns.GetHostName()) uri.AbsolutePath
 
         let readTag (s : Stream) : Tag =
             let br = new BinaryReader(s)
@@ -89,7 +85,7 @@
             override self.CopyTo(folder : string, file : string, target : Stream) = 
                 async {
                     use! source = (self :> ICloudStore).ReadImmutable(folder,file)
-                    do! Async.AwaitTask(source.CopyToAsync(target))
+                    do! source.CopyToAsync(target)
                 }
 
             override self.CopyFrom(folder : string, file : string, source : Stream, asFile : bool) =
@@ -98,7 +94,7 @@
                     if not <| Directory.Exists(path) then
                         Directory.CreateDirectory(path) |> ignore
                     use target = new FileStream(Path.Combine(path,file), FileMode.CreateNew, FileAccess.Write) :> Stream
-                    do! Async.AwaitTask(source.CopyToAsync(target))
+                    do! source.CopyToAsync(target)
                 }
 
             override self.Delete(folder : string, file : string) =

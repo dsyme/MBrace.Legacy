@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Runtime.Store
+﻿namespace Nessos.MBrace.Runtime
 
     open System
     open System.IO
@@ -9,9 +9,9 @@
     open Nessos.MBrace.Utils
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.Store.Utils
+    open Nessos.MBrace.Runtime.StoreUtils
 
     [<AutoOpen>]
     module private LogStoreUtils =

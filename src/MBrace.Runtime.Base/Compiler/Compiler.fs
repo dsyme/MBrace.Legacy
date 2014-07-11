@@ -186,11 +186,7 @@ namespace Nessos.MBrace.Core
             | [] -> name, functions, warnings
 
 
-    type CloudCompiler private () =
-
-        static let compilerId = Guid.NewGuid()
-
-        static member CompilerId = compilerId
+    type CloudCompiler =
 
         static member Compile(expr : Expr<Cloud<'T>>, ?name : string) =
 
@@ -209,7 +205,7 @@ namespace Nessos.MBrace.Core
 
         static member GetRawImage(cc : CloudComputation) =
             {
-                CompilerId = compilerId
+                CompilerId = VagrantRegistry.Instance.UUId
                 Name = cc.Name
                 ComputationRaw = Serialization.Serialize cc
                 ReturnTypeRaw = Serialization.Serialize cc.ReturnType

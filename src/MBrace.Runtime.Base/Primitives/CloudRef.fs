@@ -1,6 +1,7 @@
-﻿namespace Nessos.MBrace.Runtime.Store
+﻿namespace Nessos.MBrace.Runtime
 
     open System
+    open System.Collections.Concurrent
     open System.IO
     open System.Reflection
     open System.Runtime.Serialization
@@ -9,17 +10,13 @@
 
     open Nessos.MBrace
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Core
-    open Nessos.MBrace.Runtime.Store.Utils
+    open Nessos.MBrace.Runtime.StoreUtils
 
     type CloudRef<'T> internal (id : string, container : string, storeId : StoreId) as self =
 
-        let provider =
-            lazy
-                match StoreRegistry.TryGetStoreInfo storeId with
-                | None -> raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some info -> info.Primitives.CloudRefProvider :?> CloudRefProvider
+        let provider : Lazy<CloudRefProvider> = lazy CloudRefProvider.GetById storeId
 
         let mutable value : 'T option = None
         let valueLazy () =
@@ -62,10 +59,12 @@
                 info.AddValue("storeId",storeId, typeof<StoreId>)
     
 
-    and internal CloudRefProvider(id : StoreId, store : ICloudStore, inmem : InMemCache, fscache : LocalCache) as self =
+    and CloudRefProvider private (storeId : StoreId, store : ICloudStore, inmem : InMemoryCache, fscache : LocalCache) =
 
         static let extension = "ref"
         static let postfix s = sprintf' "%s.%s" s extension
+
+        static let providers = new ConcurrentDictionary<StoreId, CloudRefProvider> ()
 
         // TODO 1 : refine exception handling for reads
         // TODO 2 : decide if file is cloud ref by reading header, not file extension.
@@ -75,7 +74,7 @@
             Serialization.DefaultPickler.Serialize<obj>(stream, value)
         }
 
-        let storeHash = String.Convert.BytesToBase32(id.UUID)
+        let storeHash = String.Convert.BytesToBase32(storeId.UUID)
 
         let read container id : Async<Type * obj> = async {
             use! stream = fscache.Read(container, id) 
@@ -104,12 +103,19 @@
             let ctor =
                 {
                     new IFunc<ICloudRef> with
-                        member __.Invoke<'T> () = new CloudRef<'T>(id, container, self.StoreId) :> ICloudRef
+                        member __.Invoke<'T> () = new CloudRef<'T>(id, container, storeId) :> ICloudRef
                 }
 
             existential.Apply ctor
 
-        member __.StoreId = id
+        static member internal Create(storeId : StoreId, store : ICloudStore, inmem : InMemoryCache, fscache : LocalCache) =
+            providers.GetOrAdd(storeId, fun id -> new CloudRefProvider(storeId, store, inmem, fscache))
+
+        static member internal GetById(storeId : StoreId) =
+            let ok, provider = providers.TryGetValue storeId
+            if ok then provider
+            else
+                raise <| new MBraceException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
 
         member self.Delete<'T> (cloudRef : CloudRef<'T>) : Async<unit> =
             async {
@@ -138,32 +144,30 @@
                     return value :?> 'T
             } |> onDereferenceError cref
 
-        interface ICloudRefProvider with
+        member self.Create (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
+            async {
+                do! fscache.Create(container, postfix id, serialize value typeof<'T>, false)
+                return new CloudRef<'T>(id, container, storeId) :> ICloudRef<_>
+            } |> onCreateError container id
 
-            member self.Create (container : string, id : string, value : 'T) : Async<ICloudRef<'T>> = 
-                async {
-                    do! fscache.Create(container, postfix id, serialize value typeof<'T>, false)
-                    return new CloudRef<'T>(id, container, self.StoreId) :> ICloudRef<_>
-                } |> onCreateError container id
+        member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 
+            async {
+                do! fscache.Create(container, postfix id, serialize value t, false)
+                return defineUntyped(t, container, id)
+            } |> onCreateError container id
 
-            member self.Create (container : string, id : string, t : Type, value : obj) : Async<ICloudRef> = 
-                async {
-                    do! fscache.Create(container, postfix id, serialize value t, false)
-                    return defineUntyped(t, container, id)
-                } |> onCreateError container id
+        member self.GetExisting(container, id) : Async<ICloudRef> =
+            async {
+                let! t = readType container (postfix id)
+                return defineUntyped(t, container, id)
+            } |> onGetError container id
 
-            member self.GetExisting(container, id) : Async<ICloudRef> =
-                async {
-                    let! t = readType container (postfix id)
-                    return defineUntyped(t, container, id)
-                } |> onGetError container id
+        member self.GetContainedRefs(container : string) : Async<ICloudRef []> =
+            async {
+                let! ids = getIds container
 
-            member self.GetContainedRefs(container : string) : Async<ICloudRef []> =
-                async {
-                    let! ids = getIds container
-
-                    return!
-                        ids 
-                        |> Array.map (fun id -> (self :> ICloudRefProvider).GetExisting(container,id))
-                        |> Async.Parallel
-                } |> onListError container
+                return!
+                    ids 
+                    |> Array.map (fun id -> self.GetExisting(container,id))
+                    |> Async.Parallel
+            } |> onListError container

@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Runtime.Store
+﻿namespace Nessos.MBrace.Runtime
 
     open System
     open System.IO
@@ -6,19 +6,15 @@
     open System.Runtime.Serialization
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.Store.Utils
+    open Nessos.MBrace.Runtime.StoreUtils
 
 
     type MutableCloudRef<'T> internal (id : string, container : string, tag : Tag, storeId : StoreId) =
 
-        let provider =
-            lazy
-                match StoreRegistry.TryGetStoreInfo storeId with
-                | None -> raise <| new StoreException(sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName)
-                | Some info -> info.Primitives.MutableCloudRefProvider :?> MutableCloudRefProvider
+        let provider : Lazy<MutableCloudRefProvider> = lazy MutableCloudRefProvider.GetById storeId
 
         // These methods are used to synchronize tag updates in the case of multithreaded parallelism.
         // In cloud execution there is no need to sync, as no threads share the same mutablecloudref instance.
@@ -77,10 +73,12 @@
                 info.AddValue("storeId", storeId, typeof<StoreId>)
 
 
-    and internal MutableCloudRefProvider(id : StoreId, store : ICloudStore) as self =
+    and MutableCloudRefProvider private (storeId : StoreId, store : ICloudStore) =
 
         static let extension = "mref"
         static let postfix s = sprintf' "%s.%s" s extension
+
+        static let providers = new System.Collections.Concurrent.ConcurrentDictionary<StoreId, MutableCloudRefProvider>()
 
         static let serialize (value : obj) (ty : Type) (stream : Stream) = async {
             Serialization.DefaultPickler.Serialize<Type>(stream, ty, leaveOpen = true)
@@ -117,21 +115,21 @@
             let ctor =
                 {
                     new IFunc<IMutableCloudRef> with
-                        member __.Invoke<'T> () = new MutableCloudRef<'T>(id, container, tag, self.StoreId) :> IMutableCloudRef
+                        member __.Invoke<'T> () = new MutableCloudRef<'T>(id, container, tag, storeId) :> IMutableCloudRef
                 }
 
             existential.Apply ctor
-//            typeof<MutableCloudRefProvider>
-//                .GetMethod("CreateCloudRef", BindingFlags.Static ||| BindingFlags.NonPublic)
-//                .MakeGenericMethod([| ty |])
-//                .Invoke(null, [| id :> obj ; container :> obj ; tag :> obj ; self :> obj |])
-//                :?> IMutableCloudRef
-//
-//        // WARNING : method called by reflection from 'defineUntyped' function above
-//        static member CreateCloudRef<'T>(id, container, tag, provider) =
-//            new MutableCloudRef<'T>(id , container, tag, provider)
 
-        member self.StoreId = id
+
+        static member internal Create (storeId : StoreId, store : ICloudStore) =
+            providers.GetOrAdd(storeId, fun id -> new MutableCloudRefProvider(id, store))
+
+        static member internal GetById (storeId : StoreId) =
+            let ok, provider = providers.TryGetValue storeId
+            if ok then provider
+            else
+                let msg = sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName
+                raise <| new StoreException(msg)
 
         member self.Delete(mref : MutableCloudRef<'T>) : Async<unit> = 
             store.Delete(mref.Container, postfix mref.Name)
@@ -172,33 +170,31 @@
                 mref.Release()
             } |> onUpdateError mref
 
-        interface IMutableCloudRefProvider with
+        member self.Create (container : string, id : string, value : 'T) : Async<IMutableCloudRef<'T>> = 
+            async {
+                let! tag = store.CreateMutable(container, postfix id, serialize value typeof<'T>)
 
-            member self.Create (container : string, id : string, value : 'T) : Async<IMutableCloudRef<'T>> = 
-                async {
-                    let! tag = store.CreateMutable(container, postfix id, serialize value typeof<'T>)
+                return new MutableCloudRef<'T>(id, container, tag, storeId) :> IMutableCloudRef<_>
+            } |> onCreateError container id
 
-                    return new MutableCloudRef<'T>(id, container, tag, self.StoreId) :> IMutableCloudRef<_>
-                } |> onCreateError container id
+        member self.Create (container : string, id : string, t : Type, value : obj) : Async<IMutableCloudRef> = 
+            async {
+                let! tag = store.CreateMutable(container, postfix id, serialize value t)
 
-            member self.Create (container : string, id : string, t : Type, value : obj) : Async<IMutableCloudRef> = 
-                async {
-                    let! tag = store.CreateMutable(container, postfix id, serialize value t)
+                return defineUntyped(t, container, id, tag)
+            } |> onCreateError container id
 
-                    return defineUntyped(t, container, id, tag)
-                } |> onCreateError container id
+        member self.GetExisting (container , id) : Async<IMutableCloudRef> =
+            async {
+                let! t, tag = readInfo container (postfix id)
+                return defineUntyped(t, container, id, tag)
+            } |> onGetError container id
 
-            member self.GetExisting (container , id) : Async<IMutableCloudRef> =
-                async {
-                    let! t, tag = readInfo container (postfix id)
-                    return defineUntyped(t, container, id, tag)
-                } |> onGetError container id
-
-            member self.GetContainedRefs(container : string) : Async<IMutableCloudRef []> =
-                async {
-                    let! ids = getIds container
-                    return! 
-                        ids 
-                        |> Array.map (fun id -> (self :> IMutableCloudRefProvider).GetExisting(container, id))
-                        |> Async.Parallel
-                } |> onListError container
+        member self.GetContainedRefs(container : string) : Async<IMutableCloudRef []> =
+            async {
+                let! ids = getIds container
+                return! 
+                    ids 
+                    |> Array.map (fun id -> self.GetExisting(container, id))
+                    |> Async.Parallel
+            } |> onListError container

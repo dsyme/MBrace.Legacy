@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.Runtime.Interpreter
 
     open System
     open System.Reflection
@@ -8,6 +8,7 @@
     open Microsoft.FSharp.Quotations.Patterns
     
     open Nessos.MBrace
+    open Nessos.MBrace.CloudExpr
 
     /// Parsed version of Expr.CustomAttributes
 
@@ -69,11 +70,6 @@
             
             Environment : IDictionary<string, string>
         }
-
-    /// Defines a deep object cloning abstraction
-    type IObjectCloner =
-        abstract Clone : 'T -> 'T
-
 
     type TaskConfiguration =
         {

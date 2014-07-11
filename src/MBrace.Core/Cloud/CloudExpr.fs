@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.CloudExpr
 
     open System
     open System.IO

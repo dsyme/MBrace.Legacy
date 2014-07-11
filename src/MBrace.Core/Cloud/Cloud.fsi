@@ -2,10 +2,10 @@ namespace Nessos.MBrace
 
     open System
 
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
 
     type CloudAttribute = ReflectedDefinitionAttribute
-    type ProcessId = Nessos.MBrace.Core.ProcessId
+    type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
 
     [<Sealed>]
     /// Disable tracing for cloud workflow
@@ -29,7 +29,7 @@ namespace Nessos.MBrace
         class
             internal new : cloudExpr:CloudExpr -> Cloud<'T>
             member Type : Type
-            member CloudExpr : CloudExpr
+            member internal CloudExpr : CloudExpr
         end
         
     /// Contains the methods (combinators) to express the primitive computations directly supported by

@@ -1,11 +1,11 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.Runtime.Interpreter
 
     open System
     open System.Reflection
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
-    open Nessos.MBrace.Core.Utils
+    open Nessos.MBrace.Utils
+    open Nessos.MBrace.CloudExpr
 
     open Microsoft.FSharp.Quotations
     open Microsoft.FSharp.Quotations.DerivedPatterns

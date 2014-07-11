@@ -1,6 +1,6 @@
 ﻿namespace Nessos.MBrace
 
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
 
     [<AutoOpen>]
     module CloudRefModule =

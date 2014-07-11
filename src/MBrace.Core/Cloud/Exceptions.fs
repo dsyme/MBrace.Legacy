@@ -3,7 +3,7 @@
     open System
     open System.Runtime.Serialization
 
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
 
     // TODO : move specialized exceptions to Runtime assemblies
 

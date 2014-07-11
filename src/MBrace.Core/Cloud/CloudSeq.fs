@@ -2,7 +2,7 @@
     
     open System
     
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
 
     type CloudSeq =
         static member New<'T>(container : string, values : seq<'T>) : Cloud<ICloudSeq<'T>> =
