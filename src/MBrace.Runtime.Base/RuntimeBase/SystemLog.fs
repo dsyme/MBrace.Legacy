@@ -11,7 +11,7 @@
     open Nessos.Thespian
 
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.Store
+    open Nessos.MBrace.Store
 
 
     /// abstract system logger

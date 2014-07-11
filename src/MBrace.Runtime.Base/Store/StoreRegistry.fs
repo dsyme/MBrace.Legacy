@@ -59,6 +59,7 @@
     and StoreRegistry private () =
 
         static let defaultStore = ref None
+        static let localCacheStore = ref None
         static let registry = new ConcurrentDictionary<StoreId, StoreInfo> ()
 
         static let hashAlgorithm = SHA256Managed.Create() :> HashAlgorithm
@@ -104,6 +105,11 @@
             if makeDefault then defaultStore := Some info
             info
 
+        static member ActivateLocalCacheStore(definition : StoreDefinition) =
+            lock localCacheStore (fun () ->
+                let cacheStore = 
+            )
+
 
 
 //        static member internal Register(store : StoreInfo, ?makeDefault) =
@@ -115,6 +121,16 @@
             match Type.GetType(info.FactoryQualifiedName, throwOnError = false) with
             | null -> None
             | factoryType -> Some <| StoreDefinition.Create(factoryType, info.ConnectionString)
+
+
+
+        static member TryActivate(activationInfo : StoreActivationInfo, makeDefault) =
+            match StoreRegistry.TryGetStoreInfo activationInfo.Id with
+            | Some info as r -> StoreRegistry.Activate(info, makeDefault = makeDefault) ; r
+            | None ->
+                match StoreRegistry.TryGetStoreProvider activationInfo with
+                | Some p -> StoreRegistry.Activate(p, ?makeDefault = makeDefault) |> Some
+                | None -> None
 
 //        static member ActivateLocalCache(cacheDefinition : StoreDefinition) =
 //            lock localCache (fun () ->

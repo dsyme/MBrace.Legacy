@@ -19,8 +19,7 @@
         // These methods are used to synchronize tag updates in the case of multithreaded parallelism.
         // In cloud execution there is no need to sync, as no threads share the same mutablecloudref instance.
         let mutable isAcquiredRefInstance = 0
-        member internal __.TryAcquire () = 
-            System.Threading.Interlocked.CompareExchange(&isAcquiredRefInstance, 1, 0) = 0
+        member internal __.TryAcquire () = System.Threading.Interlocked.CompareExchange(&isAcquiredRefInstance, 1, 0) = 0
         member internal __.Release () = isAcquiredRefInstance <- 0
             
 

@@ -4,9 +4,11 @@
     open System.Text
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
     open Nessos.MBrace.Utils.String
-    open Nessos.MBrace.Runtime.Store
+    open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Interpreter
+    open Nessos.MBrace.Store
 
     type CloudLogEntry =
         {

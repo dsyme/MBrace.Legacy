@@ -59,7 +59,6 @@
   </Target>
   <ItemGroup>
     <Compile Include="Utils.fs" />
-    <Compile Include="StoreId.fs" />
     <Compile Include="LocalCache.fs" />
     <Compile Include="FileSystemStore.fs" />
   </ItemGroup>
