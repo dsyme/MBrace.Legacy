@@ -1,4 +1,4 @@
-namespace Nessos.MBrace.Core
+namespace Nessos.MBrace.Runtime.Interpreter
 
     open System
     open System.Reflection
@@ -14,12 +14,11 @@ namespace Nessos.MBrace.Core
     open Nessos.Vagrant
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Reflection
     open Nessos.MBrace.Utils.PrettyPrinters
-    open Nessos.MBrace.Core.CloudUtils
+//    open Nessos.MBrace.CloudUtils
     open Nessos.MBrace.Runtime
 
     [<AutoOpen>]

@@ -9,6 +9,8 @@
     open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.PrettyPrinters
+    open Nessos.MBrace.CloudExpr
+    open Nessos.MBrace.Runtime.Interpreter
 
     /// Represents a cloud computation that has been statically checked by the client.
     [<AbstractClass>]
@@ -51,7 +53,7 @@
         override __.Functions = []
         override __.Warnings = []
 
-        override __.GetCloudExpr () = Interpreter.extractCloudExpr value
+        override __.GetCloudExpr () = CloudExprHelper.Unwrap value
 
 
     type internal QuotedCloudComputation<'T> internal (name : string, expr : Expr<Cloud<'T>>, dependencies, functions, warnings) =
@@ -68,7 +70,7 @@
         override __.Dependencies = dependencies
         override __.Warnings = warnings
 
-        override __.GetCloudExpr () = Interpreter.extractCloudExpr(getValue ())
+        override __.GetCloudExpr () = CloudExprHelper.Unwrap (getValue ())
 
 
     [<Serializable>]

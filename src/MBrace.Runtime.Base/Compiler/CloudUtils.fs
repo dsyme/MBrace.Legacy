@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Core
+﻿namespace Nessos.MBrace.Runtime.Interpreter
 
     open System
     open System.Collections.Generic
@@ -10,7 +10,7 @@
     open Microsoft.FSharp.Quotations.ExprShape
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.CloudExpr
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Reflection
 
