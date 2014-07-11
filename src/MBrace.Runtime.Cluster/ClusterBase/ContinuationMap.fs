@@ -7,7 +7,7 @@ open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.ReplicatedState
 
 open Nessos.MBrace
-open Nessos.MBrace.Core
+open Nessos.MBrace.CloudExpr
 open Nessos.MBrace.Utils
 
 type State = ReplicatedState<Map<ThunkId, ThunkId> * Map<ThunkId, Dump>>

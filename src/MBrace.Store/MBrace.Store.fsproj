@@ -58,9 +58,12 @@
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
   </Target>
   <ItemGroup>
-    <Compile Include="Utils.fs" />
-    <Compile Include="LocalCache.fs" />
+    <Compile Include="ICloudStore.fs" />
     <Compile Include="FileSystemStore.fs" />
+    <Compile Include="SqlServerStore\Common.fs" />
+    <Compile Include="SqlServerStore\SqlServerStore.fs" />
+    <None Include="SqlServerStore\Test.fsx" />
+    <Compile Include="StoreDefinition.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -69,17 +72,15 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\MBrace.Core\MBrace.Core.fsproj">
-      <Name>MBrace.Core</Name>
-      <Project>{5b1ad626-0c09-48ea-8267-493100e1a206}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
       <Name>MBrace.Utils</Name>
       <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="System.Transactions" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

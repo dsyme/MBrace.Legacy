@@ -17,9 +17,6 @@ namespace Nessos.MBrace.Runtime.Interpreter
 
     module Interpreter =
 
-        /// raise exception with given object
-        let inline internal throwInvalidState (value : 'T) = invalidOp <| sprintf "invalid state %A" value
-
         /// <summary>
         ///     evalutes the symbolic stack sequentially until a cloud primitive is encountered.
         /// </summary>
@@ -432,7 +429,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                         Functions = []
                     }
                 
-                let! result = evaluateLocal primitiveConfig taskConfig getCurrentTaskId false [CloudExprHelper.Unwrap computation]
+                let! result = evaluateLocal primitiveConfig taskConfig getCurrentTaskId false [CloudExprHelpers.Unwrap computation]
 
                 return
                     match result with

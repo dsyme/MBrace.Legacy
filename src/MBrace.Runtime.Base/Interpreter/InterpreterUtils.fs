@@ -5,8 +5,11 @@
 
     open Nessos.MBrace.Utils
 
-
+    [<AutoOpen>]
     module internal Utils =
+
+        /// raise exception with given object
+        let inline internal throwInvalidState (value : 'T) = invalidOp <| sprintf "invalid state %A" value
 
         let (|TargetInvocationException|_|) (e : exn) =
             let rec aux depth (e : exn) =

@@ -128,9 +128,9 @@
       <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\MBrace.SqlServer\MBrace.SqlServer.fsproj">
-      <Name>MBrace.SqlServer</Name>
-      <Project>{90842977-d9df-405f-9965-c43d6d56f0b9}</Project>
+    <ProjectReference Include="..\..\src\MBrace.Store\MBrace.Store.fsproj">
+      <Name>MBrace.Store</Name>
+      <Project>{5ed53545-4f89-4a52-9400-dc0bd9e7e864}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\src\MBrace.Utils\MBrace.Utils.fsproj">

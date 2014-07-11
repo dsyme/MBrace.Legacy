@@ -10,7 +10,6 @@
     open Nessos.FsPickler
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime.StoreUtils
@@ -69,7 +68,7 @@
 
             new CloudSeq<'T>(id, container, storeId)
     
-    and CloudSeqProvider private (storeId : StoreId, store : ICloudStore, cacheStore : LocalCache) =
+    and CloudSeqProvider private (storeId : StoreId, store : ICloudStore, cacheStore : CacheStore) =
 
         static let extension = "seq"
         static let postfix s = sprintf' "%s.%s" s extension
@@ -118,7 +117,7 @@
 
             existential.Apply ctor
 
-        static member internal Create (storeId : StoreId, store : ICloudStore, cacheStore : LocalCache) =
+        static member internal Create (storeId : StoreId, store : ICloudStore, cacheStore : CacheStore) =
             providers.GetOrAdd(storeId, fun id -> new CloudSeqProvider(id, store, cacheStore))
 
         static member internal GetById (storeId : StoreId) =

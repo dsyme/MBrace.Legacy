@@ -10,6 +10,7 @@ namespace Nessos.MBrace.Runtime.Tests
     open FsUnit
 
     open Nessos.MBrace
+    open Nessos.MBrace.Runtime
     open Nessos.MBrace.Client
     open Nessos.MBrace.Lib
     open Nessos.MBrace.Lib.Concurrency
@@ -852,7 +853,7 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Concurrent cache writes (Parallel CloudSeq read after cleaning cache)`` () =
 
             let cs = <@ cloud { return! CloudSeq.New(Array.init (10 * 1024 * 1024) id) } @> |> test.ExecuteExpression
-            let storeId = Runtime.Store.StoreRegistry.DefaultStoreInfo.Id
+            let storeId = StoreRegistry.DefaultStoreInfo.Id
             // Clear client cache
             let cacheDir = Path.Combine(MBraceSettings.WorkingDirectory, "StoreCache", sprintf "fscache-%d" <| hash storeId)
             Directory.Delete(cacheDir, true)

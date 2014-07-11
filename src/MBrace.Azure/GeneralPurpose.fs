@@ -2,7 +2,6 @@
 
     open System
     open System.IO
-    open Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Azure.Common
     open Microsoft.WindowsAzure.Storage
     open Microsoft.WindowsAzure.Storage.Blob

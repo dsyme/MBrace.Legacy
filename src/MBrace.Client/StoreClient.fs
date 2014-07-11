@@ -4,22 +4,21 @@
     open System.IO
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.Store
     open Nessos.Thespian.ConcurrencyTools
 
     /// Provides methods for interacting with the store and the primitives without the need for a runtime.
     [<Sealed; AutoSerializable(false)>]
     type StoreClient internal (info : StoreInfo) =
 
-        let config = info.Primitives
+        let config = PrimitiveConfiguration.Init(info.Id)
 
         let newId () = Guid.NewGuid().ToString()
 
         static let registry = Atom.atom Map.empty<StoreId, StoreClient>
 
-        member __.StoreProvider = info.Provider
+        member __.StoreDefinition = info.Definition
 
         /// Gets the default StoreClient that corresponds to the current StoreProvider.
         static member Default 

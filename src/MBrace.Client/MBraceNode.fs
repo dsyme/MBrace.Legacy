@@ -12,10 +12,9 @@
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.PrettyPrinters
-
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Utils
-    open Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Daemon.Configuration
     
@@ -116,13 +115,13 @@
                 int timer.ElapsedMilliseconds
             with e -> handleError e
 
-        member __.SetStoreConfigurationAsync (provider : StoreProvider) = async {
+        member __.SetStoreConfigurationAsync (provider : StoreDefinition) = async {
             let info = StoreRegistry.Activate(provider, makeDefault = false)
             let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
             return! StoreManager.uploadStore info storeManager
         }
 
-        member __.SetStoreConfiguration (provider : StoreProvider) = 
+        member __.SetStoreConfiguration (provider : StoreDefinition) = 
             __.SetStoreConfigurationAsync(provider) |> Async.RunSynchronously
 
         member __.GetStoreManagerAsync () = async {
@@ -270,7 +269,7 @@
         /// <param name="storeProvider">The StoreProvider to be used as the node's default.</param>
         static member SpawnAsync(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?storeProvider : StoreProvider) : Async<MBraceNode> = 
+                                    ?background : bool, ?storeProvider : StoreDefinition) : Async<MBraceNode> = 
             async {
                 let debug = defaultArg debug false
                 let useTemporaryWorkDir = defaultArg useTemporaryWorkDir false
@@ -321,7 +320,7 @@
         /// <param name="storeProvider">The StoreProvider to be used as the node's default.</param>
         static member Spawn(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?storeProvider : StoreProvider) : MBraceNode =
+                                    ?background : bool, ?storeProvider : StoreDefinition) : MBraceNode =
 
             MBraceNode.SpawnAsync(?hostname = hostname, ?primaryPort = primaryPort, ?workerPorts = workerPorts, ?logFiles = logFiles,
                                         ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?workingDirectory = workingDirectory,
@@ -342,7 +341,7 @@
         /// <param name="background">Spawn in the background (without a console window).</param>
         /// <param name="storeProvider">The StoreProvider to be used as the nodes' default.</param>
         static member SpawnMultiple(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeProvider : StoreProvider) : MBraceNode list =
+                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeProvider : StoreDefinition) : MBraceNode list =
         
             let spawnSingle primary pool =
                     MBraceNode.SpawnAsync(?hostname = hostname, primaryPort = primary, workerPorts = pool, ?logFiles = logFiles,

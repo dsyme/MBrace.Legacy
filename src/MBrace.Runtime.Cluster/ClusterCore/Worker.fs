@@ -10,11 +10,12 @@ open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.BehaviorExtensions
 
 open Nessos.MBrace
-open Nessos.MBrace.Core
+open Nessos.MBrace.CloudExpr
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Runtime
 open Nessos.MBrace.Runtime.Logging
-open Nessos.MBrace.Runtime.Store
+open Nessos.MBrace.Runtime.Compiler
+open Nessos.MBrace.Runtime.Interpreter
 
 //type alias to prevent conflicts with non-cluster types
 type private ProcessMonitorDb = CommonTypes.ProcessMonitorDb
@@ -31,7 +32,7 @@ let workerBehavior (processId: ProcessId)
                    (msg: Worker) =
     
     /// Dependency injection point. Fix!
-    let config = StoreRegistry.DefaultStoreInfo.Primitives
+    let config = PrimitiveConfiguration.Init()
     let logger = IoC.Resolve<ISystemLogger> ()
     let store = StoreRegistry.DefaultStoreInfo.Store
 
@@ -76,7 +77,7 @@ let workerBehavior (processId: ProcessId)
                     return (ValueExpr choiceValue) :: rest
                 | LocalExpr cloudExpr :: rest -> 
                     let taskF () = sprintf "local thread %d" System.Threading.Thread.CurrentThread.ManagedThreadId
-                    let! value = Interpreter.evaluateLocal config taskConfig taskF Serialization.DeepClone false [cloudExpr]
+                    let! value = Interpreter.evaluateLocal config taskConfig taskF false [cloudExpr]
                     return! processTask' <| (ValueExpr value) :: rest
                 | ValueExpr (Obj (ObjValue value, t)) :: rest when value <> null ->
                     let! cloudRefValue = config.CloudRefProvider.Create<obj>("temp" + (string processId), Guid.NewGuid().ToString(), box value)

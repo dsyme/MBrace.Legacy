@@ -16,14 +16,12 @@
         open Nessos.Thespian.Remote.TcpProtocol
 
         open Nessos.MBrace
-        open Nessos.MBrace.Core
         open Nessos.MBrace.Utils
+        open Nessos.MBrace.Store
         open Nessos.MBrace.Runtime
         open Nessos.MBrace.Runtime.Logging
-        open Nessos.MBrace.Runtime.Store
         open Nessos.MBrace.Runtime.Definitions
-        open Nessos.MBrace.Runtime.ProcessDomain.Configuration 
-        open Nessos.MBrace.Client
+        open Nessos.MBrace.Runtime.ProcessDomain.Configuration
 
         let selfProc = Process.GetCurrentProcess()
 
@@ -98,7 +96,7 @@
             ThespianLogger.Register(logger)
 
             // Register Store
-            StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem cacheStoreEndpoint)
+            StoreRegistry.ActivateLocalCacheStore(StoreDefinition.FileSystem cacheStoreEndpoint)
 
             // load store dependencies from cache
             let results = VagrantRegistry.Instance.LoadCachedAssemblies(activator.Dependencies, loadPolicy = AssemblyLoadPolicy.ResolveAll)

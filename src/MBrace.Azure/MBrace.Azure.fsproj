@@ -106,9 +106,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MBrace.Runtime.Base\MBrace.Runtime.Base.fsproj">
-      <Name>MBrace.Runtime.Base</Name>
-      <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
+    <ProjectReference Include="..\MBrace.Store\MBrace.Store.fsproj">
+      <Name>MBrace.Store</Name>
+      <Project>{5ed53545-4f89-4a52-9400-dc0bd9e7e864}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

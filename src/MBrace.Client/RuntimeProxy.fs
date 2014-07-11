@@ -6,8 +6,8 @@
     open Nessos.Thespian.ActorExtensions.RetryExtensions
 
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.Store
 
     let rec private runtimeProxyBehaviour (state : ClusterDeploymentInfo) (message : MBraceNode) = async {
 
@@ -73,7 +73,7 @@
         match config.StoreId with
         | None -> ()
         | Some id ->
-            let storeInfo = Store.StoreRegistry.TryGetStoreInfo id |> Option.get
+            let storeInfo = StoreRegistry.TryGetStoreInfo id |> Option.get
             let! storeMan = master.PostWithReplyRetriable (GetStoreManager, 2)
             do! StoreManager.uploadStore storeInfo storeMan
 

@@ -1,7 +1,7 @@
 ﻿namespace Nessos.MBrace.Runtime.Tests
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.Runtime.Compiler
     open Nessos.MBrace.Client
 
     open NUnit.Framework

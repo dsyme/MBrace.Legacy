@@ -6,7 +6,6 @@
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.Store
 
     let storeManagerBehavior (ctx: BehaviorContext<_>) (msg: StoreManager) = async {
         

@@ -4,9 +4,9 @@
     open System.IO
     open System.Runtime.Serialization
 
+    open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
-
 
     // TODO : CloudSeq & ClouFile only delete from target store and not cache
     // this might lead to confusing exception messages if attempting to read from
@@ -14,7 +14,7 @@
     // probably need a __.Delete implementation here too.
     // Better still, implement a full ICloudStore interface wrap
 
-    type LocalCache(cacheContainer : string, localCacheStore : ICloudStore, targetStore : ICloudStore) = 
+    type CacheStore(cacheContainer : string, localCacheStore : ICloudStore, targetStore : ICloudStore) = 
 
         let getCachedFileName (container : string) (name : string) =
             let name' = String.Convert.StringToBase32(container + name)
@@ -58,9 +58,9 @@
                         return! retryAsync (RetryPolicy.Infinite(0.5<sec>)) (attemptRead())
 
                 | true, false -> 
-                    return raise <| Nessos.MBrace.MBraceException(sprintf' "Incoherent cache : Item %s - %s found in cache but not in the main store" folder file)
+                    return raise <| StoreException(sprintf' "Incoherent cache : Item %s - %s found in cache but not in the main store" folder file)
                 | false, false -> 
-                    return raise <| Nessos.MBrace.NonExistentObjectStoreException(folder,file)
+                    return raise <| NonExistentObjectStoreException(folder,file)
             }
 
             attemptRead()

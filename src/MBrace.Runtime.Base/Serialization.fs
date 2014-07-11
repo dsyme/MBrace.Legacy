@@ -8,14 +8,16 @@
 
     open Nessos.Thespian.Serialization
 
-    open Nessos.MBrace.Core
+    /// Represents a typed pickle
+    type Pickle<'T> internal (bytes : byte []) =
+        member internal __.Bytes = bytes
 
     type Serialization private () =
 
         static let lockObj = obj()
         static let mutable picklerSingleton = None
 
-        static member internal Register(pickler : FsPicklerBase) =
+        static member Register(pickler : FsPicklerBase) =
             lock lockObj (fun () ->
                 if picklerSingleton.IsSome then
                     invalidOp "An instance of FsPickler has been registered."
@@ -37,11 +39,11 @@
         static member Serialize (x : 'T) = Serialization.DefaultPickler.Pickle<obj>(x)
         static member Deserialize<'T> (data : byte []) = Serialization.DefaultPickler.UnPickle<obj>(data) :?> 'T
 
-//        static member DeepClone =
-//            {
-//                new IObjectCloner with
-//                    member __.Clone (t : 'T) = FsPickler.Clone t
-//            }
+        static member Pickle (x : 'T) = 
+            let bytes = Serialization.DefaultPickler.Pickle<'T>(x)
+            new Pickle<'T>(bytes)
+
+        static member UnPickle (pickle : Pickle<'T>) = Serialization.DefaultPickler.UnPickle<'T>(pickle.Bytes)
 
 
     type JsonLogPickler private () =

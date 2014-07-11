@@ -7,9 +7,7 @@ open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.BehaviorExtensions
 
 open Nessos.MBrace
-open Nessos.MBrace.Core
 open Nessos.MBrace.Runtime
-open Nessos.MBrace.Runtime.Store
 open Nessos.MBrace.Runtime.Logging
 open Nessos.MBrace.Utils
 

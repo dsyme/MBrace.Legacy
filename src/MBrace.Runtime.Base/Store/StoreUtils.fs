@@ -32,4 +32,3 @@
             onError (sprintf "Error getting length for %A" obj) 
         let inline onUpdateError (obj : 'U) =
             onError (sprintf "Error updating %A" obj) 
-

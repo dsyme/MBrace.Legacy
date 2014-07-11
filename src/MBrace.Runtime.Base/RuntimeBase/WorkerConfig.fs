@@ -5,7 +5,7 @@
     open Nessos.UnionArgParser
 
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Runtime.Store
+    open Nessos.MBrace.Runtime
 
     module Configuration =
 

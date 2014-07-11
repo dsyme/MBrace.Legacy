@@ -13,12 +13,11 @@ namespace Nessos.MBrace.Client
     open Nessos.Thespian.Remote
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
-    open Nessos.MBrace.Runtime.Store
 
     module private ConfigUtils =
 
@@ -80,10 +79,10 @@ namespace Nessos.MBrace.Client
             // parse store provider
             let storeProvider =
                 match parseResults.TryGetResult <@ Store_Provider @> with
-                | None -> StoreProvider.LocalFS
+                | None -> StoreDefinition.LocalFS
                 | Some sp ->
                     let endpoint = defaultArg (parseResults.TryGetResult <@ Store_Endpoint @>) ""
-                    StoreProvider.Parse(sp, endpoint)
+                    StoreDefinition.Parse(sp, endpoint)
 
             // Populate working directory
             let assemblyCacheDir = Path.Combine(workingDirectory, "AssemblyCache")
@@ -108,7 +107,8 @@ namespace Nessos.MBrace.Client
             do registerLogger logger
 
             // activate local cache
-            do StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem(localCacheDir))
+            let localCache = StoreDefinition.FileSystem(localCacheDir)
+            do StoreRegistry.ActivateLocalCacheStore(localCache)
 
             // activate store provider
             let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
@@ -164,9 +164,9 @@ namespace Nessos.MBrace.Client
                     config.Value.Swap(fun c -> { c with Logger = l })
                 )
 
-        /// Gets or sets the StoreProvider used by the client.
+        /// Gets or sets the default StoreProvider used by the client.
         static member StoreProvider
-            with get () = config.Value.Value.StoreInfo.Provider
+            with get () = config.Value.Value.StoreInfo.Definition
 
             and set p =
                 // store activation has side-effects ; use lock instead of swap

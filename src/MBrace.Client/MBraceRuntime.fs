@@ -12,10 +12,10 @@ namespace Nessos.MBrace.Client
 
     open Nessos.MBrace
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Core
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
+    open Nessos.MBrace.Runtime.Compiler
     open Nessos.MBrace.Runtime.Logging
-    open Nessos.MBrace.Runtime.Store
     open Nessos.MBrace.Client.Reporting
 
     open Nessos.MBrace.Client
@@ -80,7 +80,7 @@ namespace Nessos.MBrace.Client
                 return initOfProxyActor proxy
             }
 
-        static member BootAsync(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?storeProvider : StoreProvider) : Async<MBraceRuntime> = async {
+        static member BootAsync(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?storeProvider : StoreDefinition) : Async<MBraceRuntime> = async {
             let failoverFactor = defaultArg failoverFactor 2
             let replicationFactor = defaultArg replicationFactor (if failoverFactor = 0 then 0 else 2)
             let storeId = 

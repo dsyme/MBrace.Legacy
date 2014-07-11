@@ -14,8 +14,6 @@
 
         open Nessos.MBrace.Utils
         open Nessos.MBrace.Runtime.Logging
-        open Nessos.MBrace.Runtime.Store
-        open Nessos.MBrace.Client
 
         open Nessos.MBrace.Runtime
         open Nessos.MBrace.Runtime.Daemon.Configuration

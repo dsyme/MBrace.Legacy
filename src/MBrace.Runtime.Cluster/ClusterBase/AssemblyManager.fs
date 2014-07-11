@@ -9,7 +9,6 @@ open Nessos.Thespian
 open Nessos.Thespian.Cluster
 open Nessos.Thespian.Cluster.ActorExtensions
 
-open Nessos.MBrace.Core
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Runtime
 

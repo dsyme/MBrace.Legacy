@@ -5,17 +5,18 @@
     open Microsoft.FSharp.Quotations
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
+    open Nessos.MBrace.Runtime.Interpreter
     open Nessos.MBrace.Client.Reporting
 
     // type abbreviations
 
     type Node = Nessos.MBrace.Client.MBraceNode
     type MBrace = Nessos.MBrace.Client.MBraceRuntime
-    type CloudComputation = Nessos.MBrace.Core.CloudComputation
-    type CloudComputation<'T> = Nessos.MBrace.Core.CloudComputation<'T>
+    type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
+    type StoreDefinition = Nessos.MBrace.Store.StoreDefinition
+    type CloudComputation<'T> = Nessos.MBrace.Runtime.Compiler.CloudComputation<'T>
 
     [<AutoOpen>]
     module ClientExtensions =
@@ -49,10 +50,9 @@
                     else
                         new NullCloudProcessLogger() :> ICloudLogger
 
-                return! 
-                    Interpreter.evaluateLocalWrapped 
-                        MBraceSettings.DefaultStoreInfo.Primitives Serialization.DeepClone 
-                        logger processId computation.Value
+                let primitives = PrimitiveConfiguration.Init(StoreRegistry.DefaultStoreInfo.Id)
+
+                return! Interpreter.evaluateLocalWrapped primitives logger processId computation.Value
             }
 
             static member RunLocalAsync (computation : Cloud<'T>, ?showLogs) : Async<'T> =

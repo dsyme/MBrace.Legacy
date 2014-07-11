@@ -3,14 +3,16 @@
     open System
     open System.Reflection
 
-    open Nessos.MBrace
-    open Nessos.MBrace.Utils
-    open Nessos.MBrace.CloudExpr
-
     open Microsoft.FSharp.Quotations
     open Microsoft.FSharp.Quotations.DerivedPatterns
     open Microsoft.FSharp.Quotations.ExprShape
     open Microsoft.FSharp.Quotations.Patterns
+
+    open Nessos.MBrace
+    open Nessos.MBrace.Utils
+    open Nessos.MBrace.CloudExpr
+    open Nessos.MBrace.Runtime.Compiler
+
     
     module internal DebugInfo =
 

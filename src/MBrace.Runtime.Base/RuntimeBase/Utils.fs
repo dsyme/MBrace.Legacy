@@ -7,8 +7,7 @@
     open Nessos.Thespian
 
     open Nessos.MBrace.Utils
-    open Nessos.MBrace.Core
-    open Nessos.MBrace.Runtime.Store
+    open Nessos.MBrace.CloudExpr
 
     module Defaults =
 
@@ -158,14 +157,6 @@
             | Shutdown _ -> None
             | SetNodePermissions _ -> None
 
-//        let (|RuntimeProxyReply|_|) (msg : ClientRuntimeProxy) =
-//            match msg with
-//            | GetLastRecordedState rc -> rc :> IReplyChannel |> Some
-//            | RemoteMsg (RuntimeReply rc) -> Some rc
-//            | _ -> None
-//
-//        let tryReply msg reply = match msg with RuntimeProxyReply rc -> rc.ReplyUntyped reply | _ -> ()
-
         let (|ProcessManagerReply|) (msg : ProcessManager) =
             match msg with
             | GetAssemblyLoadInfo (r,_,_) -> r :> IReplyChannel
@@ -194,11 +185,3 @@
             | :? CommunicationException as e -> Some e
             | MessageHandlingExceptionRec e -> (|CommunicationExceptionRec|_|) e
             | _ -> None
-
-//        let nodeUsesCompatibleStore (node : NodeRef) =
-//            try (node <!= GetStoreId) = StoreRegistry.DefaultStoreInfo.Id
-//            with _ -> false
-//
-//        let runtimeUsesCompatibleStore (runtime : ActorRef<ClientRuntimeProxy>) =
-//            try runtime <!= (RemoteMsg << GetStoreId) = StoreRegistry.DefaultStoreInfo.Id
-//            with _ -> false

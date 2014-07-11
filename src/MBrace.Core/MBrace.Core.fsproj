@@ -59,23 +59,21 @@
   </Target>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Store\ICloudStore.fs" />
-    <Compile Include="Store\StoreDefinition.fs" />
-    <Compile Include="Store\Primitives.fs" />
-    <Compile Include="Cloud\CloudExpr.fs" />
-    <Compile Include="Cloud\Exceptions.fs" />
-    <None Include="Cloud\Cloud.fsi" />
-    <Compile Include="Cloud\Cloud.fs" />
-    <Compile Include="Cloud\CloudRef.fsi" />
-    <Compile Include="Cloud\CloudRef.fs" />
-    <Compile Include="Cloud\MutableCloudRef.fsi" />
-    <Compile Include="Cloud\MutableCloudRef.fs" />
-    <Compile Include="Cloud\CloudSeq.fsi" />
-    <Compile Include="Cloud\CloudSeq.fs" />
-    <Compile Include="Cloud\CloudFile.fsi" />
-    <Compile Include="Cloud\CloudFile.fs" />
-    <Compile Include="Cloud\CloudExtensions.fs" />
-    <Compile Include="Cloud\CloudExprExporter.fs" />
+    <Compile Include="Primitives.fs" />
+    <Compile Include="CloudExpr.fs" />
+    <Compile Include="Exceptions.fs" />
+    <Compile Include="Cloud.fsi" />
+    <Compile Include="Cloud.fs" />
+    <Compile Include="CloudRef.fsi" />
+    <Compile Include="CloudRef.fs" />
+    <Compile Include="MutableCloudRef.fsi" />
+    <Compile Include="MutableCloudRef.fs" />
+    <Compile Include="CloudSeq.fsi" />
+    <Compile Include="CloudSeq.fs" />
+    <Compile Include="CloudFile.fsi" />
+    <Compile Include="CloudFile.fs" />
+    <Compile Include="CloudExtensions.fs" />
+    <Compile Include="CloudExprHelpers.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

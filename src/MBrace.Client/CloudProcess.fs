@@ -11,11 +11,11 @@
     open Nessos.Vagrant
 
     open Nessos.MBrace
-    open Nessos.MBrace.Core
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.PrettyPrinters
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
-    open Nessos.MBrace.Runtime.Store
+    open Nessos.MBrace.Runtime.Compiler
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Utils
 

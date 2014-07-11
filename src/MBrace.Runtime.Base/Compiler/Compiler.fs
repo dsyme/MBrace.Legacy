@@ -1,4 +1,4 @@
-namespace Nessos.MBrace.Runtime.Interpreter
+namespace Nessos.MBrace.Runtime.Compiler
 
     open System
     open System.Reflection
@@ -18,7 +18,6 @@ namespace Nessos.MBrace.Runtime.Interpreter
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Reflection
     open Nessos.MBrace.Utils.PrettyPrinters
-//    open Nessos.MBrace.CloudUtils
     open Nessos.MBrace.Runtime
 
     [<AutoOpen>]
@@ -206,8 +205,8 @@ namespace Nessos.MBrace.Runtime.Interpreter
             {
                 CompilerId = VagrantRegistry.Instance.UUId
                 Name = cc.Name
-                ComputationRaw = Serialization.Serialize cc
-                ReturnTypeRaw = Serialization.Serialize cc.ReturnType
+                ComputationRaw = Serialization.Pickle cc
+                ReturnTypeRaw = Serialization.Pickle cc.ReturnType
                 TypeName = Type.prettyPrint cc.ReturnType
                 Dependencies = cc.Dependencies |> List.map VagrantUtils.ComputeAssemblyId
             }
@@ -222,10 +221,10 @@ namespace Nessos.MBrace.Runtime.Interpreter
             Name : string
 
             /// Serialized cloud computation ; to be deserialized after dependency load
-            ComputationRaw : byte []
+            ComputationRaw : Pickle<CloudComputation>
 
             /// Serialized return System.Type for computation
-            ReturnTypeRaw : byte []
+            ReturnTypeRaw : Pickle<Type>
 
             /// Pretty printed type
             TypeName : string
@@ -234,5 +233,5 @@ namespace Nessos.MBrace.Runtime.Interpreter
             Dependencies : AssemblyId list
         }
     with
-        member ci.ReturnType = Serialization.Deserialize<Type> ci.ReturnTypeRaw
-        member ci.Computation = Serialization.Deserialize<CloudComputation> ci.ComputationRaw
+        member ci.ReturnType = Serialization.UnPickle ci.ReturnTypeRaw
+        member ci.Computation = Serialization.UnPickle ci.ComputationRaw

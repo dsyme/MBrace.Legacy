@@ -3,8 +3,6 @@
     open Nessos.Thespian
     open Nessos.Vagrant
 
-    open Nessos.MBrace.Runtime.Store
-
     type StoreLoadResponse =
         | Success
         | MissingAssemblies of AssemblyId list

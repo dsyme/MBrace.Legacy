@@ -1,6 +1,7 @@
 ﻿namespace Nessos.MBrace.Utils
 
     open System
+    open System.Threading.Tasks
     open System.Collections.Generic
     open System.Runtime.Serialization
 
@@ -191,6 +192,12 @@
             member d.TryFind (k : 'K) =
                 let found, v = d.TryGetValue k
                 if found then Some v else None
+
+        type AsyncBuilder with
+            member ab.Bind(t : Task<'T>, cont : 'T -> Async<'S>) = ab.Bind(Async.AwaitTask t, cont)
+            member ab.Bind(t : Task, cont : unit -> Async<'S>) =
+                let t0 = t.ContinueWith ignore
+                ab.Bind(Async.AwaitTask t0, cont)
 
 
         [<AbstractClass>]

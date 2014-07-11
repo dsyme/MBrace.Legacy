@@ -6,9 +6,9 @@ open Nessos.Thespian
 open Nessos.Thespian.Cluster
 
 open Nessos.MBrace
+open Nessos.MBrace.CloudExpr
 open Nessos.MBrace.Runtime
 open Nessos.MBrace.Utils
-open Nessos.MBrace.Core
 
 //type alias to prevent conflicts with non-cluster types
 type private ProcessMonitorDb = CommonTypes.ProcessMonitorDb
@@ -24,11 +24,10 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                       (state: State)
                       (msg: Scheduler) = 
 
-    /// dependency injection! fix this!
-    let coreConfig = Store.StoreRegistry.DefaultStoreInfo.Primitives
+    let primitiveConfig = PrimitiveConfiguration.Init()
 
     let newRef (processId : int) (value : 'T) = 
-        coreConfig.CloudRefProvider.Create<'T>("temp" + (string processId), Guid.NewGuid().ToString(), value)
+        primitiveConfig.CloudRefProvider.Create<'T>("temp" + (string processId), Guid.NewGuid().ToString(), value)
 
     let taskManager = state.TaskManager
     let continuationMap = state.ContinuationMap
@@ -44,7 +43,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
 
                 let package =
                     try
-                        let pkg = Serialization.Deserialize<CloudComputation> exprImage
+                        let pkg = Serialization.UnPickle exprImage
                         Choice1Of2 pkg
 
                     with ex -> Choice2Of2 ex

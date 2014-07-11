@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Runtime.Interpreter
+﻿namespace Nessos.MBrace.Runtime.Compiler
 
     open System
     open System.Collections.Generic
@@ -14,6 +14,7 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Reflection
 
+    [<AutoOpen>]
     module internal CloudUtils =
 
         /// checks if the given type or covariant type arguments are of type Cloud<'T>

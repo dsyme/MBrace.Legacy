@@ -26,19 +26,9 @@
     type StoreActivationInfo =
         {
             Id : StoreId
-            FactoryQualifiedName : string
-            ConnectionString : string
+            StoreDefinitionPickle : Pickle<StoreDefinition>
             Dependencies : AssemblyId list
         }
-
-//    // TODO : add LocalCache and Cached store instances here
-//    [<AutoSerializable(false) ; NoEquality ; NoComparison>]
-//    type LocalCacheInfo =
-//        {
-//            Store : ICloudStore
-//            ActivationInfo : StoreActivationInfo
-//            InMemoryCache : InMemoryCache
-//        }
 
     [<AutoSerializable(false) ; NoEquality ; NoComparison>]
     type StoreInfo = 
@@ -50,7 +40,7 @@
             
             // TODO : make optional
             InMemoryCache : InMemoryCache
-            CacheStore : LocalCache
+            CacheStore : CacheStore
         }
     with
         member __.Id = __.ActivationInfo.Id
@@ -69,7 +59,12 @@
             let factory = Activator.CreateInstance definition.StoreFactoryType :?> ICloudStoreFactory
             factory.CreateStoreFromConnectionString definition.ConnectionString
 
-        static member Activate (definition : StoreDefinition, cacheStore : StoreDefinition, makeDefault) =
+        static let getLocalCache () =
+            match localCacheStore.Value with
+            | None -> invalidOp "No local cache store has been registered."
+            | Some c -> c
+
+        static member Activate (definition : StoreDefinition, makeDefault) =
             let store = activate definition
             let id = { AssemblyQualifiedName = store.GetType().AssemblyQualifiedName ; UUID = computeHash store.UUID }
 
@@ -82,14 +77,13 @@
                 let info = 
                     { 
                         Id = id
-                        FactoryQualifiedName = definition.StoreFactoryQualifiedName
-                        ConnectionString = definition.ConnectionString
+                        StoreDefinitionPickle = Serialization.Pickle definition
                         Dependencies = ids
                     }
 
                 let inmem = new InMemoryCache()
-                let cacheStore = activate cacheStore
-                let localCache = new LocalCache(sprintf "fscache-%d" <| hash id, cacheStore, store)
+                let cacheStore = getLocalCache() |> snd
+                let localCache = new CacheStore(sprintf "fscache-%d" <| hash id, cacheStore, store)
 
                 {
                     Store = store
@@ -97,7 +91,7 @@
                     Dependencies = dependencies
                     ActivationInfo = info
 
-                    InMemoryCache = new InMemoryCache()
+                    InMemoryCache = inmem
                     CacheStore = localCache
                 }
 
@@ -107,46 +101,31 @@
 
         static member ActivateLocalCacheStore(definition : StoreDefinition) =
             lock localCacheStore (fun () ->
-                let cacheStore = 
-            )
+                match localCacheStore.Value with
+                | None -> 
+                    let cacheStore = activate definition
+                    localCacheStore := Some (definition, cacheStore)
 
+                | Some _ -> invalidOp "A local cache store has already been registered.")
 
-
-//        static member internal Register(store : StoreInfo, ?makeDefault) =
-//            registry.[store.ActivationInfo.Id] <- store
-//            if defaultArg makeDefault false then
-//                defaultStore := Some store
-
-        static member TryGetStoreDefinition(info : StoreActivationInfo) =
-            match Type.GetType(info.FactoryQualifiedName, throwOnError = false) with
-            | null -> None
-            | factoryType -> Some <| StoreDefinition.Create(factoryType, info.ConnectionString)
-
-
+        static member LocalCacheDefinition = getLocalCache () |> fst
 
         static member TryActivate(activationInfo : StoreActivationInfo, makeDefault) =
             match StoreRegistry.TryGetStoreInfo activationInfo.Id with
-            | Some info as r -> StoreRegistry.Activate(info, makeDefault = makeDefault) ; r
+            | Some _ as r -> (if makeDefault then defaultStore := r) ; r
             | None ->
-                match StoreRegistry.TryGetStoreProvider activationInfo with
-                | Some p -> StoreRegistry.Activate(p, ?makeDefault = makeDefault) |> Some
-                | None -> None
+                let definition = 
+                    try Some <| Serialization.UnPickle activationInfo.StoreDefinitionPickle
+                    with _ -> None
 
-//        static member ActivateLocalCache(cacheDefinition : StoreDefinition) =
-//            lock localCache (fun () ->
-//                let info = initStore cacheDefinition
-//                let cacheInfo = { ActivationInfo = info.ActivationInfo ; Store = info.Store ; InMemoryCache = new InMemoryCache() }
-//                localCache := Some cacheInfo)
-//
-//        static member LocalCache =
-//            match localCache.Value with
-//            | None -> invalidOp "a local cache has not been registered."
-//            | Some lc -> lc
-//
-//        static member DefaultStoreInfo = 
-//            match defaultStore.Value with
-//            | None -> invalidOp "a default store has not been registered."
-//            | Some ds -> ds
+                match definition with
+                | None -> None
+                | Some d -> Some <| StoreRegistry.Activate(d, makeDefault = makeDefault)
+
+        static member DefaultStoreInfo = 
+            match defaultStore.Value with
+            | None -> invalidOp "a default store has not been registered."
+            | Some ds -> ds
 
         static member TryGetStoreInfo id = registry.TryFind id
 

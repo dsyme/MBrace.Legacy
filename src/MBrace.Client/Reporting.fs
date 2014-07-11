@@ -5,9 +5,9 @@
     open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.PrettyPrinters
-    open Nessos.MBrace.Core
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
+    open Nessos.MBrace.Runtime.Compiler
 
     module Logs =
 

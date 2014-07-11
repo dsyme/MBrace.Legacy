@@ -40,11 +40,11 @@
                 info.AddValue("container", container)
                 info.AddValue("storeId", storeId, typeof<StoreId>)
     
-    and CloudFileProvider private (storeId : StoreId, store : ICloudStore, cache : LocalCache) =
+    and CloudFileProvider private (storeId : StoreId, store : ICloudStore, cache : CacheStore) =
 
         static let providers = new System.Collections.Concurrent.ConcurrentDictionary<StoreId, CloudFileProvider> ()
 
-        static member internal Create (storeId : StoreId, store : ICloudStore, cache : LocalCache) =
+        static member internal Create (storeId : StoreId, store : ICloudStore, cache : CacheStore) =
             providers.GetOrAdd(storeId, fun id -> new CloudFileProvider(id, store, cache))
 
         static member internal GetById (storeId : StoreId) =

@@ -6,11 +6,6 @@
     open System.Diagnostics
     open System.Collections.Generic
 
-    open Nessos.Thespian
-    open Nessos.Thespian.Agents
-    open Nessos.Thespian.ImemDb
-
-    open Nessos.MBrace.Runtime
     open Nessos.MBrace.Utils
 
     type private PerfCounter = System.Diagnostics.PerformanceCounter

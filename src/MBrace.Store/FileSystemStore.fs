@@ -5,6 +5,7 @@
     open System.Security.AccessControl
     open System.Runtime.CompilerServices
 
+    open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
 
     type FileSystemStore(path : string, ?name) =

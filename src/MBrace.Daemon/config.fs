@@ -20,15 +20,13 @@
         open Nessos.Thespian.Remote.PipeProtocol
         open Nessos.Thespian.Serialization
 
-        open Nessos.MBrace.Core
         open Nessos.MBrace.Utils
         open Nessos.MBrace.Utils.Retry
         open Nessos.MBrace.Utils.String
+        open Nessos.MBrace.Store
         open Nessos.MBrace.Runtime
         open Nessos.MBrace.Runtime.Logging
-        open Nessos.MBrace.Runtime.Store
         open Nessos.MBrace.Runtime.Daemon.Configuration
-        open Nessos.MBrace.Client
 
         // if anyone can suggest a less hacky way, be my guest..
         // a process spawned from command line is UserInteractive but has null window handle
@@ -138,7 +136,7 @@
                     let vagrant = new Vagrant(cacheDirectory = cacheDir)
                     VagrantRegistry.Register(vagrant)
 
-            do create "StoreCache" (fun endpoint -> StoreRegistry.ActivateLocalCache(StoreProvider.FileSystem(endpoint)))
+            do create "StoreCache" (fun endpoint -> StoreRegistry.ActivateLocalCacheStore(StoreDefinition.FileSystem(endpoint)))
 
         let registerProcessDomainExecutable (path : string) =
             let path =
@@ -194,7 +192,7 @@
 
         let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =
             try
-                let provider = StoreProvider.Parse(storeProvider, storeEndpoint)
+                let provider = StoreDefinition.Parse(storeProvider, storeEndpoint)
                 StoreRegistry.Activate(provider, makeDefault = true)
             with e ->
                 exiter.Exit(sprintf "Error connecting to store: %s" e.Message, 2)

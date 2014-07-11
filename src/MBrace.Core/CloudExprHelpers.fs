@@ -2,5 +2,5 @@
 
     open Nessos.MBrace
 
-    type CloudExprHelper =
+    type CloudExprHelpers =
         static member Unwrap(cloud : Cloud<'T>) = cloud.CloudExpr

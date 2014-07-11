@@ -78,10 +78,10 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
         let processExecutable = IoC.Resolve<string> "MBraceProcessExe"
         let debugMode = defaultArg (IoC.TryResolve<bool> "debugMode") false
 
-        let storeInfo = Store.StoreRegistry.DefaultStoreInfo.ActivationInfo
+        let storeInfo = StoreRegistry.DefaultStoreInfo.ActivationInfo
         // TODO : currently passing only connection string since local cache is FileSystem
         // should probably pass entire provider info to arguments
-        let cacheStoreEndpoint = Store.StoreRegistry.LocalCache.ActivationInfo.ConnectionString
+        let cacheStoreEndpoint = StoreRegistry.LocalCacheDefinition.ConnectionString
 
         // protocol specific! should be changed
         let primaryAddr = IoC.Resolve<Address> "primaryAddress"

@@ -13,7 +13,6 @@ open Nessos.MBrace
 open Nessos.MBrace.Utils
 open Nessos.MBrace.Runtime
 open Nessos.MBrace.Runtime.Logging
-open Nessos.MBrace.Runtime.Store
 
 // updated state event
 let internal StateChangeEvent = new Event<NodeState>()

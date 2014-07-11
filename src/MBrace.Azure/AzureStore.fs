@@ -2,9 +2,9 @@
 
     open System
     open System.IO
-    open Nessos.MBrace.Runtime.Store
-    open Nessos.MBrace.Azure.Common
 
+    open Nessos.MBrace.Store
+    open Nessos.MBrace.Azure.Common
 
     type AzureStore (conn) =
         
@@ -98,6 +98,6 @@
 
     [<AutoOpen>]
     module StoreProvider =
-        type Nessos.MBrace.Client.StoreProvider with
+        type StoreDefinition with
             static member AzureStore (connectionString : string) =
-                Nessos.MBrace.Client.StoreProvider.Define<AzureStoreFactory>(connectionString)
+                StoreDefinition.Create<AzureStoreFactory>(connectionString)

@@ -59,7 +59,7 @@
                 info.AddValue("storeId",storeId, typeof<StoreId>)
     
 
-    and CloudRefProvider private (storeId : StoreId, store : ICloudStore, inmem : InMemoryCache, fscache : LocalCache) =
+    and CloudRefProvider private (storeId : StoreId, store : ICloudStore, inmem : InMemoryCache, fscache : CacheStore) =
 
         static let extension = "ref"
         static let postfix s = sprintf' "%s.%s" s extension
@@ -108,7 +108,7 @@
 
             existential.Apply ctor
 
-        static member internal Create(storeId : StoreId, store : ICloudStore, inmem : InMemoryCache, fscache : LocalCache) =
+        static member internal Create(storeId : StoreId, store : ICloudStore, inmem : InMemoryCache, fscache : CacheStore) =
             providers.GetOrAdd(storeId, fun id -> new CloudRefProvider(storeId, store, inmem, fscache))
 
         static member internal GetById(storeId : StoreId) =

@@ -2,12 +2,13 @@
 
     open System
     open System.IO
-    open Nessos.MBrace.Azure
-    open Nessos.MBrace.Azure.Common
-    open Nessos.MBrace.Runtime.Store
+
     open Microsoft.WindowsAzure.Storage
     open Microsoft.WindowsAzure.Storage.Blob
     open Microsoft.WindowsAzure.Storage.Table
+
+    open Nessos.MBrace.Store
+    open Nessos.MBrace.Azure.Common
 
     type MutableStore (conn) =
 

@@ -131,6 +131,11 @@
       <Project>{c70ce00e-6850-4c14-8827-cf4c4f103263}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\MBrace.Store\MBrace.Store.fsproj">
+      <Name>MBrace.Store</Name>
+      <Project>{5ed53545-4f89-4a52-9400-dc0bd9e7e864}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\MBrace.Utils\MBrace.Utils.fsproj">
       <Name>MBrace.Utils</Name>
       <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>

@@ -15,8 +15,9 @@
         open Nessos.Vagrant
 
         open Nessos.MBrace
-        open Nessos.MBrace.Core
+        open Nessos.MBrace.CloudExpr
         open Nessos.MBrace.Runtime
+        open Nessos.MBrace.Runtime.Compiler
         open Nessos.MBrace.Utils
 
         type ProcessDomainId = Guid
@@ -26,9 +27,9 @@
         type JobId = System.Guid
         type Dump = Dump of CloudExpr list
         type ProcessBody = ProcessBody of (ResultType * ThunksIdsStack * ICloudRef<FunctionInfo list> * Dump)
-        type ExprImage = byte[] //The binary image of an Expr
-        type TaskId = Nessos.MBrace.Core.TaskId
-        type ProcessId = Nessos.MBrace.Core.ProcessId
+        type ExprImage = Pickle<CloudComputation>
+        type TaskId = Nessos.MBrace.CloudExpr.TaskId
+        type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
         type TaskHeader = ProcessId * TaskId
 
         type TaskResult = TaskSuccess of ProcessBody | TaskFailure of exn
@@ -39,7 +40,7 @@
                 ClientId: Guid
                 RequestId: Guid
                 Name: string
-                Type: byte[]
+                Type: Pickle<Type>
                 TypeName: string
                 Initialized: DateTime 
                 Created: DateTime option
@@ -132,7 +133,7 @@
             ClientId: Guid
             RequestId: Guid
             Name: string
-            Type: byte[]
+            Type: Pickle<Type>
             TypeName: string
             Dependencies : AssemblyId list
         }

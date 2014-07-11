@@ -72,6 +72,7 @@
     <Compile Include="Serialization.fs" />
     <Compile Include="Vagrant.fs" />
     <Compile Include="Store\StoreUtils.fs" />
+    <Compile Include="Store\CacheStore.fs" />
     <Compile Include="Store\LogStore.fs" />
     <Compile Include="Store\StoreRegistry.fs" />
     <Compile Include="Primitives\CloudRef.fs" />
@@ -79,13 +80,14 @@
     <Compile Include="Primitives\CloudSeq.fs" />
     <Compile Include="Primitives\CloudFile.fs" />
     <Compile Include="Primitives\PrimitiveConfiguration.fs" />
+    <Compile Include="Compiler\Metadata.fs" />
+    <Compile Include="Compiler\CloudComputation.fs" />
+    <Compile Include="Compiler\CloudUtils.fs" />
+    <Compile Include="Compiler\Compiler.fs" />
     <Compile Include="Interpreter\InterpreterUtils.fs" />
     <Compile Include="Interpreter\Types.fs" />
     <Compile Include="Interpreter\DebugInfo.fs" />
     <Compile Include="Interpreter\Interpreter.fs" />
-    <Compile Include="Compiler\CloudComputation.fs" />
-    <Compile Include="Compiler\CloudUtils.fs" />
-    <Compile Include="Compiler\Compiler.fs" />
     <Compile Include="RuntimeBase\SystemLog.fs" />
     <Compile Include="RuntimeBase\CloudProcessLog.fs" />
     <Compile Include="RuntimeBase\PerformanceMonitor.fs" />
