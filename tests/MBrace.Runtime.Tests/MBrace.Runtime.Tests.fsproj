@@ -70,6 +70,7 @@
     <Compile Include="CloudTests.fs" />
     <Compile Include="LocalCloudTests.fs" />
     <Compile Include="ClusterCloudTests.fs" />
+    <Compile Include="FsiTests.fs" />
     <None Include="connections.config" />
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +111,10 @@
     </ProjectReference>
     <Reference Include="FsCheck">
       <HintPath>..\..\packages\FsCheck.0.9.4.0\lib\net40-Client\FsCheck.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Compiler.Service">
+      <HintPath>..\..\packages\FSharp.Compiler.Service.0.0.58\lib\net45\FSharp.Compiler.Service.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsPickler">

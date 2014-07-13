@@ -1,4 +1,4 @@
-﻿namespace MBrace.Shell.Tests
+﻿namespace Nessos.MBrace.Runtime.Tests
 
     open System
     open System.Reflection
@@ -94,6 +94,7 @@
                     "Vagrant.dll"
                     "MBrace.Core.dll"
                     "MBrace.Lib.dll"
+                    "MBrace.Store.dll"
                     "MBrace.Runtime.Base.dll"
                     "MBrace.Client.dll"
                 ]
@@ -101,7 +102,7 @@
             fsi.EvalInteraction "open Nessos.MBrace"
             fsi.EvalInteraction "open Nessos.MBrace.Client"
             fsi.EvalInteraction <| """MBraceSettings.MBracedExecutablePath <- "mbraced.exe" """
-            fsi.EvalInteraction <| "let runtime = MBrace.InitLocal(4)" 
+            fsi.EvalInteraction <| "let runtime = MBrace.InitLocal(3)" 
 
         [<TestFixtureTearDown>]
         let stopFsiSession () =
@@ -132,8 +133,8 @@
         let ``Mutable ref captured`` () =
             let fsi = FsiSession.Value
             "let x = ref 0" |> fsi.EvalInteraction
-            "for i = 1 to 5 do x := runtime.Run <@ cloud { return !x + 1 } @>" |> fsi.EvalInteraction
-            "x.Value" |> fsi.EvalExpression |> shouldEqual 5
+            "for i in 1 .. 3 do x := runtime.Run <@ cloud { return !x + 1 } @>" |> fsi.EvalInteraction
+            "x.Value" |> fsi.EvalExpression |> shouldEqual 3
 
         [<Test;>]
         let ``Reference to external library`` () =
