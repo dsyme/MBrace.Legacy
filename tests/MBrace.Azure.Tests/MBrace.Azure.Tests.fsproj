@@ -5,13 +5,13 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>cd5be4e0-3d03-4eb1-886c-942f3a4b5396</ProjectGuid>
+    <ProjectGuid>29f2a155-49fa-4891-9dd9-8276a2d77512</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>MBrace.Store.Tests</RootNamespace>
-    <AssemblyName>MBrace.Store.Tests</AssemblyName>
+    <RootNamespace>MBrace.Azure.Tests</RootNamespace>
+    <AssemblyName>MBrace.Azure.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
-    <Name>MBrace.Store.Tests</Name>
+    <Name>MBrace.Azure.Tests</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -20,21 +20,19 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>../../bin</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>bin\Debug\MBrace.Azure.Tests.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>../../bin</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>bin\Release\MBrace.Azure.Tests.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -60,23 +58,14 @@
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
   </Target>
   <ItemGroup>
-    <Compile Include="StoreTests.fs" />
-    <None Include="packages.config" />
-    <None Include="app.config" />
-    <None Include="connections.config" />
+    <Compile Include="Tests.fs" />
+    <Content Include="packages.config" />
+    <Content Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FsPickler">
-      <HintPath>..\..\packages\FsPickler.0.9.6\lib\net45\FsPickler.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FsUnit.NUnit">
-      <HintPath>..\..\packages\FsUnit.1.3.0.1\Lib\Net40\FsUnit.NUnit.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
@@ -85,18 +74,19 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\..\src\MBrace.Azure\MBrace.Azure.fsproj">
+      <Name>MBrace.Azure</Name>
+      <Project>{1ff00f82-1102-44c4-b73f-39aee6bc1635}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\MBrace.Store\MBrace.Store.fsproj">
       <Name>MBrace.Store</Name>
       <Project>{5ed53545-4f89-4a52-9400-dc0bd9e7e864}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\MBrace.Utils\MBrace.Utils.fsproj">
-      <Name>MBrace.Utils</Name>
-      <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
+    <ProjectReference Include="..\MBrace.Store.Tests\MBrace.Store.Tests.fsproj">
+      <Name>MBrace.Store.Tests</Name>
+      <Project>{cd5be4e0-3d03-4eb1-886c-942f3a4b5396}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
