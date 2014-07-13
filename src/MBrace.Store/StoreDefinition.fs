@@ -33,7 +33,7 @@
             match name with
             | "LocalFS" -> StoreDefinition.LocalFS
             | "FileSystem" -> StoreDefinition.FileSystem connectionString
-            | "SqlStore" -> StoreDefinition.SqlServer connectionString
+            | "SqlServerStore" -> StoreDefinition.SqlServer connectionString
             | _ -> StoreDefinition.TryDefine(name, connectionString, throwOnError = true) |> Option.get
 
 

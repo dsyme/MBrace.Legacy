@@ -56,7 +56,7 @@ namespace Nessos.MBrace.Client
             let logger = Logger.createConsoleLogger()
 
             // init runtime configuration
-            SystemConfiguration.InitializeConfiguration(logger, ?mbracedPath = mbracedExe, 
+            SystemConfiguration.InitializeConfiguration(logger, ?mbraceDaemonPath = mbracedExe, 
                                 ?workingDirectory = workingDirectory, useVagrantPickler = true, cleanupWorkingDirectory = false)
 
             // activate store provider

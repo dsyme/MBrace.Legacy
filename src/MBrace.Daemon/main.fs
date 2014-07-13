@@ -47,10 +47,7 @@
             let detach = results.Contains <@ Detach @>
             let spawnWindow = results.Contains <@ Spawn_Window @>
             let useTempWD = results.Contains <@ Use_Temp_WorkDir @>
-
-            let storeEndpoint = results.GetResult (<@ Store_EndPoint @>, null)
-            let storeProvider = results.GetResult (<@ Store_Provider @>, null)
-            let mbraceProc = results.GetResult <@ MBrace_ProcessDomain_Executable @>
+            let mbraceWorkerExe = results.TryPostProcessResult(<@ MBrace_ProcessDomain_Executable @>, parseWorkerExe)
 
             let workerPorts =
                 // drop *all* app.config settings if either appears as command line argument
@@ -102,8 +99,8 @@
             IoC.RegisterValue(debugMode, "debugMode")
 
             // initialize base runtime configuration
-            SystemConfiguration.InitializeConfiguration(?workingDirectory = workingDirectory, useVagrantPickler = false)
-            do lockWorkingDir SystemConfiguration.WorkingDirectory
+            SystemConfiguration.InitializeConfiguration(?workingDirectory = workingDirectory, ?mbraceWorkerPath = mbraceWorkerExe, useVagrantPickler = false)
+            SystemConfiguration.MBraceWorkerExecutablePath |> ignore // force evaluation to ensure that is found
 
             // init and register logger
             let logger = initLogger SystemConfiguration.WorkingDirectory logFiles logLevel
@@ -111,9 +108,6 @@
 
             // Register Exiter
             IoC.RegisterValue<IExiter>(exiter)
-
-            // Register Store ; TODO : remove
-            let info = registerStore storeProvider storeEndpoint SystemConfiguration.WorkingDirectory
 
             // Dependency injection : remove
             IoC.RegisterValue(evalPorts workerPorts, "mbrace.process.portPool")
@@ -129,7 +123,6 @@
             logger.Logf Info "Process Id = %d" selfProc.Id
             logger.Logf Info "Default Serializer = %s" Serialization.SerializerRegistry.DefaultName
             logger.Logf Info "Working Directory = %s" SystemConfiguration.WorkingDirectory
-            logger.Logf Info "StoreProvider = %s" info.Store.Name
 
             let perfMon = perfMonTask.Result
             IoC.RegisterValue perfMon

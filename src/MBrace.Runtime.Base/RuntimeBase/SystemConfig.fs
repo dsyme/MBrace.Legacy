@@ -35,6 +35,7 @@
 
         let initRuntimeState cleanup useVagrantPickler 
                                 (mbracedPath : string option) 
+                                (mbraceWorkerPath : string option)
                                 (workingDirectory : string option) 
                                 (logger : ISystemLogger option) =
 
@@ -45,20 +46,28 @@
                 match mbracedPath with
                 | None ->
                     let thisAssembly = System.Reflection.Assembly.GetExecutingAssembly()
-                    let candidate = Path.Combine(Path.GetDirectoryName thisAssembly.Location, "mbraced.exe")
+                    let candidate = Path.Combine(Path.GetDirectoryName thisAssembly.Location, Defaults.MBraceDaemonExe)
                     if File.Exists candidate then Some candidate
                     else None
                 | Some path when File.Exists path -> Some <| Path.GetFullPath path
-                | Some path -> mfailwithf "Invalid configuration: '%s' does not exist." path
+                | Some path -> 
+                    let msg = sprintf "invalid mbrace daemon location '%s'." path
+                    raise <| new FileNotFoundException(msg)
 
             let mbraceWorkerPath =
-                match mbracedPath with
-                | None -> None
-                | Some d ->
-                    let candidate = Path.Combine(Path.GetDirectoryName d, "mbrace.worker.exe")
+                match mbraceWorkerPath, mbracedPath with
+                | None, Some d ->
+                    let candidate = Path.Combine(Path.GetDirectoryName d, Defaults.MBraceWorkerExe)
                     if File.Exists candidate then Some candidate
                     else
                         None
+
+                | None, None -> None
+                | Some p, _ when File.Exists p -> Some <| Path.GetFullPath p
+                | Some p, _ ->
+                    let msg = sprintf "invalid mbrace worker location '%s'." p
+                    raise <| new FileNotFoundException(msg)
+
             
             let workingDirectory =
                 match workingDirectory with
@@ -121,14 +130,17 @@
             | None -> invalidOp "Runtime configuration has not been initialized."
             | Some c -> c
 
-        static member InitializeConfiguration(?logger : ISystemLogger, ?mbracedPath : string, ?workingDirectory : string, 
-                                                    ?cleanupWorkingDirectory : bool, ?useVagrantPickler) =
+        static member InitializeConfiguration(?logger : ISystemLogger, ?mbraceDaemonPath : string, ?mbraceWorkerPath : string, 
+                                                ?workingDirectory : string, ?cleanupWorkingDirectory : bool, ?useVagrantPickler) =
 
             lock container (fun () ->
                 if container.Value.IsSome then
                     invalidOp "Runtime configuration has already been initialized."
 
-                let config = initRuntimeState cleanupWorkingDirectory useVagrantPickler mbracedPath workingDirectory logger
+                let config = 
+                    initRuntimeState cleanupWorkingDirectory useVagrantPickler 
+                            mbraceDaemonPath mbraceWorkerPath workingDirectory logger
+
                 container.Set <| Some config)
 
         static member WorkingDirectory = getConfig().WorkingDirectory
@@ -158,7 +170,7 @@
                     getConfig() |> ignore // force exception if not initialized
                     container.Swap(fun c -> Some { c.Value with MBraceDaemonExecutablePath = Some p })
                 else
-                    mfailwithf "Invalid path '%s'." p
+                    mfailwithf "Invalid path to mbrace daemon '%s'." p
 
         static member MBraceWorkerExecutablePath
             with get () = 
@@ -172,4 +184,4 @@
                     getConfig() |> ignore // force exception if not initialized
                     container.Swap(fun c -> Some { c.Value with MBraceWorkerExecutablePath = Some p })
                 else
-                    mfailwithf "Invalid path '%s'." p
+                    mfailwithf "Invalid path to mbrace.worker '%s'." p

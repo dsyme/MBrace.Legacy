@@ -24,9 +24,7 @@
             | [<NoAppSettings>] Detach
             | [<NoAppSettings>] Spawn_Window
             | [<Mandatory>] Permissions of int
-            | Store_Provider of string
-            | Store_EndPoint of string
-            | [<NoCommandLine>][<Mandatory>] MBrace_ProcessDomain_Executable of string
+            | [<NoCommandLine>] MBrace_ProcessDomain_Executable of string
         with
             interface IArgParserTemplate with
                 member s.Usage =
@@ -46,8 +44,6 @@
                     | Parent_Receiver_Id _ -> "specify parent receiver id."
                     | Debug -> "enables debug mode."
                     | Permissions _ -> "override the default runtime permissions (All)."
-                    | Store_EndPoint _ -> "the endpoint (connection string/path) for the store."
-                    | Store_Provider _ -> "the name of the storage provider or assembly qualified name for a custom store."
                     | MBrace_ProcessDomain_Executable _ -> "sets the location of the mbraces.process executable."
 
 

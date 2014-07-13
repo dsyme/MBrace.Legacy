@@ -126,6 +126,8 @@
             | None -> invalidOp "a default store has not been registered."
             | Some ds -> ds
 
+        static member TryGetDefaultStoreInfo () = defaultStore.Value
+
         static member TryGetStoreInfo id = registry.TryFind id
 
         static member GetStoreInfo id =

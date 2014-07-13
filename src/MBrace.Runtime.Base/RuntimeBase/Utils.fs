@@ -17,6 +17,8 @@
 
         let MBracedIpcServerName = "ipcNodeInfo"
         let MBracedIpcSpawningReceiverName (childPid : int) = sprintf' "spawningReceiver-%d" childPid
+        let MBraceDaemonExe = "mbraced.exe"
+        let MBraceWorkerExe = "mbrace.worker.exe"
 
 
     [<AutoOpen>]

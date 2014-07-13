@@ -145,6 +145,16 @@
                 failwithf "invalid port range %d..%d." lower upper
             else Range(lower, upper)
 
+        let parseWorkerExe (path : string) =
+            let path = 
+                if Path.IsPathRooted path then path
+                else Path.Combine(Path.GetDirectoryName selfExe, path)
+
+            if File.Exists path then path
+            else
+                let msg = sprintf "invalied mbrace worker executable '%s'." path
+                raise <| new FileNotFoundException(path)
+
         let parseSingularWorkerPort = parsePort >> Singular
 
         let evalPorts (ports : WorkerPorts list) =

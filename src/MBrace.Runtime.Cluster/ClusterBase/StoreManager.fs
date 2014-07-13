@@ -12,9 +12,9 @@
         match msg with
         | ActivateStore(RR ctx reply, info) ->
             try
-                if StoreRegistry.DefaultStoreInfo.Id = info.Id then
-                    reply <| Value StoreLoadResponse.Success
-                else
+                match StoreRegistry.TryGetDefaultStoreInfo() with
+                | Some defStore when defStore.Id = info.Id -> reply <| Value StoreLoadResponse.Success
+                | _ ->
                     let missingDependencies =
                         VagrantRegistry.Instance.GetAssemblyLoadInfo(info.Dependencies, loadPolicy = AssemblyLoadPolicy.ResolveAll)
                         |> List.choose (function Loaded _ -> None | info -> Some info.Id)
@@ -24,7 +24,7 @@
                     else
                         match StoreRegistry.TryActivate(info, makeDefault = true) with
                         | Some _ -> 
-                            ctx.LogInfo <| sprintf "switching to store '%s'." info.Id.AssemblyQualifiedName
+                            ctx.LogInfo <| sprintf "activated store '%s'." info.Id.AssemblyQualifiedName
                             reply <| Value StoreLoadResponse.Success
 
                         | None -> failwith "could not activate store '%s'." info.Id.AssemblyQualifiedName
