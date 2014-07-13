@@ -14,12 +14,11 @@
 
     type Serialization private () =
 
-        static let lockObj = obj()
-        static let mutable picklerSingleton = None
+        static let instance = ref None
 
-        static member Register(pickler : FsPicklerBase) =
-            lock lockObj (fun () ->
-                if picklerSingleton.IsSome then
+        static member internal Register(pickler : FsPicklerBase) =
+            lock instance (fun () ->
+                if instance.Value.IsSome then
                     invalidOp "An instance of FsPickler has been registered."
 
                 let actorSerializer = 
@@ -28,10 +27,10 @@
                 SerializerRegistry.Register(actorSerializer)
                 SerializerRegistry.SetDefault actorSerializer.Name
 
-                picklerSingleton <- Some pickler)
+                instance := Some pickler)
 
         static member DefaultPickler = 
-            match picklerSingleton with
+            match instance.Value with
             | None -> invalidOp "No instance of FsPickler has been registered."
             | Some p -> p
 

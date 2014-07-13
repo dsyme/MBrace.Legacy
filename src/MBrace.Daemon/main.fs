@@ -30,9 +30,6 @@
             // init performance monitor
             let perfMonTask = Async.StartAsTask(registerPerfMonitorAsync())
             
-            // register serialization
-            do registerSerializers ()
-            
             let results = mbracedParser.Parse(errorHandler = plugExiter exiter)
 
             if results.Contains <@ Version @> then
@@ -85,8 +82,8 @@
 
             let workingDirectory =
                 match useTempWD, workingDirectory with
-                | true, _ | _, Some "temp" -> getTempWD ()
-                | false, Some path -> Path.GetFullPath path
+                | true, _ | _, Some "temp" -> None
+                | false, Some path -> Some <| Path.GetFullPath path
                 | false, None -> results.Raise("missing '--working-directory' parameter.", errorCode = 2)
 
             // received detach request
@@ -104,22 +101,21 @@
             // TODO : remove?
             IoC.RegisterValue(debugMode, "debugMode")
 
-            // set working directory
-            do registerWorkingDirectory useTempWD workingDirectory
+            // initialize base runtime configuration
+            SystemConfiguration.InitializeConfiguration(?workingDirectory = workingDirectory, useVagrantPickler = false)
+            do lockWorkingDir SystemConfiguration.WorkingDirectory
 
-            // Register logging
-            let logger = registerLogger workingDirectory logFiles logLevel
-
-            // register mbrace.process executable
-            registerProcessDomainExecutable mbraceProc
+            // init and register logger
+            let logger = initLogger SystemConfiguration.WorkingDirectory logFiles logLevel
+            SystemConfiguration.Logger <- logger
 
             // Register Exiter
             IoC.RegisterValue<IExiter>(exiter)
 
-            // Register Store
-            let info = registerStore storeProvider storeEndpoint workingDirectory
+            // Register Store ; TODO : remove
+            let info = registerStore storeProvider storeEndpoint SystemConfiguration.WorkingDirectory
 
-            //TODO!!!! THIS IS WRONG
+            // Dependency injection : remove
             IoC.RegisterValue(evalPorts workerPorts, "mbrace.process.portPool")
 
             // resolve primary address
@@ -132,7 +128,7 @@
             logger.Logf Info "{m}brace daemon version %O" selfInfo.Version
             logger.Logf Info "Process Id = %d" selfProc.Id
             logger.Logf Info "Default Serializer = %s" Serialization.SerializerRegistry.DefaultName
-            logger.Logf Info "Working Directory = %s" workingDirectory
+            logger.Logf Info "Working Directory = %s" SystemConfiguration.WorkingDirectory
             logger.Logf Info "StoreProvider = %s" info.Store.Name
 
             let perfMon = perfMonTask.Result

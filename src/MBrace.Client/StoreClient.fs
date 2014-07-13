@@ -23,7 +23,7 @@
         /// Gets the default StoreClient that corresponds to the current StoreProvider.
         static member Default 
             with get () = 
-                let info = MBraceSettings.DefaultStoreInfo
+                let info = StoreRegistry.DefaultStoreInfo
                 match registry.Value.TryFind info.ActivationInfo.Id with
                 | Some sc -> sc
                 | None ->

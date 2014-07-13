@@ -28,9 +28,6 @@
         open Nessos.MBrace.Runtime.Logging
         open Nessos.MBrace.Runtime.Daemon.Configuration
 
-        // if anyone can suggest a less hacky way, be my guest..
-        // a process spawned from command line is UserInteractive but has null window handle
-        // a process spawned in an autonomous window is UserInteractive and has a non-trivial window handle
         let isWindowed = Environment.UserInteractive && selfProc.MainWindowHandle <> 0n
 
         let thisAssembly = System.Reflection.Assembly.GetExecutingAssembly()
@@ -48,11 +45,16 @@
 
         let flushConsole () = Console.Error.Flush() ; Console.Out.Flush()
 
-        let registerLogger workingDirectory logFiles logLevel =
+        let initLogger workingDirectory logFiles logLevel =
             // gather constituent loggers
             let loggers =
 
                 let createFileLogger (file: string) =
+                    let file =
+                        if Path.IsPathRooted file then file
+                        else
+                            Path.Combine(workingDirectory, file)
+
                     let logger = new FileLogger(file, showDate = true, append = true)
                     logger.LogInfo "M-BRACE DAEMON STARTUP"
                     logger :> ISystemLogger
@@ -80,77 +82,12 @@
                 |> Logger.maxLogLevel logLevel
                 |> Logger.wrapAsync
 
-            // Dependency injection : TODO remove
-            IoC.RegisterValue<ISystemLogger>(logger)
-
-            ThespianLogger.Register(logger)
-
             logger
-
-
-        let parseMBraceProc (id : int) =
-            let proc = Process.GetProcessById id
-            if proc.ProcessName = selfProc.ProcessName then proc
-            else failwith "process id is not of mbraced."
 
         let lockWorkingDir (path : string) =
             match ThreadSafe.tryClaimGlobalMutex <| "mbraced:" + path with
             | None -> exiter.Exit(sprintf "ERROR: working directory '%s' is in use." path, 10)
             | Some mtx -> exiter.ExitEvent.Add(fun _ -> mtx.Close())
-
-
-        let getTempWD () = Path.Combine(Path.GetTempPath(), sprintf "mbraced-%d" selfProc.Id)
-
-        // "None" denotes using a disposable tmp folder
-        let registerWorkingDirectory cleanup (wd : string) =
-            try
-                retry (RetryPolicy.Retry(3, 0.5<sec>)) (fun () ->
-                    if cleanup then
-                        if Directory.Exists wd then Directory.Delete(wd, true)
-                        Directory.CreateDirectory wd |> ignore
-
-                    elif not <| Directory.Exists wd then
-                            Directory.CreateDirectory wd |> ignore
-
-                    Directory.SetCurrentDirectory wd)
-
-                do lockWorkingDir wd
-
-            with e ->
-                exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s' : %A" wd e.Message, 1)
-
-            // populate subdirectories
-            let create subdir registrar =
-                let path = Path.Combine(wd, subdir)
-                try
-                    if not <| Directory.Exists path then
-                        Directory.CreateDirectory path |> ignore
-
-                    do registrar path
-                with e ->
-                    exiter.Exit(sprintf "ERROR: cannot initialize working directory '%s': %A" path e.Message)
-
-            // temporary solution; revise later
-            do create "AssemblyCache" <| 
-                fun cacheDir -> 
-                    let vagrant = new Vagrant(cacheDirectory = cacheDir)
-                    VagrantRegistry.Register(vagrant)
-
-            do create "StoreCache" (fun endpoint -> StoreRegistry.ActivateLocalCacheStore(StoreDefinition.FileSystem(endpoint)))
-
-        let registerProcessDomainExecutable (path : string) =
-            let path =
-                if File.Exists path then path
-                else
-                    // do some guesswork
-                    let binFolder = Assembly.GetExecutingAssembly().Location |> Path.GetDirectoryName
-                    let file = Path.Combine(binFolder, path)
-
-                    if File.Exists file then file
-                    else
-                        exiter.Exit("ERROR: cannot locate mbrace.worker.exe.", 11)
-                
-            IoC.RegisterValue(path, "MBraceProcessExe")
 
         let registerFancyConsoleEvent debug (address : Address) =
             Nessos.MBrace.Runtime.Definitions.MBraceNode.stateChangeObservable.Subscribe(
@@ -178,9 +115,6 @@
                         if isWindowed then
                             Console.BackgroundColor <- consoleBgColor            
             ) |> ignore
-
-        let registerSerializers () =
-            Nessos.MBrace.Runtime.Serialization.Register(FsPickler.CreateBinary())
 
 
         let registerPerfMonitorAsync () = async {
@@ -236,12 +170,6 @@
                         yield ", "
                         yield! printPort p
             } |> String.build
-
-//        let parsePermissions (n : int) =
-//            let p = enum<Permissions> n
-//            if p < Permissions.None || p > Permissions.All then
-//                failwithf "invalid permissions %d" n
-//            else p
 
         let isLocalIpAddress =
             let localIPs =

@@ -75,13 +75,9 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
 
         //create os process of cloud process
         let ospid = System.Diagnostics.Process.GetCurrentProcess().Id
-        let processExecutable = IoC.Resolve<string> "MBraceProcessExe"
         let debugMode = defaultArg (IoC.TryResolve<bool> "debugMode") false
 
         let storeInfo = StoreRegistry.DefaultStoreInfo.ActivationInfo
-        // TODO : currently passing only connection string since local cache is FileSystem
-        // should probably pass entire provider info to arguments
-        let cacheStoreEndpoint = StoreRegistry.LocalCacheDefinition.ConnectionString
 
         // protocol specific! should be changed
         let primaryAddr = IoC.Resolve<Address> "primaryAddress"
@@ -90,7 +86,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
             [
                 yield Parent_Pid ospid
                 yield Process_Domain_Id processDomainId
-                yield Assembly_Cache VagrantRegistry.Instance.CachePath
+                yield Working_Directory SystemConfiguration.WorkingDirectory
                 yield Parent_Address <| primaryAddr.ToString ()
                 yield Store_Activator storeInfo
 
@@ -100,15 +96,10 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                     yield HostName TcpListenerPool.DefaultHostname
                     yield Port selectedPort
                 | None -> ()
-
-                yield Cache_Store_Endpoint cacheStoreEndpoint
             ]
 
-        let command, args =
-            if runsOnMono then
-                "mono", sprintf' "%s %s" processExecutable <| workerConfig.PrintCommandLineFlat args
-            else
-                processExecutable, workerConfig.PrintCommandLineFlat args
+        let command = SystemConfiguration.MBraceWorkerExecutablePath
+        let args = workerConfig.PrintCommandLineFlat args
 
         use nodeManagerReceiver = Receiver.create()
                                   |> Receiver.rename "activatorReceiver"

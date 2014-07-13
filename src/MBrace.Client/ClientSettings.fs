@@ -4,8 +4,6 @@ namespace Nessos.MBrace.Client
     open System.Reflection
     open System.IO
 
-    open Nessos.Thespian.ConcurrencyTools
-
     open Nessos.FsPickler
     open Nessos.UnionArgParser
     open Nessos.Vagrant
@@ -21,21 +19,7 @@ namespace Nessos.MBrace.Client
 
     module private ConfigUtils =
 
-        type Configuration =
-            {
-                ClientId : Guid
-
-                MBracedPath : string option
-
-                WorkingDirectory : string
-                LocalCacheDirectory : string
-
-                Logger : ISystemLogger
-
-                StoreInfo : StoreInfo
-            }
-
-        and AppConfigParameter =
+        type AppConfigParameter =
             | MBraced_Path of string
             | Working_Directory of string
             | Store_Provider of string
@@ -49,32 +33,17 @@ namespace Nessos.MBrace.Client
                     | Store_Provider _ -> "The type of storage to be used by mbrace."
                     | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
-        let registerLogger (logger : ISystemLogger) =
-            // register logger
-            ThespianLogger.Register(logger)
-
-        let initConfiguration () =
+        let initClientConfiguration () =
             
             let parser = new UnionArgParser<AppConfigParameter>()
             let thisAssembly = System.Reflection.Assembly.GetExecutingAssembly()
             let parseResults = parser.ParseAppSettings(thisAssembly)
             
             // parse mbraced executable
-            let mbracedExe =
-                match parseResults.TryGetResult <@ MBraced_Path @> with
-                | None ->
-                    let candidate = Path.Combine(Path.GetDirectoryName thisAssembly.Location, "mbraced.exe")
-                    if File.Exists candidate then Some candidate
-                    else None
-                | Some path when not <| File.Exists path ->
-                    mfailwithf "Invalid configuration: '%s' does not exist." path
-                | _ as p -> p
+            let mbracedExe = parseResults.TryGetResult <@ MBraced_Path @>
 
-            // working directory
-            let workingDirectory =
-                match parseResults.TryGetResult <@ Working_Directory @> with
-                | None -> Path.Combine(Path.GetTempPath(), sprintf "mbrace-client-%d" selfProc.Id)
-                | Some path -> path
+            // parse working directory
+            let workingDirectory = parseResults.TryGetResult <@ Working_Directory @> 
 
             // parse store provider
             let storeProvider =
@@ -84,50 +53,16 @@ namespace Nessos.MBrace.Client
                     let endpoint = defaultArg (parseResults.TryGetResult <@ Store_Endpoint @>) ""
                     StoreDefinition.Parse(sp, endpoint)
 
-            // Populate working directory
-            let assemblyCacheDir = Path.Combine(workingDirectory, "AssemblyCache")
-            let localCacheDir = Path.Combine(workingDirectory, "StoreCache")
-
-            let populate () =
-                if Directory.Exists workingDirectory then Directory.Delete(workingDirectory, true)
-                Directory.CreateDirectory workingDirectory |> ignore
-                Directory.CreateDirectory assemblyCacheDir |> ignore
-                Directory.CreateDirectory localCacheDir |> ignore
-
-            do retry (RetryPolicy.Retry(3, 0.5<sec>)) populate
-
-            // activate vagrant
-            let vagrant = new Vagrant(cacheDirectory = assemblyCacheDir)
-            VagrantRegistry.Register vagrant
-
-            // register serializer
-            Serialization.Register vagrant.Pickler
-
             let logger = Logger.createConsoleLogger()
-            do registerLogger logger
 
-            // activate local cache
-            let localCache = StoreDefinition.FileSystem(localCacheDir)
-            do StoreRegistry.ActivateLocalCacheStore(localCache)
+            // init runtime configuration
+            SystemConfiguration.InitializeConfiguration(logger, ?mbracedPath = mbracedExe, 
+                                ?workingDirectory = workingDirectory, useVagrantPickler = true, cleanupWorkingDirectory = false)
 
             // activate store provider
             let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
 
-            // initialize connection pool
-            do ConnectionPool.TcpConnectionPool.Init()
-
-            {
-                ClientId = vagrant.UUId
-
-                MBracedPath = mbracedExe
-                WorkingDirectory = workingDirectory
-
-                LocalCacheDirectory = localCacheDir
-
-                Logger = logger
-
-                StoreInfo = storeInfo
-            }
+            ()
 
 
     open ConfigUtils
@@ -135,47 +70,27 @@ namespace Nessos.MBrace.Client
     /// The object representing the {m}brace client settings.
     type MBraceSettings private () =
 
-        static let config = lazy (Atom.atom <| initConfiguration ())
+        static let init = runOnce initClientConfiguration
         
         /// Gets the client's unique identifier.
-        static member ClientId = config.Value.Value.ClientId
+        static member ClientId = init () ; VagrantRegistry.Instance.UUId
 
         /// The (relative/absolute) path to the mbraced.exe.
         static member MBracedExecutablePath 
-            with get () = 
-                match config.Value.Value.MBracedPath with 
-                | None -> mfailwith "No mbrace daemon executable defined." 
-                | Some p -> p
-            and set p = 
-                let p = Path.GetFullPath p
-                if File.Exists p then
-                    config.Value.Swap(fun c -> { c with MBracedPath = Some p })
-                else
-                    mfailwithf "Invalid path '%s'." p
-
-        static member internal DefaultStoreInfo = config.Value.Value.StoreInfo
+            with get () = init () ; SystemConfiguration.MBraceDaemonExecutablePath
+            and set p = init () ; SystemConfiguration.MBraceDaemonExecutablePath <- p
 
         /// Gets or sets the logger used by the client.
         static member Logger
-            with get () = config.Value.Value.Logger
-            and set l = 
-                lock config.Value (fun () ->
-                    registerLogger l
-                    config.Value.Swap(fun c -> { c with Logger = l })
-                )
+            with get () = init () ; SystemConfiguration.Logger
+            and set l = init () ; SystemConfiguration.Logger <- l
 
         /// Gets or sets the default StoreProvider used by the client.
         static member StoreProvider
-            with get () = config.Value.Value.StoreInfo.Definition
-
-            and set p =
-                // store activation has side-effects ; use lock instead of swap
-                lock config.Value (fun () ->
-                    let storeInfo = StoreRegistry.Activate(p, makeDefault = true)
-                    config.Value.Swap(fun c -> { c with StoreInfo = storeInfo })
-                )
+            with get () = init () ; StoreRegistry.DefaultStoreInfo.Definition
+            and set p = init () ; StoreRegistry.Activate(p, makeDefault = true) |> ignore
 
         /// Gets the path used by the client as a working directory.
-        static member WorkingDirectory = config.Value.Value.WorkingDirectory
-
-        static member internal StoreInfo = config.Value.Value.StoreInfo
+        static member WorkingDirectory = init () ; SystemConfiguration.WorkingDirectory
+        static member AssemblyCacheDirectory = init () ; SystemConfiguration.AssemblyCacheDirectory
+        static member LocalCacheStoreDirectory = init () ; SystemConfiguration.LocalCacheStoreDirectory

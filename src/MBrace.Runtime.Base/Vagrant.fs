@@ -17,7 +17,7 @@ namespace Nessos.MBrace.Runtime
 
         static let isMbraceAssembly a = mbraceAssemblies.Value.Contains a
 
-        static member Register(v : Vagrant) =
+        static member internal Register(v : Vagrant) =
             lock container (fun () ->
                 match container.Value with
                 | None -> container := Some v

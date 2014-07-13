@@ -66,22 +66,20 @@
             let parentProc = results.PostProcessResult(<@ Parent_Pid @>, Process.GetProcessById)
             let debugMode = results.Contains <@ Debug @>
             let processDomainId = results.GetResult <@ Process_Domain_Id @>
-            let assemblyPath = results.GetResult <@ Assembly_Cache @>
+            let workingDirectory = results.GetResult <@ Working_Directory @>
             let hostname = results.GetResult (<@ HostName @>, defaultValue = "localhost")
             let port = results.GetResult (<@ Port @>, defaultValue = -1)
             let parentAddress = results.PostProcessResult (<@ Parent_Address @>, Address.Parse)
             let activator = results.GetResult <@ Store_Activator @>
-            let cacheStoreEndpoint = results.GetResult <@ Cache_Store_Endpoint @>
 
             //
             // Register Things
             //
 
-            let vagrant = new Vagrant(cacheDirectory = assemblyPath)
-            VagrantRegistry.Register vagrant
-
-            // Register Serialization
-            do Nessos.MBrace.Runtime.Serialization.Register(FsPickler.CreateBinary())
+            SystemConfiguration.InitializeConfiguration(
+                    workingDirectory = workingDirectory, 
+                    cleanupWorkingDirectory = false, 
+                    useVagrantPickler = false)
 
             // Register Logger
             let logger =
@@ -91,24 +89,17 @@
                 // prepend "ProcessDomain" prefix to all log entries
                 |> Logger.map (fun e -> {e with Message = sprintf "[worker %d] %s" pid e.Message})
 
-
-            IoC.RegisterValue<ISystemLogger>(logger)
-            ThespianLogger.Register(logger)
-
-            // Register Store
-            StoreRegistry.ActivateLocalCacheStore(StoreDefinition.FileSystem cacheStoreEndpoint)
+            SystemConfiguration.Logger <- logger
 
             // load store dependencies from cache
             let results = VagrantRegistry.Instance.LoadCachedAssemblies(activator.Dependencies, loadPolicy = AssemblyLoadPolicy.ResolveAll)
-
                 
-            let storeInfo = StoreRegistry.TryActivate(activator, makeDefault = true)
+            let storeInfo = StoreRegistry.TryActivate(activator, makeDefault = true) |> Option.get
 
             // Register listeners
             TcpListenerPool.DefaultHostname <- hostname
             if port = -1 then TcpListenerPool.RegisterListener(IPEndPoint.any)
             else TcpListenerPool.RegisterListener(IPEndPoint.anyIp port)
-            TcpConnectionPool.Init()
 
             // Register exiter
             IoC.RegisterValue<IExiter>(exiter)

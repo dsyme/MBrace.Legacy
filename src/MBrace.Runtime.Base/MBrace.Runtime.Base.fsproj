@@ -98,6 +98,7 @@
     <Compile Include="RuntimeBase\DaemonConfig.fs" />
     <Compile Include="RuntimeBase\WorkerConfig.fs" />
     <Compile Include="RuntimeBase\Exceptions.fs" />
+    <Compile Include="RuntimeBase\SystemConfig.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>

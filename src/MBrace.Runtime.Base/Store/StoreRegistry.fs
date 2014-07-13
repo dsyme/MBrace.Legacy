@@ -38,7 +38,8 @@
             Dependencies : Map<AssemblyId, Assembly>
             ActivationInfo : StoreActivationInfo
             
-            // TODO : make optional
+            // TODO : investigate whether inmem cache should be
+            // global or restricted to particular stores
             InMemoryCache : InMemoryCache
             CacheStore : CacheStore
         }
@@ -82,7 +83,7 @@
                     }
 
                 let inmem = new InMemoryCache()
-                let cacheStore = getLocalCache() |> snd
+                let cacheStore = getLocalCache()
                 let localCache = new CacheStore(sprintf "fscache-%d" <| hash id, cacheStore, store)
 
                 {
@@ -99,16 +100,14 @@
             if makeDefault then defaultStore := Some info
             info
 
-        static member ActivateLocalCacheStore(definition : StoreDefinition) =
+        static member internal ActivateLocalCacheStore(definition : StoreDefinition) =
             lock localCacheStore (fun () ->
                 match localCacheStore.Value with
                 | None -> 
                     let cacheStore = activate definition
-                    localCacheStore := Some (definition, cacheStore)
+                    localCacheStore := Some cacheStore
 
                 | Some _ -> invalidOp "A local cache store has already been registered.")
-
-        static member LocalCacheDefinition = getLocalCache () |> fst
 
         static member TryActivate(activationInfo : StoreActivationInfo, makeDefault) =
             match StoreRegistry.TryGetStoreInfo activationInfo.Id with

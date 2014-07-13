@@ -85,7 +85,7 @@ namespace Nessos.MBrace.Client
             let replicationFactor = defaultArg replicationFactor (if failoverFactor = 0 then 0 else 2)
             let storeId = 
                 match storeProvider with 
-                | None -> MBraceSettings.DefaultStoreInfo.Id
+                | None -> StoreRegistry.DefaultStoreInfo.Id
                 | Some p -> let info = StoreRegistry.Activate(p, makeDefault = false) in info.Id
 
             let nodes = nodes |> Seq.map (fun n -> n.Ref) |> Seq.toArray
