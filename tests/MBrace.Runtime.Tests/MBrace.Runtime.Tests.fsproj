@@ -71,7 +71,6 @@
     <Compile Include="LocalCloudTests.fs" />
     <Compile Include="ClusterCloudTests.fs" />
     <Compile Include="FsiTests.fs" />
-    <None Include="connections.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\MBrace.Azure\MBrace.Azure.fsproj">

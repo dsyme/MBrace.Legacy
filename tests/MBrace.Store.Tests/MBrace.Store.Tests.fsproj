@@ -63,7 +63,6 @@
     <Compile Include="StoreTests.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
-    <None Include="connections.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">

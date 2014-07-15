@@ -10,6 +10,7 @@
     open FsUnit
 
     open Nessos.MBrace.Store
+    open System.Reflection
 
     [<AutoOpen>]
     module private PicklerHelper =
@@ -300,18 +301,6 @@
             |> Seq.filter (test.Store.ContainerExists >> Async.RunSynchronously)
             |> Seq.iter   (test.Store.DeleteContainer >> Async.RunSynchronously)
 
-
-    module ConnectionsConfig =
-        open System.Xml.Linq
-
-        let get (provider : string) = 
-            let doc = XDocument.Load("connections.config")
-            let X s =  XName.Get(s)
-            let conn = doc.Element(X "connections").Elements()
-                       |> Seq.find(fun xe -> xe.Attribute(X "id").Value = provider)
-            conn.Attribute(X "connectionString").Value
-
-
     [<TestFixture;Category("FileSystemStore")>]
     type ``FileSystem tests`` () =
         inherit ``Store tests`` ()
@@ -326,8 +315,8 @@
     type ``SqlServer tests`` () =
         inherit ``Store tests`` ()
 
-        let conn = ConnectionsConfig.get "SqlServer" 
+        let conn = File.ReadAllText(Path.Combine(__SOURCE_DIRECTORY__, "../temp/sqlserver.txt"))
         let factory = new SqlServerStoreFactory() :> ICloudStoreFactory
         let store = factory.CreateStoreFromConnectionString(conn)
-
+        
         override test.Store = store
