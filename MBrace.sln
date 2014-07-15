@@ -74,6 +74,12 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Store", "src\MBrace.
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Azure.Tests", "tests\MBrace.Azure.Tests\MBrace.Azure.Tests.fsproj", "{29F2A155-49FA-4891-9DD9-8276A2D77512}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{A066BB5C-E8BA-45A2-B85E-DE06AE3FD631}"
+	ProjectSection(SolutionItems) = preProject
+		lib\FSharp.Core.optdata = lib\FSharp.Core.optdata
+		lib\FSharp.Core.sigdata = lib\FSharp.Core.sigdata
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -18,7 +18,7 @@ nodes |> List.iter (fun n -> n.ShowSystemLogs())
 
 //let rt = MBrace.Boot nodes 
 let rt = MBrace.InitLocal 3
-
+rt.
 rt.Reboot()
 
 rt.Run <@ cloud { return 42 } @>
