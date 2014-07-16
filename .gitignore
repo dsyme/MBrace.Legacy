@@ -6,7 +6,8 @@
 *.user
 *.sln.docstates
 
-[Tt]emp/*
+[Tt]emp/azure.txt
+[Tt]emp/sqlserver.txt
 
 # Build results
 

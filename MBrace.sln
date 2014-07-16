@@ -75,9 +75,13 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Azure.Tests", "tests\MBrace.Azure.Tests\MBrace.Azure.Tests.fsproj", "{29F2A155-49FA-4891-9DD9-8276A2D77512}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{A066BB5C-E8BA-45A2-B85E-DE06AE3FD631}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "fsharp", "fsharp", "{FCA1DA62-B062-4BE1-BF23-5A2E8564A749}"
 	ProjectSection(SolutionItems) = preProject
+		lib\fsharp\FSharp.Core.dll = lib\fsharp\FSharp.Core.dll
 		lib\FSharp.Core.optdata = lib\FSharp.Core.optdata
 		lib\FSharp.Core.sigdata = lib\FSharp.Core.sigdata
+		lib\fsharp\FSharp.Core.xml = lib\fsharp\FSharp.Core.xml
 	EndProjectSection
 EndProject
 Global
@@ -201,5 +205,6 @@ Global
 		{6E315C67-9D30-4500-A80E-EEEAECAD46C6} = {B6E824CD-AFA5-4F1A-96F8-3100300FE0AA}
 		{5ED53545-4F89-4A52-9400-DC0BD9E7E864} = {DD3A3780-3D8E-44A6-8328-354C75E81756}
 		{29F2A155-49FA-4891-9DD9-8276A2D77512} = {EEAEC377-38CD-4229-977B-8E5F7CC7E1BB}
+		{FCA1DA62-B062-4BE1-BF23-5A2E8564A749} = {A066BB5C-E8BA-45A2-B85E-DE06AE3FD631}
 	EndGlobalSection
 EndGlobal
