@@ -221,13 +221,18 @@ Target "NuGet -- MBrace.Runtime" (fun _ ->
                     yield! addAssembly @"lib\net45" @"..\bin\mbrace.worker.exe"
                     yield! addAssembly @"lib\net45" @"..\bin\mbracesvc.exe"
                     yield! addAssembly @"lib\net45" @"..\bin\mbracectl.exe"
+
+                    yield  addFile     @"lib\net45" @"..\lib\fsharp\FSharp.Core.dll"
+                    yield  addFile     @"lib\net45" @"..\lib\fsharp\FSharp.Core.xml"
+                    yield  addFile     @"lib\net45" @"..\lib\fsharp\FSharp.Core.sigdata"
+                    yield  addFile     @"lib\net45" @"..\lib\fsharp\FSharp.Core.optdata"
                     
                     yield  addFile "tools" "install.ps1"  
                     yield  addFile "content" "preamble.fsx"
-                    //yield  addFile "tools" "init.ps1"     
-                    //yield  addFile "tools" "uninstall.ps1"
-                ]
-        })
+                    //yield  addFile@"lib\net45" "tools" "init.ps1"     
+                    //yield  addFile@"lib\net45" "tools" "uninstall.ps1"
+                ]                   
+        })                          
         ("nuget/MBrace.nuspec")
 )
 
