@@ -168,6 +168,17 @@ Target "NuGet -- MBrace.Core" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
+Target "MBraceIntro" (fun _ ->
+    let newFile = 
+        File.ReadLines("./nuget/mbrace-intro.fsx")
+        |> Seq.map (fun line -> 
+            if line.StartsWith """#load "../packages/MBrace.Runtime""" then 
+                sprintf """#load "../packages/MBrace.Runtime.%s/preamble.fsx" """ release.NugetVersion
+            else line)
+        |> Seq.toArray
+    File.WriteAllLines("./nuget/mbrace-intro.fsx", newFile)
+)
+
 Target "NuGet -- MBrace.Runtime" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
@@ -183,55 +194,40 @@ Target "NuGet -- MBrace.Runtime" (fun _ ->
             ToolPath = nugetPath
             AccessKey = getBuildParamOrDefault "nugetkey" ""
             Publish = hasBuildParam "nugetkey"
-//            Dependencies = //Json.net missing
-//                [
-//                    "FsPickler", "0.9.6"
-//                    "FsPickler.Json", "0.9.6"
-//                    "Thespian", "0.0.7"
-//                    "UnionArgParser", "0.7.0"
-//                    "Unquote", "2.2.2"
-//                    "Vagrant", "0.2.1"
-//                    "MBrace.Core", RequireExactly nugetVersion
-//                ]
             Files =
                 [  
-                    yield! addAssembly @"lib\net45" @"..\bin\Newtonsoft.Json.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\FSharp.Compiler.Service.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Mono.Cecil.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Mono.Cecil.Mdb.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Mono.Cecil.Pdb.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Mono.Cecil.Rocks.dll"
-
-                    yield! addAssembly @"lib\net45" @"..\bin\FsPickler.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\FsPickler.Json.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Thespian.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Thespian.Cluster.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\UnionArgParser.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Unquote.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Vagrant.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\Vagrant.Cecil.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Core.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Lib.dll"
-                 
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Utils.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Base.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Cluster.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Client.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Store.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\mbraced.exe"
-                    yield! addAssembly @"lib\net45" @"..\bin\mbrace.worker.exe"
-                    yield! addAssembly @"lib\net45" @"..\bin\mbracesvc.exe"
-                    yield! addAssembly @"lib\net45" @"..\bin\mbracectl.exe"
-
-                    yield  addFile     @"lib\net45" @"..\lib\fsharp\FSharp.Core.dll"
-                    yield  addFile     @"lib\net45" @"..\lib\fsharp\FSharp.Core.xml"
-                    yield  addFile     @"lib\net45" @"..\lib\fsharp\FSharp.Core.sigdata"
-                    yield  addFile     @"lib\net45" @"..\lib\fsharp\FSharp.Core.optdata"
-                    
-                    yield  addFile "tools" "install.ps1"  
-                    yield  addFile "content" "preamble.fsx"
-                    //yield  addFile@"lib\net45" "tools" "init.ps1"     
-                    //yield  addFile@"lib\net45" "tools" "uninstall.ps1"
+                    yield! addAssembly @"tools" @"..\bin\Newtonsoft.Json.dll"
+                    yield! addAssembly @"tools" @"..\bin\FSharp.Compiler.Service.dll"
+                    yield! addAssembly @"tools" @"..\bin\Mono.Cecil.dll"
+                    yield! addAssembly @"tools" @"..\bin\Mono.Cecil.Mdb.dll"
+                    yield! addAssembly @"tools" @"..\bin\Mono.Cecil.Pdb.dll"
+                    yield! addAssembly @"tools" @"..\bin\Mono.Cecil.Rocks.dll"
+                    yield! addAssembly @"tools" @"..\bin\FsPickler.dll"
+                    yield! addAssembly @"tools" @"..\bin\FsPickler.Json.dll"
+                    yield! addAssembly @"tools" @"..\bin\Thespian.dll"
+                    yield! addAssembly @"tools" @"..\bin\Thespian.Cluster.dll"
+                    yield! addAssembly @"tools" @"..\bin\UnionArgParser.dll"
+                    yield! addAssembly @"tools" @"..\bin\Unquote.dll"
+                    yield! addAssembly @"tools" @"..\bin\Vagrant.dll"
+                    yield! addAssembly @"tools" @"..\bin\Vagrant.Cecil.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Core.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Lib.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Utils.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Runtime.Base.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Runtime.Cluster.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Client.dll"
+                    yield! addAssembly @"tools" @"..\bin\MBrace.Store.dll"
+                    yield! addAssembly @"tools" @"..\bin\mbraced.exe"
+                    yield! addAssembly @"tools" @"..\bin\mbrace.worker.exe"
+                    yield! addAssembly @"tools" @"..\bin\mbracesvc.exe"
+                    yield! addAssembly @"tools" @"..\bin\mbracectl.exe"
+                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.dll"
+                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.xml"
+                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.sigdata"
+                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.optdata"
+                    yield  addFile     @"" @"preamble.fsx"
+                    yield  addFile     @"tools" @"install.ps1"  
+                    yield  addFile     @"content" "mbrace-intro.fsx"
                 ]                   
         })                          
         ("nuget/MBrace.nuspec")
@@ -261,6 +257,7 @@ Target "PrepareRelease" DoNothing
 "Default"
   ==> "PrepareRelease"
   ==> "NuGet -- MBrace.Core"
+  ==> "MBraceIntro"
   ==> "NuGet -- MBrace.Runtime"
   ==> "Release"
 

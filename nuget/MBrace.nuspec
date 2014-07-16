@@ -15,6 +15,7 @@
 	  <copyright>Copyright 2014</copyright>
 	  <tags>@tags@</tags>
 	  @dependencies@
+    @references@
 	</metadata>
 	@files@
 </package>

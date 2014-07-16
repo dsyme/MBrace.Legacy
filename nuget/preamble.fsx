@@ -1,15 +1,14 @@
 ﻿//  Loads the minimal set of assemblies required to initialize an MBrace session
-#I "./bin/Debug/" // EDIT this according to your build path
 
-#r "Thespian.dll"
-#r "Vagrant.dll"
-#r "MBrace.Core.dll"
-#r "MBrace.Lib.dll"
-#r "MBrace.Store.dll"
-#r "MBrace.Runtime.Base.dll"
-#r "MBrace.Client.dll"
+#I __SOURCE_DIRECTORY__
+#r "tools/Thespian.dll"
+#r "tools/Vagrant.dll"
+#r "tools/MBrace.Core.dll"
+#r "tools/MBrace.Lib.dll"
+#r "tools/MBrace.Store.dll"
+#r "tools/MBrace.Runtime.Base.dll"
+#r "tools/MBrace.Client.dll"
 
-open System.IO
 open Nessos.MBrace.Client
 
-MBraceSettings.MBracedExecutablePath <- Path.Combine(__SOURCE_DIRECTORY__, "./bin/Debug/mbraced.exe")
+MBraceSettings.MBracedExecutablePath <- System.IO.Path.Combine(__SOURCE_DIRECTORY__, "./tools/mbraced.exe")
