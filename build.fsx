@@ -217,6 +217,7 @@ Target "NuGet -- MBrace.Runtime" (fun _ ->
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Base.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Cluster.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Client.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Store.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\mbraced.exe"
                     yield! addAssembly @"lib\net45" @"..\bin\mbrace.worker.exe"
                     yield! addAssembly @"lib\net45" @"..\bin\mbracesvc.exe"
