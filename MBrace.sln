@@ -86,6 +86,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "fsharp", "fsharp", "{FCA1DA
 		lib\fsharp\FSharp.Core.xml = lib\fsharp\FSharp.Core.xml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{91CC9059-07C2-475F-B3D3-D017D7A12B90}"
+	ProjectSection(SolutionItems) = preProject
+		nuget\installer\dotNetFx45_Full_setup.exe = nuget\installer\dotNetFx45_Full_setup.exe
+		nuget\installer\Install-MBrace.ps1 = nuget\installer\Install-MBrace.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -208,5 +214,6 @@ Global
 		{5ED53545-4F89-4A52-9400-DC0BD9E7E864} = {DD3A3780-3D8E-44A6-8328-354C75E81756}
 		{29F2A155-49FA-4891-9DD9-8276A2D77512} = {EEAEC377-38CD-4229-977B-8E5F7CC7E1BB}
 		{FCA1DA62-B062-4BE1-BF23-5A2E8564A749} = {A066BB5C-E8BA-45A2-B85E-DE06AE3FD631}
+		{91CC9059-07C2-475F-B3D3-D017D7A12B90} = {B6E824CD-AFA5-4F1A-96F8-3100300FE0AA}
 	EndGlobalSection
 EndGlobal
