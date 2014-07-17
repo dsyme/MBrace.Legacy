@@ -6,6 +6,7 @@
 #r "packages/FAKE/tools/FakeLib.dll"
 
 open Fake
+open Fake.Git
 open Fake.AssemblyInfoFile
 open Fake.ReleaseNotesHelper
 
@@ -27,6 +28,9 @@ let tags = "F# cloud mapreduce distributed"
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let release = parseReleaseNotes (IO.File.ReadAllLines "RELEASE_NOTES.md") 
 let nugetVersion = release.NugetVersion
+
+let gitHome = "https://github.com/nessos"
+let gitName = "MBrace"
 
 // Generate assembly info files with the right version & up-to-date information
 Target "AssemblyInfo" (fun _ ->
@@ -298,6 +302,25 @@ Target "RuntimePkg" (fun _ ->
 )
 
 // --------------------------------------------------------------------------------------
+// documentation
+
+Target "GenerateDocs" (fun _ ->
+    executeFSIWithArgs "docs/tools" "generate.fsx" ["--define:RELEASE"] [] |> ignore
+)
+
+Target "ReleaseDocs" (fun _ ->
+    let tempDocsDir = "temp/gh-pages"
+    CleanDir tempDocsDir
+    Repository.cloneSingleBranch "" (gitHome + "/" + gitName + ".git") "gh-pages" tempDocsDir
+
+    fullclean tempDocsDir
+    CopyRecursive "docs/output" tempDocsDir true |> tracefn "%A"
+    StageAll tempDocsDir
+    Commit tempDocsDir (sprintf "Update generated documentation for version %s" release.NugetVersion)
+    Branches.push tempDocsDir
+)
+
+// --------------------------------------------------------------------------------------
 // Run all targets by default. Invoke 'build <Target>' to override
 Target "Default" DoNothing
 Target "DefaultWithStores" DoNothing
@@ -318,13 +341,16 @@ Target "PrepareRelease" DoNothing
   ==> "RunTests"
   ==> "DefaultWithStores"
 
-"Default"
-  ==> "PrepareRelease"
-  ==> "CorePkg"
-  ==> "MBraceIntroScript"
-  ==> "RuntimePkg"
-  ==> "AzurePkg"
-  ==> "Release"
+//"Clean"
+//  ==> "PrepareRelease"
+//  ==> "Build"
+//  ==> "GenerateDocs"
+//  ==> "ReleaseDocs"
+//  ==> "CorePkg"
+//  ==> "MBraceIntroScript"
+//  ==> "RuntimePkg"
+//  ==> "AzurePkg"
+//  ==> "Release"
 
 // start build
 RunTargetOrDefault "Default"

@@ -92,6 +92,27 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{
 		nuget\installer\Install-MBrace.ps1 = nuget\installer\Install-MBrace.ps1
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{5F7AB181-FCDB-4BC3-9486-D2E6CBF0E06F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{4C2FC4EE-FC72-429F-BCC7-0D9BD46EFA37}"
+	ProjectSection(SolutionItems) = preProject
+		docs\content\index.fsx = docs\content\index.fsx
+		docs\content\tutorial.fsx = docs\content\tutorial.fsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{298103B8-C3A7-4EA6-A108-7F8B41F4FD1A}"
+	ProjectSection(SolutionItems) = preProject
+		docs\files\img\fsharp.png = docs\files\img\fsharp.png
+		docs\files\img\nessos.png = docs\files\img\nessos.png
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{F53605EB-3D25-4ADF-9BBD-D8638A35EA71}"
+	ProjectSection(SolutionItems) = preProject
+		docs\tools\generate.fsx = docs\tools\generate.fsx
+		docs\tools\packages.config = docs\tools\packages.config
+		docs\tools\templates\template.cshtml = docs\tools\templates\template.cshtml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -215,5 +236,8 @@ Global
 		{29F2A155-49FA-4891-9DD9-8276A2D77512} = {EEAEC377-38CD-4229-977B-8E5F7CC7E1BB}
 		{FCA1DA62-B062-4BE1-BF23-5A2E8564A749} = {A066BB5C-E8BA-45A2-B85E-DE06AE3FD631}
 		{91CC9059-07C2-475F-B3D3-D017D7A12B90} = {B6E824CD-AFA5-4F1A-96F8-3100300FE0AA}
+		{4C2FC4EE-FC72-429F-BCC7-0D9BD46EFA37} = {5F7AB181-FCDB-4BC3-9486-D2E6CBF0E06F}
+		{298103B8-C3A7-4EA6-A108-7F8B41F4FD1A} = {5F7AB181-FCDB-4BC3-9486-D2E6CBF0E06F}
+		{F53605EB-3D25-4ADF-9BBD-D8638A35EA71} = {5F7AB181-FCDB-4BC3-9486-D2E6CBF0E06F}
 	EndGlobalSection
 EndGlobal
