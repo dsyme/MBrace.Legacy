@@ -143,7 +143,7 @@ let addAssembly (target : string) assembly =
         yield! includeFile false <| assembly + ".config"
     }
 
-Target "NuGet -- MBrace.Core" (fun _ ->
+Target "CorePkg" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -168,7 +168,71 @@ Target "NuGet -- MBrace.Core" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "MBraceIntro" (fun _ ->
+Target "StorePkg" (fun _ ->
+    let nugetPath = ".nuget/NuGet.exe"
+    NuGet (fun p -> 
+        { p with   
+            Authors = authors
+            Project = "MBrace.Store"
+            Summary = "Interfaces for writing custom store definitions for MBrace."
+            Description = description
+            Version = nugetVersion
+            ReleaseNotes = String.concat " " release.Notes
+            Tags = tags
+            OutputPath = "bin"
+            ToolPath = nugetPath
+            AccessKey = getBuildParamOrDefault "nugetkey" ""
+            Publish = hasBuildParam "nugetkey"
+            References = 
+                [
+                    "MBrace.Store.dll"
+                ]
+            Files =
+                [
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Store.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Utils.dll"
+
+                ]
+        })
+        ("nuget/MBrace.nuspec")
+)
+
+Target "AzurePkg" (fun _ ->
+    let nugetPath = ".nuget/NuGet.exe"
+    NuGet (fun p -> 
+        { p with   
+            Authors = authors
+            Project = "MBrace.Azure"
+            Summary = "A store definition for MBrace that uses the Azure storage as a backend."
+            Description = description
+            Version = nugetVersion
+            ReleaseNotes = String.concat " " release.Notes
+            Tags = tags
+            OutputPath = "bin"
+            ToolPath = nugetPath
+            AccessKey = getBuildParamOrDefault "nugetkey" ""
+            Publish = hasBuildParam "nugetkey"
+            Dependencies = 
+                [
+                    "MBrace.Store",                                 release.NugetVersion
+                    "Microsoft.Data.Edm",                           "5.6.0"
+                    "Microsoft.Data.OData",                         "5.6.0"
+                    "Microsoft.Data.Services.Client",               "5.6.0"
+                    "Microsoft.WindowsAzure.ConfigurationManager",  "1.8.0.0"
+                    "Newtonsoft.Json",                              "6.0.3" 
+                    "System.Spatial",                               "5.6.0"
+                    "WindowsAzure.Storage",                         "4.1.0"
+                ]
+            Files =
+                [
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Core.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Lib.dll"
+                ]
+        })
+        ("nuget/MBrace.nuspec")
+)
+
+Target "MBraceIntroScript" (fun _ ->
     let newFile = 
         File.ReadLines("./nuget/mbrace-intro.fsx")
         |> Seq.map (fun line -> 
@@ -179,7 +243,7 @@ Target "MBraceIntro" (fun _ ->
     File.WriteAllLines("./nuget/mbrace-intro.fsx", newFile)
 )
 
-Target "NuGet -- MBrace.Runtime" (fun _ ->
+Target "RuntimePkg" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -256,9 +320,10 @@ Target "PrepareRelease" DoNothing
 
 "Default"
   ==> "PrepareRelease"
-  ==> "NuGet -- MBrace.Core"
-  ==> "MBraceIntro"
-  ==> "NuGet -- MBrace.Runtime"
+  ==> "CorePkg"
+  ==> "MBraceIntroScript"
+  ==> "RuntimePkg"
+  ==> "AzurePkg"
   ==> "Release"
 
 // start build
