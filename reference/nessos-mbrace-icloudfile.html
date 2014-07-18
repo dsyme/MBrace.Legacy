@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>ICloudFile - Brace</title>
+    <title>ICloudFile - MBrace</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
@@ -26,7 +26,7 @@
           <li><a href="http://fsharp.org">fsharp.org</a></li>
           <li><a href="http://github.com/nessos/MBrace">github page</a></li>
         </ul>
-        <h3 class="muted"><a href="/MBrace/index.html">Brace</a></h3>
+        <h3 class="muted"><a href="/MBrace/index.html">MBrace</a></h3>
       </div>
       <hr />
       <div class="row">
@@ -37,6 +37,7 @@
 
 <h1>ICloudFile</h1>
 <div class="xmldoc">
+<p>Represents a binary object stored in the underlying CloudStore.</p>
 </div>
   <h3>Instance members</h3>
   <table class="table table-bordered member-list">
@@ -47,77 +48,83 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
+          <code onmouseout="hideTip(event, '48', 48)" onmouseover="showTip(event, '48', 48)">
             Container
           </code>
-          <div class="tip" id="37">
+          <div class="tip" id="48">
             <strong>Signature:</strong> string<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L66-66" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L104-104" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>The CloudFile's container (folder).</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '38', 38)" onmouseover="showTip(event, '38', 38)">
+          <code onmouseout="hideTip(event, '49', 49)" onmouseover="showTip(event, '49', 49)">
             Name
           </code>
-          <div class="tip" id="38">
+          <div class="tip" id="49">
             <strong>Signature:</strong> string<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L65-65" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L102-102" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>The CloudFile's name.</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '39', 39)" onmouseover="showTip(event, '39', 39)">
+          <code onmouseout="hideTip(event, '50', 50)" onmouseover="showTip(event, '50', 50)">
             Read()
           </code>
-          <div class="tip" id="39">
+          <div class="tip" id="50">
             <strong>Signature:</strong> unit -&gt; Async&lt;Stream&gt;<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L69-69" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L110-110" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>A asynchronous computations that returns the content of the CloudFile as a Stream.
+Note that this Stream is not guaranteed to be a direct Stream to the underlying store
+and it should be used only for read operations.</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '40', 40)" onmouseover="showTip(event, '40', 40)">
+          <code onmouseout="hideTip(event, '51', 51)" onmouseover="showTip(event, '51', 51)">
             Size
           </code>
-          <div class="tip" id="40">
+          <div class="tip" id="51">
             <strong>Signature:</strong> int64<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L67-67" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L106-106" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>The CloudFile's size in bytes.</p>
+
         </td>
       </tr>
     </tbody>
@@ -127,7 +134,7 @@
         <div class="span3">
           <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />  
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
-            <li class="nav-header">Brace</li>
+            <li class="nav-header">MBrace</li>
             <li><a href="/MBrace/index.html">Home page</a></li>
             <li class="divider"></li>
             <li><a href="http://www.nuget.org/packages/MBrace">Get Library via NuGet</a></li>

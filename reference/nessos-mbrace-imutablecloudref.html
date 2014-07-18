@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>IMutableCloudRef - Brace</title>
+    <title>IMutableCloudRef - MBrace</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
@@ -26,7 +26,7 @@
           <li><a href="http://fsharp.org">fsharp.org</a></li>
           <li><a href="http://github.com/nessos/MBrace">github page</a></li>
         </ul>
-        <h3 class="muted"><a href="/MBrace/index.html">Brace</a></h3>
+        <h3 class="muted"><a href="/MBrace/index.html">MBrace</a></h3>
       </div>
       <hr />
       <div class="row">
@@ -37,6 +37,8 @@
 
 <h1>IMutableCloudRef</h1>
 <div class="xmldoc">
+<p>Represents a mutable reference to an
+object that is stored in the underlying CloudStore.</p>
 </div>
   <h3>Instance members</h3>
   <table class="table table-bordered member-list">
@@ -47,115 +49,121 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '112', 112)" onmouseover="showTip(event, '112', 112)">
+          <code onmouseout="hideTip(event, '114', 114)" onmouseover="showTip(event, '114', 114)">
             Container
           </code>
-          <div class="tip" id="112">
+          <div class="tip" id="114">
             <strong>Signature:</strong> string<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L47-47" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L73-73" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
+          <p>The MutableCloudRef's container (folder).</p>
 
-          <code onmouseout="hideTip(event, '114', 114)" onmouseover="showTip(event, '114', 114)">
-            ForceUpdate(arg1)
-          </code>
-          <div class="tip" id="114">
-            <strong>Signature:</strong> obj -&gt; Async&lt;unit&gt;<br />
-              <strong>Modifiers:</strong> abstract<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L52-52" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '115', 115)" onmouseover="showTip(event, '115', 115)">
-            Name
+            ForceUpdate(arg1)
           </code>
           <div class="tip" id="115">
-            <strong>Signature:</strong> string<br />
+            <strong>Signature:</strong> obj -&gt; Async&lt;unit&gt;<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L46-46" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L81-81" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>Updates the current value of the MutableCloudRef with the given value.</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '116', 116)" onmouseover="showTip(event, '116', 116)">
-            ReadValue()
+            Name
           </code>
           <div class="tip" id="116">
-            <strong>Signature:</strong> unit -&gt; Async&lt;obj&gt;<br />
+            <strong>Signature:</strong> string<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L50-50" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L71-71" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>The MutableCloudRef's name.</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '117', 117)" onmouseover="showTip(event, '117', 117)">
-            TryUpdate(arg1)
+            ReadValue()
           </code>
           <div class="tip" id="117">
-            <strong>Signature:</strong> obj -&gt; Async&lt;bool&gt;<br />
+            <strong>Signature:</strong> unit -&gt; Async&lt;obj&gt;<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L51-51" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L77-77" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>Returns an asynchronous computation that gets the current value of the MutableCloudRef.</p>
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '118', 118)" onmouseover="showTip(event, '118', 118)">
-            Type
+            TryUpdate(arg1)
           </code>
           <div class="tip" id="118">
+            <strong>Signature:</strong> obj -&gt; Async&lt;bool&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L79-79" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Executes an update operation on the MutableCloudRef and returns if the operation succeeded.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '119', 119)" onmouseover="showTip(event, '119', 119)">
+            Type
+          </code>
+          <div class="tip" id="119">
             <strong>Signature:</strong> Type<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L48-48" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Primitives.fs#L75-75" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>The type of the object stored in the MutableCloudRef.</p>
+
         </td>
       </tr>
     </tbody>
@@ -165,7 +173,7 @@
         <div class="span3">
           <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />  
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
-            <li class="nav-header">Brace</li>
+            <li class="nav-header">MBrace</li>
             <li><a href="/MBrace/index.html">Home page</a></li>
             <li class="divider"></li>
             <li><a href="http://www.nuget.org/packages/MBrace">Get Library via NuGet</a></li>
