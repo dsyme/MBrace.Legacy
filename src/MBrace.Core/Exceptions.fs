@@ -54,6 +54,7 @@
         new (x : SerializationInfo, y : StreamingContext) = { inherit MBraceException(x, y) }
 
     [<Serializable>]
+    /// Represents a failure in an operation executed by the runtime.
     type SystemFailedException =
         inherit MBraceException
 
@@ -97,11 +98,18 @@
 
         // TODO: implement a symbolic trace
 //        member __.Trace = inner.StackTrace
+
+        /// The identifier of the corresponding cloud process.
         member e.ProcessId = e.processId
+        /// The filename.
         member e.File = match e.context with Some c -> c.File | None -> "unknown"
+        /// The name of the function that threw an exception.
         member e.FunctionName = match e.context with Some c -> c.FunctionName | None -> "unknown"
+        /// The row and column of the expression start.
         member e.StartPos = match e.context with Some c -> c.Start | None -> (-1,-1)
+        /// The row and column of the expression end.
         member e.EndPos = match e.context with Some c -> c.End | None -> (-1,-1)
+        /// Variables captured by the expression.
         member e.Environment = match e.context with Some c -> c.Vars | None -> [||]
     
         override e.GetObjectData(si : SerializationInfo, sc : StreamingContext) =

@@ -3,9 +3,10 @@
     open System
     open System.IO
 
+    /// A tag used by MutableCloudRefs to control concurrency.
     type Tag = string
 
-    /// Cloud filesystem abstraction
+    /// Cloud filesystem abstraction.
     type ICloudStore =
 
         /// A description of the implementation
@@ -128,5 +129,10 @@
         /// <param name="writer">writer function; asynchronously write to the target stream.</param>
         abstract ForceUpdateMutable : container:string * name:string * writer:(Stream -> Async<unit>) -> Async<Tag>
 
+    /// A factory to create ICloudStore instances.
     type ICloudStoreFactory =
+        /// <summary>
+        /// Create an ICloudStore from a connection string.
+        /// </summary>
+        /// <param name="connectionString">The connection string.</param>
         abstract CreateStoreFromConnectionString: connectionString : string -> ICloudStore
