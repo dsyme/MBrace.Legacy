@@ -1,4 +1,5 @@
-﻿namespace Nessos.MBrace.CloudExpr
+﻿// Contains types used by the MBrace interpreter. Normally user code should not use any of these types.
+namespace Nessos.MBrace.CloudExpr
 
     open System
     open System.IO
@@ -6,6 +7,7 @@
 
     open Nessos.MBrace
 
+    /// This type represents a cloud computation.
     type CloudExpr = 
         // Monadic Exprs
         | DelayExpr of (unit -> CloudExpr) * ObjFunc
@@ -68,6 +70,7 @@
         // Value
         | ValueExpr of Value
 
+    /// [omit]
     and Value = 
         | Obj of ObjValue * Type 
         | Exc of exn * CloudDumpContext option
@@ -76,34 +79,51 @@
         | ChoiceValue of (CloudExpr [] * Type)
         | ChoiceThunks of (ThunkValue [] * Type)
 
+    /// [omit]
     and ObjValue =
         | ObjValue of obj
         | CloudRefValue of ICloudRef<obj>
 
+    /// Represents the result of a cloud computation.
     and Result<'T> = 
         | ValueResult of 'T 
         | ExceptionResult of (exn * CloudDumpContext option) //ValueResult | ExceptionResult are valid process results
 
+    /// The container of an object stored in the CloudStore.
     and Container = string
+    /// The identifier of an object stored in the CloudStore.
     and Id = string
+    /// [omit]
     and ObjFunc = obj
+    /// The identifier of a cloud process.
     and ProcessId = int
+    /// The identifier of a task.
     and TaskId = string
 
+    /// [omit]
     and ThunkValue = Thunk of CloudExpr | ThunkId of string
 
+    /// [omit]
     and IAsyncContainer = 
         abstract Unpack<'R> : IAsyncConsumer<'R> -> 'R
 
+    /// [omit]
     and IAsyncConsumer<'R> = 
         abstract Invoke<'T> : Async<'T> -> 'R
 
+    /// Contains debug information.
     and CloudDumpContext =
         {
+            ///Filename
             File : string
+            ///Start position (row and column) of the expression.
             Start : int * int // row * col
+            ///Endposition (row and column) of the expression.
             End : int * int
+            ///The expression dump.
             CodeDump : string
+            ///The function's name.
             FunctionName : string
+            ///Variables captured by the expression.
             Vars : (string * obj) []
         }

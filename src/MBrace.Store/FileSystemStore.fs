@@ -8,6 +8,7 @@
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
 
+    /// An ICloudStore implementation that uses the local filesystem as a backend.
     type FileSystemStore(path : string, ?name) =
         let path = Path.GetFullPath path
 

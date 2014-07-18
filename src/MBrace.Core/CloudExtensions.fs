@@ -1,10 +1,19 @@
 ﻿namespace Nessos.MBrace
 
-    // Some extensions to the Cloud type that are not primitives but
-    // don't belong to MBrace.Lib 
     [<AutoOpen>]
-    module CloudExtensions = 
+    /// A module that provides extensions to use with the CloudRef primitive.
+    module CloudRefExtensions =
 
+        [<Cloud>]
+        /// Creates a new CloudRef. This is a shorthand for the 'CloudRef.New' method.
+        let newRef value = CloudRef.New value 
+    
+        /// An active pattern that matches an ICloudRef and returns its value.
+        let (|CloudRef|) (cloudRef : ICloudRef<'T>) = cloudRef.Value
+
+    [<AutoOpen>]
+    /// Some extensions to the Cloud type that are not primitives but don't belong to MBrace.Lib.
+    module CloudExtensions = 
         type Cloud with
             /// <summary>Performs given cloud computation discarding the result.</summary>
             /// <param name="computation">The computation input.</param>
@@ -43,36 +52,53 @@
             static member Sleep(millisecondsDueTime : int) =
                 Cloud.OfAsync <| Async.Sleep(millisecondsDueTime)
 
-        [<AutoOpen>]
-        module CloudOperators =
+    [<AutoOpen>]
+    /// A module containing some useful operators for cloud computations.
+    module CloudOperators =
 
-            [<Cloud>]
-            /// Converts an Cloud computation to a computation that will
-            /// be executed locally.
-            let local (computation : Cloud<'T>) : Cloud<'T> =
-                Cloud.ToLocal computation
+        [<Cloud>]
+        /// Converts an Cloud computation to a computation that will
+        /// be executed locally.
+        let local (computation : Cloud<'T>) : Cloud<'T> =
+            Cloud.ToLocal computation
 
-            [<Cloud>]
-            [<NoTraceInfo>]
-            let (<||>) (left : Cloud<'a>) (right : Cloud<'b>) : Cloud<'a * 'b> = 
-                cloud { 
-                    let! result = 
-                            Cloud.Parallel<obj> [| cloud { let! value = left in return value :> obj }; 
-                                                    cloud { let! value = right in return value :> obj } |]
-                    return (result.[0] :?> 'a, result.[1] :?> 'b) 
-                }
+        /// <summary>
+        /// Combines two cloud computations into one that executes them in parallel.
+        /// </summary>
+        /// <param name="left">The first cloud computation.</param>
+        /// <param name="right">The second cloud computation.</param>
+        [<Cloud>]
+        [<NoTraceInfo>]
+        let (<||>) (left : Cloud<'a>) (right : Cloud<'b>) : Cloud<'a * 'b> = 
+            cloud { 
+                let! result = 
+                        Cloud.Parallel<obj> [| cloud { let! value = left in return value :> obj }; 
+                                                cloud { let! value = right in return value :> obj } |]
+                return (result.[0] :?> 'a, result.[1] :?> 'b) 
+            }
 
-            [<Cloud>]
-            [<NoTraceInfo>]
-            let (<|>) (left : Cloud<'a>) (right : Cloud<'a>) : Cloud<'a> =
-                cloud {
-                    let! result = 
-                        Cloud.Choice [| cloud { let! value = left  in return Some (value) }
-                                        cloud { let! value = right in return Some (value) }  |]
+        /// <summary>
+        ///  Combines two cloud computations into one that executes them in parallel and returns the
+        ///  result of the first computation that completes and cancels the other.
+        /// </summary>
+        /// <param name="left">The first cloud computation.</param>
+        /// <param name="right">The second cloud computation.</param>
+        [<Cloud>]
+        [<NoTraceInfo>]
+        let (<|>) (left : Cloud<'a>) (right : Cloud<'a>) : Cloud<'a> =
+            cloud {
+                let! result = 
+                    Cloud.Choice [| cloud { let! value = left  in return Some (value) }
+                                    cloud { let! value = right in return Some (value) }  |]
 
-                    return result.Value
-                }
+                return result.Value
+            }
 
-            [<Cloud>]
-            [<NoTraceInfo>]
-            let (<.>) first second = cloud { let! v1 = first in let! v2 = second in return (v1, v2) }
+        /// <summary>
+        /// Combines two cloud computations into one that executes them sequentially.
+        /// </summary>
+        /// <param name="left">The first cloud computation.</param>
+        /// <param name="right">The second cloud computation.</param>
+        [<Cloud>]
+        [<NoTraceInfo>]
+        let (<.>) first second = cloud { let! v1 = first in let! v2 = second in return (v1, v2) }

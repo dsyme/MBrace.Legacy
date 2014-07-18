@@ -6,6 +6,7 @@
     open System.Data.SqlClient
     open System.Collections.Generic
     
+    /// An ICloudStore implementation that uses a SQLServer instance as a backend.
     type SqlServerStore(connectionString: string, ?name : string) as this =
         let name = defaultArg name "SqlServer"
 

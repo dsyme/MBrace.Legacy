@@ -13,16 +13,18 @@
         member __.StoreFactoryType = storeFactoryType
         member __.ConnectionString = connectionString
 
-        /// Defines a new store provider
+        /// Defines a new store provider.
         static member Create<'Factory when 'Factory :> ICloudStoreFactory>(connectionString : string) =
             new StoreDefinition(typeof<'Factory>, connectionString)
 
+        /// Defines a new store provider.
         static member Create(storeFactoryType : Type, connectionString : string) =
             if typeof<ICloudStoreFactory>.IsAssignableFrom storeFactoryType then
                 new StoreDefinition(storeFactoryType, connectionString)
             else
                 invalidArg "storeFactoryQualifiedName" "Type is not a store factory."
 
+        /// Defines a new store provider.
         static member TryDefine(storeFactoryQualifiedName : string, connectionString : string, throwOnError : bool) =
             match Type.GetType(storeFactoryQualifiedName, throwOnError = throwOnError) with
             | null -> None

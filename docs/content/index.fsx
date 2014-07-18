@@ -12,7 +12,7 @@
   <div class="span1"></div>
   <div class="span6">
     <div class="well well-small" id="nuget">
-      The FsPickler library can be <a href="https://nuget.org/packages/MBrace">installed from NuGet</a>:
+      The MBrace framework can be <a href="https://nuget.org/packages/MBrace">installed from NuGet</a>:
       <pre>PM> Install-Package MBrace.Runtime
 PM> Install-Package MBrace.Core</pre>
     </div>

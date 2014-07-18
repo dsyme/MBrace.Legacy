@@ -12,7 +12,7 @@ let githubLink = "http://github.com/nessos/MBrace"
 
 // Specify more information about your project
 let info =
-  [ "project-name", "Brace"
+  [ "project-name", "MBrace"
     "project-author", "Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"
     "project-summary", "An open source framework for large-scale distributed computation and data processing written in F#."
     "project-github", githubLink

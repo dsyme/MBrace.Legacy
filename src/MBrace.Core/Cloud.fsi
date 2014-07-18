@@ -4,20 +4,24 @@ namespace Nessos.MBrace
 
     open Nessos.MBrace.CloudExpr
 
+    /// Adding this attribute to a let-binding marks that
+    /// the value definition contains cloud expressions.
     type CloudAttribute = ReflectedDefinitionAttribute
+    
+    /// The identifier of the running cloud process.
     type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
 
     [<Sealed>]
-    /// Disable tracing for cloud workflow
+    /// Disable tracing for the current cloud workflow.
     type NoTraceInfoAttribute =
         class
             inherit System.Attribute
             new : unit -> NoTraceInfoAttribute
-            member Name : string
+            //member Name : string
         end
 
     [<Sealed>]
-    /// Disable [<Cloud>] warnings for current workflow
+    /// Disable warnings for missing CloudAttributes for the current workflow.
     type NoWarnAttribute =
         class
             inherit System.Attribute
@@ -25,9 +29,11 @@ namespace Nessos.MBrace
         end
 
     [<Sealed>]
+    /// Representation of a cloud computation, which, when run will produce a value of type 'T, or else raises an exception.
     type Cloud<'T> =
         class
             internal new : cloudExpr:CloudExpr -> Cloud<'T>
+            /// The type of the returned value.
             member Type : Type
             member internal CloudExpr : CloudExpr
         end
@@ -92,27 +98,41 @@ namespace Nessos.MBrace
     type CloudBuilder =
         class
             new : unit -> CloudBuilder
+            
+            ///Implements 'let!' in cloud computations.
             member Bind : computation:Cloud<'T> * bindF:('T -> Cloud<'U>) -> Cloud<'U>
+            ///Creates a cloud computation that first runs one computation and then runs another computation, returning the result of the second computation.
             member Combine : first:Cloud<unit> * second:Cloud<'T> -> Cloud<'T>
+            ///Creates a cloud computation that runs a function.
             member Delay : f:(unit -> Cloud<'T>) -> Cloud<'T>
+            ///Implements the 'for' expression in cloud computations.
             member For : values:'T [] * bindF:('T -> Cloud<unit>) -> Cloud<unit>
+            ///Implements the 'for' expression in cloud computations.
             member For : values:'T list * bindF:('T -> Cloud<unit>) -> Cloud<unit>
+            ///Implements the 'return' expression in cloud computations.
             member Return : value:'T -> Cloud<'T>
+            ///Implements the 'return!' expression in cloud computations.
             member ReturnFrom : computation:Cloud<'T> -> Cloud<'T>
+            ///Implements the 'try ... finally' expression in cloud computations.
             member TryFinally : computation:Cloud<'T> * compensation:(unit -> unit) -> Cloud<'T>
+            ///Implements the 'try ... with' expression in cloud computations.
             member TryWith : computation:Cloud<'T> * exceptionF:(exn -> Cloud<'T>) -> Cloud<'T>
+            ///Creates a cloud computation that does nothing and returns ().
             member Zero : unit -> Cloud<unit>
+            ///Implements the 'use!' expression in cloud computation expressions.
             member Using<'T, 'U when 'T :> ICloudDisposable> : 'T * ('T -> Cloud<'U>) -> Cloud<'U> 
 
             [<CompilerMessage("While loops in distributed computation not recommended; consider using an accumulator pattern instead.", 44)>]
+            ///Implements the 'while' keyword in cloud computation expressions.
             member While : guardF:(unit -> bool) * body:Cloud<unit> -> Cloud<unit>
         end
 
     [<AutoOpen>]
     [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    /// The monadic builder module.
     module CloudBuilder = begin
-
-        val cloud : CloudBuilder
+        /// Builds a cloud workflow. 
+        val cloud : CloudBuilder 
         val internal mkTry<'Exc,'T when 'Exc :> exn> :
             expr:Cloud<'T> -> Cloud<'T option>
     end
