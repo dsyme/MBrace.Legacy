@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>StoreClient - Brace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/MBrace/content/style.css" />
+    <script type="text/javascript" src="/MBrace/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/nessos/MBrace">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/MBrace/index.html">Brace</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>StoreClient</h1>
+<div class="xmldoc">
+<p>Provides methods for interacting with the store and the primitives without the need for a runtime.</p>
+</div>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '323', 323)" onmouseover="showTip(event, '323', 323)">
+            ContainerExists(container)
+          </code>
+          <div class="tip" id="323">
+            <strong>Signature:</strong> container:string -&gt; bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L243-243" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Checks if container exists in the given path.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '324', 324)" onmouseover="showTip(event, '324', 324)">
+            ContainerExistsAsync(container)
+          </code>
+          <div class="tip" id="324">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;bool&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L238-238" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Checks if container exists in the given path.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '325', 325)" onmouseover="showTip(event, '325', 325)">
+            CreateCloudFile(container, name, writer)
+          </code>
+          <div class="tip" id="325">
+            <strong>Signature:</strong> (container:string * name:string * writer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; ICloudFile<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L159-159" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Create a new file in the storage with the specified folder and name.
+Use the serialize function to write to the underlying stream.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '326', 326)" onmouseover="showTip(event, '326', 326)">
+            CreateCloudFileAsync(...)
+          </code>
+          <div class="tip" id="326">
+            <strong>Signature:</strong> (container:string * name:string * writer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; Async&lt;ICloudFile&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L140-140" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Create a new file in the storage with the specified folder and name.
+Use the serialize function to write to the underlying stream.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '327', 327)" onmouseover="showTip(event, '327', 327)">
+            CreateCloudRef(container, value)
+          </code>
+          <div class="tip" id="327">
+            <strong>Signature:</strong> (container:string * value:&#39;T) -&gt; ICloudRef&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L64-64" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new CloudRef in the specified container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '328', 328)" onmouseover="showTip(event, '328', 328)">
+            CreateCloudRefAsync(container, value)
+          </code>
+          <div class="tip" id="328">
+            <strong>Signature:</strong> (container:string * value:&#39;T) -&gt; Async&lt;ICloudRef&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L41-41" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new CloudRef in the specified container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '329', 329)" onmouseover="showTip(event, '329', 329)">
+            CreateCloudSeq(container, values)
+          </code>
+          <div class="tip" id="329">
+            <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; ICloudSeq&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L114-114" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new CloudSeq in the specified container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '330', 330)" onmouseover="showTip(event, '330', 330)">
+            CreateCloudSeqAsync(container, values)
+          </code>
+          <div class="tip" id="330">
+            <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; Async&lt;ICloudSeq&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L91-91" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new CloudSeq in the specified container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '331', 331)" onmouseover="showTip(event, '331', 331)">
+            CreateMutableCloudRef(...)
+          </code>
+          <div class="tip" id="331">
+            <strong>Signature:</strong> (container:string * id:string * value:&#39;T) -&gt; IMutableCloudRef&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L199-199" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new MutableCloudRef in the specified folder with the specified identifier.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '332', 332)" onmouseover="showTip(event, '332', 332)">
+            CreateMutableCloudRefAsync(...)
+          </code>
+          <div class="tip" id="332">
+            <strong>Signature:</strong> (container:string * id:string * value:&#39;T) -&gt; Async&lt;IMutableCloudRef&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L180-180" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new MutableCloudRef in the specified folder with the specified identifier.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '333', 333)" onmouseover="showTip(event, '333', 333)">
+            DeleteContainer(container)
+          </code>
+          <div class="tip" id="333">
+            <strong>Signature:</strong> container:string -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L223-223" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Deletes the specified container from store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '334', 334)" onmouseover="showTip(event, '334', 334)">
+            DeleteContainerAsync(container)
+          </code>
+          <div class="tip" id="334">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L218-218" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Deletes the specified container from store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '335', 335)" onmouseover="showTip(event, '335', 335)">
+            GetCloudFile(container, id)
+          </code>
+          <div class="tip" id="335">
+            <strong>Signature:</strong> (container:string * id:string) -&gt; ICloudFile<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L170-170" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Create a CloudFile from an existing file.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '336', 336)" onmouseover="showTip(event, '336', 336)">
+            GetCloudFileAsync(container, name)
+          </code>
+          <div class="tip" id="336">
+            <strong>Signature:</strong> (container:string * name:string) -&gt; Async&lt;ICloudFile&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L151-151" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Create a CloudFile from an existing file.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '337', 337)" onmouseover="showTip(event, '337', 337)">
+            GetCloudFiles(container)
+          </code>
+          <div class="tip" id="337">
+            <strong>Signature:</strong> container:string -&gt; ICloudFile []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L164-164" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Return all the files (as CloudFiles) in a folder.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '338', 338)" onmouseover="showTip(event, '338', 338)">
+            GetCloudFilesAsync(container)
+          </code>
+          <div class="tip" id="338">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;ICloudFile []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L145-145" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Return all the files (as CloudFiles) in a folder.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '339', 339)" onmouseover="showTip(event, '339', 339)">
+            GetCloudRef(container, id)
+          </code>
+          <div class="tip" id="339">
+            <strong>Signature:</strong> (container:string * id:string) -&gt; ICloudRef<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L79-79" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns a CloudRef that already exists in the specified contained with the given identifier.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '340', 340)" onmouseover="showTip(event, '340', 340)">
+            GetCloudRefAsync(container, id)
+          </code>
+          <div class="tip" id="340">
+            <strong>Signature:</strong> (container:string * id:string) -&gt; Async&lt;ICloudRef&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L56-56" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns a CloudRef that already exists in the specified contained with the given identifier.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '341', 341)" onmouseover="showTip(event, '341', 341)">
+            GetCloudRefs(container)
+          </code>
+          <div class="tip" id="341">
+            <strong>Signature:</strong> container:string -&gt; ICloudRef []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L71-71" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of the CloudRefs contained in the specified folder.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '342', 342)" onmouseover="showTip(event, '342', 342)">
+            GetCloudRefsAsync(container)
+          </code>
+          <div class="tip" id="342">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;ICloudRef []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L48-48" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of the CloudRefs contained in the specified folder.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '343', 343)" onmouseover="showTip(event, '343', 343)">
+            GetCloudSeq(container, id)
+          </code>
+          <div class="tip" id="343">
+            <strong>Signature:</strong> (container:string * id:string) -&gt; ICloudSeq<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L129-129" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns a CloudSeq that already exists in the specified contained with the given identifier.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '344', 344)" onmouseover="showTip(event, '344', 344)">
+            GetCloudSeqAsync(container, id)
+          </code>
+          <div class="tip" id="344">
+            <strong>Signature:</strong> (container:string * id:string) -&gt; Async&lt;ICloudSeq&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L106-106" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns a CloudSeq that already exists in the specified contained with the given identifier.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '345', 345)" onmouseover="showTip(event, '345', 345)">
+            GetCloudSeqs(container)
+          </code>
+          <div class="tip" id="345">
+            <strong>Signature:</strong> container:string -&gt; ICloudSeq []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L121-121" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of the CloudSeqs contained in the specified folder.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '346', 346)" onmouseover="showTip(event, '346', 346)">
+            GetCloudSeqsAsync(container)
+          </code>
+          <div class="tip" id="346">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;ICloudSeq []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L98-98" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of the CloudSeqs contained in the specified folder.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '347', 347)" onmouseover="showTip(event, '347', 347)">
+            GetContainers()
+          </code>
+          <div class="tip" id="347">
+            <strong>Signature:</strong> unit -&gt; string []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L233-233" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Retrieves the name of all containers from store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '348', 348)" onmouseover="showTip(event, '348', 348)">
+            GetContainersAsync()
+          </code>
+          <div class="tip" id="348">
+            <strong>Signature:</strong> unit -&gt; Async&lt;string []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L228-228" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Retrieves the name of all containers from store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '349', 349)" onmouseover="showTip(event, '349', 349)">
+            GetMutableCloudRef(container, id)
+          </code>
+          <div class="tip" id="349">
+            <strong>Signature:</strong> (container:string * id:string) -&gt; IMutableCloudRef<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L210-210" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns the MutableCloudRef with the specified container and id combination.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '350', 350)" onmouseover="showTip(event, '350', 350)">
+            GetMutableCloudRefAsync(container, id)
+          </code>
+          <div class="tip" id="350">
+            <strong>Signature:</strong> (container:string * id:string) -&gt; Async&lt;IMutableCloudRef&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L191-191" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns the MutableCloudRef with the specified container and id combination.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '351', 351)" onmouseover="showTip(event, '351', 351)">
+            GetMutableCloudRefs(container)
+          </code>
+          <div class="tip" id="351">
+            <strong>Signature:</strong> container:string -&gt; IMutableCloudRef []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L204-204" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of all the MutableCloudRefs within the container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '352', 352)" onmouseover="showTip(event, '352', 352)">
+            GetMutableCloudRefsAsync(container)
+          </code>
+          <div class="tip" id="352">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;IMutableCloudRef []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L185-185" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of all the MutableCloudRefs within the container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '353', 353)" onmouseover="showTip(event, '353', 353)">
+            StoreDefinition
+          </code>
+          <div class="tip" id="353">
+            <strong>Signature:</strong> StoreDefinition<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L21-21" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '356', 356)" onmouseover="showTip(event, '356', 356)">
+            Default
+          </code>
+          <div class="tip" id="356">
+            <strong>Signature:</strong> StoreClient<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L24-24" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets the default StoreClient that corresponds to the current StoreProvider.</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">Brace</li>
+            <li><a href="/MBrace/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://www.nuget.org/packages/MBrace">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/nessos/MBrace">Source Code on GitHub</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/License.md">License</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting started</li>
+            <li><a href="/MBrace/tutorial.html">Sample tutorial</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a href="/MBrace/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/nessos/MBrace"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>
