@@ -4,7 +4,7 @@
 // --------------------------------------------------------------------------------------
 
 // Binaries that have XML documentation (in a corresponding generated XML file)
-let referenceBinaries = [ "MBrace.Core.dll" ]
+let referenceBinaries = [ "MBrace.Core.dll" ; "MBrace.Lib.dll" ; "MBrace.Store.dll" ; "MBrace.Client.dll" ]
 // Web site location for the generated documentation
 let website = "/MBrace"
 
@@ -77,6 +77,7 @@ let buildReference () =
       parameters = ("root", root)::info,
       sourceRepo = githubLink @@ "tree/master",
       sourceFolder = __SOURCE_DIRECTORY__ @@ ".." @@ "..",
+      libDirs = [bin],
       publicOnly = true )
 
 // Build documentation from `fsx` and `md` files in `docs/content`
