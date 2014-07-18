@@ -187,6 +187,10 @@ Target "StorePkg" (fun _ ->
             ToolPath = nugetPath
             AccessKey = getBuildParamOrDefault "nugetkey" ""
             Publish = hasBuildParam "nugetkey"
+            Dependencies =
+                [
+                    "FSharp.Core.3", "0.0.2"
+                ]
             References = 
                 [
                     "MBrace.Store.dll"
