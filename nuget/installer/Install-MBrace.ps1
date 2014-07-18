@@ -9,7 +9,7 @@
 
 function Download-Nuget
 {
-    Invoke-WebRequest http://nuget.org/nuget.exe -OutFile nuget.exe 
+    Invoke-WebRequest "http://nuget.org/nuget.exe" -OutFile nuget.exe 
 }
 
 function CheckIf-Admin
@@ -48,13 +48,13 @@ function Install-MBraceService
 
 function Execute-Step([string]$message, [scriptblock]$block)
 {
-    Write-Verbose "* $message . . . "
+    Write-Host "* $message . . . " 
     return $block.Invoke()
 }
 
 $VerbosePreference = 'Continue'
 
-Start-Transcript 
+Start-Transcript -Path "mbraceinstaller$(Get-Date -Format "ddMMyyyyHHmmss").txt"
 
 $isAdmin = Execute-Step "Checking for admin permissions" { CheckIf-Admin }
 if(!$isAdmin) { Write-Host "Admin permissions required"; exit }
