@@ -16,14 +16,12 @@
 
         static let instance = ref None
 
-        static member internal Register(pickler : FsPicklerBase) =
+        static member internal Register(pickler : FsPicklerSerializer) =
             lock instance (fun () ->
                 if instance.Value.IsSome then
                     invalidOp "An instance of FsPickler has been registered."
 
-                let actorSerializer = 
-                    new FsPicklerSerializer(pickler) :> IMessageSerializer
-
+                let actorSerializer = new FsPicklerMessageSerializer(pickler) :> IMessageSerializer
                 SerializerRegistry.Register(actorSerializer)
                 SerializerRegistry.SetDefault actorSerializer.Name
 

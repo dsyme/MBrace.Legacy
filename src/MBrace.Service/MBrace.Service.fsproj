@@ -66,7 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsPickler">
-      <HintPath>..\..\packages\FsPickler.0.9.6\lib\net45\FsPickler.dll</HintPath>
+      <HintPath>..\..\packages\FsPickler.0.9.9\lib\net45\FsPickler.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
@@ -95,11 +95,11 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="Thespian">
-      <HintPath>..\..\packages\Thespian.0.0.8-alpha\lib\net45\Thespian.dll</HintPath>
+      <HintPath>..\..\packages\Thespian.0.0.10-alpha\lib\net45\Thespian.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Thespian.Cluster">
-      <HintPath>..\..\packages\Thespian.0.0.8-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
+      <HintPath>..\..\packages\Thespian.0.0.10-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="UnionArgParser">
@@ -107,11 +107,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">
-      <HintPath>..\..\packages\Vagrant.0.2.1\lib\net45\Vagrant.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.2.2\lib\net45\Vagrant.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant.Cecil">
-      <HintPath>..\..\packages\Vagrant.0.2.1\lib\net45\Vagrant.Cecil.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.2.2\lib\net45\Vagrant.Cecil.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
