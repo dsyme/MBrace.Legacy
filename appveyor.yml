@@ -2,10 +2,11 @@ version: 0.5.0.{build}
 
 configuration: Release
 
-before_test:
-  - netsh.exe advfirewall firewall add rule name='MBrace daemon' dir=in action=allow program=.\bin\mbraced.exe enable=yes
-  - netsh.exe advfirewall firewall add rule name='MBrace worker' dir=in action=allow program=.\bin\mbrace.worker.exe enable=yes
-  - Add-AppveyorMessage -Message "Created firewall rules"
+#before_test:
+#  - ps: Add-AppveyorMessage -Message "Creating firewall rules"
+#  - netsh.exe advfirewall firewall add rule name = "MBrace Worker" dir=in action=allow program="c:\projects\mbrace\bin\mbrace.worker.exe" enable=yes profile=any
+#  - netsh.exe advfirewall firewall add rule name = "MBrace Daemon" dir=in action=allow program="c:\projects\mbrace\bin\mbraced.exe" enable=yes profile=any
+#  - ps: Add-AppveyorMessage -Message "Created firewall rules"
 
 test:
   assemblies:
@@ -15,4 +16,4 @@ test:
     - FileSystemStore
     - CompilerTests
     - LocalTests
-    - ClusterTests
+#    - ClusterTests
