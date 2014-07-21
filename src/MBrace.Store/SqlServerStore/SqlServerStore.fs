@@ -28,7 +28,7 @@
 
         interface ICloudStore with
             override this.Name = name
-            override this.UUID = connectionString
+            override this.EndpointId = connectionString
 
             override this.CreateImmutable (folder, file, serialize, _) = async {
                     let ms = new MemoryStream()

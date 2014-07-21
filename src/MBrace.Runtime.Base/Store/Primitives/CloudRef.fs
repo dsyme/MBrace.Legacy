@@ -74,7 +74,7 @@
             Serialization.DefaultPickler.Serialize<obj>(stream, value)
         }
 
-        let storeHash = String.Convert.BytesToBase32(storeId.UUID)
+        let storeHash = String.Convert.BytesToBase32(storeId.HashCode)
 
         let read container id : Async<Type * obj> = async {
             use! stream = fscache.Read(container, id) 

@@ -17,7 +17,7 @@
 
         let name = defaultArg name "FileSystem"
 
-        let uuid =
+        let fullPath =
             let uri = Uri(path)
             if uri.IsUnc then uri.ToString()
             else sprintf "file://%s/%s" (System.Net.Dns.GetHostName()) uri.AbsolutePath
@@ -42,7 +42,7 @@
 
         interface ICloudStore with
             override self.Name = name
-            override self.UUID = uuid
+            override self.EndpointId = fullPath
 
             override self.CreateImmutable(folder : string, file : string, serialize : Stream -> Async<unit>, asFile : bool) =
                 async {

@@ -24,10 +24,10 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                       (state: State)
                       (msg: Scheduler) = 
 
-    let primitiveConfig = PrimitiveConfiguration.Init()
+    let storeInfo = StoreRegistry.DefaultStoreInfo
 
     let newRef (processId : int) (value : 'T) = 
-        primitiveConfig.CloudRefProvider.Create<'T>("temp" + (string processId), Guid.NewGuid().ToString(), value)
+        storeInfo.CloudRefProvider.Create<'T>("temp" + (string processId), Guid.NewGuid().ToString(), value)
 
     let taskManager = state.TaskManager
     let continuationMap = state.ContinuationMap

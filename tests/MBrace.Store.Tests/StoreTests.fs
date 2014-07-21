@@ -47,7 +47,7 @@
 
         [<Test>]
         member test.``A.0 UUID is not null or empty.`` () = 
-            String.IsNullOrEmpty test.Store.UUID
+            String.IsNullOrEmpty test.Store.EndpointId
             |> should equal false
 
         [<Test>]

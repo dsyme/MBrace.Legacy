@@ -50,9 +50,9 @@
                     else
                         new NullCloudProcessLogger() :> ICloudLogger
 
-                let primitives = PrimitiveConfiguration.Init(StoreRegistry.DefaultStoreInfo.Id)
+                let storeInfo = StoreRegistry.DefaultStoreInfo
 
-                return! Interpreter.evaluateLocalWrapped primitives logger processId computation.Value
+                return! Interpreter.evaluateLocalWrapped storeInfo logger processId computation.Value
             }
 
             static member RunLocalAsync (computation : Cloud<'T>, ?showLogs) : Async<'T> =

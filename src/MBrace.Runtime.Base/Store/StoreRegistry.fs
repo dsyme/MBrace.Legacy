@@ -5,22 +5,11 @@
     open System.Collections.Concurrent
     open System.Runtime
     open System.Reflection
-    open System.Security.Cryptography
-    open System.Text
 
     open Nessos.Vagrant
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Store
-
-    [<AutoSerializable(true) ; StructuralEquality ; StructuralComparison>]
-    type StoreId = 
-        {
-            AssemblyQualifiedName : string
-            UUID                  : byte []
-        }
-    with 
-        override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
 
     [<AutoSerializable(true) ; NoEquality ; NoComparison>]
     type StoreActivationInfo =
@@ -37,7 +26,12 @@
             Definition : StoreDefinition
             Dependencies : Map<AssemblyId, Assembly>
             ActivationInfo : StoreActivationInfo
-            
+
+            CloudRefProvider : CloudRefProvider
+            CloudFileProvider : CloudFileProvider
+            CloudSeqProvider : CloudSeqProvider
+            MutableCloudRefProvider : MutableCloudRefProvider
+
             // TODO : investigate whether inmem cache should be
             // global or restricted to particular stores
             InMemoryCache : InMemoryCache
@@ -50,11 +44,8 @@
     and StoreRegistry private () =
 
         static let defaultStore = ref None
-        static let localCacheStore = ref None
+        static let localCacheStore : ICloudStore option ref = ref None
         static let registry = new ConcurrentDictionary<StoreId, StoreInfo> ()
-
-        static let hashAlgorithm = SHA256Managed.Create() :> HashAlgorithm
-        static let computeHash (txt : string) = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes txt)
 
         static let activate (definition : StoreDefinition) =
             let factory = Activator.CreateInstance definition.StoreFactoryType :?> ICloudStoreFactory
@@ -67,7 +58,7 @@
 
         static member Activate (definition : StoreDefinition, makeDefault) =
             let store = activate definition
-            let id = { AssemblyQualifiedName = store.GetType().AssemblyQualifiedName ; UUID = computeHash store.UUID }
+            let id = StoreId.Generate store
 
             let mkStoreInfo (id : StoreId) =
                 let assemblies = VagrantRegistry.ComputeDependencies definition.StoreFactoryType
@@ -86,11 +77,21 @@
                 let cacheStore = getLocalCache()
                 let localCache = new CacheStore(sprintf "fscache-%d" <| hash id, cacheStore, store)
 
+                let cRefProvider = CloudRefProvider.Create(info.Id, store, inmem, localCache)
+                let cFileProvider = CloudFileProvider.Create(info.Id, store, localCache)
+                let mRefProvider = MutableCloudRefProvider.Create(info.Id, store)
+                let cSeqprovider = CloudSeqProvider.Create(info.Id, store, localCache)
+
                 {
                     Store = store
                     Definition = definition
                     Dependencies = dependencies
                     ActivationInfo = info
+
+                    CloudRefProvider = cRefProvider
+                    CloudFileProvider = cFileProvider
+                    MutableCloudRefProvider = mRefProvider
+                    CloudSeqProvider = cSeqprovider
 
                     InMemoryCache = inmem
                     CacheStore = localCache

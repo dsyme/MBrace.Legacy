@@ -5,6 +5,7 @@
     open Nessos.Thespian
 
     open Nessos.MBrace.Utils
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime.Logging
 
     type NodeState =
