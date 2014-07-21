@@ -23,7 +23,7 @@
 
         interface ICloudStore with
             member this.Name = immutableStore.Name
-            member this.UUID = conn
+            member this.EndpointId = conn
 
             // Immutable
             member this.CreateImmutable(folder, file, serialize, asFile) =

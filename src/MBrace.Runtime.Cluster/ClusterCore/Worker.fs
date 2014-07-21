@@ -32,11 +32,11 @@ let workerBehavior (processId: ProcessId)
                    (msg: Worker) =
     
     /// Dependency injection point. Fix!
-    let config = PrimitiveConfiguration.Init()
+    let storeInfo = StoreRegistry.DefaultStoreInfo
     let logger = IoC.Resolve<ISystemLogger> ()
     let store = StoreRegistry.DefaultStoreInfo.Store
 
-    let toCloudRef cloudExpr = config.CloudRefProvider.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr.GetType(), cloudExpr)
+    let toCloudRef cloudExpr = storeInfo.CloudRefProvider.Create("temp" + (string processId), Guid.NewGuid().ToString(), cloudExpr.GetType(), cloudExpr)
     let taskManager = state.TaskManager
 
     let processTask (processId : ProcessId, taskId : TaskId, functions : FunctionInfo list, Dump (dump)) = async {
@@ -57,7 +57,7 @@ let workerBehavior (processId: ProcessId)
 
         let rec processTask' stack = 
             async {
-                let! stack' = Interpreter.evaluateSequential config taskConfig (isTraceEnabled stack) stack
+                let! stack' = Interpreter.evaluateSequential storeInfo taskConfig (isTraceEnabled stack) stack
                 match stack' with
                 | GetProcessIdExpr :: rest ->
                     return! processTask' <| ValueExpr (Obj (ObjValue processId, typeof<int>)) :: rest
@@ -77,10 +77,10 @@ let workerBehavior (processId: ProcessId)
                     return (ValueExpr choiceValue) :: rest
                 | LocalExpr cloudExpr :: rest -> 
                     let taskF () = sprintf "local thread %d" System.Threading.Thread.CurrentThread.ManagedThreadId
-                    let! value = Interpreter.evaluateLocal config taskConfig taskF false [cloudExpr]
+                    let! value = Interpreter.evaluateLocal storeInfo taskConfig taskF false [cloudExpr]
                     return! processTask' <| (ValueExpr value) :: rest
                 | ValueExpr (Obj (ObjValue value, t)) :: rest when value <> null ->
-                    let! cloudRefValue = config.CloudRefProvider.Create<obj>("temp" + (string processId), Guid.NewGuid().ToString(), box value)
+                    let! cloudRefValue = storeInfo.CloudRefProvider.Create<obj>("temp" + (string processId), Guid.NewGuid().ToString(), box value)
                     return (ValueExpr (Obj (CloudRefValue cloudRefValue, t))) :: rest
                 | _ -> return stack'
             }

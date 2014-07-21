@@ -20,11 +20,11 @@ namespace Nessos.MBrace.Runtime.Interpreter
         /// <summary>
         ///     evalutes the symbolic stack sequentially until a cloud primitive is encountered.
         /// </summary>
-        /// <param name="primitiveConfig"></param>
+        /// <param name="storeConfig"></param>
         /// <param name="taskConfig"></param>
         /// <param name="traceEnabled"></param>
         /// <param name="stack"></param>
-        let evaluateSequential (primitiveConfig : PrimitiveConfiguration) (taskConfig : TaskConfiguration)
+        let evaluateSequential (storeConfig : StoreInfo) (taskConfig : TaskConfiguration)
                                 (traceEnabled : bool) (stack : CloudExpr list) : Async<CloudExpr list> =
 
             let trapExc (f : obj -> CloudExpr) (value : obj) (objF : ObjFunc) : CloudExpr = 
@@ -77,7 +77,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
 
                     | NewRefByNameExpr (container, value, t) :: rest ->
                         let id = Guid.NewGuid().ToString()
-                        let! exec = Async.Catch <| primitiveConfig.CloudRefProvider.Create(container, id, t, value)
+                        let! exec = Async.Catch <| storeConfig.CloudRefProvider.Create(container, id, t, value)
                         match exec with
                         | Choice1Of2 result ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
@@ -85,7 +85,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | GetRefByNameExpr (container, id, t) :: rest ->
-                        let! cref = Async.Catch <| primitiveConfig.CloudRefProvider.GetExisting(container, id)
+                        let! cref = Async.Catch <| storeConfig.CloudRefProvider.GetExisting(container, id)
                         match cref with
                         | Choice1Of2 cref ->
                             if cref.Type <> t then
@@ -95,7 +95,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     | GetRefsByNameExpr (container) :: rest ->
-                        let! exec = Async.Catch <| primitiveConfig.CloudRefProvider.GetContainedRefs container
+                        let! exec = Async.Catch <| storeConfig.CloudRefProvider.GetContainedRefs container
                         match exec with
                         | Choice1Of2 refs ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<ICloudRef []>)) :: rest
@@ -103,7 +103,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | NewMutableRefByNameExpr (container, id, value, t) :: rest ->
-                        let! exec = primitiveConfig.MutableCloudRefProvider.Create(container, id, t, value) |> Async.Catch
+                        let! exec = storeConfig.MutableCloudRefProvider.Create(container, id, t, value) |> Async.Catch
                         match exec with
                         | Choice1Of2 result ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue result, result.GetType())) :: rest
@@ -135,7 +135,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
                     
                     | GetMutableRefByNameExpr (container, id, t) :: rest ->
-                        let! mref = Async.Catch <| primitiveConfig.MutableCloudRefProvider.GetExisting(container, id)
+                        let! mref = Async.Catch <| storeConfig.MutableCloudRefProvider.GetExisting(container, id)
                         match mref with
                         | Choice1Of2 mref ->
                             if mref.Type <> t then
@@ -146,7 +146,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | GetMutableRefsByNameExpr (container) :: rest ->
-                        let! exec = Async.Catch <| primitiveConfig.MutableCloudRefProvider.GetContainedRefs(container)
+                        let! exec = Async.Catch <| storeConfig.MutableCloudRefProvider.GetContainedRefs(container)
                         match exec with
                         | Choice1Of2 refs ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<IMutableCloudRef []>)) :: rest
@@ -162,7 +162,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | NewCloudFile(container, id, serializer) :: rest ->
-                        let! exec = Async.Catch <| primitiveConfig.CloudFileProvider.Create(container, id, serializer)
+                        let! exec = Async.Catch <| storeConfig.CloudFileProvider.Create(container, id, serializer)
                         match exec with
                         | Choice1Of2 file ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
@@ -170,7 +170,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | GetCloudFile(container, id) :: rest ->
-                        let! exec = Async.Catch <| primitiveConfig.CloudFileProvider.GetExisting(container, id)
+                        let! exec = Async.Catch <| storeConfig.CloudFileProvider.GetExisting(container, id)
                         match exec with
                         | Choice1Of2 file ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue file, typeof<ICloudFile>)) :: rest
@@ -178,7 +178,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | GetCloudFiles(container) :: rest ->
-                        let! exec = Async.Catch <| primitiveConfig.CloudFileProvider.GetContainedFiles container
+                        let! exec = Async.Catch <| storeConfig.CloudFileProvider.GetContainedFiles container
                         match exec with
                         | Choice1Of2 files ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue files, typeof<ICloudFile []>)) :: rest
@@ -202,7 +202,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
 
                     | NewCloudSeqByNameExpr (container, values, t) :: rest ->
                         let id = Guid.NewGuid().ToString()
-                        let! exec = Async.Catch <| primitiveConfig.CloudSeqProvider.Create(container, id, t, values)
+                        let! exec = Async.Catch <| storeConfig.CloudSeqProvider.Create(container, id, t, values)
                         match exec with
                         | Choice1Of2 cloudSeq ->
                             return! eval traceEnabled <| (ValueExpr (Obj (ObjValue cloudSeq, typeof<ICloudSeq>))) :: rest
@@ -210,7 +210,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | GetCloudSeqByNameExpr (container, id, t) :: rest ->
-                        let! cseq = Async.Catch <| primitiveConfig.CloudSeqProvider.GetExisting(container, id)
+                        let! cseq = Async.Catch <| storeConfig.CloudSeqProvider.GetExisting(container, id)
                         match cseq with
                         | Choice1Of2 cseq ->
                             if t <> cseq.Type
@@ -220,7 +220,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
 
                     | GetCloudSeqsByNameExpr (container) :: rest ->
-                        let! exec = Async.Catch <| primitiveConfig.CloudSeqProvider.GetContainedSeqs(container)
+                        let! exec = Async.Catch <| storeConfig.CloudSeqProvider.GetContainedSeqs(container)
                         match exec with
                         | Choice1Of2 seqs ->
                             return! eval traceEnabled <| ValueExpr (Obj (ObjValue seqs, typeof<ICloudSeq []>)) :: rest
@@ -337,13 +337,13 @@ namespace Nessos.MBrace.Runtime.Interpreter
         /// <summary>
         ///     Evaluates a cloud expression using thread-parallel semantics.
         /// </summary>
-        /// <param name="primitiveConfig"></param>
+        /// <param name="storeConfig"></param>
         /// <param name="taskConfig"></param>
         /// <param name="getCurrentTask"></param>
         /// <param name="cloner"></param>
         /// <param name="traceEnabled"></param>
         /// <param name="stack"></param>
-        let evaluateLocal (primitiveConfig : PrimitiveConfiguration) (taskConfig : TaskConfiguration)
+        let evaluateLocal (storeConfig : StoreInfo) (taskConfig : TaskConfiguration)
                                 (getCurrentTask : unit -> TaskId)
                                 (traceEnabled : bool)  (stack : CloudExpr list) : Async<Value> =
             
@@ -354,7 +354,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
             
             let rec eval (traceEnabled : bool) (stack : CloudExpr list) = 
                 async {
-                    let! stack' = evaluateSequential primitiveConfig { taskConfig with TaskId = getCurrentTask () } traceEnabled stack
+                    let! stack' = evaluateSequential storeConfig { taskConfig with TaskId = getCurrentTask () } traceEnabled stack
                     match stack' with 
                     | [ValueExpr value] -> return value
                     | GetWorkerCountExpr :: rest -> 
@@ -411,12 +411,12 @@ namespace Nessos.MBrace.Runtime.Interpreter
         /// <summary>
         ///     Evaluates a cloud workflow using thread-parallel execution semantics
         /// </summary>
-        /// <param name="primitiveConfig"></param>
+        /// <param name="storeConfig"></param>
         /// <param name="cloner"></param>
         /// <param name="processId"></param>
         /// <param name="logger"></param>
         /// <param name="computation"></param>
-        let evaluateLocalWrapped (primitiveConfig : PrimitiveConfiguration) (logger : ICloudLogger) 
+        let evaluateLocalWrapped (storeConfig : StoreInfo) (logger : ICloudLogger) 
                                                         (processId : ProcessId) (computation : Cloud<'T>) =
             async {
 
@@ -429,7 +429,7 @@ namespace Nessos.MBrace.Runtime.Interpreter
                         Functions = []
                     }
                 
-                let! result = evaluateLocal primitiveConfig taskConfig getCurrentTaskId false [CloudExprHelpers.Unwrap computation]
+                let! result = evaluateLocal storeConfig taskConfig getCurrentTaskId false [CloudExprHelpers.Unwrap computation]
 
                 return
                     match result with

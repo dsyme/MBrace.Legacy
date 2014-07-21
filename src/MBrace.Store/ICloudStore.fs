@@ -13,7 +13,7 @@
         abstract Name : string
 
         /// Unique store endpoint identifier
-        abstract UUID : string
+        abstract EndpointId : string
 
         // General-purpose methods
 
