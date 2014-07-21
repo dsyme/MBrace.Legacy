@@ -17,11 +17,10 @@ namespace Nessos.MBrace
         class
             inherit System.Attribute
             new : unit -> NoTraceInfoAttribute
-            //member Name : string
         end
 
     [<Sealed>]
-    /// Disable warnings for missing CloudAttributes for the current workflow.
+    /// Disable static check warnings being generated for current workflow.
     type NoWarnAttribute =
         class
             inherit System.Attribute
@@ -29,7 +28,7 @@ namespace Nessos.MBrace
         end
 
     [<Sealed>]
-    /// Representation of a cloud computation, which, when run will produce a value of type 'T, or else raises an exception.
+    /// Representation of a cloud computation, which, when run will produce a value of type 'T, or raise an exception.
     type Cloud<'T> =
         class
             internal new : cloudExpr:CloudExpr -> Cloud<'T>

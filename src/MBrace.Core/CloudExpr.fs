@@ -7,7 +7,7 @@ namespace Nessos.MBrace.CloudExpr
 
     open Nessos.MBrace
 
-    /// This type represents a cloud computation.
+    /// Represents an untyped cloud computation expression tree.
     type CloudExpr = 
         // Monadic Exprs
         | DelayExpr of (unit -> CloudExpr) * ObjFunc

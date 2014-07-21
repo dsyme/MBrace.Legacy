@@ -13,7 +13,7 @@
         abstract Dispose : unit -> Async<unit>
 
     /// Represents an immutable reference to an
-    /// object that is stored in the underlying CloudStore.
+    /// object that is persisted in the underlying CloudStore.
     type ICloudRef =
         inherit ICloudDisposable
 

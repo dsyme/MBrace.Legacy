@@ -10,8 +10,13 @@
     [<AutoSerializable(true); NoEquality ; NoComparison>]
     type StoreDefinition private (id : StoreId, storeFactoryType : Type, connectionString : string) =
 
+        /// Store identifier for definition
         member __.Id = id
+
+        /// ICloudStoreFactory instance used by the store
         member __.StoreFactoryType = storeFactoryType
+
+        /// Connection string for given endpoint
         member __.ConnectionString = connectionString
 
         /// Defines a new store provider.

@@ -13,7 +13,7 @@
             /// Returns a CloudRef that already exists in the specified contained with the given identifier.
             static member Get : container:string * id:string -> Cloud<ICloudRef<'T>>
 
-            /// <summary>Creates a new CloudRef in the process's container (folder).</summary>
+            /// <summary>Creates a new CloudRef in the process defined container.</summary>
             /// <param name="value">The value to be stored.</param>
             static member New : value:'T -> Cloud<ICloudRef<'T>>
                 
@@ -22,7 +22,7 @@
             /// <param name="value">The value to be stored.</param>
             static member New : container:string * value:'T -> Cloud<ICloudRef<'T>>
 
-            /// <summary>Gets the value stored in a CloudRef.</summary>
+            /// <summary>Dereferences a CloudRef.</summary>
             /// <param name="cref">The CloudRef to read.</param>
             static member Read : cref:ICloudRef<'T> -> Cloud<'T>
 

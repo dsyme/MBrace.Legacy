@@ -25,6 +25,7 @@
 
         override this.ToString () = sprintf "StoreId:%s" this.AssemblyQualifiedName
 
+        /// Generates a store identifier from given instance.
         static member Generate(store : ICloudStore) =
             let aqn = store.GetType().AssemblyQualifiedName
             let hc = Hashcode.compute store.EndpointId

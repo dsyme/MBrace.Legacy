@@ -17,7 +17,7 @@
             sI.GetValue(name, typeof<'T>) :?> 'T
 
     [<Serializable>]
-    /// The base type for all the MBrace system exceptions.
+    /// The base type for all MBrace system exceptions.
     type MBraceException =
         inherit System.Exception
 
