@@ -4,40 +4,24 @@
     open System.IO
 
     /// Represents the storage provider used by CloudRefs etc.
-    /// This can be the the local filesystem (for local usage),
+    /// This can be the local filesystem (for local usage),
     /// a shared filesystem (like a UNC path)
     /// or any custom provider that implements the ICloudStore interface.
     [<AutoSerializable(true); NoEquality ; NoComparison>]
-    type StoreDefinition private (storeFactoryType : Type, connectionString : string) =
+    type StoreDefinition private (id : StoreId, storeFactoryType : Type, connectionString : string) =
 
+        member __.Id = id
         member __.StoreFactoryType = storeFactoryType
         member __.ConnectionString = connectionString
 
         /// Defines a new store provider.
         static member Create<'Factory when 'Factory :> ICloudStoreFactory>(connectionString : string) =
-            new StoreDefinition(typeof<'Factory>, connectionString)
+            // attempt a connection before returning
+            let factory = System.Activator.CreateInstance<'Factory> ()
+            let store = factory.CreateStoreFromConnectionString connectionString
+            let id = StoreId.Generate store
 
-        /// Defines a new store provider.
-        static member Create(storeFactoryType : Type, connectionString : string) =
-            if typeof<ICloudStoreFactory>.IsAssignableFrom storeFactoryType then
-                new StoreDefinition(storeFactoryType, connectionString)
-            else
-                invalidArg "storeFactoryQualifiedName" "Type is not a store factory."
-
-        /// Defines a new store provider.
-        static member TryDefine(storeFactoryQualifiedName : string, connectionString : string, throwOnError : bool) =
-            match Type.GetType(storeFactoryQualifiedName, throwOnError = throwOnError) with
-            | null -> None
-            | factoryType -> Some <| StoreDefinition.Create(factoryType, connectionString)
-
-        /// Create a StoreProvider object from the storeProvider, storeEndpoint configuration.
-        static member Parse(name : string, connectionString : string) =
-            match name with
-            | "LocalFS" -> StoreDefinition.LocalFS
-            | "FileSystem" -> StoreDefinition.FileSystem connectionString
-            | "SqlServerStore" -> StoreDefinition.SqlServer connectionString
-            | _ -> StoreDefinition.TryDefine(name, connectionString, throwOnError = true) |> Option.get
-
+            new StoreDefinition(id, typeof<'Factory>, connectionString)
 
         /// <summary>
         /// A store provider using the file system with an endpoint being either a

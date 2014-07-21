@@ -57,10 +57,9 @@
             | Some c -> c
 
         static member Activate (definition : StoreDefinition, makeDefault) =
-            let store = activate definition
-            let id = StoreId.Generate store
-
             let mkStoreInfo (id : StoreId) =
+
+                let store = activate definition
                 let assemblies = VagrantRegistry.ComputeDependencies definition.StoreFactoryType
 
                 let ids = assemblies |> List.map VagrantUtils.ComputeAssemblyId
@@ -97,7 +96,7 @@
                     CacheStore = localCache
                 }
 
-            let info = registry.GetOrAdd(id, mkStoreInfo)
+            let info = registry.GetOrAdd(definition.Id, mkStoreInfo)
             if makeDefault then defaultStore := Some info
             info
 

@@ -124,12 +124,12 @@
         }
 
 
-        let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =
-            try
-                let provider = StoreDefinition.Parse(storeProvider, storeEndpoint)
-                StoreRegistry.Activate(provider, makeDefault = true)
-            with e ->
-                exiter.Exit(sprintf "Error connecting to store: %s" e.Message, 2)
+//        let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =
+//            try
+//                let provider = StoreDefinition.Parse(storeProvider, storeEndpoint)
+//                StoreRegistry.Activate(provider, makeDefault = true)
+//            with e ->
+//                exiter.Exit(sprintf "Error connecting to store: %s" e.Message, 2)
 
         // parser implementations        
 

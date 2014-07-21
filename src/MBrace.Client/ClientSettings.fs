@@ -22,16 +22,12 @@ namespace Nessos.MBrace.Client
         type AppConfigParameter =
             | MBraced_Path of string
             | Working_Directory of string
-            | Store_Provider of string
-            | Store_Endpoint of string
         with
             interface IArgParserTemplate with
                 member config.Usage =
                     match config with
                     | MBraced_Path _ -> "path to a local mbraced executable."
                     | Working_Directory _ -> "the working directory of this client instance. Leave blank for a temp folder."
-                    | Store_Provider _ -> "The type of storage to be used by mbrace."
-                    | Store_Endpoint _ -> "Url/Connection string for the given storage provider."
 
         let initClientConfiguration () =
             
@@ -46,12 +42,7 @@ namespace Nessos.MBrace.Client
             let workingDirectory = parseResults.TryGetResult <@ Working_Directory @> 
 
             // parse store provider
-            let storeProvider =
-                match parseResults.TryGetResult <@ Store_Provider @> with
-                | None -> StoreDefinition.LocalFS
-                | Some sp ->
-                    let endpoint = defaultArg (parseResults.TryGetResult <@ Store_Endpoint @>) ""
-                    StoreDefinition.Parse(sp, endpoint)
+            let storeProvider = StoreDefinition.LocalFS
 
             let logger = Logger.createConsoleLogger()
 
