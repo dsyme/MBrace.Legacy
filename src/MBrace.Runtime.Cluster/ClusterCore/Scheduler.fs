@@ -8,6 +8,7 @@ open Nessos.Thespian.Cluster
 open Nessos.MBrace
 open Nessos.MBrace.CloudExpr
 open Nessos.MBrace.Runtime
+open Nessos.MBrace.Runtime.Interpreter
 open Nessos.MBrace.Utils
 
 //type alias to prevent conflicts with non-cluster types
@@ -170,7 +171,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
 
                     if isValid then
                         match pb with 
-                        | ProcessBody(resultType, [_], _, Dump([(ValueExpr (Obj (CloudRefValue (CloudRef value), valueType)))]))
+                        | ProcessBody(resultType, [_], _, Dump([(ValueExpr (Obj (CloudRefValue (Interpreter.CloudRef value), valueType)))]))
                         | ProcessBody(resultType, [_], _, Dump([(ValueExpr (Obj (ObjValue value, valueType)))])) ->
                                 
                             if resultType = valueType || resultType.IsInstanceOfType(value) then

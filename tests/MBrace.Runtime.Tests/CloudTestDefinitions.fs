@@ -286,14 +286,14 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Cloud>]
         let testSimpleCloudRef a = 
             cloud {
-                let! ref = newRef a
+                let! ref = CloudRef.New a
                 return ref.Value
             }
 
         [<Cloud>]
         let testParallelCloudRefDeref a = 
             cloud {
-                let! ref = newRef a
+                let! ref = CloudRef.New a
                 let! (x, y) = cloud { return ref.Value } <||> cloud { return ref.Value }
                 return x + y
             }
@@ -303,10 +303,10 @@ namespace Nessos.MBrace.Runtime.Tests
         let rec testBuildCloudList a = 
             cloud {
                 if a = 0 then 
-                    return! newRef Nil
+                    return! CloudRef.New Nil
                 else
                     let! tail = testBuildCloudList (a - 1)
-                    return! newRef <| Cons (1, tail)
+                    return! CloudRef.New <| Cons (1, tail)
             }
         [<Cloud>]
         let rec testReduceCloudList (cloudRefList : ICloudRef<CloudList<_>>) = 
@@ -323,10 +323,10 @@ namespace Nessos.MBrace.Runtime.Tests
         let rec testBuildCloudTree a = 
             cloud {
                 if a = 1 then 
-                    return! newRef <| Leaf 1
+                    return! CloudRef.New <| Leaf 1
                 else
                     let! left, right = testBuildCloudTree (a - 1) <.> testBuildCloudTree (a - 1)
-                    return! newRef <| Node (left, right)
+                    return! CloudRef.New <| Node (left, right)
             }
         [<Cloud>]
         let rec testReduceCloudTree (cloudRefTree : ICloudRef<CloudTree<_>>) = 

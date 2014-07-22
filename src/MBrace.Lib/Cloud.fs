@@ -77,5 +77,5 @@
         let map (f : 'T -> 'S) (r : ICloudRef<'T>) : Cloud<ICloudRef<'S>> =
             cloud {
                 let v = r.Value
-                return! newRef (f v)
+                return! CloudRef.New (f v)
             }

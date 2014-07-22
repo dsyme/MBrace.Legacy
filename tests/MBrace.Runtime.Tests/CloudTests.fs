@@ -380,11 +380,11 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test>]
         member test.``CloudRef - inside cloud non-monadic deref`` () = 
-            <@ cloud { let! x = newRef 42 in return x.Value } @> |> test.ExecuteExpression |> should equal 42
+            <@ cloud { let! x = CloudRef.New 42 in return x.Value } @> |> test.ExecuteExpression |> should equal 42
 
         [<Test>]
         member test.``CloudRef - outside cloud non-monadic deref`` () = 
-            <@ cloud { let! x = newRef 42 in return x } @> |> test.ExecuteExpression |> (fun x -> x.Value) |> should equal 42
+            <@ cloud { let! x = CloudRef.New 42 in return x } @> |> test.ExecuteExpression |> (fun x -> x.Value) |> should equal 42
 
         [<Test>]
         member test.``Parallel CloudRef dereference`` () = 
@@ -402,9 +402,9 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test>]
         member test.``CloudRef Tree Node Composition`` () = 
-            let firstRef = <@ cloud { return! newRef <| Leaf 1 } @> |> test.ExecuteExpression 
-            let secondRef = <@ cloud { return! newRef <| Leaf 2 } @> |> test.ExecuteExpression 
-            <@ cloud { return! newRef <| TestFunctions.Node (firstRef, secondRef) } @> |> test.ExecuteExpression |> ignore
+            let firstRef = <@ cloud { return! CloudRef.New <| Leaf 1 } @> |> test.ExecuteExpression 
+            let secondRef = <@ cloud { return! CloudRef.New <| Leaf 2 } @> |> test.ExecuteExpression 
+            <@ cloud { return! CloudRef.New <| TestFunctions.Node (firstRef, secondRef) } @> |> test.ExecuteExpression |> ignore
 
 
 //        [<Test>]
@@ -714,8 +714,9 @@ namespace Nessos.MBrace.Runtime.Tests
             <@ cloud {
                 let! x = MutableCloudRef.New(0)
                 do! MutableCloudRef.Free(x)
-                return! MutableCloudRef.TryRead(x)
-            } @> |> test.ExecuteExpression |> should equal None
+                let! res = Cloud.Catch <| MutableCloudRef.Read(x)
+                return match res with Choice1Of2 _ -> true | _ -> false
+            } @> |> test.ExecuteExpression |> should equal false
 
         [<Test; Repeat 10>]
         member test.``MutableCloudRef - High contention`` () = 

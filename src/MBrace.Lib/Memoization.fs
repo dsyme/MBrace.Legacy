@@ -20,7 +20,7 @@
                     match b with
                     | None ->
                         let! v  = f a
-                        let! r = MutableCloudRef.TryNew(cacheName, encode a, v)
+                        let! r = Cloud.Catch <| MutableCloudRef.New(cacheName, encode a, v)
                         return v
                     | Some b -> return! MutableCloudRef.Read(b)
                 }

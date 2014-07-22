@@ -17,6 +17,9 @@ namespace Nessos.MBrace.Runtime.Interpreter
 
     module Interpreter =
 
+        /// An active pattern that matches an ICloudRef and returns its value.
+        let (|CloudRef|) (cref : ICloudRef<'T>) = cref.Value
+
         /// <summary>
         ///     evalutes the symbolic stack sequentially until a cloud primitive is encountered.
         /// </summary>
