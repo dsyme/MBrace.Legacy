@@ -36,20 +36,10 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``let binding `` () =
             <@ cloud { let x = 1 in return x + 1 } @> |> test.ExecuteExpression |> should equal 2
 
-        
-//        [<Test>] 
-//        member test.``let private binding `` () =
-//            let testPrivate = 42 
-//            <@ cloud { return testPrivate } @> |> test.ExecuteExpression |> should equal 42
-
         [<Test>] 
         member test.``let rec binding `` () =
             <@ let rec f n = cloud { if n <= 0 then return 1 else let! p = f (n-1) in return n * p } in f 2 @>
             |> test.ExecuteExpression |> should equal 2
-
-//        [<Test>] 
-//        member test.``variable hiding`` () =
-//            <@ cloud { let x = 1 in return (fun x -> x + 1) (x + 1) } @> |> test.ExecuteExpression |> should equal 3
 
         [<Test>] 
         member test.``variable binding with null and ()`` () =
@@ -59,11 +49,6 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test>] 
         member test.``customer object`` () = 
             <@ cloud { return new Foo(42) } @> |> test.ExecuteExpression |> (fun x -> should equal 42 <| x.Get() )
-
-//        [<Test>] 
-//        member test.``curry uncurry calls`` () = 
-//            <@ add 1 2  @> |> test.ExecuteExpression |> should equal 3;
-//            <@ addUnCurry (1, 2) @> |> test.ExecuteExpression |> should equal 3;
 
         [<Test>] 
         member test.``Custom Recursive Type`` () =
@@ -80,32 +65,6 @@ namespace Nessos.MBrace.Runtime.Tests
             <@ mcCarthy91 50 @> |> test.ExecuteExpression |> should equal 91;
             <@ mcCarthy91 150 @> |> test.ExecuteExpression |> should equal 140;
 
-//        [<Test>] 
-//        member test.``let mutable binding `` () =
-//            <@ cloud { 
-//                let mutable x = 1
-//                x <- x + 1
-//                return x 
-//            } @> |> test.ExecuteExpression |> should equal 2 
-            
-//        [<Test>] 
-//        member test.``.Net calls `` () =
-//            <@ cloud { return Int32.Parse("1") } @> |> test.ExecuteExpression |> should equal 1;
-//            <@ cloud { return (1 + 1).ToString() } @> |> test.ExecuteExpression |> should equal "2"
-
-//        [<Test>] 
-//        member test.``Array comprehension `` () =
-//            <@ cloud { return [| for i = 1 to 3 do yield i * 2 |] } @>
-//            |> test.ExecuteExpression |> should equal [|2; 4; 6|]
-
-//        [<Test>] 
-//        member test.``CloudAttribute `` () =
-//            <@ add 2 3 @> |> test.ExecuteExpression |> should equal 5
-
-//        [<Test>] 
-//        member test.``CloudAttribute on PropertyGet`` () =
-//            <@ testPropGet @> |> test.ExecuteExpression |> should equal 42
-
         [<Test>] 
         member test.``Simple Cloud Bind`` () = 
             <@ cloud { let! a = cloud { return 1 } in return a + 1 } @> |> test.ExecuteExpression |> should equal 2
@@ -114,6 +73,12 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Simple Cloud Parallel `` () =
             let result : int[] = <@ cloud { return! Cloud.Parallel [|cloud { return 1 }; cloud { return 2 }|] } @> |> test.ExecuteExpression
             result.Length |> should equal 2
+
+        // https://github.com/nessos/MBrace/issues/2
+        [<Test>]
+        member test.``Cloud Parallel with large input size.`` () =
+            let res = test.ExecuteExpression <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
+            res.Length |> should equal 1000
 
         [<Test>] 
         member test.``Parallel Combinator <||>`` () =
@@ -186,26 +151,6 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``Primes example `` () = 
             <@ PrimesTest.parallelPrimes 20 2 @> |> test.ExecuteExpression |> should equal (Seq.ofArray [| 2; 3; 5; 7; 11; 13; 17; 19 |])
 
-//        [<Test>]
-//        member test.``valid return type Cloud<_> from quoted function call (general example '<|') `` () = 
-//            <@ cloud { let! x = (fun x -> cloud { return x }) <| 1 in return x } @> |> test.ExecuteExpression |> should equal 1
-
-//        [<Test>]
-//        member test.``valid return type Cloud<_> from Cloud<_> `` () = 
-//            let expectedValue : Cloud<int> = <@ cloud { return cloud { return 1 } } @> |> test.ExecuteExpression 
-//            let expectedValue : Cloud<int> = <@ cloud { let! x = cloud { return cloud { return 1 } } in return x } @> |> test.ExecuteExpression 
-//            ()
-//
-//        [<Test>] 
-//        member test.``if then else `` () = 
-//            <@ testIfThenElse 42 @> |> test.ExecuteExpression |> should equal "Magic" |> ignore
-//            <@ testIfThenElse 41 @> |> test.ExecuteExpression |> should equal "Boring"
-//
-//        [<Test>] 
-//        member test.``Pattern match `` () = 
-//            <@ testMatchWith 42 @> |> test.ExecuteExpression |> should equal "Magic" |> ignore
-//            <@ testMatchWith 41 @> |> test.ExecuteExpression |> should equal "Boring"
-
         [<Test>] 
         member test.``Combine cloud expr`` () = 
             <@ 
@@ -215,27 +160,23 @@ namespace Nessos.MBrace.Runtime.Tests
                 }
             @> |> test.ExecuteExpression |> should equal 42
 
-//        [<Test>]
-//        member test.``Sequential `` () = 
-//            <@ testSequential @> |> test.ExecuteExpression |> should equal 2
-
         [<Test>]
         member test.``For Loop `` () = 
             <@ testForLoop @> |> test.ExecuteExpression |> should equal 1000
 
-//        [<Test>]
-//        member test.``For Loop as last expr `` () = 
-//            <@ cloud { for _ in [|1..10|] do () } @> 
-//            |> test.ExecuteExpression |> should equal ()
+        [<Test>]
+        member test.``For Loop as last expr `` () = 
+            <@ cloud { for _ in [|1..10|] do () } @> 
+            |> test.ExecuteExpression |> should equal ()
 
         [<Test>]
         member test.``While Loop `` () = 
             <@ testWhileLoop @> |> test.ExecuteExpression |> should equal 2
 
-//        [<Test>]
-//        member test.``While Loop as last expr `` () = 
-//            <@ cloud { while false do () } @> 
-//            |> test.ExecuteExpression |> should equal ()
+        [<Test>]
+        member test.``While Loop as last expr `` () = 
+            <@ cloud { while false do () } @> 
+            |> test.ExecuteExpression |> should equal ()
 
 
         [<Test>]
@@ -271,9 +212,9 @@ namespace Nessos.MBrace.Runtime.Tests
             <@ even 2 @> |> test.ExecuteExpression |> should equal true;
             <@ even 3 @> |> test.ExecuteExpression |> should equal false
 
-//        [<Test>]
-//        member test.``sequence application `` () = 
-//            <@ (cloud { return 2 }, cloud { return 1 }) ||> (fun first second -> cloud { let! _ = first in return! second }) @> |> test.ExecuteExpression |> should equal 1;
+        [<Test>]
+        member test.``sequence application `` () = 
+            <@ (cloud { return 2 }, cloud { return 1 }) ||> (fun first second -> cloud { let! _ = first in return! second }) @> |> test.ExecuteExpression |> should equal 1;
             
 
         [<Test>]
@@ -324,13 +265,6 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test>]
         member test.``parallel random sum for GZipStream behavior`` () =
             <@ randomSumParallel() @> |> test.ExecuteExpression |> ignore
-
-//        [<Test>]
-//        member test.``ambiguous match exception in parallel cloud exception construction`` () =
-//            fun () -> 
-//                test.ExecuteExpression <@ testAmbiguousParallelException () @> |> ignore
-//
-//            |> shouldFailwith<MBraceException>
 
         [<Test>]
         member test.``simple CloudRef`` () = 
@@ -405,18 +339,6 @@ namespace Nessos.MBrace.Runtime.Tests
             let firstRef = <@ cloud { return! CloudRef.New <| Leaf 1 } @> |> test.ExecuteExpression 
             let secondRef = <@ cloud { return! CloudRef.New <| Leaf 2 } @> |> test.ExecuteExpression 
             <@ cloud { return! CloudRef.New <| TestFunctions.Node (firstRef, secondRef) } @> |> test.ExecuteExpression |> ignore
-
-
-//        [<Test>]
-//        member test.``RunLocal Cloud`` () = 
-//            cloud { 
-//                let x = ref 1
-//                let! _ = cloud { 
-//                            do x := !x + 1
-//                            return ()
-//                            }
-//                return !x 
-//            } |> MBrace.RunLocal |> should equal 2
 
         [<Test; Repeat 10>]
         member test.``Cloud Side effects`` () =
@@ -824,30 +746,30 @@ namespace Nessos.MBrace.Runtime.Tests
                } 
             @> |> test.ExecuteExpression |> should equal -1
 
-//        [<Test>]
-//        member test.``Cloud.Catch`` () =
-//            let result : Choice<unit,exn> = 
-//                <@ cloud { 
-//                        return! Cloud.Catch <| cloud { return raise <| exn() }
-//                   } 
-//                @> |> test.ExecuteExpression
-//            match result with
-//            | Choice1Of2 _ -> Assert.Fail("Expected exception but got result.")
-//            | Choice2Of2 e -> ()
-//
-//            let result : Choice<unit,exn> = 
-//                <@ cloud { 
-//                        return! Cloud.Catch <| cloud { return () }
-//                   } 
-//                @> |> test.ExecuteExpression
-//            match result with
-//            | Choice1Of2 _ -> ()
-//            | Choice2Of2 e -> Assert.Fail("Expected result but got exception.")
-//
-//        [<Test>]
-//        member test.``Cloud.Sleep`` () =
-//            <@ cloud { do! Cloud.Sleep 1000 } @>
-//            |> test.ExecuteExpression
+        [<Test>]
+        member test.``Cloud.Catch`` () =
+            let result : Choice<unit,exn> = 
+                <@ cloud { 
+                        return! Cloud.Catch <| cloud { return raise <| exn() }
+                   } 
+                @> |> test.ExecuteExpression
+            match result with
+            | Choice1Of2 _ -> Assert.Fail("Expected exception but got result.")
+            | Choice2Of2 e -> ()
+
+            let result : Choice<unit,exn> = 
+                <@ cloud { 
+                        return! Cloud.Catch <| cloud { return () }
+                   } 
+                @> |> test.ExecuteExpression
+            match result with
+            | Choice1Of2 _ -> ()
+            | Choice2Of2 e -> Assert.Fail("Expected result but got exception.")
+
+        [<Test>]
+        member test.``Cloud.Sleep`` () =
+            <@ cloud { do! Cloud.Sleep 1000 } @>
+            |> test.ExecuteExpression
             
 
         [<Test>]
