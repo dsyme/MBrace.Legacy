@@ -17,13 +17,13 @@
     type ICloudRef =
         inherit ICloudDisposable
 
-        /// The CloudRef's name.
+        /// CloudRef identifier.
         abstract Name : string 
-        /// The CloudRef's container (folder).
+        /// CloudRef containing folder in underlying store.
         abstract Container : string
-        /// The type of the object stored in the CloudRef.
+        /// Type of value referenced by CloudRef.
         abstract Type : Type
-        /// The object stored in the CloudRef.
+        /// Retrieve value referenced by CloudRef.
         abstract Value : obj
 
     /// Represents an immutable reference to an
@@ -31,9 +31,9 @@
     type ICloudRef<'T> = 
         inherit ICloudRef
 
-        /// The object stored in the CloudRef.
+        /// Retrieve value referenced by CloudRef.
         abstract Value : 'T
-        /// The object stored in the CloudRef.
+        /// Try Retrieving value referenced by CloudRef.
         abstract TryValue : 'T option
 
     /// Represents a finite and immutable sequence of
@@ -43,16 +43,15 @@
         inherit ICloudDisposable
         inherit IEnumerable
 
-        /// The CloudSeq's name.
+        /// CloudSeq identifier.
         abstract Name : string
-        /// The CloudSeq's container (folder).
+        /// CloudSeq containing folder in underlying store.
         abstract Container : string
-        /// The type of the elements stored in the CloudSeq.
+        /// Element Type in referenced CloudSeq.
         abstract Type : Type
-        /// The size of the CloudSeq in the underlying store.
-        /// The value is in bytes and might be an approximation.
+        /// Approximate size (in bytes) of the referenced CloudSeq.
         abstract Size : int64
-        /// The number of elements contained in the CloudSeq.
+        /// CloudSeq element count.
         abstract Count : int
 
     /// Represents a finite and immutable sequence of
@@ -67,17 +66,17 @@
     type IMutableCloudRef = 
         inherit ICloudDisposable
 
-        /// The MutableCloudRef's name.
+        /// MutableCloudRef identifier.
         abstract Name : string
-        /// The MutableCloudRef's container (folder).
+        /// MutableCloudSeq containing folder in underlying store.
         abstract Container : string
-        /// The type of the object stored in the MutableCloudRef.
+        /// Type of value referenced by MutableCloudRef.
         abstract Type : Type
-        /// Returns an asynchronous computation that gets the current value of the MutableCloudRef.
+        /// Asynchronously dereferences the MutableCloudRef.
         abstract ReadValue : unit -> Async<obj>
-        /// Executes an update operation on the MutableCloudRef and returns if the operation succeeded.
+        /// Asynchronously attempts to update the MutableCloudRef; returns true if successful.
         abstract TryUpdate : obj -> Async<bool>
-        /// Updates the current value of the MutableCloudRef with the given value.
+        /// Asynchronously forces update to MutableCloudRef regardless of state.
         abstract ForceUpdate : obj -> Async<unit>
 
     /// Represents a mutable reference to an
@@ -85,26 +84,24 @@
     type IMutableCloudRef<'T> = 
         inherit IMutableCloudRef
 
-        /// Gets the current value of the MutableCloudRef.
+        /// Dereferences current value of MutableCloudRef.
         abstract Value : 'T
-        /// Returns an asynchronous computation that gets the current value of the MutableCloudRef.
+        /// Asynchronously dereferences current value of MutableCloudRef.
         abstract ReadValue : unit -> Async<'T>
-        /// Executes an update operation on the MutableCloudRef and returns if the operation succeeded.
+        /// Asynchronously attempts to update the MutableCloudRef; returns true if successful.
         abstract TryUpdate : 'T -> Async<bool>
-        /// Updates the current value of the MutableCloudRef with the given value.
+        /// Asynchronously forces update to MutableCloudRef regardless of state.
         abstract ForceUpdate : 'T -> Async<unit>
 
     /// Represents a binary object stored in the underlying CloudStore.
     type ICloudFile =
         inherit ICloudDisposable
 
-        /// The CloudFile's name.
+        /// CloudFile Identifier.
         abstract Name : string
-        /// The CloudFile's container (folder).
+        /// CloudFile containing folder in underlying store.
         abstract Container : string
-        /// The CloudFile's size in bytes.
+        /// CloudFile size in bytes.
         abstract Size : int64
-        /// A asynchronous computations that returns the content of the CloudFile as a Stream.
-        /// Note that this Stream is not guaranteed to be a direct Stream to the underlying store
-        /// and it should be used only for read operations.
+        /// Asynchronously returns a read-only stream with access to CloudFile data.
         abstract Read : unit -> Async<Stream>
