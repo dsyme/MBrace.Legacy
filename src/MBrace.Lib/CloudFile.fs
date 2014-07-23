@@ -58,13 +58,18 @@
 
         type CloudFile with
         
-            [<Cloud>]
             /// <summary> Read the contents of a CloudFile as a sequence of objects using the given deserialize/reader function.</summary>
             /// <param name="cloudFile">The CloudFile to read.</param>
             /// <param name="deserializer">The function that reads data from the underlying stream as a sequence.</param>
+            [<Cloud>]
             static member ReadAsSeq(cloudFile:ICloudFile, deserializer :(Stream -> Async<seq<'T>>)) : Cloud<ICloudSeq<'T>> =
                 cloud { return new CloudFileSequence<'T>(cloudFile, deserializer) :> ICloudSeq<'T> }
 
+            /// <summary>
+            ///     Reads a CloudFile as a sequence of lines.
+            /// </summary>
+            /// <param name="file">Input CloudFile.</param>
+            /// <param name="encoding">Text encoding.</param>
             [<Cloud>]
             static member ReadLines(file : ICloudFile, ?encoding : Encoding) =
                 cloud {
@@ -82,6 +87,13 @@
                     return! CloudFile.ReadAsSeq(file, reader)
                 }
 
+            /// <summary>
+            ///     Writes a sequence of lines to a given CloudFile uri.
+            /// </summary>
+            /// <param name="container">Container id.</param>
+            /// <param name="name">File name.</param>
+            /// <param name="lines">Lines to be written.</param>
+            /// <param name="encoding">Text encoding.</param>
             [<Cloud>]
             static member WriteLines(container : string, name : string, lines : seq<string>, ?encoding : Encoding) =
                 cloud {
@@ -96,6 +108,11 @@
                     return! CloudFile.Create(container, name, writer)
                 }
 
+            /// <summary>
+            ///     Dump all file contents to a single string.
+            /// </summary>
+            /// <param name="file">Input CloudFile.</param>
+            /// <param name="encoding">Text encoding.</param>
             [<Cloud>]
             static member ReadAllText(file : ICloudFile, ?encoding : Encoding) =
                 cloud {
@@ -109,6 +126,13 @@
                     return! CloudFile.Read(file, reader)
                 }
 
+            /// <summary>
+            ///     Writes string contents to given CloudFile.
+            /// </summary>
+            /// <param name="container">Container for CloudFile.</param>
+            /// <param name="name">Name of CloudFile.</param>
+            /// <param name="text">Input text.</param>
+            /// <param name="encoding">Output encoding.</param>
             [<Cloud>]
             static member WriteAllText(container : string, name : string, text : string, ?encoding : Encoding) =
                 cloud {
@@ -122,6 +146,10 @@
                     return! CloudFile.Create(container, name, writer)
                 }
         
+            /// <summary>
+            ///     Dump the contents of given CloudFile as byte[].
+            /// </summary>
+            /// <param name="file">Input CloudFile.</param>
             [<Cloud>]
             static member ReadAllBytes(file : ICloudFile) =
                 cloud {
@@ -133,6 +161,12 @@
                     return! CloudFile.Read(file, reader)
                 }
 
+            /// <summary>
+            ///     Write buffer contents to CloudFile.
+            /// </summary>
+            /// <param name="container">Container Id.</param>
+            /// <param name="name">Container name.</param>
+            /// <param name="buffer">Source buffer.</param>
             [<Cloud>]
             static member WriteAllBytes(container : string, name : string, buffer : byte []) =
                 cloud {
