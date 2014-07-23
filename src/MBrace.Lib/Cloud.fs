@@ -2,6 +2,7 @@
 
     open Nessos.MBrace
 
+    /// Cloud combinators module.
     [<RequireQualifiedAccess>]
     module Cloud =
 
@@ -69,6 +70,7 @@
         let lift2 (f: 'a -> 'b -> 'c) : 'a -> 'b -> Cloud<'c> =
             fun x y -> cloud { return f x y }
 
+    /// CloudRef combinators module.
     [<RequireQualifiedAccess>]
     module CloudRef = 
 

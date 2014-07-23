@@ -137,6 +137,9 @@
                                 [| new SqlParameter("@folder", folder); new SqlParameter("@file", file); new SqlParameter("@value", bytes) |]
                 }
 
+    /// <summary>
+    ///     SqlServer Store factory implementation.
+    /// </summary>
     type SqlServerStoreFactory () =
         interface ICloudStoreFactory with
             member this.CreateStoreFromConnectionString (connectionString : string) = 

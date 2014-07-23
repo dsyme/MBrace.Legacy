@@ -2,10 +2,12 @@
 
     open Nessos.MBrace
 
+    /// Implementation of the Haskell MVar, build on top of the MutableCloudRefs.
     type MVar<'T> = IMutableCloudRef<'T option>
 
+    /// Implementation of the Haskell MVar, build on top of the MutableCloudRefs.
+
     [<Cloud>]
-    ///Implementation of the Haskell MVar, build on top of the MutableCloudRefs.
     module MVar =
         /// Creates a new empty MVar.
         let newEmpty<'T> : Cloud<MVar<'T>> = MutableCloudRef.New(None)

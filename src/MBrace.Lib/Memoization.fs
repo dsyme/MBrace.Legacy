@@ -2,6 +2,8 @@
 
     open Nessos.MBrace
 
+    /// Distributed memoization combinators.
+
     [<Cloud>]
     [<RequireQualifiedAccessAttribute>]
     module Memoization = 

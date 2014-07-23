@@ -100,10 +100,12 @@
         static member Dispose<'T when 'T :> ICloudDisposable>(resource : 'T) : Cloud<unit> =
             Cloud.OfAsync (resource.Dispose())
             
-        /// <summary>Creates a cloud computation that executes a specified computation.
-        /// If this computation completes successfully, then this method returns Choice1Of2 
-        /// with the returned value. If this computation raises an exception before it
-        /// completes then return Choice2Of2 with the raised exception.</summary>
+        /// <summary>
+        ///     Creates a cloud computation that executes a specified computation.
+        ///     If this computation completes successfully, then this method returns Choice1Of2 
+        ///     with the returned value. If this computation raises an exception before it
+        ///     completes then return Choice2Of2 with the raised exception.
+        /// </summary>
         /// <param name="computation">The computation input.</param>
         /// <returns>A cloud computation that returns a Choice of type 'T or an exception.</returns>
         [<Cloud; NoTraceInfo>]
@@ -122,9 +124,10 @@
 
 
 
+    /// [omit]
+    /// A module containing some useful operators for cloud computations.
 
     [<AutoOpen>]
-    /// A module containing some useful operators for cloud computations.
     module CloudOperators =
 
         [<Cloud>]

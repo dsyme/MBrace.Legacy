@@ -10,6 +10,9 @@
         let inline lift (f: 'T -> Cloud<'U>) (x : 'S) =
             let expr = f (x :> obj :?> 'T) in expr.CloudExpr
 
+    /// <summary>
+    ///     Cloud workflow computation expression builder.
+    /// </summary>
     type CloudBuilder() =
 
         /// Implements the 'return' expression in cloud computations.
@@ -59,6 +62,7 @@
             CloudExpr.wrap <| DisposableBindExpr (value :> ICloudDisposable, typeof<'T>, lift bindF, bindF :> obj)
 
 
+    /// [omit]
     [<AutoOpen>]
     [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
     module CloudBuilder =

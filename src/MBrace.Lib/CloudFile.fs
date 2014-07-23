@@ -56,6 +56,7 @@
                 let deserializer = sI.GetValue("reader", typeof<Stream -> Async<seq<'T>>>) :?> Stream -> Async<seq<'T>>
                 new CloudFileSequence<'T>(file, deserializer)
 
+        /// CloudFile extension methods 
         type CloudFile with
         
             /// <summary> Read the contents of a CloudFile as a sequence of objects using the given deserialize/reader function.</summary>

@@ -169,6 +169,9 @@
                     return fs, tag
                 }
 
+    /// <summary>
+    ///     FileSystem Store factory implementation.
+    /// </summary>
     type FileSystemStoreFactory () =
         interface ICloudStoreFactory with
             member this.CreateStoreFromConnectionString (path : string) = 

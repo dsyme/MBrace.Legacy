@@ -80,7 +80,7 @@
             CloudExpr.wrap <| GetMutableRefByNameExpr(container, id, typeof<'T>)
 
         /// <summary>
-        ///     Deletes the MutableCloudRef from the underlying store.</summary>
+        ///     Deletes the MutableCloudRef from the underlying store.
         /// </summary>
         /// <param name="mref">Mutable CloudRef to be deleted.</param>
         static member Free(mref : IMutableCloudRef<'T>) : Cloud<unit> =

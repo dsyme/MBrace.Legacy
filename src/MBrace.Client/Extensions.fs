@@ -27,9 +27,13 @@
     /// Cloud Computation + metadata
     type CloudComputation<'T> = Nessos.MBrace.Runtime.Compiler.CloudComputation<'T>
 
+
+    /// MBrace Client extension methods
+
     [<AutoOpen>]
     module ClientExtensions =
 
+        /// MBrace static method API
         type MBrace =
             
             /// <summary>

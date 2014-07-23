@@ -1,5 +1,6 @@
 namespace Nessos.MBrace.Lib
 
+    /// A collection of sample MapReduce implementations
     module MapReduce =
 
         open Nessos.MBrace

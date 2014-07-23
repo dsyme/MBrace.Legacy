@@ -22,7 +22,10 @@
 
     type private MBraceNodeMsg = Nessos.MBrace.Runtime.MBraceNode
 
+    /// Record containing Node performance metrics.
     type NodePerformanceInfo = Nessos.MBrace.Runtime.NodePerformanceInfo
+
+    /// MBrace Node deployment permissions enumeration.
     type Permissions = Nessos.MBrace.Runtime.Permissions
 
     /// Provides a handle and administration API for remote MBrace nodes.
