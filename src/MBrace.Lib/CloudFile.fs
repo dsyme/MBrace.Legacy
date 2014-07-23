@@ -9,6 +9,8 @@
 
     open Nessos.MBrace
 
+    /// CloudFile extension methods
+
     [<AutoOpen>]
     module CloudFileExtensions =
 
