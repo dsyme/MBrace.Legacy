@@ -37,6 +37,7 @@
 
 <h1>MapReduce</h1>
 <div class="xmldoc">
+<p>A collection of sample MapReduce implementations</p>
 </div>
 
 <!-- Render nested types and modules, if there are any -->
@@ -90,15 +91,15 @@ or sequential execution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
+          <code onmouseout="hideTip(event, '17', 17)" onmouseover="showTip(event, '17', 17)">
             mapReduce mapF reduceF identity values
           </code>
-          <div class="tip" id="22">
+          <div class="tip" id="17">
             <strong>Signature:</strong> mapF:(&#39;T -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:&#39;R -&gt; values:&#39;T list -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L103-103" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L104-104" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -110,15 +111,15 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
+          <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
             mapReduce&#39; (...)
           </code>
-          <div class="tip" id="23">
+          <div class="tip" id="18">
             <strong>Signature:</strong> mapF:(&#39;T -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:(unit -&gt; Cloud&lt;&#39;R&gt;) -&gt; container:&#39;Container -&gt; containerF:(&#39;Container -&gt; ContainerState&lt;&#39;Container,&#39;T&gt;) -&gt; context:ParallelismContext -&gt; depth:int -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R, 'Container          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L54-54" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L55-55" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -128,15 +129,15 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '24', 24)" onmouseover="showTip(event, '24', 24)">
+          <code onmouseout="hideTip(event, '19', 19)" onmouseover="showTip(event, '19', 19)">
             mapReduce&#39;&#39; (...)
           </code>
-          <div class="tip" id="24">
+          <div class="tip" id="19">
             <strong>Signature:</strong> mapF:(&#39;T -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:(unit -&gt; Cloud&lt;&#39;R&gt;) -&gt; container:&#39;Container -&gt; containerF:(&#39;Container -&gt; ContainerState&lt;&#39;Container,&#39;T&gt;) -&gt; context:ParallelismContext -&gt; depth:int -&gt; execute:(Cloud&lt;&#39;R&gt; -&gt; Cloud&lt;&#39;R&gt; -&gt; Cloud&lt;&#39;R * &#39;R&gt;) -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R, 'Container          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L35-35" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L36-36" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -146,15 +147,15 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
+          <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
             mapReduceArray (...)
           </code>
-          <div class="tip" id="25">
+          <div class="tip" id="20">
             <strong>Signature:</strong> mapF:(&#39;T [] -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:(unit -&gt; Cloud&lt;&#39;R&gt;) -&gt; values:&#39;T [] -&gt; partition:int -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L75-75" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L76-76" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -165,15 +166,15 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
+          <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
             mapReduceCloudTree (...)
           </code>
-          <div class="tip" id="26">
+          <div class="tip" id="21">
             <strong>Signature:</strong> mapF:(&#39;T -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:(unit -&gt; Cloud&lt;&#39;R&gt;) -&gt; values:ICloudRef&lt;CloudTree&lt;&#39;T&gt;&gt; -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L88-88" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L89-89" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -184,15 +185,15 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
+          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
             nextJobsNumber ()
           </code>
-          <div class="tip" id="27">
+          <div class="tip" id="22">
             <strong>Signature:</strong> unit -&gt; Cloud&lt;int&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L28-28" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Lib/MapReduce.fs#L29-29" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
