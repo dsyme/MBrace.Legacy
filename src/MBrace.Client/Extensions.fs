@@ -12,34 +12,62 @@
 
     // type abbreviations
 
+    /// Provides a handle and administration API for remote MBrace nodes.
     type Node = Nessos.MBrace.Client.MBraceNode
+
+    /// Provides a handle and administration API for a running MBrace cluster.
     type MBrace = Nessos.MBrace.Client.MBraceRuntime
+
+    /// Cloud Process Identifier
     type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
+
+    /// Store configuration descriptor (Implementation/Connection string)
     type StoreDefinition = Nessos.MBrace.Store.StoreDefinition
+
+    /// Cloud Computation + metadata
     type CloudComputation<'T> = Nessos.MBrace.Runtime.Compiler.CloudComputation<'T>
 
     [<AutoOpen>]
     module ClientExtensions =
 
         type MBrace =
+            
+            /// <summary>
+            ///     Compiles a cloud workflow to a cloud computation.
+            /// </summary>
+            /// <param name="expr">Quoted cloud computation.</param>
+            /// <param name="name">Assigned name to cloud computation.</param>
             static member Compile (expr : Expr<Cloud<'T>>, ?name) : CloudComputation<'T> = 
                 CloudComputation.Compile(expr, ?name = name)
-        
+
+            /// <summary>
+            ///     Compiles a cloud workflow to a cloud computation.
+            /// </summary>
+            /// <param name="expr">Cloud computation.</param>
+            /// <param name="name">Assigned name to cloud computation.</param>        
             [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
             static member Compile (block : Cloud<'T>, ?name) : CloudComputation<'T> = 
                 CloudComputation.Compile(block, ?name = name)
 
-            static member RunRemoteAsTask (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) : Task<'T> =
-                let computation = MBrace.Compile expr
-                Async.StartAsTask (runtime.RunAsync computation)
-
-            /// Runs a computation at the given runtime.
+            /// <summary>
+            ///     Runs a computation at given runtime.
+            /// </summary>
+            /// <param name="runtime">Runtime to execute the computation.</param>
+            /// <param name="expr">Quoted cloud computation to be executed.</param>
             static member RunRemote (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) : 'T = runtime.Run expr
 
-            /// Creates a new process at the given runtime.
+            /// <summary>
+            ///   Creates a new process at the given runtime.  
+            /// </summary>
+            /// <param name="runtime">Runtime to execute the computation.</param>
+            /// <param name="expr">Cloud computation to be executed.</param>
             static member CreateProcess (runtime : MBraceRuntime) (expr : Expr<Cloud<'T>>) : Process<'T> = runtime.CreateProcess expr
 
-            /// Runs the given computation locally without the need of a runtime.
+            /// <summary>
+            ///     Asynchronously executes a cloud workflow inside the local process with thread-parallelism semantics.
+            /// </summary>
+            /// <param name="computation">Cloud computation to be executed.</param>
+            /// <param name="showLogs">Print user logs to StdOut.</param>
             static member RunLocalAsync (computation : CloudComputation<'T>, ?showLogs) : Async<'T> = async {
                 let processId = 0
 
@@ -55,19 +83,44 @@
                 return! Interpreter.evaluateLocalWrapped storeInfo logger processId computation.Value
             }
 
+            /// <summary>
+            ///     Asynchronously executes a cloud workflow inside the local process with thread-parallelism semantics.
+            /// </summary>
+            /// <param name="computation">Cloud computation to be executed.</param>
+            /// <param name="showLogs">Print user logs to StdOut.</param>
             static member RunLocalAsync (computation : Cloud<'T>, ?showLogs) : Async<'T> =
                 let cc = CloudComputation.Compile computation in
                 MBrace.RunLocalAsync(cc, ?showLogs = showLogs)
 
+            /// <summary>
+            ///     Asynchronously executes a cloud workflow inside the local process with thread-parallelism semantics.
+            /// </summary>
+            /// <param name="computation">Cloud computation to be executed.</param>
+            /// <param name="showLogs">Print user logs to StdOut.</param>
             static member RunLocalAsync (expr : Expr<Cloud<'T>>, ?showLogs) : Async<'T> =
                 let cc = CloudComputation.Compile expr in
                 MBrace.RunLocalAsync(cc, ?showLogs = showLogs)
 
+            /// <summary>
+            ///     Executes a cloud workflow inside the local process with thread-parallelism semantics.
+            /// </summary>
+            /// <param name="computation">Cloud computation to be executed.</param>
+            /// <param name="showLogs">Print user logs to StdOut.</param>
             static member RunLocal(computation : CloudComputation<'T>, ?showLogs) : 'T =
                 MBrace.RunLocalAsync(computation, ?showLogs = showLogs) |> Async.RunSynchronously
 
+            /// <summary>
+            ///     Executes a cloud workflow inside the local process with thread-parallelism semantics.
+            /// </summary>
+            /// <param name="computation">Cloud computation to be executed.</param>
+            /// <param name="showLogs">Print user logs to StdOut.</param>
             static member RunLocal(computation : Cloud<'T>, ?showLogs) : 'T =
                 MBrace.RunLocalAsync(computation, ?showLogs = showLogs) |> Async.RunSynchronously
 
+            /// <summary>
+            ///     Executes a cloud workflow inside the local process with thread-parallelism semantics.
+            /// </summary>
+            /// <param name="computation">Cloud computation to be executed.</param>
+            /// <param name="showLogs">Print user logs to StdOut.</param>
             static member RunLocal(computation : Expr<Cloud<'T>>, ?showLogs) : 'T =
                 MBrace.RunLocalAsync(computation, ?showLogs = showLogs) |> Async.RunSynchronously

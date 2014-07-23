@@ -9,6 +9,7 @@
     open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
 
+    /// provides basic failover logic when communicating with the runtime from the client
     let rec private runtimeProxyBehaviour (state : ClusterDeploymentInfo) (message : MBraceNode) = async {
 
         // get updated deployment info from any of the cluster nodes
@@ -48,10 +49,12 @@
                 return! runtimeProxyBehaviour state' message
     }
 
+    /// initializes a failover proxy actor for given cluster deployment
     let initRuntimeProxy (state : ClusterDeploymentInfo) = 
         Behavior.stateful state runtimeProxyBehaviour
         |> Actor.bind
 
+    /// connects to an already booted MBrace cluster
     let connect (node : ActorRef<MBraceNode>) = async {
         let! state = node.PostWithReplyRetriable((fun ch -> GetClusterDeploymentInfo(ch, false)), 2)
 
@@ -68,6 +71,12 @@
         return initRuntimeProxy state
     }
 
+    /// <summary>
+    ///     Boots a given collection of MBrace nodes to a runtime with given configuration;
+    ///     then initializes a proxy actor on the deployment configuration.
+    /// </summary>
+    /// <param name="master"></param>
+    /// <param name="config"></param>
     let boot (master : ActorRef<MBraceNode>, config : BootConfiguration) = async {
         // upload store activation info if specified
         match config.StoreId with
@@ -77,10 +86,21 @@
             let! storeMan = master.PostWithReplyRetriable (GetStoreManager, 2)
             do! StoreManager.uploadStore storeInfo storeMan
 
-        let! state = master.PostWithReplyRetriable((fun ch -> MasterBoot(ch, config)), 2)
+        // boot delays mostly occuring in local runtimes;
+        // create a dynamic timeout scheme based on number of local cores.
+        let bootTimeout = min ((40000 / min Environment.ProcessorCount 4) * config.Nodes.Length) 120000
+        let! state = master.PostWithReply((fun ch -> MasterBoot(ch, config)), bootTimeout)
         return initRuntimeProxy state
     }
 
+    /// <summary>
+    ///     Boots a given collection of MBrace nodes to a runtime with given configuration;
+    ///     then initializes a proxy actor on the deployment configuration.
+    /// </summary>
+    /// <param name="nodes"></param>
+    /// <param name="replicationFactor"></param>
+    /// <param name="failoverFactor"></param>
+    /// <param name="storeProvider"></param>
     let bootNodes (nodes : ActorRef<MBraceNode> [], replicationFactor, failoverFactor, storeProvider) = async {
         if nodes.Length < 3 then invalidArg "nodes" "insufficient amount of nodes."
 

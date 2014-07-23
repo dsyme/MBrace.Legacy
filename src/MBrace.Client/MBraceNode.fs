@@ -25,7 +25,7 @@
     type NodePerformanceInfo = Nessos.MBrace.Runtime.NodePerformanceInfo
     type Permissions = Nessos.MBrace.Runtime.Permissions
 
-    /// The type representing a {m}brace node.
+    /// Provides a handle and administration API for remote MBrace nodes.
     [<Sealed; NoEquality; NoComparison; AutoSerializable(false)>]
     type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri : Uri) as self =
 
@@ -63,47 +63,45 @@
          /// Create a new MBraceNode object. No node is spawned.
         new (uri : string) = MBraceNode(new Uri(uri))
 
-        /// Gets the System.Diagnostics.Process object that corresponds to the node's process.
+        /// Gets the System.Diagnostics.Process object that correspond to a local MBrace node.
         member __.Process : Process option = snd nodeInfo.Value
         member internal __.Ref = nodeRef
         
-        /// Gets the node's uri.
+        /// Gets the Node uri.
         member __.Uri : Uri = uri
 
-        /// Sets the node's permissions.
+        /// Gets or sets the Node deployment permissions.
         member __.Permissions
             with get () : Permissions = (fst nodeInfo.Value).Permissions
             and  set (newPermissions: Permissions) =
                 try nodeRef <-- SetNodePermissions newPermissions
                 with e -> handleError e
 
-        /// Sets whether the node has slave permissions.
+        /// Gets or sets whether the Node can be run as slave in a cluster.
         member n.IsPermittedSlave
             with get() = n.Permissions.HasFlag Permissions.Slave
             and  set (x: bool) = n.Permissions <- Permissions.switch x Permissions.Slave n.Permissions
 
-        /// Sets whether the node has master permissions.
+        /// Gets or sets whether the Node can be run as master in a cluster.
         member n.IsPermittedMaster
             with get () = n.Permissions.HasFlag Permissions.Slave
             and  set (x: bool) = n.Permissions <- Permissions.switch x Permissions.Slave n.Permissions 
 
-        /// Gets the current node's state.
+        /// Gets the current deployment state of the Node.
         member n.State : NodeState = (fst nodeInfo.Value).State
 
-        /// Gets a Guid that identifies this deployment.
+        /// Gets a Guid that identifies the Node instance.
         member n.DeploymentId = (fst nodeInfo.Value).DeploymentId
 
-        /// Gets whether the node is active or idle.
+        /// Gets whether the node is active in an MBrace cluster.
         member n.IsActive = n.State <> Idle
 
         /// <summary>
-        /// Sends a ping message to the node and returns the duration of the roundtrip.
+        ///     Pings the remote node, returning the response timespan.
         /// </summary>
-        /// <param name="silent">Do not show a Ping message on the node's logs.</param>
         /// <param name="timeout">The amount of time in milliseconds to wait for a reply from the node (default is 3 seconds).</param>
-        member n.Ping(?silent: bool, ?timeout: int) : int =
+        member n.Ping(?timeout: int) : TimeSpan =
             try
-                let silent = defaultArg silent false
                 let timeout = defaultArg timeout 3000
 
                 let timer = new Stopwatch()
@@ -112,24 +110,38 @@
                 nodeRef <!== (Ping , timeout)
                 timer.Stop()
 
-                int timer.ElapsedMilliseconds
+                timer.Elapsed
             with e -> handleError e
 
+        /// <summary>
+        ///     Asynchronously assigns store configuration to the remote Node.
+        /// </summary>
+        /// <param name="provider">Store connection definition.</param>
         member __.SetStoreConfigurationAsync (provider : StoreDefinition) = async {
             let info = StoreRegistry.Activate(provider, makeDefault = false)
             let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
             return! StoreManager.uploadStore info storeManager
         }
 
+        /// <summary>
+        ///     Assigns store configuration to the remote Node.
+        /// </summary>
+        /// <param name="provider">Store connection definition.</param>
         member __.SetStoreConfiguration (provider : StoreDefinition) = 
             __.SetStoreConfigurationAsync(provider) |> Async.RunSynchronously
 
+        /// <summary>
+        ///     Asynchronously returns a manager object for handling storage of remote Node.
+        /// </summary>
         member __.GetStoreManagerAsync () = async {
             let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
             let! info = StoreManager.downloadStore false storeManager
             return new StoreClient(info)
         }
 
+        /// <summary>
+        ///     Asynchronously returns a manager object for handling storage of remote Node.
+        /// </summary>
         member __.GetStoreManager () = __.GetStoreManagerAsync() |> Async.RunSynchronously
 
         member internal __.GetNodeInfoAsync getPerformanceCounters = async {
@@ -240,7 +252,7 @@
             }
 
         /// <summary>
-        /// Spawns a new {m}brace daemon (node).
+        ///     Spawns a new MBrace Node in the local machine with given CLI arguments.
         /// </summary>
         /// <param name="arguments">The command line arguments.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
@@ -254,7 +266,8 @@
             } |> Async.RunSynchronously
 
         /// <summary>
-        /// Spawns a new {m}brace daemon (node).
+        ///     Spawns a new MBrace Node in the local machine with given parameters.
+        ///     Unspecified parameters are loaded from the mbraced executable Application configuration file.
         /// </summary>
         /// <param name="hostname">The hostname to be used by the node and the runtime.</param>
         /// <param name="primaryPort">The port the node listens to.</param>
@@ -266,16 +279,16 @@
         /// <param name="workingDirectory">The path to be used as a working directory.</param>
         /// <param name="useTemporaryWorkDir">Use a temporary folder as a working directory.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        /// <param name="storeProvider">The StoreProvider to be used as the node's default.</param>
+        /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
         static member SpawnAsync(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?storeProvider : StoreDefinition) : Async<MBraceNode> = 
+                                    ?background : bool, ?storeDefinition : StoreDefinition) : Async<MBraceNode> = 
             async {
                 let debug = defaultArg debug false
                 let useTemporaryWorkDir = defaultArg useTemporaryWorkDir false
                 let workerPorts = defaultArg workerPorts []
                 let logFiles = defaultArg logFiles []
-                let storeProvider = defaultArg storeProvider MBraceSettings.StoreProvider
+                let storeProvider = defaultArg storeDefinition MBraceSettings.StoreProvider
 
                 // build arguments
                 let args =
@@ -292,9 +305,6 @@
                         match permissions with Some p -> yield MBracedConfig.Permissions(int p) | _ -> ()
                         match workingDirectory with Some w -> yield Working_Directory w | _ -> ()
                         match logLevel with Some l -> yield Log_Level l.Value | _ -> ()
-
-//                        yield Store_Provider storeProvider.StoreFactoryQualifiedName
-//                        yield Store_EndPoint storeProvider.ConnectionString
                     ]
         
                 let! node = MBraceNode.SpawnAsync(args, ?background = background)
@@ -305,7 +315,8 @@
             }
 
         /// <summary>
-        /// Spawns a new {m}brace daemon (node).
+        ///     Spawns a new MBrace Node in the local machine with given parameters.
+        ///     Unspecified parameters are loaded from the mbraced executable Application configuration file.
         /// </summary>
         /// <param name="hostname">The hostname to be used by the node and the runtime.</param>
         /// <param name="primaryPort">The port the node listens to.</param>
@@ -317,18 +328,19 @@
         /// <param name="workingDirectory">The path to be used as a working directory.</param>
         /// <param name="useTemporaryWorkDir">Use a temporary folder as a working directory.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        /// <param name="storeProvider">The StoreProvider to be used as the node's default.</param>
+        /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
         static member Spawn(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?storeProvider : StoreDefinition) : MBraceNode =
+                                    ?background : bool, ?storeDefinition : StoreDefinition) : MBraceNode =
 
             MBraceNode.SpawnAsync(?hostname = hostname, ?primaryPort = primaryPort, ?workerPorts = workerPorts, ?logFiles = logFiles,
                                         ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?workingDirectory = workingDirectory,
-                                        ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?storeProvider = storeProvider)
+                                        ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?storeDefinition = storeDefinition)
             |> Async.RunSynchronously
 
         /// <summary>
-        /// Spawns multiple {m}brace daemons.
+        ///     Spawns multiple MBrace Nodes in the local machine with given parameters.
+        ///     Unspecified parameters are loaded from the mbraced executable Application configuration file.
         /// </summary>
         /// <param name="nodeCount">The number of nodes to spawn.</param>
         /// <param name="masterPort">Force a specific master port to the first node in the list.</param>
@@ -339,14 +351,14 @@
         /// <param name="permissions">Permissions for all nodes.</param>
         /// <param name="debug">Run in debug mode.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        /// <param name="storeProvider">The StoreProvider to be used as the nodes' default.</param>
+        /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
         static member SpawnMultiple(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeProvider : StoreDefinition) : MBraceNode list =
+                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : MBraceNode list =
         
             let spawnSingle primary pool =
                     MBraceNode.SpawnAsync(?hostname = hostname, primaryPort = primary, workerPorts = pool, ?logFiles = logFiles,
                                             ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?background = background,
-                                                    ?storeProvider = storeProvider, useTemporaryWorkDir = true)
+                                                    ?storeDefinition = storeDefinition, useTemporaryWorkDir = true)
             async {
                 let workerPortsPerNode = defaultArg workerPortsPerNode 7
 
@@ -372,7 +384,7 @@
             } |> Async.RunSynchronously
 
         /// <summary>
-        /// Prints a report about the given collection of nodes.
+        ///     Prints a report on the given collection of nodes.
         /// </summary>
         /// <param name="nodes">The nodes.</param>
         /// <param name="displayPerfCounters">Also display performance statistics.</param>
@@ -385,7 +397,7 @@
         }
 
         /// <summary>
-        /// Prints a report about the given collection of nodes.
+        ///     Prints a report on the given collection of nodes.
         /// </summary>
         /// <param name="nodes">The nodes.</param>
         /// <param name="displayPerfCounters">Also display performance statistics.</param>

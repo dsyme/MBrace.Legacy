@@ -16,7 +16,13 @@
 
         static let registry = Atom.atom Map.empty<StoreId, StoreClient>
 
+        /// Gets the Store definition for given client instance.
         member __.StoreDefinition = info.Definition
+
+        /// Initializes a StoreClient for given store definition
+        static member Create(definition : StoreDefinition) =
+            let info = StoreRegistry.Activate(definition, makeDefault = false)
+            new StoreClient(info)
 
         /// Gets the default StoreClient that corresponds to the current StoreProvider.
         static member Default 
@@ -82,7 +88,7 @@
         // CloudSeq
 
         /// <summary>
-        /// Creates a new CloudSeq in the specified container.
+        ///     Creates a new CloudSeq in the specified container.
         /// </summary>
         /// <param name="container">The folder's name.</param>
         /// <param name="values">The source sequence.</param>
@@ -90,7 +96,7 @@
             info.CloudSeqProvider.Create(container, newId(), values)
 
         /// <summary>
-        /// Returns an array of the CloudSeqs contained in the specified folder.
+        ///     Returns an array of the CloudSeqs contained in the specified folder.
         /// </summary>
         /// <param name="container">The folder to search.</param>
         member this.GetCloudSeqsAsync(container : string) : Async<ICloudSeq []> =
@@ -105,7 +111,7 @@
             info.CloudSeqProvider.GetExisting(container, id)
 
         /// <summary>
-        /// Creates a new CloudSeq in the specified container.
+        ///     Creates a new CloudSeq in the specified container.
         /// </summary>
         /// <param name="container">The folder's name.</param>
         /// <param name="values">The source sequence.</param>
@@ -113,14 +119,14 @@
             Async.RunSynchronously <| info.CloudSeqProvider.Create(container, newId(), values)
 
         /// <summary>
-        /// Returns an array of the CloudSeqs contained in the specified folder.
+        ///     Returns an array of the CloudSeqs contained in the specified folder.
         /// </summary>
         /// <param name="container">The folder to search.</param>
         member this.GetCloudSeqs(container : string) : ICloudSeq [] =
             Async.RunSynchronously <| info.CloudSeqProvider.GetContainedSeqs(container)
 
         /// <summary>
-        /// Returns a CloudSeq that already exists in the specified contained with the given identifier.
+        ///     Returns a CloudSeq that already exists in the specified contained with the given identifier.
         /// </summary>
         /// <param name="container">The folder to search.</param>
         /// <param name="id">The CloudSeq's id.</param>
@@ -130,8 +136,10 @@
         //---------------------------------------------------------------------------------
         // CloudFile
 
-        /// <summary> Create a new file in the storage with the specified folder and name.
-        /// Use the serialize function to write to the underlying stream.</summary>
+        /// <summary>
+        ///     Create a new file in the storage with the specified folder and name.
+        ///     Use the serialize function to write to the underlying stream.
+        /// </summary>
         /// <param name="container">The container (folder) of the CloudFile.</param>
         /// <param name="name">The (file)name of the CloudFile.</param>
         /// <param name="writer">The function that will write data on the underlying stream.</param>
@@ -149,8 +157,10 @@
         member this.GetCloudFileAsync(container : string, name : string) : Async<ICloudFile> =
             info.CloudFileProvider.GetExisting(container, name)
             
-        /// <summary> Create a new file in the storage with the specified folder and name.
-        /// Use the serialize function to write to the underlying stream.</summary>
+        /// <summary> 
+        ///     Create a new file in the storage with the specified folder and name.
+        ///     Use the serialize function to write to the underlying stream.
+        /// </summary>
         /// <param name="container">The container (folder) of the CloudFile.</param>
         /// <param name="name">The (file)name of the CloudFile.</param>
         /// <param name="writer">The function that will write data on the underlying stream.</param>

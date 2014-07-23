@@ -71,7 +71,7 @@ namespace Nessos.MBrace.Client
             with get () = init () ; SystemConfiguration.MBraceDaemonExecutablePath
             and set p = init () ; SystemConfiguration.MBraceDaemonExecutablePath <- p
 
-        /// Gets or sets the logger used by the client.
+        /// Gets or sets the default logger used by the client process.
         static member Logger
             with get () = init () ; SystemConfiguration.Logger
             and set l = init () ; SystemConfiguration.Logger <- l
@@ -83,5 +83,7 @@ namespace Nessos.MBrace.Client
 
         /// Gets the path used by the client as a working directory.
         static member WorkingDirectory = init () ; SystemConfiguration.WorkingDirectory
+        /// Gets the assembly cache directory used by Vagrant.
         static member AssemblyCacheDirectory = init () ; SystemConfiguration.AssemblyCacheDirectory
+        /// Gets the local cache directory used for Store primitives.
         static member LocalCacheStoreDirectory = init () ; SystemConfiguration.LocalCacheStoreDirectory

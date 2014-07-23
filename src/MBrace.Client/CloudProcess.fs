@@ -63,48 +63,48 @@
             | ProcessResultImage.Killed -> Killed
 
     [<AbstractClass>]
-    /// The type representing a process submitted to the runtime.
+    /// Type representing a cloud process submitted to the runtime.
     type Process internal (processId : ProcessId, returnType : Type, processManager : ProcessManager) =
 
         let processInfo = CacheAtom.Create(fun () -> processManager.GetProcessInfo(processId) |> Async.RunSynchronously)
 
-        ///<summary>Wait for the process's result.</summary>
+        ///<summary>Wait for the process result.</summary>
         ///<param name="pollingInterval">The number of milliseconds to poll for a result.</param>
         abstract AwaitBoxedResultAsync : ?pollingInterval:int -> Async<obj>
         
-        ///<summary>Wait for the process's result.</summary>
+        ///<summary>Wait for the process result.</summary>
         ///<param name="pollingInterval">The number of milliseconds to poll for a result.</param>
         abstract AwaitBoxedResult : ?pollingInterval:int -> obj
         
-        /// Try retreive the process's result. Returns None if the process is not completed.
+        /// Try retreive the process result. Returns None if the process is not completed.
         abstract TryGetBoxedResult : unit -> obj option
 
-        /// Process's name.
+        /// Process name.
         member p.Name : string = processInfo.Value.Name
 
-        /// Process's identifier.
+        /// Runtime process identifier.
         member p.ProcessId : ProcessId = processId
 
-        /// The type of process's result.
+        /// Process result type.
         member p.ReturnType : Type = returnType
         member internal p.ProcessInfo : ProcessInfo = processInfo.Value
 
-        /// The amount of time this process is running.
+        /// Amount of time current process has been running.
         member p.ExecutionTime : TimeSpan = processInfo.Value.ExecutionTime
 
         /// Gets whether the process is completed.
         member p.Complete : bool = processInfo.Value.ResultRaw <> ProcessResultImage.Pending
         
-        /// The date the process was created.
+        /// Process creation date/time.
         member p.InitTime : DateTime = processInfo.Value.InitTime
         
-        /// The number of workers used by this process.
+        /// Number of workers currently occupied with this process.
         member p.Workers : int = processInfo.Value.Workers
 
-        /// The number of tasks created by the process.
+        /// Number of tasks currently occupied with this process.
         member p.Tasks : int = processInfo.Value.Tasks
 
-        /// The identifier of the client that created this process.
+        /// UUID identifying the client that created this process.
         member p.ClientId : Guid = processInfo.Value.ClientId
 
         static member internal CreateUntyped(t : Type, processId : ProcessId, processManager : ProcessManager) =
@@ -117,41 +117,44 @@
 
             existential.Apply ctor
 
-        /// Returns information about this cloud process.
+        /// Returns printed information on the cloud process.
         member p.GetInfo () : string = MBraceProcessReporter.Report [processInfo.Value]
         
-        /// Prints information about this cloud process.
+        /// Prints information on the cloud process to StdOut.
         member p.ShowInfo () : unit = p.GetInfo() |> Console.WriteLine
 
-        /// Kill the process.
+        /// Violently kill the process.
         member p.Kill () : unit = processManager.Kill processId |> Async.RunSynchronously
         
-        /// Gets all user logs created by this process.
+        /// Gets all user generated logs by the process.
         member p.GetLogs () : CloudLogEntry [] = p.GetLogsAsync () |> Async.RunSynchronously
-        /// Gets all user logs created by this process.
+
+        /// Gets all user generated logs by the process.
         member p.GetLogsAsync () : Async<CloudLogEntry []> = async {
             let reader = StoreCloudLogger.GetReader(processManager.RuntimeStore, processId)
             let! logs = reader.FetchLogs()
             return logs |> Array.sortBy (fun e -> e.Date)
         }
 
-        /// Deletes any user logs created by this process.
+        /// Deletes any user logs created by the process.
         member p.DeleteLogs () : unit = Async.RunSynchronously <| p.DeleteLogsAsync()
-        /// Deletes any user logs created by this process.
+
+        /// Deletes any user logs created by the process.
         member p.DeleteLogsAsync () : Async<unit> = async {
             let reader = StoreCloudLogger.GetReader(processManager.RuntimeStore, processId)
             do! reader.DeleteLogs()
         }
 
-        /// Prints all user logs created by this process.
+        /// Prints all user logs created by the process.
         member p.ShowLogs () : unit =
             p.GetLogs () 
             |> Array.map (fun l -> l.ToSystemLogEntry(processId))
             |> Logs.show
 
-        /// Prints the stream of user logs as they are being created by the process.
+        /// Blocking operation that prints user logs to stdout as generated by the process.
         member p.StreamLogs () : unit = Async.RunSynchronously <| p.StreamLogsAsync()
-        /// Prints the stream of user logs as they are being created by the process.
+
+        /// Asynchronous operation that prints user logs to stdout as generated by the process.
         member p.StreamLogsAsync () : Async<unit> = 
             async {
                 use cts = new Threading.CancellationTokenSource()
@@ -175,27 +178,30 @@
 
         /// Deletes the container used by this process in the store.
         member p.DeleteContainer() : unit = p.DeleteContainerAsync() |> Async.RunSynchronously
+
         /// Deletes the container used by this process in the store.
         member p.DeleteContainerAsync() : Async<unit> =
             async {
                 return! processManager.RuntimeStore.DeleteContainer(sprintf' "process%d" p.ProcessId)
             }
 
-    /// The type representing a process submitted to the runtime.
+    /// Type representing a cloud process submitted to the runtime.
     and [<Sealed; NoEquality ; NoComparison ; AutoSerializable(false)>] 
       Process<'T> internal (id : ProcessId, processManager : ProcessManager) =
         inherit Process(id, typeof<'T>, processManager)
 
-        /// Gets the process' result.
+        /// Gets the process result.
         member p.Result : ProcessResult<'T> =
             let info = base.ProcessInfo
             ProcessResult<'T>.OfProcessInfo info
 
-        /// Try retreive the process's result. Returns None if the process is not completed.
+        /// Try retreiving the process result. Returns None if the process is not completed.
         member p.TryGetResult () : 'T option = p.Result.TryGetValue()
         
-        ///<summary>Waits for the process's result.</summary>
-        ///<param name="pollingInterval">The number of milliseconds to poll for a result.</param>
+        /// <summary>
+        ///      Asynchronously awaits the process result.
+        /// </summary>
+        /// <param name="pollingInterval">Result polling interval in milliseconds.</param>
         member p.AwaitResultAsync(?pollingInterval) : Async<'T> = async {
             let pollingInterval = defaultArg pollingInterval 200
             let rec retriable () = async {
@@ -209,29 +215,37 @@
             return! retriable ()
         }
 
-        ///<summary>Waits for the process's result.</summary>
-        ///<param name="pollingInterval">The number of milliseconds to poll for a result.</param>
+        /// <summary>
+        ///     Synchronously awaits the process result.
+        /// </summary>
+        /// <param name="pollingInterval">The number of milliseconds to poll for a result.</param>
         member p.AwaitResult(?pollingInterval) : 'T = 
             p.AwaitResultAsync(?pollingInterval = pollingInterval)
             |> Async.RunSynchronously
 
-        /// Try retreive the process's result. Returns None if the process is not completed.
+        /// Try retreiving the process result. Returns None if the process is not completed.
         override p.TryGetBoxedResult () = p.TryGetResult() |> Option.map (fun r -> r :> obj)
         
-        ///<summary>Waits for the process's result.</summary>
-        ///<param name="pollingInterval">The number of milliseconds to poll for a result.</param>        
+        /// <summary>
+        ///      Asynchronously awaits the process result.
+        /// </summary>
+        /// <param name="pollingInterval">Result polling interval in milliseconds.</param> 
         override p.AwaitBoxedResultAsync (?pollingInterval) = async {
             let! r = p.AwaitResultAsync(?pollingInterval = pollingInterval)
             return r :> obj
         }
 
-        ///<summary>Waits for the process's result.</summary>
-        ///<param name="pollingInterval">The number of milliseconds to poll for a result.</param>
+        /// <summary>
+        ///     Synchronously awaits the process result.
+        /// </summary>
+        /// <param name="pollingInterval">The number of milliseconds to poll for a result.</param>
         override p.AwaitBoxedResult (?pollingInterval) =
             p.AwaitBoxedResultAsync(?pollingInterval = pollingInterval)
             |> Async.RunSynchronously
 
-
+    /// <summary>
+    ///     Provides a basic process management logic for a given runtime.
+    /// </summary>
     and internal ProcessManager (processManagerF : unit -> ActorRef<ProcessManagerMsg>, storeInfoF : unit -> StoreInfo) =
         
         // keep track of process id's handled by process manager
@@ -256,11 +270,22 @@
 
         }
 
+        /// <summary>
+        ///     CloudStore instance used by runtime.
+        /// </summary>
         member pm.RuntimeStore = storeInfoF().Store
 
+        /// <summary>
+        ///     Asynchronously retrieves a ProcessInfo record from the runtime.
+        /// </summary>
+        /// <param name="pid">ProcessId identifier.</param>
         member pm.GetProcessInfo (pid : ProcessId) : Async<ProcessInfo> = 
             postWithReply(fun ch -> GetProcessInfo(ch, pid))
 
+        /// <summary>
+        ///     Downloads Vagrant dependencies for a running process if required.
+        /// </summary>
+        /// <param name="pid"></param>
         member pm.DownloadProcessDependencies (pid : ProcessId) = async {
             
             if processes.Value.Contains pid then return () else
@@ -287,6 +312,10 @@
             processes.Swap(fun ps -> ps.Add pid)
         }
 
+        /// <summary>
+        ///     Gets a client process object for given ProcessId.
+        /// </summary>
+        /// <param name="pid"></param>
         member pm.GetProcess (pid : ProcessId) = async {
             do! pm.DownloadProcessDependencies pid
             let! info = postWithReply <| fun ch -> GetProcessInfo(ch, pid)
@@ -295,6 +324,9 @@
             return Process.CreateUntyped(returnType, pid, pm)
         }
 
+        /// <summary>
+        ///     Gets a collection of client objects for all running or completed processes in runtime.
+        /// </summary>
         member pm.GetAllProcesses () = async {
             let! infos = postWithReply GetAllProcessInfo
 
@@ -304,9 +336,21 @@
                 |> Async.Parallel
         }            
 
+        /// <summary>
+        ///     Erase all completed process info from runtime.
+        /// </summary>
+        /// <param name="pid"></param>
         member pm.ClearProcessInfo (pid : ProcessId) = postWithReply <| fun ch -> ClearProcessInfo(ch, pid)
+
+        /// <summary>
+        ///     Erase all process info from runtime.
+        /// </summary>
         member pm.ClearAllProcessInfo () = postWithReply ClearAllProcessInfo
 
+        /// <summary>
+        ///     Initializes a new cloud workflow to runtime and asynchronously returns a process object.
+        /// </summary>
+        /// <param name="comp">Cloud workflow.</param>
         member pm.CreateProcess<'T> (comp : CloudComputation<'T>) : Async<Process<'T>> = async {
             let requestId = Guid.NewGuid()
 
@@ -332,8 +376,15 @@
             return Process<'T>(info.ProcessId, pm)
         }
 
+        /// <summary>
+        ///     Violently kill a remote process.
+        /// </summary>
+        /// <param name="pid"></param>
         member pm.Kill (pid : ProcessId) = postWithReply <| fun ch -> KillProcess(ch, pid)
 
+        /// <summary>
+        ///     Get printed info for all processes in runtime.
+        /// </summary>
         member pm.GetInfo () : string =
             let info = postWithReply GetAllProcessInfo |> Async.RunSynchronously |> Array.toList
             MBraceProcessReporter.Report(info, showBorder = false)
