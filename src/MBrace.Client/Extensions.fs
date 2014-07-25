@@ -24,7 +24,7 @@
     /// Store configuration descriptor (Implementation/Connection string)
     type StoreDefinition = Nessos.MBrace.Store.StoreDefinition
 
-    /// Cloud Computation + metadata
+    /// Compiled cloud computation package with metadata
     type CloudComputation<'T> = Nessos.MBrace.Runtime.Compiler.CloudComputation<'T>
 
 

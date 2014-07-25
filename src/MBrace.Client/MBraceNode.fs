@@ -122,7 +122,7 @@
         /// <param name="provider">Store connection definition.</param>
         member __.SetStoreConfigurationAsync (provider : StoreDefinition) = async {
             let info = StoreRegistry.Activate(provider, makeDefault = false)
-            let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
+            let! storeManager = nodeRef.PostWithReply(GetStoreManager, MBraceSettings.DefaultTimeout)
             return! StoreManager.uploadStore info storeManager
         }
 
@@ -137,7 +137,7 @@
         ///     Asynchronously returns a manager object for handling storage of remote Node.
         /// </summary>
         member __.GetStoreManagerAsync () = async {
-            let! storeManager = nodeRef.PostWithReplyRetriable(GetStoreManager, 2)
+            let! storeManager = nodeRef.PostWithReply(GetStoreManager, MBraceSettings.DefaultTimeout)
             let! info = StoreManager.downloadStore false storeManager
             return new StoreClient(info)
         }

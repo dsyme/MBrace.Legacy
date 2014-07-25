@@ -256,14 +256,18 @@
                 do processManagerF().Post msg
             with
             | MBraceExn e -> reraise' e
+            // temporary solution due to Thespian issue
+            | :? System.Net.Sockets.SocketException as e -> mfailwithInner e "Cannot communicate with runtime."
             | :? CommunicationException as e -> mfailwithInner e "Cannot communicate with runtime."
             | MessageHandlingExceptionRec e -> mfailwithInner e "Runtime replied with exception."
 
         let postWithReply (msgB : IReplyChannel<'R> -> ProcessManagerMsg) = async {
             try
-                return! processManagerF() <!- msgB
+                return! processManagerF().PostWithReply(msgB, MBraceSettings.DefaultTimeout)
             with
             | MBraceExn e -> return reraise' e
+            // temporary solution due to Thespian issue
+            | :? System.Net.Sockets.SocketException as e -> return mfailwithInner e "Cannot communicate with runtime."
             | :? CommunicationException as e -> return mfailwithInner e "Cannot communicate with runtime."
             | MessageHandlingExceptionRec e ->
                 return! mfailwithInner e "Runtime replied with exception."

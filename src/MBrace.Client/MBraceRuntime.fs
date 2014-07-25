@@ -35,12 +35,12 @@ namespace Nessos.MBrace.Client
             | _ -> reraise' e
 
         let postAsync msg = async {
-            try return! runtime.PostRetriable(msg, 2)
+            try return! runtime.PostAsync msg
             with e -> return handleError e
         }
 
         let postWithReplyAsync msgBuilder = async {
-            try return! runtime.PostWithReplyRetriable(msgBuilder, 2)
+            try return! runtime.PostWithReply(msgBuilder, MBraceSettings.DefaultTimeout)
             with e -> return handleError e
         }
 
@@ -250,7 +250,7 @@ namespace Nessos.MBrace.Client
         member r.DetachAsync (node: MBraceNode) : Async<unit> =
             async {
                 try
-                    do! node.Ref <!- Detach
+                    do! node.Ref.PostWithReply(Detach, MBraceSettings.DefaultTimeout)
                 with
                 | MBraceExn e -> return reraise' e
                 | CommunicationException _ -> return mfailwithf "Failed to connect to node %A." node.Uri

@@ -242,7 +242,7 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test;RuntimeAdministrationCategory>]
         member __.``Ping the Runtime``() =
-            should greaterThan 0 (__.Runtime.Ping())
+            should greaterThan TimeSpan.Zero (__.Runtime.Ping())
             
         [<Test;RuntimeAdministrationCategory>]
         member __.``Get Runtime Status`` () =
