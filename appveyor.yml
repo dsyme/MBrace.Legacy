@@ -8,6 +8,9 @@ configuration: Release
 #  - netsh.exe advfirewall firewall add rule name = "MBrace Daemon" dir=in action=allow program="c:\projects\mbrace\bin\mbraced.exe" enable=yes profile=any
 #  - ps: Add-AppveyorMessage -Message "Created firewall rules"
 
+before_test:
+	- copy C:\Projects\bin\MBrace\lib\fsharp\FSharp.Core.* C:\Projects\bin\MBrace\bin\
+
 test:
   assemblies:
     - MBrace.Core.Tests.dll

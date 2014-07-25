@@ -311,7 +311,7 @@
 
         override test.Store = store
 
-    [<TestFixture; Category("CustomStores")>]
+    [<TestFixture; Category("CustomStores") ; Ignore("Do not run SQL tests by default.")>]
     type ``SqlServer tests`` () =
         inherit ``Store tests`` ()
 
