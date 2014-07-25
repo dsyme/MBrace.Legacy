@@ -39,3 +39,10 @@ ps.ShowLogs()
 
 
 rt.Run <@ cloud { return 42 } @>
+
+
+let rt = MBrace.InitLocal 3
+let ps = rt.CreateProcess <@ cloud { while true do do! Cloud.Sleep 10 } @>
+
+
+ps.ShowInfo()
