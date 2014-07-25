@@ -33,7 +33,7 @@
     <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\MBrace.Core.Tests.XML</DocumentationFile>
+    <DocumentationFile>..\..\bin\MBrace.Core.Tests.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FsPickler">

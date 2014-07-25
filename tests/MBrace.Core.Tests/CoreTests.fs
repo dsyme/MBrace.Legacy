@@ -183,6 +183,16 @@
                    } @> |> test.ExecuteExpression 
             f 0 |> should equal r
 
+        [<Test>]
+        member test.``1. Simple : UnQuote Exception`` () =
+            <@ cloud { 
+                    try
+                        return raise <| System.InvalidOperationException() 
+                    with :? System.InvalidOperationException -> return -1
+                         | _ -> return -2
+               } 
+            @> |> test.ExecuteExpression |> should equal -1
+
 
         //
         //  Section 2: Cloud workflow parallelism tests
@@ -375,6 +385,31 @@
                         |> Cloud.Parallel
                         |> Cloud.Ignore
                 } @> |> test.ExecuteExpression |> ignore
+
+        [<Test; CloudCombinatorsCategory>]
+        member test.``3. Combinators : Catch`` () =
+            let result : Choice<unit,exn> = 
+                <@ cloud { 
+                        return! Cloud.Catch <| cloud { return raise <| exn() }
+                   } 
+                @> |> test.ExecuteExpression
+            match result with
+            | Choice1Of2 _ -> Assert.Fail("Expected exception but got result.")
+            | Choice2Of2 e -> ()
+
+            let result : Choice<unit,exn> = 
+                <@ cloud { 
+                        return! Cloud.Catch <| cloud { return () }
+                   } 
+                @> |> test.ExecuteExpression
+            match result with
+            | Choice1Of2 _ -> ()
+            | Choice2Of2 e -> Assert.Fail("Expected result but got exception.")
+
+        [<Test; CloudCombinatorsCategory>]
+        member test.``3. Combinators : Sleep`` () =
+            <@ cloud { do! Cloud.Sleep 1000 } @>
+            |> test.ExecuteExpression
 
 
 
@@ -742,45 +777,10 @@
             <@ cloud { 
                 return! MutableCloudRef.TryGet(Guid.NewGuid().ToString("N"),Guid.NewGuid().ToString("N"))
                } @> |> test.ExecuteExpression |> should equal None
-
-        [<Test>]
-        member test.``UnQuote Exception`` () =
-            <@ cloud { 
-                    try
-                        return raise <| System.InvalidOperationException() 
-                    with :? System.InvalidOperationException -> return -1
-                         | _ -> return -2
-               } 
-            @> |> test.ExecuteExpression |> should equal -1
-
-        [<Test; CloudCombinatorsCategory>]
-        member test.``4. Combinators : Catch`` () =
-            let result : Choice<unit,exn> = 
-                <@ cloud { 
-                        return! Cloud.Catch <| cloud { return raise <| exn() }
-                   } 
-                @> |> test.ExecuteExpression
-            match result with
-            | Choice1Of2 _ -> Assert.Fail("Expected exception but got result.")
-            | Choice2Of2 e -> ()
-
-            let result : Choice<unit,exn> = 
-                <@ cloud { 
-                        return! Cloud.Catch <| cloud { return () }
-                   } 
-                @> |> test.ExecuteExpression
-            match result with
-            | Choice1Of2 _ -> ()
-            | Choice2Of2 e -> Assert.Fail("Expected result but got exception.")
-
-        [<Test; CloudCombinatorsCategory>]
-        member test.``4. Combinators : Sleep`` () =
-            <@ cloud { do! Cloud.Sleep 1000 } @>
-            |> test.ExecuteExpression
             
 
-        [<Test>]
-        member test.``Concurrent cache writes (Parallel CloudSeq read after cleaning cache)`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``4. Primitives : Concurrent local cache writes`` () =
 
             let cs = <@ cloud { return! CloudSeq.New(Array.init (10 * 1024 * 1024) id) } @> |> test.ExecuteExpression
             let storeId = StoreRegistry.DefaultStoreInfo.Id

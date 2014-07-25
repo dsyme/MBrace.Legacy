@@ -10,7 +10,7 @@
     type CompilerTestsCategoryAttribute() =
         inherit CategoryAttribute("CompilerTests")
 
-    /// CloudCompiler tests.
+    /// Simple interpreter tests.
     type SimpleTestsCategoryAttribute() =
         inherit CategoryAttribute("SimpleTests")
 
