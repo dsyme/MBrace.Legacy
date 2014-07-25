@@ -12,8 +12,3 @@ test:
   assemblies:
     - MBrace.Core.Tests.dll
     - MBrace.Store.Tests.dll
-  categories:
-    - FileSystemStore
-    - CompilerTests
-    - LocalTests
-#    - ClusterTests
