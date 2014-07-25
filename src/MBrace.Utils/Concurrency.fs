@@ -13,7 +13,7 @@ namespace Nessos.MBrace.Utils
         let initial = match initial with None -> Undefined | Some t -> Success(t, DateTime.Now)
         let container = Atom.atom<CacheState<'T>> initial
 
-        let update state =
+        let update force state =
             let inline compute lastSuccessful =
                 try Success(provider lastSuccessful, DateTime.Now)
                 with e -> Error(e, DateTime.Now, lastSuccessful)
@@ -21,8 +21,8 @@ namespace Nessos.MBrace.Utils
             let state' =
                 match state with
                 | Undefined -> compute None
-                | Success (_,time) when DateTime.Now - time <= interval -> state
-                | Error (_,time,_) when DateTime.Now - time <= interval -> state
+                | Success (_,time) when not force && DateTime.Now - time <= interval -> state
+                | Error (_,time,_) when not force && DateTime.Now - time <= interval -> state
                 | Success (t,_) -> compute <| Some t
                 | Error (_,_,last) -> compute last
 
@@ -32,12 +32,12 @@ namespace Nessos.MBrace.Utils
             | _ -> failwith "impossible"
 
         member __.Value =
-            match container.Transact update with
+            match container.Transact (update false) with
             | Choice1Of2 v -> v
             | Choice2Of2 e -> reraise' e
 
         member __.TryGetValue () =
-            match container.Transact update with
+            match container.Transact (update false) with
             | Choice1Of2 v -> Some v
             | Choice2Of2 _ -> None
 
@@ -50,6 +50,11 @@ namespace Nessos.MBrace.Utils
                 | Success(t,_)
                 | Error(_,_,Some t) -> Some t
                 | _ -> None
+
+        member __.Force () =
+            match container.Transact (update true) with
+            | Choice1Of2 v -> v
+            | Choice2Of2 e -> reraise' e
 
     and private CacheState<'T> =
         | Undefined

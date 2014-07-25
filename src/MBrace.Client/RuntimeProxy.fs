@@ -56,7 +56,7 @@
 
     /// connects to an already booted MBrace cluster
     let connect (node : ActorRef<MBraceNode>) = async {
-        let! state = node.PostWithReplyRetriable((fun ch -> GetClusterDeploymentInfo(ch, false)), 2)
+        let! state = node.PostWithReply((fun ch -> GetClusterDeploymentInfo(ch, false)), MBraceSettings.DefaultTimeout)
 
         // download store activation info if required
         let! info = async {
@@ -64,7 +64,7 @@
             match StoreRegistry.TryGetStoreInfo state.StoreId with
             | Some info -> return info
             | None ->
-                let! storeManager = node.PostWithReplyRetriable (GetStoreManager, 2)
+                let! storeManager = node.PostWithReply (GetStoreManager, MBraceSettings.DefaultTimeout)
                 return! StoreManager.downloadStore false storeManager
         }
 
@@ -83,7 +83,7 @@
         | None -> ()
         | Some id ->
             let storeInfo = StoreRegistry.TryGetStoreInfo id |> Option.get
-            let! storeMan = master.PostWithReplyRetriable (GetStoreManager, 2)
+            let! storeMan = master.PostWithReply (GetStoreManager, MBraceSettings.DefaultTimeout)
             do! StoreManager.uploadStore storeInfo storeMan
 
         // boot delays mostly occuring in local runtimes;
@@ -104,7 +104,10 @@
     let bootNodes (nodes : ActorRef<MBraceNode> [], replicationFactor, failoverFactor, storeProvider) = async {
         if nodes.Length < 3 then invalidArg "nodes" "insufficient amount of nodes."
 
-        let! nodeInfo = nodes |> Array.map (fun n -> n <!- fun ch -> GetNodeDeploymentInfo(ch, false)) |> Async.Parallel
+        let! nodeInfo = 
+            nodes 
+            |> Array.map (fun n -> n.PostWithReply((fun ch -> GetNodeDeploymentInfo(ch, false)), MBraceSettings.DefaultTimeout))
+            |> Async.Parallel
 
         match nodeInfo |> Array.tryFind (fun n -> n.State <> Idle) with
         | Some n -> mfailwithf "Node '%O' has already been booted" n.Uri

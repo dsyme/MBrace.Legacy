@@ -61,6 +61,8 @@ namespace Nessos.MBrace.Client
     /// The object representing the {m}brace client settings.
     type MBraceSettings private () =
 
+        static let mutable timeout = 30000
+
         static let init = runOnce initClientConfiguration
         
         /// Gets the client's unique identifier.
@@ -87,3 +89,10 @@ namespace Nessos.MBrace.Client
         static member AssemblyCacheDirectory = init () ; SystemConfiguration.AssemblyCacheDirectory
         /// Gets the local cache directory used for Store primitives.
         static member LocalCacheStoreDirectory = init () ; SystemConfiguration.LocalCacheStoreDirectory
+
+        /// Gets or sets the default timeout (in milliseconds) used for communicating with the runtime
+        static member DefaultTimeout
+            with get () = timeout
+            and set t =
+                if t <= 0 then invalidArg "timeout" "must be non-negative."
+                timeout <- t
