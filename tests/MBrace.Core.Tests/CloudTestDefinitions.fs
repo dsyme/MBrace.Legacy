@@ -260,16 +260,6 @@ namespace Nessos.MBrace.Core.Tests
             } 
 
         [<Cloud>]
-        let randomSumParallel () =
-            cloud {
-                let getRandomNumber () = cloud { return (new Random()).Next() }
-
-                let! (first, second) = getRandomNumber() <||> getRandomNumber()
-
-                return first + second
-            }
-
-        [<Cloud>]
         let testSimpleCloudRef a = 
             cloud {
                 let! ref = CloudRef.New a

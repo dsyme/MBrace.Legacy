@@ -14,17 +14,13 @@
     type SimpleTestsCategoryAttribute() =
         inherit CategoryAttribute("SimpleTests")
 
-    /// Cloud.Parallel tests.
-    type CloudParallelCategoryAttribute() =
-        inherit CategoryAttribute("ParallelTests")
-
-    /// Cloud.Choice tests.
-    type CloudChoiceCategoryAttribute() =
-        inherit CategoryAttribute("ChoiceTests")
-
-    /// Cloud.* tests.
+    /// Misc Cloud combinator tests.
     type CloudCombinatorsCategoryAttribute() =
         inherit CategoryAttribute("CombinatorsTests")
+
+    /// Cloud Parallelism tests.
+    type CloudParallelCategoryAttribute() =
+        inherit CategoryAttribute("ParallelTests")
 
     /// Primitives tests.
     type PrimitivesCategoryAttribute() =

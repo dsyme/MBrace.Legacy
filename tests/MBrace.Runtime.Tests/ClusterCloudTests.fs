@@ -31,9 +31,8 @@ namespace Nessos.MBrace.Runtime.Tests
             | None -> invalidOp "No runtime specified in test fixture."
             | Some r -> r
 
-        abstract InitRuntime : unit -> unit
         [<TestFixtureSetUp>]
-        default test.InitRuntime() =
+        member test.InitRuntime() =
             lock currentRuntime (fun () ->
                 match currentRuntime.Value with
                 | Some runtime -> runtime.Kill()
@@ -42,22 +41,23 @@ namespace Nessos.MBrace.Runtime.Tests
                 MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "mbraced.exe")
                 let runtime = MBraceRuntime.InitLocal(3, debug = true)
                 currentRuntime := Some runtime)
-        
-        abstract FiniRuntime : unit -> unit
+
         [<TestFixtureTearDown>]
-        default test.FiniRuntime() =
+        member test.FiniRuntime() =
             lock currentRuntime (fun () -> 
                 match currentRuntime.Value with
                 | None -> invalidOp "No runtime specified in test fixture."
                 | Some r -> r.Shutdown() ; currentRuntime := None)
 
 
-        [<Test>]
-        member test.SerializationTest () =
-            shouldFailwith<MBraceException> (fun () -> <@ cloud { return new System.Net.HttpListener() } @> |> test.ExecuteExpression |> ignore)
 
-        [<Test>] 
-        member t.``Cloud Log`` () = 
+        //
+        //  Section A : generic cluster tests
+        //
+
+
+        [<Test; ClusterTestsCategory()>]
+        member t.``Z1. Cluster Tests: Cloud Log`` () = 
             let msg = "Cloud Log Test Msg"
             let ps = <@ cloud { do! Cloud.Log msg } @> |> t.Runtime.CreateProcess
             ps.AwaitResult()
@@ -65,8 +65,8 @@ namespace Nessos.MBrace.Runtime.Tests
             dumps.Length |> should equal 1
             (dumps |> Seq.head).Message |> should equal msg
 
-        [<Test>] 
-        member t.``Cloud Logf - multiple`` () =
+        [<Test; ClusterTestsCategory()>]
+        member t.``Z1. Cluster Tests: Cloud Logf - multiple`` () =
             let ps =
                 <@
                     cloud {
@@ -92,8 +92,8 @@ namespace Nessos.MBrace.Runtime.Tests
 
             logs.Length |> should equal 100
 
-        [<Test>] 
-        member t.``Cloud Log - delete`` () = 
+        [<Test; ClusterTestsCategory()>]
+        member t.``Z1. Cluster Tests: Cloud Log - delete`` () = 
             let msg = "Cloud Log Test Msg"
             let ps = <@ cloud { do! Cloud.Log msg } @> |> t.Runtime.CreateProcess
             ps.AwaitResult()
@@ -102,8 +102,8 @@ namespace Nessos.MBrace.Runtime.Tests
             ps.GetLogs() |> should equal Seq.empty
             
             
-        [<Test>] 
-        member test.``Cloud Trace`` () = 
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Cloud Trace`` () = 
             let ps = <@ testTrace 1 @> |> test.Runtime.CreateProcess
             ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
@@ -111,26 +111,22 @@ namespace Nessos.MBrace.Runtime.Tests
             should equal true (traceHasValue dumps "a" "1")
             should equal true (traceHasValue dumps "x" "2")
 
-        [<Test>] 
-        member test.``Serialization Exception`` () = 
-            test.SerializationTest()
-
-        [<Test>]
-        member test.``Cloud Trace Exception `` () = 
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Cloud Trace Exception`` () = 
             let ps = <@ cloud { return 1 / 0 } |> Cloud.Trace @> |> test.Runtime.CreateProcess
             shouldFailwith<CloudException> (fun () -> ps.AwaitResult() |> ignore)
             let dumps = ps.GetLogs()
             should equal true (dumps |> Seq.exists(fun e -> e.Message.Contains("DivideByZeroException")))
                 
-        [<Test>] 
-        member test.``Cloud Trace handle Exception`` () = 
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Cloud Trace handle Exception`` () = 
             let ps = <@ testTraceExc () @> |> test.Runtime.CreateProcess
             ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
             should equal true (traceHasValue dumps "ex" "error")
 
-        [<Test>] 
-        member test.``Cloud Trace For Loop`` () = 
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Cloud Trace For Loop`` () = 
             let ps = <@ testTraceForLoop () @> |> test.Runtime.CreateProcess
             ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
@@ -138,15 +134,15 @@ namespace Nessos.MBrace.Runtime.Tests
             should equal true (traceHasValue dumps "i" "2")
             should equal true (traceHasValue dumps "i" "3")
 
-        [<Test>]
-        member test.``Quotation Cloud Trace`` () = 
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Cloud Trace Quotation`` () = 
             let ps = <@ cloud { let! x = cloud { return 1 } in return x } |> Cloud.Trace @> |> test.Runtime.CreateProcess
             ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
             should equal false (traceHasValue dumps "x" "1")
 
-        [<Test>]
-        member test.``Cloud NoTraceInfo Attribute`` () = 
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Cloud NoTraceInfo Attribute`` () = 
             let ps = <@ cloud { return! cloud { return 1 } <||> cloud { return 2 } } |> Cloud.Trace @> |> test.Runtime.CreateProcess
             ps.AwaitResult() |> ignore
             let dumps = ps.GetLogs()
@@ -160,8 +156,8 @@ namespace Nessos.MBrace.Runtime.Tests
 
             should equal false result
 
-        [<Test>]
-        member test.``Parallel Cloud Trace`` () = 
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Parallel Cloud Trace`` () = 
             let proc = <@ testParallelTrace () @> |> test.Runtime.CreateProcess 
             proc.AwaitResult() |> ignore
             let dumps = proc.GetLogs()
@@ -169,8 +165,8 @@ namespace Nessos.MBrace.Runtime.Tests
             should equal true (traceHasValue dumps "y" "3")
             should equal true (traceHasValue dumps "r" "5")
 
-        [<Test; Repeat 10>]
-        member test.``Z3 Test Kill Process - Process killed, process stops`` () =
+        [<Test; ClusterTestsCategory() ; Repeat 2>]
+        member test.``Z1. Cluster Tests: Process killed, process stops`` () =
             let mref = MutableCloudRef.New 0 |> MBrace.RunLocal
             let ps = 
                 <@ cloud {
@@ -187,8 +183,8 @@ namespace Nessos.MBrace.Runtime.Tests
             ps.Result |> should equal ProcessResult<unit>.Killed
             should equal val1 val2
 
-        [<Test; Repeat 10>]
-        member test.``Z4 Test Kill Process - Fork bomb`` () =
+        [<Test; ClusterTestsCategory() ; Repeat 5>]
+        member test.``Z1. Cluster Tests: Kill Process - Fork bomb`` () =
             let m = MutableCloudRef.New 0 |> MBrace.RunLocal
 
             let ps = 
@@ -211,15 +207,15 @@ namespace Nessos.MBrace.Runtime.Tests
             ps.Result |> should equal ProcessResult<unit>.Killed
             should equal 0 v
 
-        [<Test; Repeat 100>]
-        member test.``Parallel with exception cancellation`` () =
+        [<Test; Repeat 5>]
+        member test.``Z1. Cluster Tests: Parallel with exception cancellation`` () =
             let flag = MutableCloudRef.New false |> MBrace.RunLocal
             test.Runtime.Run <@ testParallelWithExceptionCancellation flag @>
             let v = MutableCloudRef.Read flag |> MBrace.RunLocal
             v |> should equal true
 
-        [<Test;>]
-        member test.``Process.StreamLogs`` () =
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Process.StreamLogs`` () =
             let ps =
                 <@ cloud {
                         for i in [|1..10|] do
@@ -229,62 +225,67 @@ namespace Nessos.MBrace.Runtime.Tests
             ps.StreamLogs()
 
 
+        //
+        //  Secion B: Runtime administration
+        //
+
+
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Fetch logs`` () =
+        member __.``Z2. Cluster Admin: Fetch logs`` () =
             __.Runtime.GetSystemLogs() |> Seq.isEmpty |> should equal false
             __.Runtime.Nodes.Head.GetSystemLogs() |> Seq.isEmpty |> should equal false
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Process delete container`` () =
+        member __.``Z2. Cluster Admin: Process delete container`` () =
             let ps = __.Runtime.CreateProcess <@ cloud { return! CloudRef.New(42) } @>
             ps.AwaitResult() |> ignore
             ps.DeleteContainer()
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Ping the Runtime``() =
+        member __.``Z2. Cluster Admin: Ping the Runtime``() =
             should greaterThan TimeSpan.Zero (__.Runtime.Ping())
             
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Get Runtime Status`` () =
+        member __.``Z2. Cluster Admin: Get Runtime Status`` () =
             __.Runtime.Active |> should equal true
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Get Runtime Information`` () =
+        member __.``Z2. Cluster Admin: Get Runtime Information`` () =
             __.Runtime.ShowInfo ()
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Get Runtime Performance Information`` () =
+        member __.``Z2. Cluster Admin: Get Runtime Performance Information`` () =
             __.Runtime.ShowInfo (true)
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Get Runtime Deployment Id`` () =
+        member __.``Z2. Cluster Admin: Get Runtime Deployment Id`` () =
             __.Runtime.Id |> ignore
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Get Runtime Nodes`` () =
+        member __.``Z2. Cluster Admin: Get Runtime Nodes`` () =
             __.Runtime.Nodes |> Seq.length |> should greaterThan 0
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Get Master Node`` () =
+        member __.``Z2. Cluster Admin: Get Master Node`` () =
             __.Runtime.Master |> ignore
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Get Alt Nodes`` () =
+        member __.``Z2. Cluster Admin: Get Alt Nodes`` () =
             __.Runtime.Alts |> ignore
 
         [<Test;RuntimeAdministrationCategory; ExpectedException(typeof<Nessos.MBrace.NonExistentObjectStoreException>)>]
-        member __.``Delete container`` () =
+        member __.``Z2. Cluster Admin: Delete container`` () =
             let s = __.Runtime.Run <@ CloudSeq.New([1..10]) @> 
             __.Runtime.GetStoreClient().DeleteContainer(s.Container) 
             Seq.toList s |> ignore
 
         [<Test; Repeat 4;RuntimeAdministrationCategory>]
-        member __.``Reboot runtime`` () =
+        member __.``Z2. Cluster Admin: Reboot runtime`` () =
             __.Runtime.Reboot()
             __.Runtime.Run <@ cloud { return 1 + 1 } @> |> should equal 2
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Attach Node`` () =
+        member __.``Z2. Cluster Admin: Attach Node`` () =
             let n = __.Runtime.Nodes |> List.length
             __.Runtime.AttachLocal 1 
 
@@ -294,7 +295,7 @@ namespace Nessos.MBrace.Runtime.Tests
             n' - n |> should equal 1
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Detach Node`` () =
+        member __.``Z2. Cluster Admin: Detach Node`` () =
             let nodes = __.Runtime.Nodes 
             let n = nodes.Length
             let node2 = nodes.[1] 
@@ -306,7 +307,7 @@ namespace Nessos.MBrace.Runtime.Tests
             n - n' |> should equal 1
 
         [<Test;RuntimeAdministrationCategory>]
-        member __.``Node Permissions`` () =
+        member __.``Z2. Cluster Admin: Node Permissions`` () =
             let nodes = __.Runtime.Nodes 
             let n = nodes.Head
 
