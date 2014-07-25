@@ -197,7 +197,7 @@ let schedulerBehavior (processMonitor: ActorRef<Replicated<ProcessMonitor, Proce
                         ctx.LogInfo "Received unexpected result (probably due to cancellation). Ignoring..."
 
                 | value -> 
-                    ctx.LogEvent(Nessos.Thespian.LogLevel.Error, "Scheduler: Unreckognized result. Terminating...")
+                    ctx.LogEvent(Nessos.Thespian.LogLevel.Error, "Scheduler: Unrecognized result. Terminating...")
                         
                     do! processMonitor <!- fun ch -> Replicated(ch, Choice1Of2 <| CompleteProcess(processId, new SystemException("Scheduler state corrupted. Severe system error. Contact M-Brace support.") :> exn |> Fault))
 

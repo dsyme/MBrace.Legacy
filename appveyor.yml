@@ -9,7 +9,7 @@ configuration: Release
 #  - ps: Add-AppveyorMessage -Message "Created firewall rules"
 
 before_test:
-	- copy C:\Projects\bin\MBrace\lib\fsharp\FSharp.Core.* C:\Projects\bin\MBrace\bin\
+	- copy C:\projects\mbrace\lib\fsharp\FSharp.Core.* C:\projects\mbrace\bin\
 
 test:
   assemblies:
