@@ -780,18 +780,16 @@
             
 
         [<Test; PrimitivesCategory>]
-        member test.``4. Primitives : Concurrent local cache writes`` () =
+        member test.``4. Primitives : Concurrent cache writes`` () =
+            let array = Array.init (10 * 1024 * 1024) id
+            let cs = test.ExecuteExpression <@ cloud { return! CloudSeq.New array } @>
 
-            let cs = <@ cloud { return! CloudSeq.New(Array.init (10 * 1024 * 1024) id) } @> |> test.ExecuteExpression
-            let storeId = StoreRegistry.DefaultStoreInfo.Id
             // Clear client cache
             let cacheDir = MBraceSettings.LocalCacheStoreDirectory
             Directory.Delete(cacheDir, true)
 
             let read () = async { return cs |> Seq.toArray }
-
-            let r = Async.Parallel [read (); read () ]
-                    |> Async.RunSynchronously
+            let r = Async.Parallel [read (); read () ] |> Async.RunSynchronously
 
             should equal r.[0] r.[1]
 
