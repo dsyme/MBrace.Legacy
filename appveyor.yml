@@ -10,7 +10,7 @@ configuration: Release
 
 test:
   assemblies:
-    - MBrace.Runtime.Tests.dll
+    - MBrace.Core.Tests.dll
     - MBrace.Store.Tests.dll
   categories:
     - FileSystemStore
