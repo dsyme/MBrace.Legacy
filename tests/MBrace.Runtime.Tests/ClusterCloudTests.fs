@@ -12,10 +12,12 @@ namespace Nessos.MBrace.Runtime.Tests
     open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Client
+    open Nessos.MBrace.Core.Tests
+    
 
-    [<Category("ClusterTests")>]
+    [<ClusterTestsCategory>]
     type ``Cluster Cloud Tests``() =
-        inherit ``Cloud Tests``()
+        inherit ``Core Tests``()
 
         let currentRuntime : MBraceRuntime option ref = ref None
         
@@ -227,61 +229,61 @@ namespace Nessos.MBrace.Runtime.Tests
             ps.StreamLogs()
 
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Fetch logs`` () =
             __.Runtime.GetSystemLogs() |> Seq.isEmpty |> should equal false
             __.Runtime.Nodes.Head.GetSystemLogs() |> Seq.isEmpty |> should equal false
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Process delete container`` () =
             let ps = __.Runtime.CreateProcess <@ cloud { return! CloudRef.New(42) } @>
             ps.AwaitResult() |> ignore
             ps.DeleteContainer()
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Ping the Runtime``() =
             should greaterThan 0 (__.Runtime.Ping())
             
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Get Runtime Status`` () =
             __.Runtime.Active |> should equal true
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Get Runtime Information`` () =
             __.Runtime.ShowInfo ()
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Get Runtime Performance Information`` () =
             __.Runtime.ShowInfo (true)
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Get Runtime Deployment Id`` () =
             __.Runtime.Id |> ignore
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Get Runtime Nodes`` () =
             __.Runtime.Nodes |> Seq.length |> should greaterThan 0
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Get Master Node`` () =
             __.Runtime.Master |> ignore
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Get Alt Nodes`` () =
             __.Runtime.Alts |> ignore
 
-        [<Test; Category("Runtime Administration"); ExpectedException(typeof<Nessos.MBrace.NonExistentObjectStoreException>)>]
+        [<Test;RuntimeAdministrationCategory; ExpectedException(typeof<Nessos.MBrace.NonExistentObjectStoreException>)>]
         member __.``Delete container`` () =
             let s = __.Runtime.Run <@ CloudSeq.New([1..10]) @> 
             __.Runtime.GetStoreClient().DeleteContainer(s.Container) 
             Seq.toList s |> ignore
 
-        [<Test; Repeat 4; Category("Runtime Administration")>]
+        [<Test; Repeat 4;RuntimeAdministrationCategory>]
         member __.``Reboot runtime`` () =
             __.Runtime.Reboot()
             __.Runtime.Run <@ cloud { return 1 + 1 } @> |> should equal 2
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Attach Node`` () =
             let n = __.Runtime.Nodes |> List.length
             __.Runtime.AttachLocal 1 
@@ -291,7 +293,7 @@ namespace Nessos.MBrace.Runtime.Tests
             let n' = __.Runtime.Nodes |> List.length 
             n' - n |> should equal 1
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Detach Node`` () =
             let nodes = __.Runtime.Nodes 
             let n = nodes.Length
@@ -303,7 +305,7 @@ namespace Nessos.MBrace.Runtime.Tests
             let n' =__.Runtime.Nodes |> List.length
             n - n' |> should equal 1
 
-        [<Test; Category("Runtime Administration")>]
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Node Permissions`` () =
             let nodes = __.Runtime.Nodes 
             let n = nodes.Head

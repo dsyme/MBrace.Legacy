@@ -1,6 +1,6 @@
 ﻿#nowarn "0044" // 'While loop considered harmful' message.
 
-namespace Nessos.MBrace.Runtime.Tests
+namespace Nessos.MBrace.Core.Tests
 
     open System
     open System.Runtime.Serialization
@@ -89,25 +89,11 @@ namespace Nessos.MBrace.Runtime.Tests
                     return! ackermann (m-1) right
             }
 
-        [<Cloud>]
-        let rec mcCarthy91 n = 
-            cloud {
-                if n > 100 then
-                    return n - 10
-                else // n <= 100
-                    let! r = mcCarthy91 (n + 11)
-                    return! mcCarthy91 r
-            }
-
         [<Cloud>] 
         let mapF (v : int) = cloud { return v }
+
         [<Cloud>] 
         let reduceF left right = cloud { return left + right }
-
-//        [<Cloud>] 
-//        let add a b = cloud { return a + b }
-//        [<Cloud>] 
-//        let addUnCurry (a, b) = cloud { return a + b }
 
         [<Cloud>] 
         let parallelIncrements () = 

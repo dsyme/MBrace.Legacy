@@ -1,13 +1,13 @@
-﻿namespace Nessos.MBrace.Runtime.Tests
+﻿namespace Nessos.MBrace.Core.Tests
 
     open Nessos.MBrace
     open Nessos.MBrace.Client
 
     open NUnit.Framework
     
-    [<Category("LocalTests")>]
+    [<LocalTestsCategory>]
     type ``Local Cloud Tests`` () =
-        inherit ``Cloud Tests`` ()
+        inherit ``Core Tests`` ()
 
         override __.Name = "Local Cloud Tests"
         override __.IsLocalTesting = true

@@ -1,4 +1,4 @@
-namespace Nessos.MBrace.Runtime.Tests
+﻿namespace Nessos.MBrace.Core.Tests
 
     #nowarn "0044" // 'While loop considered harmful' message.
 
@@ -15,86 +15,81 @@ namespace Nessos.MBrace.Runtime.Tests
     open Nessos.MBrace.Lib
     open Nessos.MBrace.Lib.Concurrency
 
-    [<TestFixture>]
-    [<AbstractClass>]
-    type ``Cloud Tests`` () =
+    [<TestFixture; AbstractClass>]
+    type ``Core Tests`` () =
 
         abstract Name : string
         abstract IsLocalTesting : bool
         abstract ExecuteExpression : Expr<Cloud<'T>> -> 'T
 
-
-        [<Test>] 
-        member test.``simple values`` () =
+            
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : simple values`` () =
             <@ cloud { return 1 } @> |> test.ExecuteExpression |> should equal 1
 
-        [<Test>] 
-        member test.``arithmetic`` () =
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : arithmetic`` () =
             <@ cloud { return 1 + 1 } @> |> test.ExecuteExpression |> should equal 2
 
-        [<Test>] 
-        member test.``let binding `` () =
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : let binding `` () =
             <@ cloud { let x = 1 in return x + 1 } @> |> test.ExecuteExpression |> should equal 2
 
-        [<Test>] 
-        member test.``let rec binding `` () =
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : let rec binding `` () =
             <@ let rec f n = cloud { if n <= 0 then return 1 else let! p = f (n-1) in return n * p } in f 2 @>
             |> test.ExecuteExpression |> should equal 2
 
-        [<Test>] 
-        member test.``variable binding with null and ()`` () =
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : variable binding with null and ()`` () =
             <@ (fun (x : string) -> cloud { return x } ) null @> |> test.ExecuteExpression |> should equal null;
             <@ (fun x -> cloud { return x } ) () @> |> test.ExecuteExpression |> should equal ();
 
-        [<Test>] 
-        member test.``customer object`` () = 
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : customer object`` () = 
             <@ cloud { return new Foo(42) } @> |> test.ExecuteExpression |> (fun x -> should equal 42 <| x.Get() )
 
-        [<Test>] 
-        member test.``Custom Recursive Type`` () =
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : custom recursive Type`` () =
             <@ peanoAddition largePeano Zero @> |> test.ExecuteExpression |> should equal largePeano |> ignore ;
             <@ peanoTest 17 25 @> |> test.ExecuteExpression |> should equal 42
 
 
-        [<Test>] 
-        member test.``Ackermann Function`` () =
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : Ackermann Function`` () =
             <@ ackermann 3 4 @> |> test.ExecuteExpression |> should equal 125
-        
-        [<Test>] 
-        member test.``McCarthy 91 Function`` () =
-            <@ mcCarthy91 50 @> |> test.ExecuteExpression |> should equal 91;
-            <@ mcCarthy91 150 @> |> test.ExecuteExpression |> should equal 140;
 
-        [<Test>] 
-        member test.``Simple Cloud Bind`` () = 
+
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : cloud Bind`` () = 
             <@ cloud { let! a = cloud { return 1 } in return a + 1 } @> |> test.ExecuteExpression |> should equal 2
 
-        [<Test>] 
-        member test.``Simple Cloud Parallel `` () =
+        [<Test; CloudParallelCategory>] 
+        member test.``2. Parallel : simple parallel`` () =
             let result : int[] = <@ cloud { return! Cloud.Parallel [|cloud { return 1 }; cloud { return 2 }|] } @> |> test.ExecuteExpression
             result.Length |> should equal 2
 
         // https://github.com/nessos/MBrace/issues/2
-        [<Test>]
-        member test.``Cloud Parallel with large input size.`` () =
+        [<Test; CloudParallelCategory>]
+        member test.``2. Parallel : large input size.`` () =
             let res = test.ExecuteExpression <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
             res.Length |> should equal 1000
 
-        [<Test>] 
-        member test.``Parallel Combinator <||>`` () =
+        [<Test; CloudParallelCategory>] 
+        member test.``2. Parallel : <||> operator`` () =
             let result = <@ cloud { return 1 } <||> cloud { return 2 } @> |> test.ExecuteExpression
             result |> should equal (1, 2)
 
-        [<Test>] 
-        member test.``Parallel Map`` () =
+        [<Test; CloudParallelCategory>] 
+        member test.``2. Parallel : map`` () =
             <@ parallelIncrements () @> |> test.ExecuteExpression |> should equal 65;
 
             <@ cloud { let! r = [|1..10|] |> Array.map (fun x -> cloud { return x }) |> Cloud.Parallel in return r } @> 
             |> test.ExecuteExpression 
             |> (fun r -> r.Length |> should equal 10)
 
-        [<Test>]
-        member test.``Parallel Exception`` () =
+        [<Test; CloudParallelCategory>]
+        member test.``2. Parallel : exception`` () =
             <@
                 let worker i = cloud { if i = 5 then invalidOp "kaboom" }
                 cloud {
@@ -110,49 +105,22 @@ namespace Nessos.MBrace.Runtime.Tests
                 }
             @> |> test.ExecuteExpression |> should equal true
 
-        [<Test>] 
-        member test.``Try With Exception`` () =
-            <@ testTryWithException 0 @> |> test.ExecuteExpression |> should equal -1
+//        [<Test; CloudParallelCategory>] 
+//        member test.``2. Parallel : Parallel computations with exceptions`` () =
+//            fun () -> 
+//                <@ testParallelWithExceptions() @> |> test.ExecuteExpression |> ignore //|> should equal -1
+//            |> shouldFailwith<CloudException>
 
-        [<Test>] 
-        member test.``Try With in non-monadic expr`` () =
-            <@ cloud { return try let l = 42 in l with _ -> 0 } @> |> test.ExecuteExpression |> should equal 42
-
-        [<Test>] 
-        member test.``Try With Unhandled Exception`` () =
-            fun () ->
-                <@ testTryWithUnhandledException 0 @> |> test.ExecuteExpression |> ignore
-
-            |> shouldFailwith<CloudException>
-
-        [<Test>] 
-        member test.``Try without Exception`` () =
-            <@ testTryWithOutException 0 @> |> test.ExecuteExpression |> should equal 1
-
-        [<Test>] 
-        member test.``Try Finally With Exception`` () =
-            <@ testTryFinallyWithException 0 @> |> test.ExecuteExpression |> should equal (ref 1)
-
-        [<Test>] 
-        member test.``Try Finally WithOut Exception`` () =
-            <@ testTryFinallyWithOutException 0 @> |> test.ExecuteExpression |> should equal (ref 2)
-
-        [<Test>] 
-        member test.``Parallel computations with exceptions`` () =
-            fun () -> 
-                <@ testParallelWithExceptions() @> |> test.ExecuteExpression |> ignore //|> should equal -1
-            |> shouldFailwith<CloudException>
-
-        [<Test; Repeat 5>]
-        member test.``Parallel Recursive calls (Parallel Fib)`` () =
+        [<Test; Repeat 5; CloudParallelCategory>]
+        member test.``2. Parallel : parallel recursive calls (Parallel Fib)`` () =
             <@ testParallelFib 10 @> |> test.ExecuteExpression |> should equal 55
 
-        [<Test>] 
-        member test.``Primes example `` () = 
+        [<Test; CloudParallelCategory>] 
+        member test.``2. Parallel : primes example `` () = 
             <@ PrimesTest.parallelPrimes 20 2 @> |> test.ExecuteExpression |> should equal (Seq.ofArray [| 2; 3; 5; 7; 11; 13; 17; 19 |])
 
-        [<Test>] 
-        member test.``Combine cloud expr`` () = 
+        [<Test; CloudParallelCategory>] 
+        member test.``2. Parallel : combine cloud expr`` () = 
             <@ 
                 cloud {
                     do! cloud { let! _ = cloud { return 1 } <||> cloud { return 42 } in return () }
@@ -160,39 +128,65 @@ namespace Nessos.MBrace.Runtime.Tests
                 }
             @> |> test.ExecuteExpression |> should equal 42
 
-        [<Test>]
-        member test.``For Loop `` () = 
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : try with exception`` () =
+            <@ testTryWithException 0 @> |> test.ExecuteExpression |> should equal -1
+
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : try...with in non-monadic expr`` () =
+            <@ cloud { return try let l = 42 in l with _ -> 0 } @> |> test.ExecuteExpression |> should equal 42
+
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : try with unhandled exception`` () =
+            fun () ->
+                <@ testTryWithUnhandledException 0 @> |> test.ExecuteExpression |> ignore
+
+            |> shouldFailwith<CloudException>
+
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : try without exception`` () =
+            <@ testTryWithOutException 0 @> |> test.ExecuteExpression |> should equal 1
+
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : try...finally with exception`` () =
+            <@ testTryFinallyWithException 0 @> |> test.ExecuteExpression |> should equal (ref 1)
+
+        [<Test; SimpleTestsCategory>] 
+        member test.``1. Simple : try...finally without exception`` () =
+            <@ testTryFinallyWithOutException 0 @> |> test.ExecuteExpression |> should equal (ref 2)
+
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : for loop `` () = 
             <@ testForLoop @> |> test.ExecuteExpression |> should equal 1000
 
-        [<Test>]
-        member test.``For Loop as last expr `` () = 
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : for loop as last expr `` () = 
             <@ cloud { for _ in [|1..10|] do () } @> 
             |> test.ExecuteExpression |> should equal ()
 
-        [<Test>]
-        member test.``While Loop `` () = 
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : while loop `` () = 
             <@ testWhileLoop @> |> test.ExecuteExpression |> should equal 2
 
-        [<Test>]
-        member test.``While Loop as last expr `` () = 
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : while loop as last expr `` () = 
             <@ cloud { while false do () } @> 
             |> test.ExecuteExpression |> should equal ()
 
-
-        [<Test>]
-        member test.``Cloud Using`` () =
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : using`` () =
             <@ testUseWithCloudDisposable () @> |> test.ExecuteExpression |> should equal true
 
-        [<Test>]
-        member test.``Cloud Using With Exception`` () =
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : using with exception`` () =
             <@ testUseWithException () @> |> test.ExecuteExpression |> should equal true
 
-        [<Test>]
-        member test.``Recursion `` () = 
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : recursion `` () = 
             <@ testRecursion 2 @> |> test.ExecuteExpression |> should equal 3
 
-        [<Test>]
-        member test.``Tail Recursion (return!)`` () =
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : tail recursion (return!)`` () =
             let delta = 
                 <@ cloud {
                         let start = GC.GetTotalMemory(true) 
@@ -203,33 +197,33 @@ namespace Nessos.MBrace.Runtime.Tests
             if delta > 100000000L then
                 failwith "Suspiciously large allocation rate"
 
-        [<Test>]
-        member test.``Point-free Lambda Generation`` () =
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : point-free lambda generation`` () =
             <@ pow 10 (fun x -> x + 1) @> |> test.ExecuteExpression |> fun f -> f 0 |> should equal 10
 
-        [<Test>]
-        member test.``Mutual Recursion `` () = 
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : mutual recursion `` () = 
             <@ even 2 @> |> test.ExecuteExpression |> should equal true;
             <@ even 3 @> |> test.ExecuteExpression |> should equal false
 
-        [<Test>]
-        member test.``sequence application `` () = 
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : sequence application `` () = 
             <@ (cloud { return 2 }, cloud { return 1 }) ||> (fun first second -> cloud { let! _ = first in return! second }) @> |> test.ExecuteExpression |> should equal 1;
             
 
-        [<Test>]
-        member test.``sequential combine (<.>) `` () = 
+        [<Test; SimpleTestsCategory>]
+        member test.``1. Simple : sequential combine (<.>) `` () = 
             <@ cloud { return 1 } <.> cloud { return "2" } @> |> test.ExecuteExpression |> should equal (1, "2")
 
-        [<Test>]
-        member test.``Cloud OfAsync`` () =
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : Cloud OfAsync`` () =
             <@ cloud { 
                 let! values = Cloud.OfAsync([1..10] |> Seq.map (fun i -> async { return i + i }) |> Async.Parallel)
                 return Array.sum values
                } @> |> test.ExecuteExpression |> should equal 110
 
-        [<Test>]
-        member test.``Cloud OfAsync Exception handling`` () =
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : Cloud OfAsync Exception handling`` () =
             <@ 
                 cloud { 
                     try
@@ -239,8 +233,8 @@ namespace Nessos.MBrace.Runtime.Tests
 
                } @> |> test.ExecuteExpression |> should equal -1
 
-        [<Test>]
-        member test.``Cloud OfAsync Looping `` () =
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : Cloud OfAsync Looping `` () =
             <@ cloud {
                 for i in [|1..100000|] do
                     let! value = Cloud.OfAsync(async { return 1 })
@@ -266,80 +260,6 @@ namespace Nessos.MBrace.Runtime.Tests
         member test.``parallel random sum for GZipStream behavior`` () =
             <@ randomSumParallel() @> |> test.ExecuteExpression |> ignore
 
-        [<Test>]
-        member test.``simple CloudRef`` () = 
-            <@ testSimpleCloudRef 42 @> |> test.ExecuteExpression |> should equal 42
-
-        [<Test>]
-        member test.``CloudRef (New-Get) by name`` () = 
-            <@ cloud { 
-                let container = Guid.NewGuid().ToString()
-                let! r = CloudRef.New(container, 42)
-                let! cloudRef = CloudRef.Get<int>(container, r.Name) 
-                return cloudRef.Value } @> |> test.ExecuteExpression |> should equal 42
-
-        [<Test>]
-        member test.``CloudRef Get by name - type mismatch`` () = 
-            fun () -> 
-                 test.ExecuteExpression
-                    <@ cloud { 
-                        let container = Guid.NewGuid().ToString()
-                        let! r = CloudRef.New(container, 42)
-                        let! cloudRef = CloudRef.Get<obj>(container, r.Name) 
-                        () } 
-                    @> |> ignore
-
-            |> shouldFailwith<MBraceException>
-
-        [<Test>]
-        member test.``CloudRef Get all in container`` () = 
-            <@ cloud { 
-                let container = Guid.NewGuid().ToString()
-                let! x = CloudRef.New(container, 40)
-                let! y = CloudRef.New(container, 1)
-                let! z = CloudRef.New(container, 1)
-                let! refs = CloudRef.Get(container)
-                let refs = refs |> Array.map unbox<ICloudRef<int>>
-                return refs 
-                       |> Seq.map (fun r -> r.Value)
-                       |> Seq.sum
-               } @> |> test.ExecuteExpression |> should equal 42
-
-        [<Test>]
-        member test.``CloudRef Get by random name - failure`` () = 
-            <@  cloud {
-                    let container, id = Guid.NewGuid().ToString(), Guid.NewGuid().ToString()
-                    return! CloudRef.TryGet<int>(container, id)
-                } @> |> test.ExecuteExpression |> should equal None
-
-        [<Test>]
-        member test.``CloudRef - inside cloud non-monadic deref`` () = 
-            <@ cloud { let! x = CloudRef.New 42 in return x.Value } @> |> test.ExecuteExpression |> should equal 42
-
-        [<Test>]
-        member test.``CloudRef - outside cloud non-monadic deref`` () = 
-            <@ cloud { let! x = CloudRef.New 42 in return x } @> |> test.ExecuteExpression |> (fun x -> x.Value) |> should equal 42
-
-        [<Test>]
-        member test.``Parallel CloudRef dereference`` () = 
-            <@ testParallelCloudRefDeref 1 @> |> test.ExecuteExpression |> should equal 2
-
-        [<Test>]
-        member test.``Cloud List`` () = 
-            let cloudList = <@ testBuildCloudList 2 @> |> test.ExecuteExpression 
-            <@ testReduceCloudList cloudList @> |> test.ExecuteExpression |> should equal 2
-
-        [<Test>]
-        member test.``Cloud Tree`` () = 
-            let cloudTree = <@ testBuildCloudTree 2 @> |> test.ExecuteExpression 
-            <@ testReduceCloudTree cloudTree @> |> test.ExecuteExpression |> should equal 2
-
-        [<Test>]
-        member test.``CloudRef Tree Node Composition`` () = 
-            let firstRef = <@ cloud { return! CloudRef.New <| Leaf 1 } @> |> test.ExecuteExpression 
-            let secondRef = <@ cloud { return! CloudRef.New <| Leaf 2 } @> |> test.ExecuteExpression 
-            <@ cloud { return! CloudRef.New <| TestFunctions.Node (firstRef, secondRef) } @> |> test.ExecuteExpression |> ignore
-
         [<Test; Repeat 10>]
         member test.``Cloud Side effects`` () =
             <@ cloud {
@@ -354,59 +274,59 @@ namespace Nessos.MBrace.Runtime.Tests
                 return x.Value
             } @> |> test.ExecuteExpression |> should equal 0
 
-        [<Test>]
-        member test.``Cloud ToLocal``() = 
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : ToLocal``() = 
             <@ cloud { 
                 let! (values : int []) = local <| Cloud.Parallel [| for i in [1..1000] -> cloud { return i } |]
                 return values |> Array.sum
                } @> |> test.ExecuteExpression |> should equal 500500
 
-        [<Test>]
-        member test.``Cloud ToLocal (Side-Effects)`` () =
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : ToLocal (Side-Effects)`` () =
             <@ cloud { 
                 let testRef = ref 1
                 let! value = local <| Cloud.Parallel [| cloud { return testRef := !testRef + 1 } |]
                 return !testRef
                } @> |> test.ExecuteExpression |> should equal 1
 
-        [<Test>]
-        member test.``Local Cloud GetWorkerCount``() = 
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : local GetWorkerCount``() = 
             <@ cloud { 
                 let! c' = local <| cloud { let! c = Cloud.GetWorkerCount() in return c }
                 return c'
                } @> |> test.ExecuteExpression |> should equal Environment.ProcessorCount
 
-        [<Test>]
-        member test.``Distrib Cloud GetWorkerCount``() = 
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : GetWorkerCount``() = 
             <@ cloud { 
                 let! c' = cloud { let! c = Cloud.GetWorkerCount() in return c }
                 return c'
                } @> |> test.ExecuteExpression |> shouldMatch (fun c -> c <> 0)
 
-        [<Test>]
-        member test.``Cloud GetProcessId``() = 
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : GetProcessId``() = 
             <@ cloud { 
                 return! Cloud.GetProcessId() 
                } @> |> test.ExecuteExpression |> shouldMatch (fun pid -> if test.IsLocalTesting then pid = 0 else pid > 0)
 
-        [<Test>]
-        member test.``Cloud GetTaskId``() = 
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : GetTaskId``() = 
             <@ cloud { return! Cloud.GetTaskId() } @> 
             |> test.ExecuteExpression 
             |> shouldMatch (not << String.IsNullOrEmpty)
 
-        [<Test>] 
-        member test.``Choice `` () =
+        [<Test; CloudChoiceCategory>] 
+        member test.``3. Choice : simple `` () =
             let result : int option = <@ cloud { let! r = Cloud.Choice [|cloud { return None }; cloud { return Some 1 }|] in return r } @> |> test.ExecuteExpression
             result |> should equal (Some 1)
 
-        [<Test>] 
-        member test.``Local Choice `` () =
+        [<Test; CloudChoiceCategory>] 
+        member test.``3. Choice : local `` () =
             let result : int option = <@ cloud { let! r = local <| Cloud.Choice [|cloud { return None }; cloud { return Some 1 }|] in return r } @> |> test.ExecuteExpression
             result |> should equal (Some 1)
 
-        [<Test>] 
-        member test.``Choice Exception`` () =
+        [<Test; CloudChoiceCategory>] 
+        member test.``3. Choice : unhandled exception`` () =
             fun () ->
                 test.ExecuteExpression 
                     <@ 
@@ -417,8 +337,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 |> ignore
             |> shouldFailwith<CloudException>
 
-        [<Test>]
-        member test.``Choice Exception handling`` () =
+        [<Test; CloudChoiceCategory>]
+        member test.``3. Choice : exception`` () =
             <@
                 cloud { 
                     try
@@ -428,8 +348,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 } 
             @> |> test.ExecuteExpression |> should equal true
         
-        [<Test; Repeat 5>]
-        member test.``Choice Recursive`` () =
+        [<Test; Repeat 5; CloudChoiceCategory>]
+        member test.``3. Choice : recursive`` () =
             <@  let rec test depth id = cloud {
                     if depth = 0 then
                         if id = 4 then return Some 4 else return None
@@ -442,37 +362,111 @@ namespace Nessos.MBrace.Runtime.Tests
             @>
             |> test.ExecuteExpression |> should equal (Some 4)
 
-        [<Test>] 
-        member test.``Cloud Parallel Log`` () = 
+        [<Test; CloudCombinatorsCategory>] 
+        member test.``4. Combinators : Parallel Log`` () = 
             <@  cloud {
                     do! [| for i in 1..10 -> cloud { do! Cloud.Log "____________________________________________"  } |]
                         |> Cloud.Parallel
                         |> Cloud.Ignore
                 } @> |> test.ExecuteExpression |> ignore
 
-        [<Test>] 
-        member test.``CloudSeq`` () = 
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudRef`` () = 
+            <@ testSimpleCloudRef 42 @> |> test.ExecuteExpression |> should equal 42
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudRef (New-Get) by name`` () = 
+            <@ cloud { 
+                let container = Guid.NewGuid().ToString()
+                let! r = CloudRef.New(container, 42)
+                let! cloudRef = CloudRef.Get<int>(container, r.Name) 
+                return cloudRef.Value } @> |> test.ExecuteExpression |> should equal 42
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudRef Get by name - type mismatch`` () = 
+            fun () -> 
+                 test.ExecuteExpression
+                    <@ cloud { 
+                        let container = Guid.NewGuid().ToString()
+                        let! r = CloudRef.New(container, 42)
+                        let! cloudRef = CloudRef.Get<obj>(container, r.Name) 
+                        () } 
+                    @> |> ignore
+
+            |> shouldFailwith<MBraceException>
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudRef Get all in container`` () = 
+            <@ cloud { 
+                let container = Guid.NewGuid().ToString()
+                let! x = CloudRef.New(container, 40)
+                let! y = CloudRef.New(container, 1)
+                let! z = CloudRef.New(container, 1)
+                let! refs = CloudRef.Get(container)
+                let refs = refs |> Array.map unbox<ICloudRef<int>>
+                return refs 
+                       |> Seq.map (fun r -> r.Value)
+                       |> Seq.sum
+               } @> |> test.ExecuteExpression |> should equal 42
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudRef Get by random name - failure`` () = 
+            <@  cloud {
+                    let container, id = Guid.NewGuid().ToString(), Guid.NewGuid().ToString()
+                    return! CloudRef.TryGet<int>(container, id)
+                } @> |> test.ExecuteExpression |> should equal None
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudRef - inside cloud non-monadic deref`` () = 
+            <@ cloud { let! x = CloudRef.New 42 in return x.Value } @> |> test.ExecuteExpression |> should equal 42
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudRef - outside cloud non-monadic deref`` () = 
+            <@ cloud { let! x = CloudRef.New 42 in return x } @> |> test.ExecuteExpression |> (fun x -> x.Value) |> should equal 42
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : Parallel CloudRef dereference`` () = 
+            <@ testParallelCloudRefDeref 1 @> |> test.ExecuteExpression |> should equal 2
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : Cloud List`` () = 
+            let cloudList = <@ testBuildCloudList 2 @> |> test.ExecuteExpression 
+            <@ testReduceCloudList cloudList @> |> test.ExecuteExpression |> should equal 2
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : Cloud Tree`` () = 
+            let cloudTree = <@ testBuildCloudTree 2 @> |> test.ExecuteExpression 
+            <@ testReduceCloudTree cloudTree @> |> test.ExecuteExpression |> should equal 2
+
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudRef Tree Node Composition`` () = 
+            let firstRef = <@ cloud { return! CloudRef.New <| Leaf 1 } @> |> test.ExecuteExpression 
+            let secondRef = <@ cloud { return! CloudRef.New <| Leaf 2 } @> |> test.ExecuteExpression 
+            <@ cloud { return! CloudRef.New <| TestFunctions.Node (firstRef, secondRef) } @> |> test.ExecuteExpression |> ignore
+
+        [<Test; PrimitivesCategory>] 
+        member test.``5. Primitives : CloudSeq`` () = 
             <@  cloud {
                     let! cloudSeq = CloudSeq.New [1..100]
                     return cloudSeq |> Seq.length
                 } @> |> test.ExecuteExpression |> should equal 100
         
-        [<Test>] 
-        member test.``CloudSeq exta info - Count`` () = 
+        [<Test; PrimitivesCategory>] 
+        member test.``5. Primitives : CloudSeq exta info - Count`` () = 
             <@  cloud {
                     let! cloudSeq =  CloudSeq.New [1..100]
                     return cloudSeq.Count = (cloudSeq |> Seq.length)
                 } @> |> test.ExecuteExpression |> should equal true
 
-        [<Test>] 
-        member test.``CloudSeq exta info - Size`` () = 
+        [<Test; PrimitivesCategory>] 
+        member test.``5. Primitives : CloudSeq exta info - Size`` () = 
             <@  cloud {
                     let! cloudSeq =  CloudSeq.New [1..100]
                     return cloudSeq.Size > 0L
                 } @> |> test.ExecuteExpression |> should equal true
 
-        [<Test>] 
-        member test.``CloudSeq (New-Get) by name`` () = 
+        [<Test; PrimitivesCategory>] 
+        member test.``5. Primitives : CloudSeq (New-Get) by name`` () = 
             <@  cloud {
                     let container = Guid.NewGuid().ToString()
                     let! s = CloudSeq.New(container, [1..100])
@@ -480,8 +474,8 @@ namespace Nessos.MBrace.Runtime.Tests
                     return cloudSeq |> Seq.length
                 } @> |> test.ExecuteExpression |> should equal 100
 
-        [<Test>]
-        member test.``CloudSeq Get by name - type mismatch`` () = 
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudSeq Get by name - type mismatch`` () = 
             fun () ->
                 test.ExecuteExpression
                     <@ 
@@ -496,16 +490,16 @@ namespace Nessos.MBrace.Runtime.Tests
 
             |> shouldFailwith<CloudException>
 
-        [<Test>]
-        member test.``CloudSeq TryGet by name - failure`` () = 
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudSeq TryGet by name - failure`` () = 
             <@  cloud {
                     let container, id = Guid.NewGuid().ToString(), Guid.NewGuid().ToString()
                     return! CloudSeq.TryGet<int>(container, id)
                 } @> |> test.ExecuteExpression |> should equal None
          
          
-        [<Test>]
-        member test.``CloudSeq Get all in container`` () = 
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudSeq Get all in container`` () = 
             <@ cloud { 
                 let container = Guid.NewGuid().ToString()
                 let! x = CloudSeq.New(container, [40])
@@ -518,8 +512,8 @@ namespace Nessos.MBrace.Runtime.Tests
                        |> Seq.sum
                } @> |> test.ExecuteExpression |> should equal 42       
 
-        [<Test>]
-        member test.``CloudFile Create/Read - Lines`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudFile Create/Read - Lines`` () =
             let words () = Array.init (1024 * 512) (fun i -> "test" + (string i))
             let (lines, text) = 
                 <@ cloud {
@@ -537,8 +531,8 @@ namespace Nessos.MBrace.Runtime.Tests
             should equal (words ()) (lines |> Seq.toArray)
             should equal ((String.concat System.Environment.NewLine (words ())) + System.Environment.NewLine) text
 
-        [<Test>]
-        member test.``CloudFile Create/Read - Stream #1`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudFile Create/Read - Stream #1`` () =
             let mk a = Array.init (a * 1024) byte
             let n = 512
             let bytes = 
@@ -556,8 +550,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 |> test.ExecuteExpression 
             should equal (mk n) bytes
 
-        [<Test>]
-        member test.``CloudFile Get`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudFile Get`` () =
             let folder = Guid.NewGuid().ToString()
             let f = 
                 <@ cloud {
@@ -569,8 +563,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 |> test.ExecuteExpression
             should equal folder f.Container
 
-        [<Test>]
-        member test.``CloudFile TryGet by name - failure`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : CloudFile TryGet by name - failure`` () =
             let folder = Guid.NewGuid().ToString()
             let f = 
                 <@ cloud {
@@ -579,8 +573,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 |> test.ExecuteExpression
             should equal f None
 
-        [<Test>]
-        member test.``MutableCloudRef - Simple For Loop`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - Simple For Loop`` () =
             <@ cloud {
                 let! x = MutableCloudRef.New(-1)
                 for i in [|0..10|] do
@@ -588,8 +582,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 return! MutableCloudRef.Read(x)
             } @> |> test.ExecuteExpression |> should equal 10
           
-        [<Test; Repeat 10>]
-        member test.``MutableCloudRef - Set`` () = 
+        [<Test; Repeat 10; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - Set`` () = 
             <@
                 cloud {
                     let! x = MutableCloudRef.New(-1)
@@ -601,8 +595,8 @@ namespace Nessos.MBrace.Runtime.Tests
             @> 
             |> test.ExecuteExpression |> should equal true
 
-        [<Test; Repeat 10>]
-        member test.``MutableCloudRef - Set multiple`` () = 
+        [<Test; Repeat 10; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - Set multiple`` () = 
             <@
                 cloud {
                     let! x = MutableCloudRef.New(-1)
@@ -618,8 +612,8 @@ namespace Nessos.MBrace.Runtime.Tests
             @>
             |> test.ExecuteExpression |> should equal (true,true)
 
-        [<Test>]
-        member test.``MutableCloudRef - Force`` () = 
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - Force`` () = 
             <@
                 cloud {
                  let! x = MutableCloudRef.New(-1)
@@ -631,8 +625,8 @@ namespace Nessos.MBrace.Runtime.Tests
             @>
             |> test.ExecuteExpression |> should equal 2
 
-        [<Test>]
-        member test.``MutableCloudRef - Free`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - Free`` () =
             <@ cloud {
                 let! x = MutableCloudRef.New(0)
                 do! MutableCloudRef.Free(x)
@@ -640,8 +634,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 return match res with Choice1Of2 _ -> true | _ -> false
             } @> |> test.ExecuteExpression |> should equal false
 
-        [<Test; Repeat 10>]
-        member test.``MutableCloudRef - High contention`` () = 
+        [<Test; Repeat 10; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - High contention`` () = 
             <@
                 cloud {
                     let! n = Cloud.GetWorkerCount()
@@ -661,8 +655,8 @@ namespace Nessos.MBrace.Runtime.Tests
             @>
             |> test.ExecuteExpression |> should equal true
 
-        [<Test; Repeat 10>]
-        member test.``MutableCloudRef - High contention - Large obj`` () = 
+        [<Test; Repeat 10; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - High contention - Large obj`` () = 
             <@ 
                 cloud {
                     let! n = Cloud.GetWorkerCount()
@@ -683,8 +677,8 @@ namespace Nessos.MBrace.Runtime.Tests
             @>
             |> test.ExecuteExpression |> should equal true
 
-        [<Test>]
-        member test.``MutableCloudRef - Token passing`` () = 
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - Token passing`` () = 
             <@
                 cloud {
                     let rec run (id : int) (locks : MVar<unit> []) (token : IMutableCloudRef<int>) : Cloud<int option> = 
@@ -715,8 +709,8 @@ namespace Nessos.MBrace.Runtime.Tests
             @>
             |> test.ExecuteExpression |> should equal true
 
-        [<Test>]
-        member test.``MutableCloudRef - Get all in container`` () = 
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - Get all in container`` () = 
             <@ cloud { 
                 let container = Guid.NewGuid().ToString()
                 let! x = MutableCloudRef.New(container, 40)
@@ -730,8 +724,8 @@ namespace Nessos.MBrace.Runtime.Tests
                 return Seq.sum r
                } @> |> test.ExecuteExpression |> should equal 42
 
-        [<Test>]
-        member test.``MutableCloudRef - TryGet by name - failure`` () = 
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : MutableCloudRef - TryGet by name - failure`` () = 
             <@ cloud { 
                 return! MutableCloudRef.TryGet(Guid.NewGuid().ToString("N"),Guid.NewGuid().ToString("N"))
                } @> |> test.ExecuteExpression |> should equal None
@@ -746,8 +740,8 @@ namespace Nessos.MBrace.Runtime.Tests
                } 
             @> |> test.ExecuteExpression |> should equal -1
 
-        [<Test>]
-        member test.``Cloud.Catch`` () =
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : Catch`` () =
             let result : Choice<unit,exn> = 
                 <@ cloud { 
                         return! Cloud.Catch <| cloud { return raise <| exn() }
@@ -766,8 +760,8 @@ namespace Nessos.MBrace.Runtime.Tests
             | Choice1Of2 _ -> ()
             | Choice2Of2 e -> Assert.Fail("Expected result but got exception.")
 
-        [<Test>]
-        member test.``Cloud.Sleep`` () =
+        [<Test; CloudCombinatorsCategory>]
+        member test.``4. Combinators : Sleep`` () =
             <@ cloud { do! Cloud.Sleep 1000 } @>
             |> test.ExecuteExpression
             
@@ -789,8 +783,8 @@ namespace Nessos.MBrace.Runtime.Tests
             should equal r.[0] r.[1]
 
 
-        [<Test>]
-        member test.``StoreClient CloudRef`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : StoreClient CloudRef`` () =
             let sc = StoreClient.Default
             let c = Guid.NewGuid().ToString("N")
             let cr = sc.CreateCloudRef(c, 42)
@@ -799,8 +793,8 @@ namespace Nessos.MBrace.Runtime.Tests
             cr'.Value |> should equal 42
             sc.DeleteContainer(c)
 
-        [<Test>]
-        member test.``StoreClient CloudSeq`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : StoreClient CloudSeq`` () =
             let sc = StoreClient.Default
             let c = Guid.NewGuid().ToString("N")
             let cr = sc.CreateCloudSeq(c, [42])
@@ -809,8 +803,8 @@ namespace Nessos.MBrace.Runtime.Tests
             cr' |> Seq.toList |> should equal [42]
             sc.DeleteContainer(c)
 
-        [<Test>]
-        member test.``StoreClient CloudFile`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : StoreClient CloudFile`` () =
             let sc = StoreClient.Default
             let c = Guid.NewGuid().ToString("N")
             let a = [|1uy..10uy|]
@@ -824,8 +818,8 @@ namespace Nessos.MBrace.Runtime.Tests
             sc.ContainerExists(c) |> should equal true
             sc.DeleteContainer(c)
 
-        [<Test>]
-        member test.``StoreClient MutableCloudRef`` () =
+        [<Test; PrimitivesCategory>]
+        member test.``5. Primitives : StoreClient MutableCloudRef`` () =
             let sc = StoreClient.Default
             let c = Guid.NewGuid().ToString("N")
             let cr = sc.CreateMutableCloudRef(c, "mutablecloudref", -1)

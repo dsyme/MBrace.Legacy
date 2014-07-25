@@ -63,12 +63,8 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="app.config" />
-    <Compile Include="Helpers.fs" />
-    <Compile Include="CloudTestDefinitions.fs" />
-    <Compile Include="CompilerTests.fs" />
+    <Compile Include="Common.fs" />
     <Compile Include="ChaosMonkeyTests.fs" />
-    <Compile Include="CloudTests.fs" />
-    <Compile Include="LocalCloudTests.fs" />
     <Compile Include="ClusterCloudTests.fs" />
     <Compile Include="FsiTests.fs" />
   </ItemGroup>
@@ -106,6 +102,11 @@
     <ProjectReference Include="..\..\src\MBrace.Utils\MBrace.Utils.fsproj">
       <Name>MBrace.Utils</Name>
       <Project>{945a209f-371c-4047-b6d4-cd271a6d7d1a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\MBrace.Core.Tests\MBrace.Core.Tests.fsproj">
+      <Name>MBrace.Core.Tests</Name>
+      <Project>{064533dc-b2b5-49e2-9428-a5b5fa1ddd6f}</Project>
       <Private>True</Private>
     </ProjectReference>
     <Reference Include="FsCheck">

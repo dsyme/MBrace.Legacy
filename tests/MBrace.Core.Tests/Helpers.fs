@@ -1,6 +1,37 @@
-﻿namespace Nessos.MBrace.Runtime.Tests
+﻿namespace Nessos.MBrace.Core.Tests
 
     open NUnit.Framework
+
+    /// RuntLocal tests.
+    type LocalTestsCategoryAttribute() = 
+        inherit CategoryAttribute("LocalTests")
+
+    /// CloudCompiler tests.
+    type CompilerTestsCategoryAttribute() =
+        inherit CategoryAttribute("CompilerTests")
+
+    /// CloudCompiler tests.
+    type SimpleTestsCategoryAttribute() =
+        inherit CategoryAttribute("SimpleTests")
+
+    /// Cloud.Parallel tests.
+    type CloudParallelCategoryAttribute() =
+        inherit CategoryAttribute("ParallelTests")
+
+    /// Cloud.Choice tests.
+    type CloudChoiceCategoryAttribute() =
+        inherit CategoryAttribute("ChoiceTests")
+
+    /// Cloud.* tests.
+    type CloudCombinatorsCategoryAttribute() =
+        inherit CategoryAttribute("CombinatorsTests")
+
+    /// Primitives tests.
+    type PrimitivesCategoryAttribute() =
+        inherit CategoryAttribute("PrimitivesTests")
+
+
+
 
     [<AutoOpenAttribute>]
     module Helpers =

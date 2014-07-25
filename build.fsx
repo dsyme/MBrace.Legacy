@@ -85,8 +85,8 @@ Target "Build" (fun _ ->
 
 let testAssemblies = 
     [
+        "bin/MBrace.Core.Tests.dll"
         "bin/MBrace.Runtime.Tests.dll"
-        "bin/MBrace.Shell.Tests.dll"
         "bin/MBrace.Store.Tests.dll"
     ]
 

@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Runtime.Tests
+﻿namespace Nessos.MBrace.Core.Tests
 
     open Nessos.MBrace
     open Nessos.MBrace.Runtime.Compiler
@@ -8,7 +8,7 @@
 
     open FsUnit
 
-    [<TestFixture; Category("CompilerTests")>]
+    [<TestFixture; CompilerTestsCategory>]
     module ``Cloud Compiler Tests`` =
 
         // force FsPickler initialization
