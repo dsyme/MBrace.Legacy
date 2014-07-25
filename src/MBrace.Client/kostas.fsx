@@ -21,7 +21,15 @@ let rt = MBrace.InitLocal 3
 
 rt.Reboot()
 
-rt.Run <@ cloud { return 42 } @>
+
+rt.Run <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
+
+rt.Ping()
+
+rt.ShowProcessInfo()
+
+rt.Reboot()
+
 
 let ps = rt.CreateProcess <@ Cloud.Log "Hi" @>
 
@@ -31,3 +39,10 @@ ps.ShowLogs()
 
 
 rt.Run <@ cloud { return 42 } @>
+
+
+let rt = MBrace.InitLocal 3
+let ps = rt.CreateProcess <@ cloud { while true do do! Cloud.Sleep 10 } @>
+
+
+ps.ShowInfo()

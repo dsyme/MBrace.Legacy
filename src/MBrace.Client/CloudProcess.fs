@@ -76,7 +76,7 @@
         ///<param name="pollingInterval">The number of milliseconds to poll for a result.</param>
         abstract AwaitBoxedResult : ?pollingInterval:int -> obj
         
-        /// Try retreive the process result. Returns None if the process is not completed.
+        /// Try retrieve the process result. Returns None if the process is not completed.
         abstract TryGetBoxedResult : unit -> obj option
 
         /// Process name.
