@@ -36,8 +36,6 @@
     <DocumentationFile>bin\Release\MBrace.Core.Tests.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FsCheck" />
-    <Reference Include="FSharp.Compiler.Service" />
     <Reference Include="FsPickler">
       <HintPath>..\..\packages\FsPickler.0.9.9\lib\net45\FsPickler.dll</HintPath>
       <Private>True</Private>
@@ -64,7 +62,7 @@
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
@@ -75,8 +73,14 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="Thespian" />
-    <Reference Include="Thespian.Cluster" />
+    <Reference Include="Thespian">
+      <HintPath>..\..\packages\Thespian.0.0.10-alpha\lib\net45\Thespian.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Thespian.Cluster">
+      <HintPath>..\..\packages\Thespian.0.0.10-alpha\lib\net45\Thespian.Cluster.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Vagrant">
       <HintPath>..\..\packages\Vagrant.0.2.2\lib\net45\Vagrant.dll</HintPath>
       <Private>True</Private>
