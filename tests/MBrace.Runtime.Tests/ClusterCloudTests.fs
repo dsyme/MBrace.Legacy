@@ -224,6 +224,29 @@ namespace Nessos.MBrace.Runtime.Tests
             ps.AwaitResult()
             ps.StreamLogs()
 
+        [<Test; ClusterTestsCategory()>]
+        member test.``Z1. Cluster Tests: Concurrent process creation`` () =
+            let cloudJob () = cloud {
+                let! n = Cloud.GetWorkerCount()
+                let! results = Array.init (2*n) (fun i -> cloud { return i * i }) |> Cloud.Parallel
+                return Array.sum results
+            }
+
+            let procs = 
+                Array.init 20 (fun _ -> async { return test.Runtime.CreateProcess (cloudJob ()) })
+                |> Async.Parallel
+                |> Async.RunSynchronously
+
+            // run early tests on proc objects
+            procs |> Seq.distinctBy (fun p -> p.ProcessId) |> Seq.length |> should equal 20
+
+            let results = 
+                procs 
+                |> Array.map (fun p -> p.AwaitResultAsync()) 
+                |> Async.Parallel
+                |> Async.RunSynchronously
+
+            results |> Seq.distinct |> Seq.length |> should equal 1
 
         //
         //  Secion B: Runtime administration
