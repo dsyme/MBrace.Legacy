@@ -11,7 +11,7 @@
     [<TestFixture; CompilerTestsCategory>]
     module ``Cloud Compiler Tests`` =
 
-        // force FsPickler initialization
+        // force runtime initialization
         do MBraceSettings.ClientId |> ignore
 
         let compile (expr : Quotations.Expr<Cloud<'T>>) = 
@@ -170,12 +170,12 @@
         [<Test>]
         let ``Cloud block that references block closure`` () =
             let block = cloud { return 12 }
-            shouldFailCompilation <@ block @>
+            shouldWarnCompilationWith "closure" <@ block @>
 
         [<Test>]
         let ``Cloud block that references function closure`` () =
             let f x = cloud { return x + 15 }
-            shouldFailCompilation <@ f 27 @>
+            shouldWarnCompilationWith "closure" <@ f 27 @>
 
         [<Test>]
         let ``Cloud block that references value with invalid binding`` () =

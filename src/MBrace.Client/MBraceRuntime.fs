@@ -476,7 +476,7 @@ namespace Nessos.MBrace.Client
         /// </summary>
         /// <param name="expr">Cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
-        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
         member __.CreateProcess (block : Cloud<'T>, ?name) : Process<'T> =
             let computation = CloudComputation.Compile(block, ?name = name)
             __.CreateProcess computation
@@ -486,7 +486,7 @@ namespace Nessos.MBrace.Client
         /// </summary>
         /// <param name="expr">Cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
-        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
         member __.RunAsync (block : Cloud<'T>, ?name) : Async<'T> =
             let computation = CloudComputation.Compile(block, ?name = name)
             __.RunAsync computation
@@ -496,7 +496,7 @@ namespace Nessos.MBrace.Client
         /// </summary>
         /// <param name="expr">Cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
-        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
         member __.Run (block : Cloud<'T>, ?name) : 'T =
             let computation = CloudComputation.Compile(block, ?name = name)
             __.Run computation 

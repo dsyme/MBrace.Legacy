@@ -1,6 +1,6 @@
-﻿#nowarn "0044" // 'While loop considered harmful' message.
+﻿namespace Nessos.MBrace.Core.Tests
 
-namespace Nessos.MBrace.Core.Tests
+    #nowarn "0444" // Disable compiler warnings emitted by MBrace API
 
     open System
     open System.Runtime.Serialization
@@ -197,15 +197,6 @@ namespace Nessos.MBrace.Core.Tests
                 | 42 -> return "Magic"
                 | n -> return "Boring"
             }
-
-//        [<Cloud>]
-//        let testSequential = 
-//            cloud {
-//                let list = new List<int>()
-//                list.Add 1
-//                list.Add 2
-//                return list.Count
-//            }
 
         [<Cloud>]
         let testForLoop = 

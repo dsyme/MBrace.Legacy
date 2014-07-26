@@ -1,6 +1,6 @@
-﻿#nowarn "0044" // Cloud blocks should be wrapped in quotation literals for better debug support.
+﻿namespace Nessos.MBrace.Runtime.Tests
 
-namespace Nessos.MBrace.Runtime.Tests
+    #nowarn "0444" // Disables compiler warnings emitted by MBrace API
 
     open Nessos.MBrace
     open Nessos.MBrace.Client

@@ -49,7 +49,7 @@
             self.For(List.toArray values, bindF)
 
         /// Implements the 'while' keyword in cloud computation expressions.
-        [<CompilerMessage("While loops in distributed computation not recommended; consider using an accumulator pattern instead.", 44)>]
+        [<CompilerMessage("While loops in distributed computation not recommended; consider using an accumulator pattern instead.", 444)>]
         member self.While (guardF : (unit -> bool), body : Cloud<unit>) : Cloud<unit> = 
             CloudExpr.wrap <| WhileExpr (guardF, CloudExpr.unwrap body)
 

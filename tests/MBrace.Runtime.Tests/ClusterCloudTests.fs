@@ -1,5 +1,3 @@
-#nowarn "0044" // 'While loop considered harmful' message.
-
 namespace Nessos.MBrace.Runtime.Tests
 
     open System
@@ -13,6 +11,8 @@ namespace Nessos.MBrace.Runtime.Tests
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Client
     open Nessos.MBrace.Core.Tests
+
+    #nowarn "0444" // Disable compiler warnings emitted by MBrace API
     
 
     [<ClusterTestsCategory>]
@@ -67,24 +67,24 @@ namespace Nessos.MBrace.Runtime.Tests
 
         [<Test; ClusterTestsCategory()>]
         member t.``Z1. Cluster Tests: Cloud Logf - multiple`` () =
-            let ps =
-                <@
-                    cloud {
-                        let taskF (_ : int) = cloud {
-                            for i in [1 .. 20] do
-                                do! Cloud.Sleep 10
-                                do! Cloud.Logf "msg = %d" i
-                        }
-
-                        do!
-                            [1..5]
-                            |> Seq.map taskF
-                            |> Cloud.Parallel
-                            |> Cloud.Ignore
-
-                        do! Cloud.Sleep 100
+            let computation =
+                cloud {
+                    let taskF (_ : int) = cloud {
+                        for i in [1 .. 20] do
+                            do! Cloud.Sleep 10
+                            do! Cloud.Logf "msg = %d" i
                     }
-                @> |> t.Runtime.CreateProcess
+
+                    do!
+                        [1..5]
+                        |> Seq.map taskF
+                        |> Cloud.Parallel
+                        |> Cloud.Ignore
+
+                    do! Cloud.Sleep 100
+                }
+
+            let ps = t.Runtime.CreateProcess computation
 
             ps.AwaitResult()
 

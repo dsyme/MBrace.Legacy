@@ -111,11 +111,11 @@ namespace Nessos.MBrace.Runtime.Compiler
                     // closure is a function ; can extract a name
                     if FSharpType.IsFunction t && o <> null then
                         let name = o.GetType().Name.Split('@').[0]
-                        log Error e "%s references closure '%s'. All cloud blocks should be top-level let bindings." blockName name
+                        log Warning e "%s references closure '%s'. All cloud blocks should be top-level let bindings." blockName name
 
                     // unknown container : not much can be reported here
                     else
-                        log Error e "%s references a closure. All cloud blocks should be top-level let bindings." blockName
+                        log Warning e "%s references a closure. All cloud blocks should be top-level let bindings." blockName
                 
                 // typeof<_> literal
                 | TypeOf t when isProhibitedType t ->
@@ -125,7 +125,7 @@ namespace Nessos.MBrace.Runtime.Compiler
                 | MemberInfo (m,returnType) ->
                     // check if cloud expression references inappropriate MBrace libraries
                     if isProhibitedMember m then
-                        log Error e "%s references prohibited method '%s'." blockName <| printMemberInfo m
+                        log Error e "%s references prohibited member '%s'." blockName <| printMemberInfo m
 
                     elif isProhibitedType returnType then
                         log Error e "%s references member '%s' of prohibited type '%s'." blockName <| printMemberInfo m <| Type.prettyPrint returnType
