@@ -19,6 +19,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Client", "src\MBrace
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{B6E824CD-AFA5-4F1A-96F8-3100300FE0AA}"
 	ProjectSection(SolutionItems) = preProject
+		.travis.yml = .travis.yml
 		appveyor.yml = appveyor.yml
 		build.cmd = build.cmd
 		build.fsx = build.fsx

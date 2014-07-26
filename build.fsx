@@ -85,28 +85,9 @@ Target "Build" (fun _ ->
 
 let testAssemblies = 
     [
-        "bin/MBrace.Core.Tests.dll"
-        "bin/MBrace.Runtime.Tests.dll"
         "bin/MBrace.Store.Tests.dll"
+        "bin/MBrace.Core.Tests.dll"
     ]
-
-let excludedStoresCategory = "CustomStores"
-
-Target "RunTestsExcludingCustomStores" (fun _ ->
-    let nunitVersion = GetPackageVersion "packages" "NUnit.Runners"
-    let nunitPath = sprintf "packages/NUnit.Runners.%s/tools" nunitVersion
-    ActivateFinalTarget "CloseTestRunner"
-        
-    testAssemblies
-    |> NUnit (fun p -> 
-        { p with
-            Framework = "v4.0.30319"
-            ToolPath = nunitPath
-            DisableShadowCopy = true
-            TimeOut = TimeSpan.FromMinutes 20.
-            ExcludeCategory = excludedStoresCategory
-            OutputFile = "TestResults.xml" })
-)
 
 Target "RunTests" (fun _ ->
     let nunitVersion = GetPackageVersion "packages" "NUnit.Runners"
@@ -119,7 +100,7 @@ Target "RunTests" (fun _ ->
             Framework = "v4.0.30319"
             ToolPath = nunitPath
             DisableShadowCopy = true
-            TimeOut = TimeSpan.FromMinutes 20.
+            TimeOut = TimeSpan.FromMinutes 60.
             OutputFile = "TestResults.xml" })
 )
 
@@ -327,7 +308,6 @@ Target "ReleaseDocs" (fun _ ->
 // --------------------------------------------------------------------------------------
 // Run all targets by default. Invoke 'build <Target>' to override
 Target "Default" DoNothing
-Target "DefaultWithStores" DoNothing
 Target "Release" DoNothing
 Target "PrepareRelease" DoNothing
 
@@ -335,15 +315,8 @@ Target "PrepareRelease" DoNothing
   ==> "RestorePackages"
   ==> "AssemblyInfo"
   ==> "Build"
-//  ==> "RunTestsExcludingCustomStores"
-  ==> "Default"
-
-"Clean"
-  ==> "RestorePackages"
-  ==> "AssemblyInfo"
-  ==> "Build"
   ==> "RunTests"
-  ==> "DefaultWithStores"
+  ==> "Default"
 
 "Clean"
   ==> "PrepareRelease"
