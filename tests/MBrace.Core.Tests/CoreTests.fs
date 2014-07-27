@@ -622,6 +622,16 @@
             should equal f None
 
         [<Test; PrimitivesCategory>]
+        member test.``4. Primitives : CloudFile attempt to write on stream`` () =
+            let f () =
+                <@ cloud { 
+                    let! cf = CloudFile.Create(fun stream -> async { stream.WriteByte(10uy) })
+                    return! CloudFile.Read(cf, fun stream -> async { stream.WriteByte(20uy) })
+                } @>
+                |> test.ExecuteExpression
+            shouldFailwith<CloudException> f
+
+        [<Test; PrimitivesCategory>]
         member test.``4. Primitives : MutableCloudRef - Simple For Loop`` () =
             <@ cloud {
                 let! x = MutableCloudRef.New(-1)
@@ -792,7 +802,6 @@
             let r = Async.Parallel [read (); read () ] |> Async.RunSynchronously
 
             should equal r.[0] r.[1]
-
 
         [<Test; PrimitivesCategory>]
         member test.``4. Primitives : StoreClient CloudRef`` () =

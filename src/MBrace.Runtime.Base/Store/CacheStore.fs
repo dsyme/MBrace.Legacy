@@ -50,7 +50,7 @@
                 | false, true -> 
                     try
                         use! stream = targetStore.ReadImmutable(folder, file)
-                        do! localCacheStore.CopyFrom(cacheContainer, cachedFileName, stream, false) // why false?
+                        do! localCacheStore.CopyFrom(cacheContainer, cachedFileName, stream, true)
                         stream.Dispose()
                         return! localCacheStore.ReadImmutable(cacheContainer, cachedFileName)
                     with 
