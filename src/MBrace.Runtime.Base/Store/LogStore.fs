@@ -190,6 +190,3 @@
         member this.Updated = updatedEvent.Publish
 
         member this.StartAsync () = async.Return <| Async.Start(loop (), cancellationToken = ct)
-            
-//        interface IDisposable with
-//            override this.Dispose () = this.Stop()

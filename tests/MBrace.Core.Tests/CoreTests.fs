@@ -1,6 +1,6 @@
 ﻿namespace Nessos.MBrace.Core.Tests
 
-    #nowarn "0044" // 'While loop considered harmful' message.
+    #nowarn "0444" // Disable compiler warnings emitted by MBrace API
 
     open System
     open System.IO

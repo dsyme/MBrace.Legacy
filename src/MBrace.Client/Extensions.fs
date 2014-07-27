@@ -49,7 +49,7 @@
             /// </summary>
             /// <param name="expr">Cloud computation.</param>
             /// <param name="name">Assigned name to cloud computation.</param>        
-            [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 44)>]
+            [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
             static member Compile (block : Cloud<'T>, ?name) : CloudComputation<'T> = 
                 CloudComputation.Compile(block, ?name = name)
 
