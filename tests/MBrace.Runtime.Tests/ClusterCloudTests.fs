@@ -239,8 +239,6 @@ namespace Nessos.MBrace.Runtime.Tests
                     Array.Parallel.init 3 (fun _ -> test.Runtime.CreateProcess (cloudJob())))
                 |> Array.concat
 
-            printfn "got procs"
-
             // run early tests on proc objects
             procs |> Seq.distinctBy (fun p -> p.ProcessId) |> Seq.length |> should equal 21
 
