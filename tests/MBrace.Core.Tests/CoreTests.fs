@@ -267,17 +267,17 @@
             } @> |> test.ExecuteExpression |> should equal 0
 
         [<Test; CloudParallelCategory>] 
-        member test.``3. Parallel : simple Cloud.Choice`` () =
+        member test.``2. Parallel : simple Cloud.Choice`` () =
             let result : int option = <@ cloud { let! r = Cloud.Choice [|cloud { return None }; cloud { return Some 1 }|] in return r } @> |> test.ExecuteExpression
             result |> should equal (Some 1)
 
         [<Test; CloudParallelCategory>] 
-        member test.``3. Parallel : local Cloud.Choice `` () =
+        member test.``2. Parallel : local Cloud.Choice `` () =
             let result : int option = <@ cloud { let! r = local <| Cloud.Choice [|cloud { return None }; cloud { return Some 1 }|] in return r } @> |> test.ExecuteExpression
             result |> should equal (Some 1)
 
         [<Test; CloudParallelCategory>] 
-        member test.``3. Parallel : Cloud.Choice unhandled exception`` () =
+        member test.``2. Parallel : Cloud.Choice unhandled exception`` () =
             fun () ->
                 test.ExecuteExpression 
                     <@ 
@@ -289,7 +289,7 @@
             |> shouldFailwith<CloudException>
 
         [<Test; CloudParallelCategory>]
-        member test.``3. Parallel : Cloud.Choice exception`` () =
+        member test.``2. Parallel : Cloud.Choice exception`` () =
             <@
                 cloud { 
                     try
@@ -316,7 +316,7 @@
             res |> should equal (Some 42)
         
         [<Test; CloudParallelCategory>]
-        member test.``3. Parallel : Cloud.Choice recursive`` () =
+        member test.``2. Parallel : Cloud.Choice recursive`` () =
             <@  let rec test depth id = cloud {
                     if depth = 0 then
                         if id = 4 then return Some 4 else return None
