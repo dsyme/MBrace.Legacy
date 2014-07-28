@@ -96,7 +96,7 @@
                             do! runtime.AttachAsync node
                     | Detatch ->
                         if nodeCount - 1 < conf.MinNodesCount then
-                            logfn "Ignoring Detatch"
+                            logfn "Ignoring Detach"
                         else
                             let node = runtime.Nodes.[random.Next(0, runtime.Nodes.Length-1)]
                             logfn "Detaching %A" node
@@ -121,9 +121,18 @@
                 MinNodesCount    = 4
                 MaxNodesCount    = 10
             }
+
+        let clientTimeout = 5 * 60 * 1000
+        let clientIgnoredException (ex : exn) =
+            match ex with
+            | :? TimeoutException -> true
+            | :? MBraceException as e when (e.InnerException :? Nessos.Thespian.CommunicationException) -> true
+            | :? MBraceException as e when (e.InnerException :? IOException) -> true
+            | _ -> false
             
         let checkF (cexpr : Cloud<'T>) (compare : 'T -> bool) =
             MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "mbraced.exe")
+            MBraceSettings.DefaultTimeout <- clientTimeout
             printfn "Using conf %A" defaultConf
             let quick = { Config.QuickThrowOnFailure with MaxTest = 10 }
 
@@ -143,8 +152,16 @@
                         logfn "STARTING CHAOS MONKEY"
                         Async.Start(chaos, cts.Token)
                         try
-                            let r = ps.AwaitResult() 
-                            logfn "Process completed : %A" r
+                            let rec retry () =
+                                try
+                                    ps.AwaitResult()
+                                with 
+                                | ex when clientIgnoredException ex -> 
+                                    logfn "Ignored %A" ex
+                                    retry ()
+                                | _ -> reraise ()
+                            let r = retry ()                            
+                            logfn "PROCESS COMPLETED : %A" r
                             compare r
                         with ex ->
                             logfn "AwaitResult failed with %A" ex

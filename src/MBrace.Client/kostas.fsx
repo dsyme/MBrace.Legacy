@@ -15,17 +15,60 @@ open Nessos.MBrace.Client
 //nodes |> List.map (fun n -> n.Ping())
 //nodes |> List.iter (fun n -> n.ShowSystemLogs())
 
+
+
 let rt = MBrace.InitLocal 3
 
-let rt = MBrace.Connect("Artemis",49204)
+rt.Run <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
 
-rt.Run <@ cloud { 
-            let! cf = CloudFile.Create(fun stream -> async { stream.WriteByte(10uy) })
-            return! CloudFile.Read(cf, fun stream -> async { stream.WriteByte(20uy) })
-        } @>
 
-let ps = rt.GetProcess(254)
-ps.AwaitBoxedResult()
+rt.GetProcessInfo()
+
+
+
+
+
+
+[<Cloud>]
+let rec bin (depth : int)  = cloud {
+    if depth = 0 then 
+        return 1
+    else 
+        let! (l,r) = bin (depth-1) <||> bin (depth-1) 
+        return l + r
+}
+
+let rt = MBrace.InitLocal 5
+
+MBraceSettings.DefaultTimeout <- 1000 * 60 * 5
+
+let ps = rt.CreateProcess <@ bin 11 @>
+
+let rec retry () =
+    try
+        ps.AwaitResult()
+    with 
+        | :? System.TimeoutException -> printfn "timeout" ; retry ()
+        | :? MBraceException as e when (e.InnerException :? Nessos.Thespian.CommunicationException) -> printfn "comm"; retry ()
+
+retry ()
+
+
+rt.AttachLocal(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 open Nessos.MBrace.Lib.Concurrency
 
