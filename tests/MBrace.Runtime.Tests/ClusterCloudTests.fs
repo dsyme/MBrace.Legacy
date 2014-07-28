@@ -232,13 +232,17 @@ namespace Nessos.MBrace.Runtime.Tests
                 return Array.sum results
             }
 
-            let procs = 
-                Array.init 20 (fun _ -> async { return test.Runtime.CreateProcess (cloudJob ()) })
-                |> Async.Parallel
-                |> Async.RunSynchronously
+            // create 21 processes, in groups of 3 concurrent requests
+
+            let procs =
+                Array.init 7 (fun _ ->
+                    Array.Parallel.init 3 (fun _ -> test.Runtime.CreateProcess (cloudJob())))
+                |> Array.concat
+
+            printfn "got procs"
 
             // run early tests on proc objects
-            procs |> Seq.distinctBy (fun p -> p.ProcessId) |> Seq.length |> should equal 20
+            procs |> Seq.distinctBy (fun p -> p.ProcessId) |> Seq.length |> should equal 21
 
             let results = 
                 procs 
