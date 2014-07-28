@@ -1,5 +1,7 @@
 namespace Nessos.MBrace.Client
 
+    #nowarn "0444" // Disable {m}brace warnings
+
     open System
     open System.Text
     open System.Threading.Tasks
@@ -422,11 +424,18 @@ namespace Nessos.MBrace.Client
 
 
         /// <summary>
-        ///     Creates a new cloud computation in runtime.
+        ///     Synchronously Cceates a new cloud computation in runtime.
         /// </summary>
         /// <param name="computation">Computation to be executed.</param>
-        member __.CreateProcess (computation : CloudComputation<'T>) : Process<'T> = 
-            processManager.CreateProcess computation |> Async.RunSynchronously
+        member r.CreateProcess (computation : CloudComputation<'T>) : Process<'T> = 
+            r.CreateProcessAsync computation |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously creates a new cloud computation in runtime.
+        /// </summary>
+        /// <param name="computation">Computation to be executed.</param>
+        member r.CreateProcessAsync (computation : CloudComputation<'T>) : Async<Process<'T>> = 
+            processManager.CreateProcess computation 
 
         /// <summary>
         ///     Asynchronously creates a new cloud computation in runtime and awaits its result.
@@ -445,13 +454,21 @@ namespace Nessos.MBrace.Client
         member __.Run (computation : CloudComputation<'T>) : 'T = __.RunAsync computation |> Async.RunSynchronously
 
         /// <summary>
-        ///     Creates a new cloud computation in runtime.
+        ///     Synchronously creates a new cloud computation in runtime.
         /// </summary>
         /// <param name="expr">Quoted cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
         member __.CreateProcess (expr : Expr<Cloud<'T>>, ?name) : Process<'T> =
+            __.CreateProcessAsync expr |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously creates a new cloud computation in runtime.
+        /// </summary>
+        /// <param name="expr">Quoted cloud workflow to be executed.</param>
+        /// <param name="name">Assigned name to cloud computation.</param>
+        member __.CreateProcessAsync (expr : Expr<Cloud<'T>>, ?name) : Async<Process<'T>> =
             let computation = CloudComputation.Compile(expr, ?name = name)
-            __.CreateProcess computation
+            __.CreateProcessAsync computation
 
         /// <summary>
         ///     Asynchronously creates a new cloud computation in runtime and awaits its result.
@@ -472,14 +489,23 @@ namespace Nessos.MBrace.Client
             __.Run computation 
 
         /// <summary>
-        ///     Creates a new cloud computation in runtime.
+        ///     Synchronously creates a new cloud computation in runtime.
         /// </summary>
         /// <param name="expr">Cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
         [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
         member __.CreateProcess (block : Cloud<'T>, ?name) : Process<'T> =
+            __.CreateProcessAsync block |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously creates a new cloud computation in runtime.
+        /// </summary>
+        /// <param name="expr">Cloud workflow to be executed.</param>
+        /// <param name="name">Assigned name to cloud computation.</param>
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
+        member __.CreateProcessAsync (block : Cloud<'T>, ?name) : Async<Process<'T>> =
             let computation = CloudComputation.Compile(block, ?name = name)
-            __.CreateProcess computation
+            __.CreateProcessAsync computation
 
         /// <summary>
         ///     Asynchronously creates a new cloud computation in runtime and awaits its result.
