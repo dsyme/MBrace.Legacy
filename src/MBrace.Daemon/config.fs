@@ -84,37 +84,33 @@
 
             logger
 
-        let lockWorkingDir (path : string) =
-            match ThreadSafe.tryClaimGlobalMutex <| "mbraced:" + path with
-            | None -> exiter.Exit(sprintf "ERROR: working directory '%s' is in use." path, 10)
-            | Some mtx -> exiter.ExitEvent.Add(fun _ -> mtx.Close())
 
-        let registerFancyConsoleEvent debug (address : Address) =
-            Nessos.MBrace.Runtime.Definitions.MBraceNode.stateChangeObservable.Subscribe(
-                fun state ->
-                    if Environment.UserInteractive then
-                        let consoleBgColor,role =
-                            match state with
-                            | NodeState.Slave 
-                            | NodeState.AltMaster -> ConsoleColor.Blue, "Slave"
-                            | NodeState.Master -> ConsoleColor.DarkMagenta, "Master"
-                            | NodeState.Idle -> ConsoleColor.Black, "Idle"
 
-                        let title =
-                            stringB {
-                                yield "mbraced"
-                             
-                                if debug then yield "[debug]"
-                            
-                                yield sprintf' "(%s Node)" role
-                                yield sprintf' " - %s:%d" address.HostnameOrAddress address.Port
+        let mkFancyConsole (address : Address) (state : NodeState) =
+            if isConsoleWindow then
+                let consoleBgColor, role =
+                    match state with
+                    | NodeState.Slave 
+                    | NodeState.AltMaster -> ConsoleColor.Blue, "Slave"
+                    | NodeState.Master -> ConsoleColor.DarkMagenta, "Master"
+                    | NodeState.Idle -> ConsoleColor.Black, "Idle"
+
+                let title =
+                    stringB {
+                        yield "mbraced"
+                        yield sprintf' "[PID %d]" selfProc.Id
+                        yield sprintf' "(%s Node)" role
+                        yield sprintf' " - %s:%d" address.HostnameOrAddress address.Port
                     
-                            } |> String.build
+                    } |> String.build
 
-                        Console.Title <- title
-                        if isWindowed then
-                            Console.BackgroundColor <- consoleBgColor            
-            ) |> ignore
+                Console.Title <- title
+                if isWindowed then
+                    Console.BackgroundColor <- consoleBgColor
+
+        let registerFancyConsoleEvent (address : Address) =
+            mkFancyConsole address NodeState.Idle
+            Definitions.MBraceNode.stateChangeObservable.Subscribe(mkFancyConsole address) |> ignore
 
 
         let registerPerfMonitorAsync () = async {
@@ -122,14 +118,6 @@
             monitor.Start()
             return monitor
         }
-
-
-//        let registerStore (storeProvider : string) (storeEndpoint : string) (workingDirectory : string) =
-//            try
-//                let provider = StoreDefinition.Parse(storeProvider, storeEndpoint)
-//                StoreRegistry.Activate(provider, makeDefault = true)
-//            with e ->
-//                exiter.Exit(sprintf "Error connecting to store: %s" e.Message, 2)
 
         // parser implementations        
 
