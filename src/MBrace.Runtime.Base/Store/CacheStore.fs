@@ -16,6 +16,17 @@
 
     type CacheStore(cacheContainer : string, localCacheStore : ICloudStore, targetStore : ICloudStore) = 
 
+#if NO_CACHESTORE
+        member this.Container = cacheContainer
+            
+        member this.Name = localCacheStore.Name
+
+        member this.Create(folder, file, serializeTo : Stream -> Async<unit>, asFile) =
+            targetStore.CreateImmutable(folder, file, serializeTo, asFile)
+
+        member this.Read(folder, file) = 
+            targetStore.ReadImmutable(folder, file)
+#else
         let getCachedFileName (container : string) (name : string) =
             let name' = String.Convert.StringToBase32(container + name)
             if Path.HasExtension name then
@@ -64,3 +75,4 @@
             }
 
             attemptRead()
+#endif

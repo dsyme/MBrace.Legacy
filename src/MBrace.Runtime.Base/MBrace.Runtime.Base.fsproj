@@ -29,10 +29,10 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\MBrace.Runtime.Base.XML</DocumentationFile>
+    <DocumentationFile>..\..\bin\MBrace.Runtime.Base.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -44,8 +44,18 @@
     <Tailcalls>false</Tailcalls>
     <DefineConstants>TRACE;DEBUG;NO_INMEM_CACHE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\MBrace.Runtime.Base.XML</DocumentationFile>
-    <OutputPath>..\..\bin\</OutputPath>
+    <DocumentationFile>..\..\bin\MBrace.Runtime.Base.XML</DocumentationFile>
+    <OutputPath>..\..\bin</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'NO_CACHE|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
+    <DefineConstants>TRACE;DEBUG;NO_INMEM_CACHE; NO_CACHESTORE</DefineConstants>
+    <WarningLevel>3</WarningLevel>
+    <DocumentationFile>..\..\bin\MBrace.Runtime.Base.XML</DocumentationFile>
+    <OutputPath>..\..\bin</OutputPath>
   </PropertyGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '11.0'">
