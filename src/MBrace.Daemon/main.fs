@@ -130,7 +130,7 @@
             logger.Logf Info "Performance Monitor active"
 
             if debugMode then logger.LogInfo "Running in DEBUG mode"
-            if isWindowed then registerFancyConsoleEvent debugMode address
+            if isWindowed then registerFancyConsoleEvent address
 
             try
                 Definitions.Service.boot hostname ips primaryPort
