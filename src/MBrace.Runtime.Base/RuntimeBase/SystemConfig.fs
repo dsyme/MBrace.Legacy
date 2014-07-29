@@ -90,7 +90,7 @@
             do retry (RetryPolicy.Retry(3, 0.5<sec>)) populate
 
             // init & register Vagrant daemon
-            let vagrant = new Vagrant(cacheDirectory = assemblyCacheDir)
+            let vagrant = Vagrant.Initialize(cacheDirectory = assemblyCacheDir)
             do VagrantRegistry.Register vagrant
 
             // register serializer

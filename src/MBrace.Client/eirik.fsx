@@ -47,3 +47,16 @@ for i in 1 .. 2 do
     x := runtime.Run <@ cloud { return !x + 1 } @>
 
 x.Value
+
+let comp = Array.init 1000 (fun _ -> Cloud.Sleep 500 ) |> Cloud.Parallel
+
+runtime.Run comp
+
+runtime.ShowInfo()
+
+runtime.ShowProcessInfo()
+
+let p = runtime.GetProcess<unit []> 6521
+
+p
+
