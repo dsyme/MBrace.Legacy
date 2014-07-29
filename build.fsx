@@ -245,8 +245,7 @@ Target "AzurePkg" (fun _ ->
                 ]
             Files =
                 [
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Core.dll"
-                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Lib.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Azure.dll"
                 ]
         })
         ("nuget/MBrace.nuspec")
