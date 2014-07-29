@@ -159,7 +159,7 @@ Target "StorePkg" (fun _ ->
         { p with   
             Authors = authors
             Project = "MBrace.Store"
-            Summary = "Interfaces for writing custom store definitions for MBrace."
+            Summary = "Interface definitions to the MBrace storage API."
             Description = description
             Version = nugetVersion
             ReleaseNotes = String.concat " " release.Notes
@@ -168,10 +168,6 @@ Target "StorePkg" (fun _ ->
             ToolPath = nugetPath
             AccessKey = getBuildParamOrDefault "nugetkey" ""
             Publish = hasBuildParam "nugetkey"
-            Dependencies =
-                [
-                    "FSharp.Core.3", "0.0.2"
-                ]
             References = 
                 [
                     "MBrace.Store.dll"
@@ -186,13 +182,48 @@ Target "StorePkg" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
+Target "ClientPkg" (fun _ ->
+    let nugetPath = ".nuget/NuGet.exe"
+    NuGet (fun p -> 
+        { p with   
+            Authors = authors
+            Project = "MBrace.Client"
+            Summary = "Client API for interfacing with remote MBrace runtimes."
+            Description = description
+            Version = nugetVersion
+            ReleaseNotes = String.concat " " release.Notes
+            Tags = tags
+            OutputPath = "bin"
+            ToolPath = nugetPath
+            AccessKey = getBuildParamOrDefault "nugetkey" ""
+            Publish = hasBuildParam "nugetkey"
+            Files =
+                [
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Utils.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Base.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\MBrace.Client.dll"
+                    yield  addFile     @"" @"preamble.fsx"
+                ]
+            Dependencies = 
+                [
+                    "FsPickler",                                    "0.9.9"
+                    "Thespian",                                     "0.0.9"
+                    "UnionArgParser",                               "0.7.0"
+                    "Vagrant",                                      "0.2.3"
+                    "MBrace.Core",                                  RequireExactly release.NugetVersion
+                    "MBrace.Store",                                 RequireExactly release.NugetVersion
+                ]
+        })
+        ("nuget/MBrace.nuspec")
+)
+
 Target "AzurePkg" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
             Authors = authors
             Project = "MBrace.Azure"
-            Summary = "A store definition for MBrace that uses the Azure storage as a backend."
+            Summary = "MBrace bindings for Azure storage."
             Description = description
             Version = nugetVersion
             ReleaseNotes = String.concat " " release.Notes
@@ -203,7 +234,7 @@ Target "AzurePkg" (fun _ ->
             Publish = hasBuildParam "nugetkey"
             Dependencies = 
                 [
-                    "MBrace.Store",                                 release.NugetVersion
+                    "MBrace.Store",                                 RequireExactly release.NugetVersion
                     "Microsoft.Data.Edm",                           "5.6.0"
                     "Microsoft.Data.OData",                         "5.6.0"
                     "Microsoft.Data.Services.Client",               "5.6.0"
@@ -238,7 +269,7 @@ Target "RuntimePkg" (fun _ ->
         { p with   
             Authors = authors
             Project = "MBrace.Runtime"
-            Summary = "Libraries and tools for setting up an MBrace runtime."
+            Summary = "Standalone distribution of the MBrace framework."
             Description = description
             Version = nugetVersion
             ReleaseNotes = String.concat " " release.Notes
@@ -252,9 +283,6 @@ Target "RuntimePkg" (fun _ ->
                     yield! addAssembly @"tools" @"..\bin\Newtonsoft.Json.dll"
                     yield! addAssembly @"tools" @"..\bin\FSharp.Compiler.Service.dll"
                     yield! addAssembly @"tools" @"..\bin\Mono.Cecil.dll"
-                    yield! addAssembly @"tools" @"..\bin\Mono.Cecil.Mdb.dll"
-                    yield! addAssembly @"tools" @"..\bin\Mono.Cecil.Pdb.dll"
-                    yield! addAssembly @"tools" @"..\bin\Mono.Cecil.Rocks.dll"
                     yield! addAssembly @"tools" @"..\bin\FsPickler.dll"
                     yield! addAssembly @"tools" @"..\bin\FsPickler.Json.dll"
                     yield! addAssembly @"tools" @"..\bin\Thespian.dll"
@@ -324,6 +352,8 @@ Target "PrepareRelease" DoNothing
   ==> "GenerateDocs"
   ==> "ReleaseDocs"
   ==> "CorePkg"
+  ==> "StorePkg"
+  ==> "ClientPkg"
   ==> "MBraceIntroScript"
   ==> "RuntimePkg"
   ==> "AzurePkg"

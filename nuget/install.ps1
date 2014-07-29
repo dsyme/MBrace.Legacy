@@ -7,7 +7,7 @@ param($installPath, $toolsPath, $package, $project)
 
 try
 {
-  $url = "http://github.com/nessos/MBrace/"
+  $url = "http://nessos.github.io/MBrace/"
   $packageId = $package.Id.ToLower()
   $dte2 = Get-Interface $dte ([EnvDTE80.DTE2])
 
