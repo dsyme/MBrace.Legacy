@@ -70,22 +70,7 @@ namespace Nessos.MBrace.Client
             new MBraceRuntime(actor.Ref, [actor :> IDisposable])
 
         /// <summary>
-        ///     Asynchronously connect to an MBrace runtime with given uri.
-        ///     Uri can correspond to any of the nodes participating in the cluster.
-        /// </summary>
-        /// <param name="uri">Connection uri.</param>
-        static member ConnectAsync(uri: Uri): Async<MBraceRuntime> =
-            async {
-                try
-                    let node = MBraceNode uri
-                    let! proxy = RuntimeProxy.connect node.Ref
-                    return initOfProxyActor proxy
-
-                with e -> return handleError e
-            }
-
-        /// <summary>
-        ///     Asynchronously boots an MBrace runtime with given nodes/configuration.s
+        ///     Asynchronously boots an MBrace runtime with given nodes/configuration.
         /// </summary>
         /// <param name="master">Designated initial master node in cluster.</param>
         /// <param name="config">Boot configuration.</param>
@@ -116,6 +101,21 @@ namespace Nessos.MBrace.Client
         }
 
         /// <summary>
+        ///     Asynchronously connect to an MBrace runtime with given uri.
+        ///     Uri can correspond to any of the nodes participating in the cluster.
+        /// </summary>
+        /// <param name="uri">Connection uri.</param>
+        static member ConnectAsync(uri: Uri): Async<MBraceRuntime> =
+            async {
+                try
+                    let node = MBraceNode uri
+                    let! proxy = RuntimeProxy.connect node.Ref
+                    return initOfProxyActor proxy
+
+                with e -> return handleError e
+            }
+
+        /// <summary>
         ///     Connect to an MBrace runtime with given uri.
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
@@ -127,14 +127,15 @@ namespace Nessos.MBrace.Client
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
         /// <param name="uri">Connection uri.</param>
-        static member Connect(host: string, port : int) : MBraceRuntime = MBraceRuntime.Connect(MBraceUri.hostPortToUri(host, port))
+        static member ConnectAsync(host: string, port : int) : Async<MBraceRuntime> = 
+            MBraceRuntime.ConnectAsync(MBraceUri.hostPortToUri(host, port))
 
         /// <summary>
-        ///     Connect to an MBrace runtime with given uri.
+        ///     Connect to an MBrace runtime with given hostname and TCP port.
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
         /// <param name="uri">Connection uri.</param>
-        static member Connect(uri: string): MBraceRuntime = MBraceRuntime.Connect(Uri(uri))
+        static member Connect(host: string, port : int) : MBraceRuntime = MBraceRuntime.ConnectAsync(host, port) |> Async.RunSynchronously
 
         /// <summary>
         ///     Asynchronously connect to an MBrace runtime with given uri.
@@ -142,6 +143,13 @@ namespace Nessos.MBrace.Client
         /// </summary>
         /// <param name="uri">Connection uri.</param>
         static member ConnectAsync(uri: string): Async<MBraceRuntime> = MBraceRuntime.ConnectAsync(Uri(uri))
+
+        /// <summary>
+        ///     Connect to an MBrace runtime with given uri.
+        ///     Uri can correspond to any of the nodes participating in the cluster.
+        /// </summary>
+        /// <param name="uri">Connection uri.</param>
+        static member Connect(uri: string): MBraceRuntime = MBraceRuntime.ConnectAsync(uri) |> Async.RunSynchronously
 
         /// <summary>
         ///     Boots a collection of nodes to form an MBrace cluster.
@@ -153,6 +161,27 @@ namespace Nessos.MBrace.Client
         static member Boot(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?storeDefinition) : MBraceRuntime = 
             MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeDefinition = storeDefinition)
             |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously spawn and initialize a local MBrace cluster of given size.
+        /// </summary>
+        /// <param name="totalNodes">Cluster size.</param>
+        /// <param name="masterPort">Specify a TCP port for the master node. Defaults to self-assigned port.</param>
+        /// <param name="hostname">Hostname/Address used for cluster communication.</param>
+        /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
+        /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
+        /// <param name="storeDefinition">Store provider that will be used by the runtime.</param>
+        /// <param name="debug">Spawn nodes in debug mode.</param>
+        /// <param name="background">Spawn nodes in background. Defaults to false.</param>
+        static member InitLocalAsync(totalNodes : int, ?masterPort, ?hostname, ?replicationFactor : int, ?failoverFactor : int,
+                                        ?storeDefinition, ?debug, ?background) : Async<MBraceRuntime> =
+            async {
+                if totalNodes < 3 then invalidArg "totalNodes" "should have at least 3 nodes."
+                let nodes = MBraceNode.SpawnMultiple(totalNodes, ?masterPort = masterPort, ?storeDefinition = storeDefinition,
+                                                        ?hostname = hostname, ?debug = debug, ?background = background)
+                
+                return! MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeDefinition = storeDefinition)
+            }
 
         /// <summary>
         ///     Spawn and initialize a local MBrace cluster of given size.
@@ -167,13 +196,14 @@ namespace Nessos.MBrace.Client
         /// <param name="background">Spawn nodes in background. Defaults to false.</param>
         static member InitLocal(totalNodes : int, ?masterPort, ?hostname, ?replicationFactor : int, ?failoverFactor : int,
                                         ?storeDefinition, ?debug, ?background) : MBraceRuntime =
+            MBraceRuntime.InitLocalAsync(totalNodes, ?masterPort = masterPort, ?hostname = hostname, 
+                                            ?replicationFactor = replicationFactor, ?storeDefinition = storeDefinition, ?debug = debug, ?background = background)
+            |> Async.RunSynchronously
 
-            if totalNodes < 3 then invalidArg "totalNodes" "should have at least 3 nodes."
-            let nodes = MBraceNode.SpawnMultiple(totalNodes, ?masterPort = masterPort, ?storeDefinition = storeDefinition,
-                                                    ?hostname = hostname, ?debug = debug, ?background = background)
-            
-            MBraceRuntime.Boot(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeDefinition = storeDefinition)
-
+        /// <summary>
+        ///     Connects to an existing MBrace runtime using the given ActorRef.
+        /// </summary>
+        /// <param name="ref">A Thespian ActoRef to master node.</param>
         static member FromActorRef(ref : ActorRef<MBraceNodeMsg>) = new MBraceRuntime(ref, [])
 
         //
@@ -317,20 +347,29 @@ namespace Nessos.MBrace.Client
         //
 
         /// <summary>
+        ///     Asynchronously pings the remote node, returning the response timespan.
+        /// </summary>
+        /// <param name="timeout">The amount of time in milliseconds to wait for a reply from the node (default is 3 seconds).</param>
+        member __.PingAsync(?silent: bool, ?timeout: int) : Async<TimeSpan> =
+            async {
+                let silent = defaultArg silent false
+                let timeout = defaultArg timeout 3000
+
+                let timer = new Stopwatch()
+
+                timer.Start()
+                do! runtime.PostWithReply(Ping, timeout)
+                timer.Stop()
+
+                return timer.Elapsed
+            }
+
+        /// <summary>
         ///     Pings the remote node, returning the response timespan.
         /// </summary>
         /// <param name="timeout">The amount of time in milliseconds to wait for a reply from the node (default is 3 seconds).</param>
         member __.Ping(?silent: bool, ?timeout: int) : TimeSpan =
-            let silent = defaultArg silent false
-            let timeout = defaultArg timeout 3000
-
-            let timer = new Stopwatch()
-
-            timer.Start()
-            runtime <!== (Ping, timeout)
-            timer.Stop()
-
-            timer.Elapsed
+            __.PingAsync(?silent = silent, ?timeout = timeout) |> Async.RunSynchronously
 
         /// <summary>
         ///     UUID identifying the current MBrace cluster deployment.
@@ -398,9 +437,23 @@ namespace Nessos.MBrace.Client
         member r.GetSystemLogs() : SystemLogEntry [] = postWithReply GetLogDump
 
         /// <summary>
+        ///     Asynchronously gets all system logs generated by the MBrace cluster.
+        /// </summary>
+        member r.GetSystemLogsAsync() : Async<SystemLogEntry []> = postWithReplyAsync GetLogDump
+
+        /// <summary>
         ///     Prints all system logs generated by the MBrace cluster to StdOut.
         /// </summary>
-        member r.ShowSystemLogs() : unit = r.GetSystemLogs() |> Reporting.Logs.show
+        member r.ShowSystemLogs() : unit = r.ShowSystemLogsAsync() |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously prints all system logs generated by the MBrace cluster to StdOut.
+        /// </summary>
+        member r.ShowSystemLogsAsync() : Async<unit> =
+            async { 
+                let! logs = r.GetSystemLogsAsync() 
+                Reporting.Logs.show logs
+            }
 
         /// <summary>
         ///     Violently kills all nodes in a local runtime.
@@ -528,48 +581,94 @@ namespace Nessos.MBrace.Client
             __.Run computation 
 
         /// <summary>
+        ///     Asynchronously kills the cloud process with given id.
+        /// </summary>
+        /// <param name="pid">Process Id to be killed.</param>
+        member __.KillProcessAsync (pid : ProcessId) : Async<unit> = processManager.Kill pid 
+
+        /// <summary>
         ///     Kills cloud process with given id.
         /// </summary>
         /// <param name="pid">Process Id to be killed.</param>
-        member __.KillProcess (pid : ProcessId) : unit = processManager.Kill pid |> Async.RunSynchronously
+        member __.KillProcess (pid : ProcessId) : unit = __.KillProcessAsync(pid) |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously gets cloud process in runtime by given id.
+        /// </summary>
+        /// <param name="pid">Process Id to be retrieved.</param>
+        member __.GetProcessAsync (pid : ProcessId) : Async<Process> = processManager.GetProcess pid 
 
         /// <summary>
         ///     Gets cloud process in runtime by given id.
         /// </summary>
         /// <param name="pid">Process Id to be retrieved.</param>
-        member __.GetProcess (pid : ProcessId) : Process = processManager.GetProcess pid |> Async.RunSynchronously
+        member __.GetProcess (pid : ProcessId) : Process = __.GetProcessAsync(pid) |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously gets the cloud process in runtime by given id.
+        /// </summary>
+        /// <param name="pid">Process Id to be retrieved.</param>
+        member __.GetProcessAsync<'T> (pid : ProcessId) : Async<Process<'T>> = 
+            async { let! ps = __.GetProcessAsync pid in return ps :?> Process<'T> }
 
         /// <summary>
         ///     Gets cloud process in runtime by given id.
         /// </summary>
         /// <param name="pid">Process Id to be retrieved.</param>
-        member __.GetProcess<'T> (pid : ProcessId) : Process<'T> = __.GetProcess pid :?> Process<'T>
+        member __.GetProcess<'T> (pid : ProcessId) : Process<'T> = __.GetProcessAsync<'T>(pid) |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously gets all running or completed process from the runtime.
+        /// </summary>
+        member __.GetAllProcessesAsync () : Async<Process []> = processManager.GetAllProcesses () 
 
         /// <summary>
         ///     Gets all running or completed process from the runtime.
         /// </summary>
-        member __.GetAllProcesses () : Process [] = processManager.GetAllProcesses () |> Async.RunSynchronously
+        member __.GetAllProcesses () : Process [] = __.GetAllProcessesAsync() |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously deletes the process info from runtime by given id.
+        /// </summary>
+        /// <param name="pid">Process Id to be retrieved.</param>
+        member __.ClearProcessInfoAsync (pid : ProcessId) : Async<unit> = processManager.ClearProcessInfo pid
 
         /// <summary>
         ///     Deletes process info from runtime by given id.
         /// </summary>
         /// <param name="pid">Process Id to be retrieved.</param>
-        member __.ClearProcessInfo (pid : ProcessId) : unit = processManager.ClearProcessInfo pid |> Async.RunSynchronously
+        member __.ClearProcessInfo (pid : ProcessId) : unit = __.ClearProcessInfoAsync pid |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously deletes *all* process information from runtime.
+        /// </summary>
+        member __.ClearAllProcessInfoAsync () : Async<unit> = processManager.ClearAllProcessInfo () 
 
         /// <summary>
         ///     Deletes *all* process information from runtime.
         /// </summary>
-        member __.ClearAllProcessInfo () : unit = processManager.ClearAllProcessInfo () |> Async.RunSynchronously
+        member __.ClearAllProcessInfo () : unit = __.ClearAllProcessInfoAsync() |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously prints runtime process information to StdOut.
+        /// </summary>
+        member __.ShowProcessInfoAsync () : Async<unit> = 
+            async { let! info = processManager.GetInfoAsync () in Console.WriteLine info }
 
         /// <summary>
         ///     Prints runtime process information to StdOut.
         /// </summary>
-        member __.ShowProcessInfo () : unit = processManager.GetInfo () |> Console.WriteLine
+        member __.ShowProcessInfo () : unit = __.ShowProcessInfoAsync() |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously gets printed runtime process information.
+        /// </summary>
+        member __.GetProcessInfoAsync () : Async<string> = processManager.GetInfoAsync ()
 
         /// <summary>
         ///     Gets printed runtime process information.
         /// </summary>
-        member __.GetProcessInfo () : string = processManager.GetInfo ()
+        member __.GetProcessInfo () : string = __.GetProcessInfoAsync() |> Async.RunSynchronously
 
 
         interface IDisposable with

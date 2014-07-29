@@ -389,6 +389,8 @@
         /// <summary>
         ///     Get printed info for all processes in runtime.
         /// </summary>
-        member pm.GetInfo () : string =
-            let info = postWithReply GetAllProcessInfo |> Async.RunSynchronously |> Array.toList
-            MBraceProcessReporter.Report(info, showBorder = false)
+        member pm.GetInfoAsync () : Async<string> =
+            async {
+                let! info = postWithReply GetAllProcessInfo 
+                return MBraceProcessReporter.Report(Array.toList info, showBorder = false)
+            }
