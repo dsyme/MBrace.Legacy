@@ -18,13 +18,13 @@
     /// Provides a handle and administration API for a running MBrace cluster.
     type MBrace = Nessos.MBrace.Client.MBraceRuntime
 
-    /// Cloud Process Identifier
+    /// Cloud Process Identifier.
     type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
 
-    /// Store configuration descriptor (Implementation/Connection string)
+    /// Store configuration descriptor (Implementation/Connection string).
     type StoreDefinition = Nessos.MBrace.Store.StoreDefinition
 
-    /// Compiled cloud computation package with metadata
+    /// Compiled cloud computation package with metadata.
     type CloudComputation<'T> = Nessos.MBrace.Runtime.Compiler.CloudComputation<'T>
 
 
@@ -33,7 +33,7 @@
     [<AutoOpen>]
     module ClientExtensions =
 
-        /// MBrace static method API
+        /// MBrace static method API.
         type MBrace =
             
             /// <summary>
@@ -54,18 +54,34 @@
                 CloudComputation.Compile(block, ?name = name)
 
             /// <summary>
+            ///     Asynchronously runs a computation at given runtime.
+            /// </summary>
+            /// <param name="runtime">Runtime to execute the computation.</param>
+            /// <param name="expr">Quoted cloud computation to be executed.</param>
+            static member RunRemoteAsync (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) : Async<'T> = runtime.RunAsync expr
+
+            /// <summary>
             ///     Runs a computation at given runtime.
             /// </summary>
             /// <param name="runtime">Runtime to execute the computation.</param>
             /// <param name="expr">Quoted cloud computation to be executed.</param>
-            static member RunRemote (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) : 'T = runtime.Run expr
+            static member RunRemote (runtime: MBraceRuntime) (expr : Expr<Cloud<'T>>) : 'T =
+                MBrace.RunRemoteAsync runtime expr |> Async.RunSynchronously
+
+            /// <summary>
+            ///   Asynchronously creates a new process at the given runtime.  
+            /// </summary>
+            /// <param name="runtime">Runtime to execute the computation.</param>
+            /// <param name="expr">Cloud computation to be executed.</param>
+            static member CreateProcessAsync (runtime : MBraceRuntime) (expr : Expr<Cloud<'T>>) : Async<Process<'T>> = runtime.CreateProcessAsync expr
 
             /// <summary>
             ///   Creates a new process at the given runtime.  
             /// </summary>
             /// <param name="runtime">Runtime to execute the computation.</param>
             /// <param name="expr">Cloud computation to be executed.</param>
-            static member CreateProcess (runtime : MBraceRuntime) (expr : Expr<Cloud<'T>>) : Process<'T> = runtime.CreateProcess expr
+            static member CreateProcess (runtime : MBraceRuntime) (expr : Expr<Cloud<'T>>) : Process<'T> =
+                MBrace.CreateProcessAsync runtime expr |> Async.RunSynchronously
 
             /// <summary>
             ///     Asynchronously executes a cloud workflow inside the local process with thread-parallelism semantics.
