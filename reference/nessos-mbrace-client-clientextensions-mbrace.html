@@ -37,7 +37,7 @@
 
 <h1>MBrace</h1>
 <div class="xmldoc">
-<p>MBrace static method API</p>
+<p>MBrace static method API.</p>
 </div>
   <h3>Static members</h3>
   <table class="table table-bordered member-list">
@@ -48,15 +48,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '227', 227)" onmouseover="showTip(event, '227', 227)">
+          <code onmouseout="hideTip(event, '210', 210)" onmouseover="showTip(event, '210', 210)">
             Compile(block, ?name)
           </code>
-          <div class="tip" id="227">
+          <div class="tip" id="210">
             <strong>Signature:</strong> (block:Cloud&lt;&#39;T&gt; * name:string option) -&gt; CloudComputation&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L53-53" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L50-50" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -67,15 +67,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '228', 228)" onmouseover="showTip(event, '228', 228)">
+          <code onmouseout="hideTip(event, '211', 211)" onmouseover="showTip(event, '211', 211)">
             Compile(expr, ?name)
           </code>
-          <div class="tip" id="228">
+          <div class="tip" id="211">
             <strong>Signature:</strong> (expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * name:string option) -&gt; CloudComputation&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L44-44" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L41-41" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -86,15 +86,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '229', 229)" onmouseover="showTip(event, '229', 229)">
+          <code onmouseout="hideTip(event, '212', 212)" onmouseover="showTip(event, '212', 212)">
             CreateProcess(runtime expr)
           </code>
-          <div class="tip" id="229">
-            <strong>Signature:</strong> runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />
+          <div class="tip" id="212">
+            <strong>Signature:</strong> runtime:Runtime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L68-68" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L80-80" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -105,15 +105,34 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '230', 230)" onmouseover="showTip(event, '230', 230)">
+          <code onmouseout="hideTip(event, '213', 213)" onmouseover="showTip(event, '213', 213)">
+            CreateProcessAsync(runtime expr)
+          </code>
+          <div class="tip" id="213">
+            <strong>Signature:</strong> runtime:Runtime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L73-73" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously creates a new process at the given runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '214', 214)" onmouseover="showTip(event, '214', 214)">
             RunLocal(computation, ?showLogs)
           </code>
-          <div class="tip" id="230">
+          <div class="tip" id="214">
             <strong>Signature:</strong> (computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * showLogs:bool option) -&gt; &#39;T<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L129-129" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L142-142" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -124,15 +143,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '231', 231)" onmouseover="showTip(event, '231', 231)">
+          <code onmouseout="hideTip(event, '215', 215)" onmouseover="showTip(event, '215', 215)">
             RunLocal(computation, ?showLogs)
           </code>
-          <div class="tip" id="231">
+          <div class="tip" id="215">
             <strong>Signature:</strong> (computation:Cloud&lt;&#39;T&gt; * showLogs:bool option) -&gt; &#39;T<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L121-121" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L134-134" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -143,15 +162,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '232', 232)" onmouseover="showTip(event, '232', 232)">
+          <code onmouseout="hideTip(event, '216', 216)" onmouseover="showTip(event, '216', 216)">
             RunLocal(computation, ?showLogs)
           </code>
-          <div class="tip" id="232">
+          <div class="tip" id="216">
             <strong>Signature:</strong> (computation:CloudComputation&lt;&#39;T&gt; * showLogs:bool option) -&gt; &#39;T<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L113-113" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L126-126" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -162,15 +181,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '233', 233)" onmouseover="showTip(event, '233', 233)">
+          <code onmouseout="hideTip(event, '217', 217)" onmouseover="showTip(event, '217', 217)">
             RunLocalAsync(expr, ?showLogs)
           </code>
-          <div class="tip" id="233">
+          <div class="tip" id="217">
             <strong>Signature:</strong> (expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * showLogs:bool option) -&gt; Async&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L104-104" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L117-117" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -181,15 +200,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '234', 234)" onmouseover="showTip(event, '234', 234)">
+          <code onmouseout="hideTip(event, '218', 218)" onmouseover="showTip(event, '218', 218)">
             RunLocalAsync(computation, ?showLogs)
           </code>
-          <div class="tip" id="234">
+          <div class="tip" id="218">
             <strong>Signature:</strong> (computation:Cloud&lt;&#39;T&gt; * showLogs:bool option) -&gt; Async&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L95-95" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L108-108" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -200,15 +219,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '235', 235)" onmouseover="showTip(event, '235', 235)">
+          <code onmouseout="hideTip(event, '219', 219)" onmouseover="showTip(event, '219', 219)">
             RunLocalAsync(computation, ?showLogs)
           </code>
-          <div class="tip" id="235">
+          <div class="tip" id="219">
             <strong>Signature:</strong> (computation:CloudComputation&lt;&#39;T&gt; * showLogs:bool option) -&gt; Async&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L75-75" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L88-88" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -219,19 +238,38 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '236', 236)" onmouseover="showTip(event, '236', 236)">
+          <code onmouseout="hideTip(event, '220', 220)" onmouseover="showTip(event, '220', 220)">
             RunRemote(runtime expr)
           </code>
-          <div class="tip" id="236">
-            <strong>Signature:</strong> runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; &#39;T<br />
+          <div class="tip" id="220">
+            <strong>Signature:</strong> runtime:Runtime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; &#39;T<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L61-61" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L65-65" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
           <p>Runs a computation at given runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '221', 221)" onmouseover="showTip(event, '221', 221)">
+            RunRemoteAsync(runtime expr)
+          </code>
+          <div class="tip" id="221">
+            <strong>Signature:</strong> runtime:Runtime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Extensions.fs#L58-58" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously runs a computation at given runtime.</p>
 
         </td>
       </tr>
