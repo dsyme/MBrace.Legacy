@@ -66,7 +66,7 @@
          /// Create a new MBraceNode object. No node is spawned.
         new (uri : string) = MBraceNode(new Uri(uri))
 
-        /// Gets the System.Diagnostics.Process object that correspond to a local MBrace node.
+        /// Gets the System.Diagnostics.Process object that corresponds to a local MBrace node.
         member __.Process : Process option = snd nodeInfo.Value
         member internal __.Ref = nodeRef
         
@@ -100,21 +100,29 @@
         member n.IsActive = n.State <> Idle
 
         /// <summary>
+        ///     Asynchronously pings the remote node, returning the response timespan.
+        /// </summary>
+        /// <param name="timeout">The amount of time in milliseconds to wait for a reply from the node (default is 3 seconds).</param>
+        member n.PingAsync(?timeout: int) : Async<TimeSpan> =
+            async {
+                try
+                    let timeout = defaultArg timeout 3000
+
+                    let timer = new Stopwatch()
+
+                    timer.Start()
+                    do! nodeRef.PostWithReply(Ping , timeout)
+                    timer.Stop()
+
+                    return timer.Elapsed
+                with e -> return handleError e
+            }
+
+        /// <summary>
         ///     Pings the remote node, returning the response timespan.
         /// </summary>
         /// <param name="timeout">The amount of time in milliseconds to wait for a reply from the node (default is 3 seconds).</param>
-        member n.Ping(?timeout: int) : TimeSpan =
-            try
-                let timeout = defaultArg timeout 3000
-
-                let timer = new Stopwatch()
-
-                timer.Start()
-                nodeRef <!== (Ping , timeout)
-                timer.Stop()
-
-                timer.Elapsed
-            with e -> handleError e
+        member n.Ping(?timeout: int) : TimeSpan = n.PingAsync(?timeout = timeout) |> Async.RunSynchronously
 
         /// <summary>
         ///     Asynchronously assigns store configuration to the remote Node.
@@ -154,35 +162,71 @@
                 return handleError e
         }
 
+        /// Asynchronously returns statistics about resources usage (CPU, Memory, etc) collected in this node.
+        member __.GetPerformanceCountersAsync () : Async<NodePerformanceInfo> =
+            async { 
+                let! info = __.GetNodeInfoAsync true
+                return info.PerformanceInfo |> Option.get
+            }
+
         /// Returns statistics about resources usage (CPU, Memory, etc) collected in this node.
-        member __.GetPerformanceCounters () : NodePerformanceInfo =
-            let info = __.GetNodeInfoAsync true |> Async.RunSynchronously
-            info.PerformanceInfo |> Option.get
+        member __.GetPerformanceCounters () : NodePerformanceInfo = __.GetPerformanceCountersAsync() |> Async.RunSynchronously
+
+        /// <summary>
+        /// Asynchronously returns information about the current node deployment.
+        /// </summary>
+        /// <param name="includePerformanceCounters">Include the performance statistics.</param>
+        member __.GetInfoAsync (?includePerformanceCounters) : Async<string> =
+            async { 
+                let showPerf = defaultArg includePerformanceCounters false
+                let! info = __.GetNodeInfoAsync(showPerf) 
+                return Reporting.MBraceNodeReporter.Report(Seq.singleton info, showPerf = showPerf, showBorder = false)
+            }
 
         /// <summary>
         /// Returns information about the current node deployment.
         /// </summary>
         /// <param name="includePerformanceCounters">Include the performance statistics.</param>
-        member __.GetInfo (?includePerformanceCounters) : string =
-            let showPerf = defaultArg includePerformanceCounters false
-            let info = __.GetNodeInfoAsync(showPerf) |> Async.RunSynchronously
-            Reporting.MBraceNodeReporter.Report(Seq.singleton info, showPerf = showPerf, showBorder = false)
+        member __.GetInfo (?includePerformanceCounters) : string = 
+            __.GetInfoAsync(?includePerformanceCounters = includePerformanceCounters) 
+            |> Async.RunSynchronously
+
+        /// <summary>
+        /// Asynchronously prints information about the current node deployment.
+        /// </summary>
+        /// <param name="includePerformanceCounters">Include the performance statistics.</param>
+        member __.ShowInfoAsync(?includePerformanceCounters) : Async<unit> =
+            async { 
+                let! info = __.GetInfoAsync(?includePerformanceCounters = includePerformanceCounters)
+                Console.WriteLine info
+            }
 
         /// <summary>
         /// Prints information about the current node deployment.
         /// </summary>
         /// <param name="includePerformanceCounters">Include the performance statistics.</param>
         member __.ShowInfo(?includePerformanceCounters) : unit =
-            __.GetInfo(?includePerformanceCounters = includePerformanceCounters)
-            |> Console.WriteLine
+            __.ShowInfoAsync(?includePerformanceCounters = includePerformanceCounters) |> Async.RunSynchronously
+
+        /// Asynchronously gets a dump of all logs printed by the node.
+        member n.GetSystemLogsAsync () : Async<SystemLogEntry []> =
+            async { 
+                try return! nodeRef.PostWithReply GetLogDump
+                with e -> return handleError e
+            }
 
         /// Gets a dump of all logs printed by the node.
-        member n.GetSystemLogs () : SystemLogEntry [] =
-            try nodeRef <!= GetLogDump
-            with e -> handleError e
+        member n.GetSystemLogs () : SystemLogEntry [] = n.GetSystemLogsAsync() |> Async.RunSynchronously
+
+        /// Asynchronously prints a dump of all logs printed by the node.
+        member n.ShowSystemLogsAsync () : Async<unit> = 
+            async {
+                let! logs = n.GetSystemLogsAsync () 
+                Logs.show logs 
+            }
 
         /// Prints a dump of all logs printed by the node.
-        member n.ShowSystemLogs () : unit = n.GetSystemLogs () |> Logs.show
+        member n.ShowSystemLogs () : unit = n.ShowSystemLogsAsync() |> Async.RunSynchronously
 
         /// Returns whether this node corresponds to a local process.
         member n.IsLocal : bool = n.Process.IsSome
@@ -255,21 +299,29 @@
             }
 
         /// <summary>
-        ///     Spawns a new MBrace Node in the local machine with given CLI arguments.
+        ///     Asynchronously spawns a new MBrace Node in the local machine with given CLI arguments.
         /// </summary>
         /// <param name="arguments">The command line arguments.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        static member Spawn(arguments : string [], ?background) : MBraceNode =
+        static member SpawnAsync(arguments : string [], ?background) : Async<MBraceNode> =
             async {
                 let arguments = 
                     try mbracedParser.ParseCommandLine(arguments, ignoreMissing = true).GetAllResults()
                     with e -> mfailwithf "Argument Parse error: %s" e.Message
 
                 return! MBraceNode.SpawnAsync(arguments, ?background = background)
-            } |> Async.RunSynchronously
+            } 
 
         /// <summary>
-        ///     Spawns a new MBrace Node in the local machine with given parameters.
+        ///     Spawns a new MBrace Node in the local machine with given CLI arguments.
+        /// </summary>
+        /// <param name="arguments">The command line arguments.</param>
+        /// <param name="background">Spawn in the background (without a console window).</param>
+        static member Spawn(arguments : string [], ?background) : MBraceNode =
+            MBraceNode.SpawnAsync(arguments, ?background = background) |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously spawns a new MBrace Node in the local machine with given parameters.
         ///     Unspecified parameters are loaded from the mbraced executable Application configuration file.
         /// </summary>
         /// <param name="hostname">The hostname to be used by the node and the runtime.</param>
@@ -342,7 +394,7 @@
             |> Async.RunSynchronously
 
         /// <summary>
-        ///     Spawns multiple MBrace Nodes in the local machine with given parameters.
+        ///     Asynchronously spawns multiple MBrace Nodes in the local machine with given parameters.
         ///     Unspecified parameters are loaded from the mbraced executable Application configuration file.
         /// </summary>
         /// <param name="nodeCount">The number of nodes to spawn.</param>
@@ -355,8 +407,8 @@
         /// <param name="debug">Run in debug mode.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
         /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
-        static member SpawnMultiple(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : MBraceNode list =
+        static member SpawnMultipleAsync(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
+                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : Async<MBraceNode list> =
         
             let spawnSingle primary pool =
                     MBraceNode.SpawnAsync(?hostname = hostname, primaryPort = primary, workerPorts = pool, ?logFiles = logFiles,
@@ -384,7 +436,28 @@
 
                     return Array.toList nodes
 
-            } |> Async.RunSynchronously
+            } 
+
+        /// <summary>
+        ///     Spawns multiple MBrace Nodes in the local machine with given parameters.
+        ///     Unspecified parameters are loaded from the mbraced executable Application configuration file.
+        /// </summary>
+        /// <param name="nodeCount">The number of nodes to spawn.</param>
+        /// <param name="masterPort">Force a specific master port to the first node in the list.</param>
+        /// <param name="workerPortsPerNode">The number of worker ports to be used by each {m}brace node.</param>
+        /// <param name="hostname">The hostname to be used by each node.</param>
+        /// <param name="logFiles">Paths to file to use for logging.</param>
+        /// <param name="logLevel">The level of entries to be logged.</param>
+        /// <param name="permissions">Permissions for all nodes.</param>
+        /// <param name="debug">Run in debug mode.</param>
+        /// <param name="background">Spawn in the background (without a console window).</param>
+        /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
+        static member SpawnMultiple(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
+                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : MBraceNode list =
+            MBraceNode.SpawnMultipleAsync(nodeCount, ?masterPort = masterPort, ?workerPortsPerNode = workerPortsPerNode, ?hostname = hostname,
+                                            ?logFiles = logFiles, ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, 
+                                            ?background = background, ?storeDefinition = storeDefinition)
+            |> Async.RunSynchronously
 
         /// <summary>
         ///     Prints a report on the given collection of nodes.

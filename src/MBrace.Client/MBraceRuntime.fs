@@ -177,8 +177,8 @@ namespace Nessos.MBrace.Client
                                         ?storeDefinition, ?debug, ?background) : Async<MBraceRuntime> =
             async {
                 if totalNodes < 3 then invalidArg "totalNodes" "should have at least 3 nodes."
-                let nodes = MBraceNode.SpawnMultiple(totalNodes, ?masterPort = masterPort, ?storeDefinition = storeDefinition,
-                                                        ?hostname = hostname, ?debug = debug, ?background = background)
+                let! nodes = MBraceNode.SpawnMultipleAsync(totalNodes, ?masterPort = masterPort, ?storeDefinition = storeDefinition,
+                                                           ?hostname = hostname, ?debug = debug, ?background = background)
                 
                 return! MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeDefinition = storeDefinition)
             }
@@ -331,15 +331,28 @@ namespace Nessos.MBrace.Client
         member r.Detach (node : MBraceNode) : unit = r.DetachAsync node |> Async.RunSynchronously
 
         /// <summary>
-        ///     Spawns a specified number of nodes and attaches to existing runtime.
+        ///     Spawns a specified number of local nodes and attaches to existing runtime.
         /// </summary>
         /// <param name="totalNodes">Additional nodes to be created.</param>
         /// <param name="permissions">Cluster permissions to be given to new Nodes.</param>
         /// <param name="debug">Spawn new nodes in debug mode.</param>
         /// <param name="background">Spawn new nodes in background.</param>
         member r.AttachLocal(totalNodes : int, ?permissions, ?debug, ?background) : unit =
-            let nodes = MBraceNode.SpawnMultiple(totalNodes, ?permissions = permissions, ?debug = debug, ?background = background)
-            r.Attach(nodes)
+            r.AttachLocalAsync(totalNodes, ?permissions = permissions, ?debug = debug, ?background = background)
+            |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously spawns a specified number of local nodes and attaches to existing runtime.
+        /// </summary>
+        /// <param name="totalNodes">Additional nodes to be created.</param>
+        /// <param name="permissions">Cluster permissions to be given to new Nodes.</param>
+        /// <param name="debug">Spawn new nodes in debug mode.</param>
+        /// <param name="background">Spawn new nodes in background.</param>
+        member r.AttachLocalAsync(totalNodes : int, ?permissions, ?debug, ?background) : Async<unit> =
+            async { 
+                let! nodes = MBraceNode.SpawnMultipleAsync(totalNodes, ?permissions = permissions, ?debug = debug, ?background = background)
+                do! r.AttachAsync(nodes)
+            }
 
 
         //
