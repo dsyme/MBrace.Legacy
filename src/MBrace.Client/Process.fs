@@ -118,7 +118,7 @@
             existential.Apply ctor
 
         /// Returns printed information on the cloud process.
-        member p.GetInfo () : string = MBraceProcessReporter.Report [processInfo.Value]
+        member p.GetInfo () : string = ProcessReporter.Report [processInfo.Value]
         
         /// Prints information on the cloud process to StdOut.
         member p.ShowInfo () : unit = p.GetInfo() |> Console.WriteLine
@@ -400,5 +400,5 @@
         member pm.GetInfoAsync () : Async<string> =
             async {
                 let! info = postWithReply GetAllProcessInfo 
-                return MBraceProcessReporter.Report(Array.toList info, showBorder = false)
+                return ProcessReporter.Report(Array.toList info, showBorder = false)
             }

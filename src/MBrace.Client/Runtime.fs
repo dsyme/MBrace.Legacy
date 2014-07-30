@@ -439,7 +439,7 @@ namespace Nessos.MBrace.Client
                     else
                         clusterConfiguration.Value
 
-                Reporting.MBraceNodeReporter.Report(info.Nodes, showPerf = showPerformanceCounters, showBorder = false)
+                Reporting.NodeReporter.Report(info.Nodes, showPerf = showPerformanceCounters, showBorder = false)
                 |> Console.WriteLine
 
             with e -> Console.Error.WriteLine e.Message

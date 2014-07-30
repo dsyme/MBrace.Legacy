@@ -39,7 +39,7 @@
             cc
 
 
-    type MBraceNodeReporter private () =
+    type NodeReporter private () =
 
         static let nodeReportTemplate : Field<NodeDeploymentInfo> list =
             [
@@ -80,7 +80,7 @@
                 Record.prettyPrint3 nodeReportTemplate title showBorder nodes
 
 
-    type MBraceProcessReporter private () =
+    type ProcessReporter private () =
 
         static let template : Field<ProcessInfo> list =
             [

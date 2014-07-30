@@ -180,7 +180,7 @@
             async { 
                 let showPerf = defaultArg includePerformanceCounters false
                 let! info = __.GetNodeInfoAsync(showPerf) 
-                return Reporting.MBraceNodeReporter.Report(Seq.singleton info, showPerf = showPerf, showBorder = false)
+                return Reporting.NodeReporter.Report(Seq.singleton info, showPerf = showPerf, showBorder = false)
             }
 
         /// <summary>
@@ -469,7 +469,7 @@
         static member PrettyPrintAsync(nodes : seq<Node>, ?displayPerfCounters, ?title, ?useBorders) : Async<string> = async {
             let displayPerfCounters = defaultArg displayPerfCounters false
             let! nodeInfo = nodes |> Seq.map (fun n -> n.GetNodeInfoAsync(displayPerfCounters)) |> Async.Parallel
-            return MBraceNodeReporter.Report(nodeInfo, displayPerfCounters, ?title = title, ?showBorder = useBorders)
+            return NodeReporter.Report(nodeInfo, displayPerfCounters, ?title = title, ?showBorder = useBorders)
         }
 
         /// <summary>
