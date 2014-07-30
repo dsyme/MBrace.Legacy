@@ -19,6 +19,8 @@ open Nessos.MBrace.Client
 
 let rt = MBrace.InitLocal 3
 
+MBraceSettings.DefaultTimeout <- 60 * 2 * 1000
+
 rt.Run <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
 
 
