@@ -39,7 +39,7 @@
 
         let rec chaosMonkey (conf: ChaosMonkeyConfiguration) 
                             (actions : ChaosAction list) 
-                            (runtime: MBraceRuntime): Async<unit> = async {
+                            (runtime: Runtime): Async<unit> = async {
             match actions with
             | [] -> 
                 logfn "CHAOS MONKEY COMPLETED" 

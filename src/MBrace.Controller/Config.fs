@@ -119,7 +119,7 @@
         let tryParseSession (sessionFile : string) =
             let tryGetNode (uri : Uri, gId : Guid) =
                 try 
-                    let n = new MBraceNode(uri)
+                    let n = new Node(uri)
                     if n.DeploymentId <> gId || n.Process.IsNone then None
                     else Some n
                 with _ -> None
@@ -133,22 +133,22 @@
                     deleteSessionFile sessionFile ; None
                 | nodes -> Some (session, nodes)
 
-        let prettyPrint (session : MBraceSession) (nodes : MBraceNode list) =
+        let prettyPrint (session : MBraceSession) (nodes : Node list) =
             try
                 let title = sprintf "{m}brace session started on %O." session.StartedOn
                     
-                MBraceNode.PrettyPrint(nodes, title = title, useBorders = false) |> printfn "%s"
+                Node.PrettyPrint(nodes, title = title, useBorders = false) |> printfn "%s"
             with e -> exiter.Exit(sprintf "mbracectl: unexpected error: %s" e.Message, 5)
 
         let spawnNodes spawnWindows (multiNode : (int * bool) option) =
             try
                 let nodes =
                     match multiNode with
-                    | None -> [ MBraceNode.Spawn(background = not spawnWindows) ]
+                    | None -> [ Node.Spawn(background = not spawnWindows) ]
                     // (nodes * boot) option
-                    | Some(n,false) -> MBraceNode.SpawnMultiple(n, background = not spawnWindows)
+                    | Some(n,false) -> Node.SpawnMultiple(n, background = not spawnWindows)
                     | Some(n,true) -> 
-                        let r = MBraceRuntime.InitLocal(n, background = not spawnWindows)
+                        let r = Runtime.InitLocal(n, background = not spawnWindows)
                         r.Nodes
 
                 let session =

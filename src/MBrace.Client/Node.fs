@@ -30,7 +30,7 @@
 
     /// Provides a handle and administration API for remote MBrace nodes.
     [<Sealed; NoEquality; NoComparison; AutoSerializable(false)>]
-    type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri : Uri) as self =
+    type Node private (nodeRef: ActorRef<MBraceNodeMsg>, uri : Uri) as self =
 
         let handleError (e : exn) : 'T =
             match e with
@@ -51,20 +51,20 @@
 
         internal new (nref: ActorRef<MBraceNodeMsg>) =
             let uri = ActorRef.toUri nref |> MBraceUri.actorUriToMbraceUri
-            MBraceNode(nref, uri)
+            Node(nref, uri)
 
-        internal new (info : NodeDeploymentInfo) = MBraceNode(info.Reference, info.Uri)
+        internal new (info : NodeDeploymentInfo) = Node(info.Reference, info.Uri)
 
-        /// Create a new MBraceNode object. No node is spawned.
+        /// Create a new Node object. No node is spawned.
         new (uri: Uri) =
             let nref = uri |> MBraceUri.mbraceUriToActorUri Serialization.SerializerRegistry.DefaultName |> ActorRef.fromUri
-            MBraceNode(nref, uri)
+            Node(nref, uri)
 
-        /// Create a new MBraceNode object. No node is spawned.
-        new (hostname : string, port : int) = MBraceNode(MBraceUri.hostPortToUri(hostname, port))
+        /// Create a new Node object. No node is spawned.
+        new (hostname : string, port : int) = Node(MBraceUri.hostPortToUri(hostname, port))
 
-         /// Create a new MBraceNode object. No node is spawned.
-        new (uri : string) = MBraceNode(new Uri(uri))
+         /// Create a new Node object. No node is spawned.
+        new (uri : string) = Node(new Uri(uri))
 
         /// Gets the System.Diagnostics.Process object that corresponds to a local MBrace node.
         member __.Process : Process option = snd nodeInfo.Value
@@ -239,7 +239,7 @@
 
         override node.ToString() = node.Uri.ToString()
 
-        static member internal SpawnAsync (arguments : MBracedConfig list, ?background) : Async<MBraceNode> =
+        static member internal SpawnAsync (arguments : MBracedConfig list, ?background) : Async<Node> =
             async {
                 let background = defaultArg background false
                 let mbracedExe = MBraceSettings.MBracedExecutablePath
@@ -292,7 +292,7 @@
                             | Some msg -> mfailwithf "Node %d exited with message '%s'." proc.Id msg
                         | StartupSuccessful(uri,_) -> 
                             let nref = uri |> MBraceUri.mbraceUriToActorUri Serialization.SerializerRegistry.DefaultName |> ActorRef.fromUri
-                            MBraceNode(nref, uri)
+                            Node(nref, uri)
                 with
                 | MBraceExn e -> return! Async.Raise e
                 | e -> return mfailwithInner e "Error spawning local {m}brace daemon."
@@ -303,13 +303,13 @@
         /// </summary>
         /// <param name="arguments">The command line arguments.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        static member SpawnAsync(arguments : string [], ?background) : Async<MBraceNode> =
+        static member SpawnAsync(arguments : string [], ?background) : Async<Node> =
             async {
                 let arguments = 
                     try mbracedParser.ParseCommandLine(arguments, ignoreMissing = true).GetAllResults()
                     with e -> mfailwithf "Argument Parse error: %s" e.Message
 
-                return! MBraceNode.SpawnAsync(arguments, ?background = background)
+                return! Node.SpawnAsync(arguments, ?background = background)
             } 
 
         /// <summary>
@@ -317,8 +317,8 @@
         /// </summary>
         /// <param name="arguments">The command line arguments.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        static member Spawn(arguments : string [], ?background) : MBraceNode =
-            MBraceNode.SpawnAsync(arguments, ?background = background) |> Async.RunSynchronously
+        static member Spawn(arguments : string [], ?background) : Node =
+            Node.SpawnAsync(arguments, ?background = background) |> Async.RunSynchronously
 
         /// <summary>
         ///     Asynchronously spawns a new MBrace Node in the local machine with given parameters.
@@ -337,7 +337,7 @@
         /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
         static member SpawnAsync(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?storeDefinition : StoreDefinition) : Async<MBraceNode> = 
+                                    ?background : bool, ?storeDefinition : StoreDefinition) : Async<Node> = 
             async {
                 let debug = defaultArg debug false
                 let useTemporaryWorkDir = defaultArg useTemporaryWorkDir false
@@ -362,7 +362,7 @@
                         match logLevel with Some l -> yield Log_Level l.Value | _ -> ()
                     ]
         
-                let! node = MBraceNode.SpawnAsync(args, ?background = background)
+                let! node = Node.SpawnAsync(args, ?background = background)
 
                 do! node.SetStoreConfigurationAsync storeProvider
 
@@ -386,9 +386,9 @@
         /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
         static member Spawn(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?storeDefinition : StoreDefinition) : MBraceNode =
+                                    ?background : bool, ?storeDefinition : StoreDefinition) : Node =
 
-            MBraceNode.SpawnAsync(?hostname = hostname, ?primaryPort = primaryPort, ?workerPorts = workerPorts, ?logFiles = logFiles,
+            Node.SpawnAsync(?hostname = hostname, ?primaryPort = primaryPort, ?workerPorts = workerPorts, ?logFiles = logFiles,
                                         ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?workingDirectory = workingDirectory,
                                         ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?storeDefinition = storeDefinition)
             |> Async.RunSynchronously
@@ -408,10 +408,10 @@
         /// <param name="background">Spawn in the background (without a console window).</param>
         /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
         static member SpawnMultipleAsync(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : Async<MBraceNode list> =
+                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : Async<Node list> =
         
             let spawnSingle primary pool =
-                    MBraceNode.SpawnAsync(?hostname = hostname, primaryPort = primary, workerPorts = pool, ?logFiles = logFiles,
+                    Node.SpawnAsync(?hostname = hostname, primaryPort = primary, workerPorts = pool, ?logFiles = logFiles,
                                             ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?background = background,
                                                     ?storeDefinition = storeDefinition, useTemporaryWorkDir = true)
             async {
@@ -453,8 +453,8 @@
         /// <param name="background">Spawn in the background (without a console window).</param>
         /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
         static member SpawnMultiple(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : MBraceNode list =
-            MBraceNode.SpawnMultipleAsync(nodeCount, ?masterPort = masterPort, ?workerPortsPerNode = workerPortsPerNode, ?hostname = hostname,
+                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : Node list =
+            Node.SpawnMultipleAsync(nodeCount, ?masterPort = masterPort, ?workerPortsPerNode = workerPortsPerNode, ?hostname = hostname,
                                             ?logFiles = logFiles, ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, 
                                             ?background = background, ?storeDefinition = storeDefinition)
             |> Async.RunSynchronously
@@ -466,7 +466,7 @@
         /// <param name="displayPerfCounters">Also display performance statistics.</param>
         /// <param name="title">A title for the report.</param>
         /// <param name="useBorders">Use fancy borders.</param>
-        static member PrettyPrintAsync(nodes : seq<MBraceNode>, ?displayPerfCounters, ?title, ?useBorders) : Async<string> = async {
+        static member PrettyPrintAsync(nodes : seq<Node>, ?displayPerfCounters, ?title, ?useBorders) : Async<string> = async {
             let displayPerfCounters = defaultArg displayPerfCounters false
             let! nodeInfo = nodes |> Seq.map (fun n -> n.GetNodeInfoAsync(displayPerfCounters)) |> Async.Parallel
             return MBraceNodeReporter.Report(nodeInfo, displayPerfCounters, ?title = title, ?showBorder = useBorders)
@@ -479,6 +479,6 @@
         /// <param name="displayPerfCounters">Also display performance statistics.</param>
         /// <param name="title">A title for the report.</param>
         /// <param name="useBorders">Use fancy borders.</param>
-        static member PrettyPrint(nodes : seq<MBraceNode>, ?displayPerfCounters, ?title, ?useBorders) =
-            MBraceNode.PrettyPrintAsync(nodes, ?displayPerfCounters = displayPerfCounters, ?title = title, ?useBorders = useBorders)
+        static member PrettyPrint(nodes : seq<Node>, ?displayPerfCounters, ?title, ?useBorders) =
+            Node.PrettyPrintAsync(nodes, ?displayPerfCounters = displayPerfCounters, ?title = title, ?useBorders = useBorders)
             |> Async.RunSynchronously

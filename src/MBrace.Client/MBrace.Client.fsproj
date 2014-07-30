@@ -55,10 +55,10 @@
     <Compile Include="ClientSettings.fs" />
     <Compile Include="Reporting.fs" />
     <Compile Include="StoreClient.fs" />
-    <Compile Include="MBraceNode.fs" />
-    <Compile Include="CloudProcess.fs" />
+    <Compile Include="Node.fs" />
+    <Compile Include="Process.fs" />
     <Compile Include="RuntimeProxy.fs" />
-    <Compile Include="MBraceRuntime.fs" />
+    <Compile Include="Runtime.fs" />
     <Compile Include="Extensions.fs" />
     <None Include="preamble.fsx" />
     <None Include="eirik.fsx" />
