@@ -337,6 +337,7 @@ Target "ReleaseDocs" (fun _ ->
 Target "Default" DoNothing
 Target "Release" DoNothing
 Target "PrepareRelease" DoNothing
+Target "Help" (fun _ -> PrintTargets() )
 
 "Clean"
   ==> "RestorePackages"
