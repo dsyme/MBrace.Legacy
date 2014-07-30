@@ -343,7 +343,7 @@
                 let useTemporaryWorkDir = defaultArg useTemporaryWorkDir false
                 let workerPorts = defaultArg workerPorts []
                 let logFiles = defaultArg logFiles []
-                let storeProvider = defaultArg storeDefinition MBraceSettings.StoreProvider
+                let storeDefinition = defaultArg storeDefinition MBraceSettings.StoreDefinition
 
                 // build arguments
                 let args =
@@ -364,7 +364,7 @@
         
                 let! node = Node.SpawnAsync(args, ?background = background)
 
-                do! node.SetStoreConfigurationAsync storeProvider
+                do! node.SetStoreConfigurationAsync storeDefinition
 
                 return node
             }

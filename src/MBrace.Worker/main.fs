@@ -94,7 +94,7 @@
             // load store dependencies from cache
             let results = VagrantRegistry.Instance.LoadCachedAssemblies(activator.Dependencies, loadPolicy = AssemblyLoadPolicy.ResolveAll)
                 
-            let storeInfo = StoreRegistry.TryActivate(activator, makeDefault = true) |> Option.get
+            let storeInfo = StoreRegistry.Activate(activator, makeDefault = true)
 
             // Register listeners
             TcpListenerPool.DefaultHostname <- hostname

@@ -109,17 +109,16 @@
 
                 | Some _ -> invalidOp "A local cache store has already been registered.")
 
-        static member TryActivate(activationInfo : StoreActivationInfo, makeDefault) =
+        static member Activate(activationInfo : StoreActivationInfo, makeDefault) =
             match StoreRegistry.TryGetStoreInfo activationInfo.Id with
-            | Some _ as r -> (if makeDefault then defaultStore := r) ; r
+            | Some info as r -> (if makeDefault then defaultStore := r) ; info
             | None ->
-                let definition = 
-                    try Some <| Serialization.UnPickle activationInfo.StoreDefinitionPickle
-                    with _ -> None
-
-                match definition with
-                | None -> None
-                | Some d -> Some <| StoreRegistry.Activate(d, makeDefault = makeDefault)
+                try
+                    let definition = Serialization.UnPickle activationInfo.StoreDefinitionPickle
+                    StoreRegistry.Activate(definition, makeDefault = makeDefault)
+                with e ->
+                    let msg = sprintf "Failed to activate store '%s'." activationInfo.Id.AssemblyQualifiedName
+                    raise <| new Nessos.MBrace.StoreException(msg, e)
 
         static member DefaultStoreInfo = 
             match defaultStore.Value with

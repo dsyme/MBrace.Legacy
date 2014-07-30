@@ -51,8 +51,5 @@
 
             let results = VagrantRegistry.Instance.LoadPortableAssemblies(pas, loadPolicy = AssemblyLoadPolicy.ResolveAll)
 
-            return
-                match StoreRegistry.TryActivate(info, makeDefault = makeDefault) with
-                | None -> invalidOp <| sprintf "Failed to activate store '%s'" info.Id.AssemblyQualifiedName
-                | Some info -> info
+            return StoreRegistry.Activate(info, makeDefault = makeDefault)
         }

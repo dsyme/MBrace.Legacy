@@ -78,10 +78,10 @@ namespace Nessos.MBrace.Client
             with get () = init () ; SystemConfiguration.Logger
             and set l = init () ; SystemConfiguration.Logger <- l
 
-        /// Gets or sets the default StoreProvider used by the client.
-        static member StoreProvider
+        /// Gets or sets the default StoreDefinition used by the client.
+        static member StoreDefinition
             with get () = init () ; StoreRegistry.DefaultStoreInfo.Definition
-            and set p = init () ; StoreRegistry.Activate(p, makeDefault = true) |> ignore
+            and set (p : StoreDefinition) = init () ; StoreRegistry.Activate(p, makeDefault = true) |> ignore
 
         /// Gets the path used by the client as a working directory.
         static member WorkingDirectory = init () ; SystemConfiguration.WorkingDirectory

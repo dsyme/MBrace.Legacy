@@ -112,7 +112,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Vagrant">
-      <HintPath>..\..\packages\Vagrant.0.2.3\lib\net45\Vagrant.dll</HintPath>
+      <HintPath>..\..\packages\Vagrant.0.2.4\lib\net45\Vagrant.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

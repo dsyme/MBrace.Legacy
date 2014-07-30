@@ -3,18 +3,25 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
-#r "MBrace.Azure.dll"
+//#I "/Users/eirik/Desktop/foo"
+#r "/Users/eirik/Desktop/foo/MBrace.Azure.dll"
 
 open Nessos.MBrace.Azure
 
+open Nessos.MBrace.Store
+
+open Nessos.MBrace.Runtime
+
 let conn = System.IO.File.ReadAllText("/mbrace/azure.txt")
-let azureProvider = StoreDefinition.Create<AzureStoreFactory>(conn)
+let azureDefinition = StoreDefinition.Create<AzureStoreFactory>(conn)
+
+MBraceSettings.StoreDefinition <- azureDefinition
 
 let runtime = MBrace.InitLocal(3, masterPort = 2675)
-//let runtime = MBrace.InitLocal(3, masterPort = 2675, storeProvider = azureProvider)
+//let runtime = MBrace.InitLocal(3, masterPort = 2675, storeDefinition = azureDefinition)
 //let nodes = Node.SpawnMultiple(3, masterPort = 2675)
-let n = MBraceNode.Spawn()
-n.SetStoreConfiguration azureProvider
+let n = Node.Spawn()
+n.SetStoreConfiguration azureDefinition
 
 
 runtime.Shutdown()

@@ -22,12 +22,9 @@
                     if missingDependencies.Length > 0 then
                         reply <| Value (MissingAssemblies missingDependencies)
                     else
-                        match StoreRegistry.TryActivate(info, makeDefault = true) with
-                        | Some _ -> 
-                            ctx.LogInfo <| sprintf "activated store '%s'." info.Id.AssemblyQualifiedName
-                            reply <| Value StoreLoadResponse.Success
-
-                        | None -> failwith "could not activate store '%s'." info.Id.AssemblyQualifiedName
+                        let info = StoreRegistry.Activate(info, makeDefault = true)
+                        ctx.LogInfo <| sprintf "activated store '%s'." info.Id.AssemblyQualifiedName
+                        reply <| Value StoreLoadResponse.Success
             with e ->
                 ctx.LogError e
                 reply <| Exception e
