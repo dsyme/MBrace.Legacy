@@ -806,46 +806,46 @@
         [<Test; PrimitivesCategory>]
         member test.``4. Primitives : StoreClient CloudRef`` () =
             let sc = StoreClient.Default
-            let c = Guid.NewGuid().ToString("N")
-            let cr = sc.CreateCloudRef(c, 42)
+            //let c = Guid.NewGuid().ToString("N")
+            let cr = sc.CreateCloudRef(42)
             cr.Value |> should equal 42
-            let cr' = sc.GetCloudRef(c, cr.Name) :?> ICloudRef<int>
+            let cr' = sc.GetCloudRef(cr.Name) :?> ICloudRef<int>
             cr'.Value |> should equal 42
-            sc.DeleteContainer(c)
+            sc.DeleteContainer()
 
         [<Test; PrimitivesCategory>]
         member test.``4. Primitives : StoreClient CloudSeq`` () =
             let sc = StoreClient.Default
-            let c = Guid.NewGuid().ToString("N")
-            let cr = sc.CreateCloudSeq(c, [42])
+            //let c = Guid.NewGuid().ToString("N")
+            let cr = sc.CreateCloudSeq([42])
             cr |> Seq.toList |> should equal [42]
-            let cr' = sc.GetCloudSeq(c, cr.Name) :?> ICloudSeq<int>
+            let cr' = sc.GetCloudSeq(cr.Name) :?> ICloudSeq<int>
             cr' |> Seq.toList |> should equal [42]
-            sc.DeleteContainer(c)
+            sc.DeleteContainer()
 
         [<Test; PrimitivesCategory>]
         member test.``4. Primitives : StoreClient CloudFile`` () =
             let sc = StoreClient.Default
-            let c = Guid.NewGuid().ToString("N")
+            //let c = Guid.NewGuid().ToString("N")
             let a = [|1uy..10uy|]
-            let cr = sc.CreateCloudFile(c, "cloudfile", fun stream -> stream.AsyncWrite(a) )
+            let cr = sc.CreateCloudFile("cloudfile", fun stream -> stream.AsyncWrite(a) )
             let l = cr.Read() |> Async.RunSynchronously
             l.AsyncRead(a.Length) |> Async.RunSynchronously |> should equal a
-            let cr' = sc.GetCloudFile(c, cr.Name) 
+            let cr' = sc.GetCloudFile( cr.Name) 
             let l' = cr.Read() |> Async.RunSynchronously
             l'.AsyncRead(a.Length) |> Async.RunSynchronously |> should equal a
-            sc.GetContainers() |> Seq.exists (fun n -> n = c) |> should equal true
-            sc.ContainerExists(c) |> should equal true
-            sc.DeleteContainer(c)
+            sc.GetContainers() |> Seq.exists (fun n -> n = MBraceSettings.DefaultContainer) |> should equal true
+            sc.ContainerExists(MBraceSettings.DefaultContainer) |> should equal true
+            sc.DeleteContainer()
 
         [<Test; PrimitivesCategory>]
         member test.``4. Primitives : StoreClient MutableCloudRef`` () =
             let sc = StoreClient.Default
-            let c = Guid.NewGuid().ToString("N")
-            let cr = sc.CreateMutableCloudRef(c, "mutablecloudref", -1)
+            //let c = Guid.NewGuid().ToString("N")
+            let cr = sc.CreateMutableCloudRef("mutablecloudref", -1)
             cr.Value |> should equal -1
-            let cr' = sc.GetMutableCloudRef(c, cr.Name) :?> IMutableCloudRef<int>
+            let cr' = sc.GetMutableCloudRef( cr.Name) :?> IMutableCloudRef<int>
             cr'.Value |> should equal -1
             cr.ForceUpdate(42) |> Async.RunSynchronously
             cr'.Value |> should equal 42
-            sc.DeleteContainer(c)
+            sc.DeleteContainer()

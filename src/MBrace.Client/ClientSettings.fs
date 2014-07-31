@@ -62,8 +62,10 @@ namespace Nessos.MBrace.Client
     type MBraceSettings private () =
 
         static let mutable timeout = 30000
+        static let mutable defaultContainer = None
 
         static let init = runOnce initClientConfiguration
+
         
         /// Gets the client's unique identifier.
         static member ClientId = init () ; VagrantRegistry.Instance.UUId
@@ -96,3 +98,14 @@ namespace Nessos.MBrace.Client
             and set t =
                 if t <= 0 then invalidArg "timeout" "must be non-negative."
                 timeout <- t
+
+        /// Gets or sets the default folder that will be used by any client store operations.
+        static member DefaultContainer 
+            with get () = 
+                init ()
+                match defaultContainer with 
+                | None -> 
+                    defaultContainer <- Some(sprintf "client%s" <| MBraceSettings.ClientId.ToString("N"))
+                    defaultContainer.Value
+                | Some c -> c
+            and set (container : string) = init () ; defaultContainer <- Some container

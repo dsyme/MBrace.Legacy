@@ -13,6 +13,7 @@
     type StoreClient internal (info : StoreInfo) =
 
         let newId () = Guid.NewGuid().ToString()
+        let defaultContainer = MBraceSettings.DefaultContainer
 
         static let registry = Atom.atom Map.empty<StoreId, StoreClient>
 
@@ -53,7 +54,7 @@
             info.CloudRefProvider.GetContainedRefs(container)
 
         /// <summary>
-        /// Returns a CloudRef that already exists in the specified contained with the given identifier.
+        /// Returns a CloudRef stored in the specified container with the given identifier.
         /// </summary>
         /// <param name="container">The folder to search.</param>
         /// <param name="id">The CloudRef's id.</param>
@@ -76,13 +77,58 @@
             Async.RunSynchronously <|info.CloudRefProvider.GetContainedRefs(container)
 
         /// <summary>
-        /// Returns a CloudRef that already exists in the specified contained with the given identifier.
+        /// Returns a CloudRef stored in the specified container with the given identifier.
         /// </summary>
         /// <param name="container">The folder to search.</param>
         /// <param name="id">The CloudRef's id.</param>
         member this.GetCloudRef(container : string, id : string) : ICloudRef =
             Async.RunSynchronously <| info.CloudRefProvider.GetExisting(container, id)
             
+
+        // Default container methods.
+
+        /// <summary>
+        /// Creates a new CloudRef in default container.
+        /// </summary>
+        /// <param name="value">The CloudRef's value.</param>
+        member this.CreateCloudRefAsync(value : 'T) : Async<ICloudRef<'T>> =
+            info.CloudRefProvider.Create(defaultContainer, newId(), value)
+            
+        /// <summary>
+        /// Returns an array of the CloudRefs contained in default container.
+        /// </summary>
+        member this.GetCloudRefsAsync() : Async<ICloudRef []> =
+            info.CloudRefProvider.GetContainedRefs(defaultContainer)
+
+        /// <summary>
+        /// Returns a CloudRef stored in default container with the given identifier.
+        /// </summary>
+        /// <param name="id">The CloudRef's id.</param>
+        member this.GetCloudRefAsync(id : string) : Async<ICloudRef> =
+            info.CloudRefProvider.GetExisting(defaultContainer, id)
+
+        /// <summary>
+        /// Creates a new CloudRef in default container.
+        /// </summary>
+        /// <param name="value">The CloudRef's value.</param>
+        member this.CreateCloudRef(value : 'T) : ICloudRef<'T> =
+            Async.RunSynchronously <| info.CloudRefProvider.Create(defaultContainer, newId(), value)
+        
+        /// <summary>
+        /// Returns an array of the CloudRefs contained in default container.
+        /// </summary>
+        member this.GetCloudRefs() : ICloudRef [] =
+            Async.RunSynchronously <|info.CloudRefProvider.GetContainedRefs(defaultContainer)
+
+        /// <summary>
+        /// Returns a CloudRef stored in default container with the given identifier.
+        /// </summary>
+        /// <param name="id">The CloudRef's id.</param>
+        member this.GetCloudRef(id : string) : ICloudRef =
+            Async.RunSynchronously <| info.CloudRefProvider.GetExisting(defaultContainer, id)
+
+
+
 
         //---------------------------------------------------------------------------------
         // CloudSeq
@@ -103,7 +149,7 @@
             info.CloudSeqProvider.GetContainedSeqs(container)
 
         /// <summary>
-        /// Returns a CloudSeq that already exists in the specified contained with the given identifier.
+        /// Returns a CloudSeq stored in the specified container with the given identifier.
         /// </summary>
         /// <param name="container">The folder to search.</param>
         /// <param name="id">The CloudSeq's id.</param>
@@ -126,12 +172,57 @@
             Async.RunSynchronously <| info.CloudSeqProvider.GetContainedSeqs(container)
 
         /// <summary>
-        ///     Returns a CloudSeq that already exists in the specified contained with the given identifier.
+        ///     Returns a CloudSeq stored in the specified container with the given identifier.
         /// </summary>
         /// <param name="container">The folder to search.</param>
         /// <param name="id">The CloudSeq's id.</param>
         member this.GetCloudSeq(container : string, id : string) : ICloudSeq =
             Async.RunSynchronously <| info.CloudSeqProvider.GetExisting(container, id)
+
+
+
+        // Default container methods.
+
+        /// <summary>
+        ///     Creates a new CloudSeq in default container.
+        /// </summary>
+        /// <param name="values">The source sequence.</param>
+        member this.CreateCloudSeqAsync(values : 'T seq) : Async<ICloudSeq<'T>> =
+            info.CloudSeqProvider.Create(defaultContainer, newId(), values)
+
+        /// <summary>
+        ///     Returns an array of the CloudSeqs contained default container.
+        /// </summary>
+        member this.GetCloudSeqsAsync() : Async<ICloudSeq []> =
+            info.CloudSeqProvider.GetContainedSeqs(defaultContainer)
+
+        /// <summary>
+        /// Returns a CloudSeq stored in default container with the given identifier.
+        /// </summary>
+        /// <param name="id">The CloudSeq's id.</param>
+        member this.GetCloudSeqAsync(id : string) : Async<ICloudSeq> =
+            info.CloudSeqProvider.GetExisting(defaultContainer, id)
+
+        /// <summary>
+        ///     Creates a new CloudSeq in default container.
+        /// </summary>
+        /// <param name="values">The source sequence.</param>
+        member this.CreateCloudSeq(values : 'T seq) : ICloudSeq<'T> =
+            Async.RunSynchronously <| info.CloudSeqProvider.Create(defaultContainer, newId(), values)
+
+        /// <summary>
+        ///     Returns an array of the CloudSeqs contained in default container.
+        /// </summary>
+        member this.GetCloudSeqs() : ICloudSeq [] =
+            Async.RunSynchronously <| info.CloudSeqProvider.GetContainedSeqs(defaultContainer)
+
+        /// <summary>
+        ///     Returns a CloudSeq stored in default container with the given identifier.
+        /// </summary>
+        /// <param name="id">The CloudSeq's id.</param>
+        member this.GetCloudSeq(id : string) : ICloudSeq =
+            Async.RunSynchronously <| info.CloudSeqProvider.GetExisting(defaultContainer, id)
+
 
         //---------------------------------------------------------------------------------
         // CloudFile
@@ -177,6 +268,50 @@
         /// <param name="name">The filename.</param>
         member this.GetCloudFile(container : string, id : string) : ICloudFile =
             Async.RunSynchronously <| info.CloudFileProvider.GetExisting(container, id)
+
+
+        
+        // Default container methods.
+
+        /// <summary>
+        ///     Create a new file in the storage with the specified name in default container.
+        ///     Use the serialize function to write to the underlying stream.
+        /// </summary>
+        /// <param name="name">The (file)name of the CloudFile.</param>
+        /// <param name="writer">The function that will write data on the underlying stream.</param>
+        member this.CreateCloudFileAsync(name : string, writer : Stream -> Async<unit>) : Async<ICloudFile> =
+            info.CloudFileProvider.Create(defaultContainer, name, writer)
+
+        /// <summary> Return all the files (as CloudFiles) in default container.</summary>
+        member this.GetCloudFilesAsync() : Async<ICloudFile []> =
+            info.CloudFileProvider.GetContainedFiles(defaultContainer)
+
+        /// <summary> Create a CloudFile from an existing file in default container.</summary>
+        /// <param name="name">The filename.</param>
+        member this.GetCloudFileAsync(name : string) : Async<ICloudFile> =
+            info.CloudFileProvider.GetExisting(defaultContainer, name)
+            
+        /// <summary>
+        ///     Create a new file in the storage with the specified name in default container.
+        ///     Use the serialize function to write to the underlying stream.
+        /// </summary>
+        /// <param name="name">The (file)name of the CloudFile.</param>
+        /// <param name="writer">The function that will write data on the underlying stream.</param>
+        member this.CreateCloudFile(name : string, writer : Stream -> Async<unit>) : ICloudFile =
+            Async.RunSynchronously <| info.CloudFileProvider.Create(defaultContainer, name, writer)
+
+        /// <summary> Return all the files (as CloudFiles) in default container.</summary>
+        member this.GetCloudFiles() : ICloudFile [] =
+            Async.RunSynchronously <| info.CloudFileProvider.GetContainedFiles(defaultContainer)
+
+        /// <summary> Create a CloudFile from an existing file in default container.</summary>
+        /// <param name="name">The filename.</param>
+        member this.GetCloudFile(id : string) : ICloudFile =
+            Async.RunSynchronously <| info.CloudFileProvider.GetExisting(defaultContainer, id)
+
+
+
+
             
         //---------------------------------------------------------------------------------
         // MutableCloudRef
@@ -218,6 +353,55 @@
         member this.GetMutableCloudRef(container : string, id : string) : IMutableCloudRef =
             Async.RunSynchronously <| info.MutableCloudRefProvider.GetExisting(container, id)
 
+
+
+        // Default container methods.
+
+        /// <summary>Creates a new MutableCloudRef in default container with the specified identifier.</summary>
+        /// <param name="id">The identifier of the MutableCloudRef in the underlying store.</param>
+        /// <param name="value">The value to be stored.</param>
+        member this.CreateMutableCloudRefAsync(id : string,  value : 'T) : Async<IMutableCloudRef<'T>> =
+            info.MutableCloudRefProvider.Create(defaultContainer, id, value)
+           
+        /// <summary>Returns an array of all the MutableCloudRefs in default container.</summary>
+        member this.GetMutableCloudRefsAsync() : Async<IMutableCloudRef []> =
+            info.MutableCloudRefProvider.GetContainedRefs(defaultContainer)
+
+        /// <summary>Returns the MutableCloudRef in default container with the given id.</summary>
+        /// <param name="id">The identifier of the MutableCloudRef in the underlying store.</param>
+        member this.GetMutableCloudRefAsync(id : string) : Async<IMutableCloudRef> =
+            info.MutableCloudRefProvider.GetExisting(defaultContainer, id)
+            
+
+        /// <summary>Creates a new MutableCloudRef in default container with the specified identifier.</summary>
+        /// <param name="id">The identifier of the MutableCloudRef in the underlying store.</param>
+        /// <param name="value">The value to be stored.</param>
+        member this.CreateMutableCloudRef(id : string, value : 'T) : IMutableCloudRef<'T> =
+            Async.RunSynchronously <| info.MutableCloudRefProvider.Create(defaultContainer, id, value)
+
+        /// <summary>Returns an array of all the MutableCloudRefs in default container.</summary>
+        member this.GetMutableCloudRefs() : IMutableCloudRef [] =
+            Async.RunSynchronously <| info.MutableCloudRefProvider.GetContainedRefs(defaultContainer)
+
+        /// <summary>Returns the MutableCloudRef in default container with the given id.</summary>
+        /// <param name="id">The identifier of the MutableCloudRef in the underlying store.</param>
+        member this.GetMutableCloudRef(id : string) : IMutableCloudRef =
+            Async.RunSynchronously <| info.MutableCloudRefProvider.GetExisting(defaultContainer, id)
+
+
+        // Default id methods.
+
+        /// <summary>Creates a new MutableCloudRef in default container.</summary>
+        /// <param name="value">The value to be stored.</param>
+        member this.CreateMutableCloudRefAsync(value : 'T) : Async<IMutableCloudRef<'T>> =
+            info.MutableCloudRefProvider.Create(defaultContainer, newId(), value)
+   
+        /// <summary>Creates a new MutableCloudRef in default container.</summary>
+        /// <param name="value">The value to be stored.</param>
+        member this.CreateMutableCloudRef(value : 'T) : IMutableCloudRef<'T> =
+            Async.RunSynchronously <| info.MutableCloudRefProvider.Create(defaultContainer, newId(), value)
+
+
         //---------------------------------------------------------------------------------
         // Misc
 
@@ -250,4 +434,14 @@
         /// <param name="container">The container to search for.</param>
         member this.ContainerExists(container : string) : bool =
             Async.RunSynchronously <| this.ContainerExistsAsync(container)
+
+        // Default container methods.
+
+        /// <summary>Deletes the default container from store.</summary>
+        member this.DeleteContainerAsync() : Async<unit> =
+            info.Store.DeleteContainer(defaultContainer)
+
+        /// <summary>Deletes the default container from store.</summary>
+        member this.DeleteContainer() : unit =
+            Async.RunSynchronously <| this.DeleteContainerAsync(defaultContainer)
         
