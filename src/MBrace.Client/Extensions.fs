@@ -18,9 +18,6 @@
     /// Cloud Process Identifier.
     type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
 
-    /// Store configuration descriptor (Implementation/Connection string).
-    type StoreDefinition = Nessos.MBrace.Store.StoreDefinition
-
     /// Compiled cloud computation package with metadata.
     type CloudComputation<'T> = Nessos.MBrace.Runtime.Compiler.CloudComputation<'T>
 

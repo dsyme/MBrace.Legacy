@@ -3,19 +3,15 @@
     open System
     open System.IO
     open System.Security.AccessControl
-    open System.Runtime.CompilerServices
+    open System.Runtime.Serialization
 
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
 
-    /// An ICloudStore implementation that uses the local filesystem as a backend.
-    type FileSystemStore(path : string, ?name) =
-        let path = Path.GetFullPath path
-
-        do if not <| Directory.Exists path then
-            retry (RetryPolicy.Retry(2, 0.5<sec>)) (fun () -> Directory.CreateDirectory path |> ignore)
-
-        let name = defaultArg name "FileSystem"
+    /// <summary>
+    ///     Store implementation that uses a  filesystem as backend.
+    /// </summary>
+    type FileSystemStore private (path : string) =
 
         let fullPath =
             let uri = Uri(path)
@@ -40,9 +36,46 @@
             | None -> return! trap path mode access share
         }
 
+        /// <summary>
+        ///     Creates a new FileSystemStore instance on given path.
+        /// </summary>
+        /// <param name="path">Local or UNC path.</param>
+        /// <param name="create">Create directory if missing. Defaults to false</param>
+        /// <param name="cleanup">Cleanup directory if it exists. Defaults to false</param>
+        static member Create(path : string, ?create, ?cleanup) =
+            let create = defaultArg create false
+            let cleanup = defaultArg cleanup false
+
+            let path = Path.GetFullPath path
+
+            if Directory.Exists path then
+                if cleanup then
+                    let cleanup () =
+                        Directory.EnumerateDirectories path |> Seq.iter (fun d -> Directory.Delete(d, true))
+                        Directory.EnumerateFiles path |> Seq.iter File.Delete
+                        
+                    retry (RetryPolicy.Retry(2, 0.5<sec>)) cleanup
+
+            elif create then
+                retry (RetryPolicy.Retry(2, 0.5<sec>)) (fun () -> Directory.CreateDirectory path |> ignore)
+            else
+                raise <| new DirectoryNotFoundException(path)
+
+            new FileSystemStore(path)
+
+        /// <summary>
+        ///     Initializes a FileSystemStore instance on the local system's temp path.
+        /// </summary>
+        static member LocalTemp =
+            let localFsPath = Path.Combine(Path.GetTempPath(), "mbrace-localfs")
+            FileSystemStore.Create(localFsPath, create = true, cleanup = false)
+
         interface ICloudStore with
-            override self.Name = name
-            override self.EndpointId = fullPath
+            override self.Name = "FileSystem"
+            override self.Id = fullPath
+
+            override self.GetStoreConfiguration () =
+                new FileSystemStoreConfiguration(path) :> ICloudStoreConfiguration
 
             override self.CreateImmutable(folder : string, file : string, serialize : Stream -> Async<unit>, asFile : bool) =
                 async {
@@ -169,10 +202,22 @@
                     return fs, tag
                 }
 
-    /// <summary>
-    ///     FileSystem Store factory implementation.
-    /// </summary>
-    type FileSystemStoreFactory () =
-        interface ICloudStoreFactory with
-            member this.CreateStoreFromConnectionString (path : string) = 
-                FileSystemStore(path) :> ICloudStore
+    /// FileSystemStore configuration object
+    and internal FileSystemStoreConfiguration (path : string) =
+
+        /// <summary>
+        ///     Initializes a FileSystemStore configuration file
+        /// </summary>
+        /// <param name="path"></param>
+        static member Create(path : string) = new FileSystemStoreConfiguration(path)
+
+        interface ICloudStoreConfiguration with
+            member __.Id = sprintf "FileSystemStore:%s" path
+            member this.Init () = FileSystemStore.Create path :> ICloudStore
+
+        private new (si : SerializationInfo, _ : StreamingContext) =
+            new FileSystemStoreConfiguration(si.Read "path")
+
+        interface ISerializable with
+            member __.GetObjectData(si : SerializationInfo, _ : StreamingContext) =
+                si.Write "path" path

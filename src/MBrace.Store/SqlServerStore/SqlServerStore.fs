@@ -5,43 +5,50 @@
     open System.Data
     open System.Data.SqlClient
     open System.Collections.Generic
+    open System.Runtime.Serialization
+
+    open Nessos.MBrace.Utils
     
     /// An ICloudStore implementation that uses a SQLServer instance as a backend.
-    type SqlServerStore(connectionString: string, ?name : string) as this =
-        let name = defaultArg name "SqlServer"
+    type SqlServerStore private (connectionString: string, sqlHelper : SqlHelper) as this =
 
         let is = this :> ICloudStore
 
-        let helper = new SqlHelper(connectionString)
+        static member Create(connectionString : string) =
+            let sqlHelper = new SqlHelper(connectionString)
+            do sqlHelper.exec """
+                if object_id('dbo.Blobs', 'U') is null
+                    CREATE TABLE [dbo].[Blobs] (
+                        [Folder] VARCHAR (50)    NOT NULL,
+                        [File]   VARCHAR (50)    NOT NULL,
+                        [Tag]    VARCHAR (50)    NULL,
+                        [Value]  VARBINARY (MAX) NOT NULL,
+                        CONSTRAINT [PK_Path] PRIMARY KEY CLUSTERED ([Folder] ASC, [File] ASC)
+                    );
+            """ [||]
+            |> Async.RunSynchronously
 
-        do helper.exec """
-            if object_id('dbo.Blobs', 'U') is null
-                CREATE TABLE [dbo].[Blobs] (
-                    [Folder] VARCHAR (50)    NOT NULL,
-                    [File]   VARCHAR (50)    NOT NULL,
-                    [Tag]    VARCHAR (50)    NULL,
-                    [Value]  VARBINARY (MAX) NOT NULL,
-                    CONSTRAINT [PK_Path] PRIMARY KEY CLUSTERED ([Folder] ASC, [File] ASC)
-                );
-        """ [||]
-        |> Async.RunSynchronously
+            new SqlServerStore(connectionString, sqlHelper)
 
         interface ICloudStore with
-            override this.Name = name
-            override this.EndpointId = connectionString
+            override this.Name = "SqlServerStore"
+            override this.Id = connectionString
+
+            override this.GetStoreConfiguration () = 
+                new SqlServerStoreConfiguration(connectionString) :> ICloudStoreConfiguration           
 
             override this.CreateImmutable (folder, file, serialize, _) = async {
                     let ms = new MemoryStream()
                     do! serialize ms
                     let bytes = ms.ToArray()
                     return! 
-                        helper.exec "insert into Blobs (Folder, [File], Value) values (@folder, @file, @value)"
+                        sqlHelper.exec "insert into Blobs (Folder, [File], Value) values (@folder, @file, @value)"
                            [| new SqlParameter("@folder", folder); new SqlParameter("@file", file); new SqlParameter("@value", bytes) |]
                 }
 
             override this.ReadImmutable(folder : string, file : string) : Async<Stream> =
                 async {
-                    return! helper.getStream "select Value from Blobs where Folder = @folder and [File] = @file"
+                    return! sqlHelper.getStream "select Value from Blobs where Folder = @folder and [File] = @file"
                                 [| new SqlParameter("@folder", folder); new SqlParameter("@file", file) |]
                 }
                 
@@ -56,36 +63,36 @@
                 
             override this.GetAllFiles folder =
                 async {
-                    return! helper.collect "select [File] from Blobs where Folder = @folder"
+                    return! sqlHelper.collect "select [File] from Blobs where Folder = @folder"
                                 [| new SqlParameter("@folder", folder) |]
                 }
                 
             override this.GetAllContainers () =
                 async {
-                    return! helper.collect "select distinct Folder from Blobs" [||]
+                    return! sqlHelper.collect "select distinct Folder from Blobs" [||]
                 }
                         
             override this.ContainerExists folder =
                 async {
-                    return! helper.test "select Folder from Blobs where Folder = @folder"
+                    return! sqlHelper.test "select Folder from Blobs where Folder = @folder"
                                 [| new SqlParameter("@folder", folder) |]
                 }
 
             override this.Exists (folder, file) =
                 async {
-                    return! helper.test "select Folder from Blobs where Folder = @folder and [File] = @file"
+                    return! sqlHelper.test "select Folder from Blobs where Folder = @folder and [File] = @file"
                                 [| new SqlParameter("@folder", folder); new SqlParameter("@file", file) |]
                 }
 
             override this.DeleteContainer folder =
                 async {
-                    return! helper.exec "delete from Blobs where Folder = @folder"
+                    return! sqlHelper.exec "delete from Blobs where Folder = @folder"
                                 [| new SqlParameter("@folder", folder) |]                    
                 }
 
             override this.Delete (folder, file) =
                 async {
-                    return! helper.exec "delete from Blobs where Folder = @folder and [File] = @file"
+                    return! sqlHelper.exec "delete from Blobs where Folder = @folder and [File] = @file"
                                 [| new SqlParameter("@folder", folder); new SqlParameter("@file", file) |]                    
                 }
 
@@ -96,18 +103,18 @@
                     let bytes = ms.ToArray()
 
                     return!
-                        helper.execWithNewTag "insert into Blobs (Folder, [File], Value, Tag) values (@folder, @file, @value, @tag)"
+                        sqlHelper.execWithNewTag "insert into Blobs (Folder, [File], Value, Tag) values (@folder, @file, @value, @tag)"
                             [| new SqlParameter("@folder", folder); new SqlParameter("@file", file); new SqlParameter("@value", bytes) |]
                 }
 
             override this.ReadMutable(folder, file) = async {
-                return! helper.getStreamTag "select Value, Tag from Blobs where Folder = @folder and [File] = @file"
+                return! sqlHelper.getStreamTag "select Value, Tag from Blobs where Folder = @folder and [File] = @file"
                             [| new SqlParameter("@folder", folder); new SqlParameter("@file", file) |]
                 }
 
             override this.TryUpdateMutable(folder, file, serialize, tag) = async {
                 return!
-                    helper.execTransaction (fun trans -> async {
+                    sqlHelper.execTransaction (fun trans -> async {
                         let ms = new MemoryStream()
                         do! serialize ms
                         let bytes = ms.ToArray()
@@ -133,14 +140,19 @@
                     do! serialize ms
                     let bytes = ms.ToArray()
 
-                    return! helper.execWithNewTag "update Blobs set Value = @value, Tag = @tag where Folder = @folder and [File] = @file"
+                    return! sqlHelper.execWithNewTag "update Blobs set Value = @value, Tag = @tag where Folder = @folder and [File] = @file"
                                 [| new SqlParameter("@folder", folder); new SqlParameter("@file", file); new SqlParameter("@value", bytes) |]
                 }
 
-    /// <summary>
-    ///     SqlServer Store factory implementation.
-    /// </summary>
-    type SqlServerStoreFactory () =
-        interface ICloudStoreFactory with
-            member this.CreateStoreFromConnectionString (connectionString : string) = 
-                SqlServerStore(connectionString) :> ICloudStore
+    and internal SqlServerStoreConfiguration (connectionString : string) =
+
+        private new (si : SerializationInfo, _ : StreamingContext) =
+            new SqlServerStoreConfiguration(si.Read "connectionString")
+
+        interface ISerializable with
+            member __.GetObjectData(si : SerializationInfo, _ : StreamingContext) =
+                si.Write "connectionString" connectionString
+
+        interface ICloudStoreConfiguration with
+            member this.Id = connectionString
+            member this.Init () = SqlServerStore.Create connectionString :> ICloudStore

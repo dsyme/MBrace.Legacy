@@ -1,7 +1,7 @@
 ﻿
 /// A stream wrapper that fails when the size of the stream gt maxSize.
 /// 'Write'-only, no data actually written.
-module FixedStream 
+module internal FixedStream 
     open System
     open System.IO
 

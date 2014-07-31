@@ -60,12 +60,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="ICloudStore.fs" />
-    <Compile Include="StoreId.fs" />
     <Compile Include="FileSystemStore.fs" />
     <Compile Include="SqlServerStore\Common.fs" />
     <Compile Include="SqlServerStore\SqlServerStore.fs" />
     <None Include="SqlServerStore\Test.fsx" />
-    <Compile Include="StoreDefinition.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

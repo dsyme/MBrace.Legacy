@@ -1,20 +1,21 @@
 ﻿namespace Nessos.MBrace.Store.Tests
 
     open System
-    open System.IO
     open System.Collections.Generic
+    open System.IO
+    open System.Reflection
 
     open Microsoft.FSharp.Quotations
 
     open NUnit.Framework
     open FsUnit
 
+    open Nessos.FsPickler
     open Nessos.MBrace.Store
-    open System.Reflection
 
     [<AutoOpen>]
     module private PicklerHelper =
-        let private pickler = Nessos.FsPickler.FsPickler.CreateBinary()
+        let private pickler = FsPickler.CreateBinary()
         let serialize<'T>   (value : 'T) (stream : Stream) = async { do pickler.Serialize<'T>(stream, value, leaveOpen = true) }
         let deserialize<'T> (stream : Stream) = pickler.Deserialize<'T>(stream, leaveOpen = true)
 
@@ -47,7 +48,7 @@
 
         [<Test>]
         member test.``A.0 UUID is not null or empty.`` () = 
-            String.IsNullOrEmpty test.Store.EndpointId
+            String.IsNullOrEmpty test.Store.Id
             |> should equal false
 
         [<Test>]
@@ -62,6 +63,17 @@
             |> Async.RunSynchronously
             |> Seq.exists ((=) test.Temp)
             |> should equal false
+
+        [<Test>]
+        member test.``A.3 ICloudStoreConfiguration should generate identical instances`` () =
+            let store = test.Store
+            let config = store.GetStoreConfiguration()
+            let config' = FsPickler.Clone config
+            let store' = config'.Init()
+
+            store'.GetType() |> should equal (store.GetType())
+            store'.Name |> should equal store.Name
+            store.Id |> should equal store.Id
 
         [<Test>]
         member test.``B.0 Create a file and Check if exists.`` () = 
@@ -306,8 +318,7 @@
         inherit ``Store tests`` ()
 
         let testDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString())
-        let factory = new FileSystemStoreFactory() :> ICloudStoreFactory
-        let store = factory.CreateStoreFromConnectionString(testDir)
+        let store = FileSystemStore.Create(testDir, create = true, cleanup = true) :> ICloudStore
 
         override test.Store = store
 
@@ -316,7 +327,6 @@
         inherit ``Store tests`` ()
 
         let conn = File.ReadAllText(Path.Combine(__SOURCE_DIRECTORY__, "../temp/sqlserver.txt"))
-        let factory = new SqlServerStoreFactory() :> ICloudStoreFactory
-        let store = factory.CreateStoreFromConnectionString(conn)
+        let store = SqlServerStore.Create conn :> ICloudStore
         
         override test.Store = store

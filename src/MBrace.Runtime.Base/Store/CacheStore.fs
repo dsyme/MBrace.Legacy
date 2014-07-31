@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Store
+﻿namespace Nessos.MBrace.Runtime
 
     open System
     open System.IO
@@ -7,6 +7,7 @@
     open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.Retry
+    open Nessos.MBrace.Store
 
     // TODO : CloudSeq & ClouFile only delete from target store and not cache
     // this might lead to confusing exception messages if attempting to read from

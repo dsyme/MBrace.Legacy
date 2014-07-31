@@ -17,12 +17,12 @@
 
         static let registry = Atom.atom Map.empty<StoreId, StoreClient>
 
-        /// Gets the Store definition for given client instance.
-        member __.StoreDefinition = info.Definition
+        /// Gets the Store name for given client instance.
+        member __.Name = info.Store.Name
 
         /// Initializes a StoreClient for given store definition
-        static member Create(definition : StoreDefinition) =
-            let info = StoreRegistry.Activate(definition, makeDefault = false)
+        static member Create(store : ICloudStore) =
+            let info = StoreRegistry.Register(store, makeDefault = false)
             new StoreClient(info)
 
         /// Gets the default StoreClient that corresponds to the current StoreProvider.

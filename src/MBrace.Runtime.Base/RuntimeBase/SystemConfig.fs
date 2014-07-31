@@ -100,7 +100,7 @@
                     FsPickler.CreateBinary())
 
             // activate local cache
-            let localCache = StoreDefinition.FileSystem(localCacheDir)
+            let localCache = FileSystemStore.Create localCacheDir
             do StoreRegistry.ActivateLocalCacheStore(localCache)
 
             // register logger

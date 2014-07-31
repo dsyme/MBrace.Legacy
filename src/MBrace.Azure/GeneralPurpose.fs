@@ -7,13 +7,13 @@
     open Microsoft.WindowsAzure.Storage.Blob
     open Microsoft.WindowsAzure.Storage.Table
 
-    type GeneralPurpose (conn) =
+    type internal GeneralPurpose (account : CloudStorageAccount) =
 
-        let blobClient () = Clients.getBlobClient conn
-        let tableClient () = Clients.getTableClient conn
+        let blobClient () = Clients.getBlobClient account
+        let tableClient () = Clients.getTableClient account
         let getTable name = tableClient().GetTableReference(name)
-        let immblob  = ImmutableBlobStoreProvider (conn)
-        let immtable = ImmutableTableStoreProvider(conn)
+        let immblob  = ImmutableBlobStoreProvider (account)
+        let immtable = ImmutableTableStoreProvider(account)
 
         let getReadBlob (folder, file)  =
             let container = (blobClient()).GetContainerReference(folder)

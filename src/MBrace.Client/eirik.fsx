@@ -3,25 +3,24 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
-//#I "/Users/eirik/Desktop/foo"
-#r "/Users/eirik/Desktop/foo/MBrace.Azure.dll"
-
+#r "../../bin/MBrace.Azure.dll"
+open Nessos.MBrace.Store
 open Nessos.MBrace.Azure
 
-open Nessos.MBrace.Store
+let azureConn = System.IO.File.ReadAllText("/mbrace/azure.txt")
+let azureStore = AzureStore.Create azureConn
 
-open Nessos.MBrace.Runtime
+MBraceSettings.SetDefaultStore azureStore
+MBraceSettings.DefaultStore
 
-let conn = System.IO.File.ReadAllText("/mbrace/azure.txt")
-let azureDefinition = StoreDefinition.Create<AzureStoreFactory>(conn)
+let runtime = MBrace.InitLocal(3, masterPort = 2673)
+//let runtime = MBrace.InitLocal(3, masterPort = 2673, store = azureStore)
+//let nodes = Node.SpawnMultiple(3, masterPort = 2673)
 
-MBraceSettings.StoreDefinition <- azureDefinition
-
-let runtime = MBrace.InitLocal(3, masterPort = 2675)
-//let runtime = MBrace.InitLocal(3, masterPort = 2675, storeDefinition = azureDefinition)
-//let nodes = Node.SpawnMultiple(3, masterPort = 2675)
 let n = Node.Spawn()
-n.SetStoreConfiguration azureDefinition
+n.SetStoreConfiguration azureStore
+n.SetStoreConfiguration FileSystemStore.LocalTemp
+runtime.Attach n
 
 
 runtime.Shutdown()
@@ -58,12 +57,3 @@ x.Value
 let comp = Array.init 1000 (fun _ -> Cloud.Sleep 500 ) |> Cloud.Parallel
 
 runtime.Run comp
-
-runtime.ShowInfo()
-
-runtime.ShowProcessInfo()
-
-let p = runtime.GetProcess<unit []> 6521
-
-p
-

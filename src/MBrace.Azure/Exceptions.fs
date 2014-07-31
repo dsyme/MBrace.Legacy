@@ -7,7 +7,7 @@
     open Microsoft.WindowsAzure.Storage.Table
 
     [<AutoOpen>]
-    module StorageExceptions =
+    module internal StorageExceptions =
         // http://msdn.microsoft.com/en-us/library/windowsazure/dd179357.aspx
         // http://msdn.microsoft.com/en-us/library/windowsazure/dd179438.aspx
         // http://msdn.microsoft.com/en-us/library/windowsazure/dd179439.aspx

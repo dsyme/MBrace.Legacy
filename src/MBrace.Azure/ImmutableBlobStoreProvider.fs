@@ -6,9 +6,9 @@
     open Microsoft.WindowsAzure
     open Microsoft.WindowsAzure.Storage
 
-    type ImmutableBlobStoreProvider (connectionString : string) =
+    type internal ImmutableBlobStoreProvider (account : CloudStorageAccount) =
     
-        let getClient () = Clients.getBlobClient connectionString
+        let getClient () = Clients.getBlobClient account
 
         let getReadBlob (folder, file) = async { 
             let container = (getClient()).GetContainerReference(folder)

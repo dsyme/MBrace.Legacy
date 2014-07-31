@@ -125,21 +125,21 @@
         member n.Ping(?timeout: int) : TimeSpan = n.PingAsync(?timeout = timeout) |> Async.RunSynchronously
 
         /// <summary>
-        ///     Asynchronously assigns store configuration to the remote Node.
+        ///     Asynchronously assigns a cloud storage definition to be used by the node.
         /// </summary>
         /// <param name="provider">Store connection definition.</param>
-        member __.SetStoreConfigurationAsync (provider : StoreDefinition) = async {
-            let info = StoreRegistry.Activate(provider, makeDefault = false)
+        member __.SetStoreAsync (store : ICloudStore) = async {
+            let info = StoreRegistry.Register(store, makeDefault = false)
             let! storeManager = nodeRef.PostWithReply(GetStoreManager, MBraceSettings.DefaultTimeout)
             return! StoreManager.uploadStore info storeManager
         }
 
         /// <summary>
-        ///     Assigns store configuration to the remote Node.
+        ///     Assigns a cloud storage definition to be used by the node.
         /// </summary>
         /// <param name="provider">Store connection definition.</param>
-        member __.SetStoreConfiguration (provider : StoreDefinition) = 
-            __.SetStoreConfigurationAsync(provider) |> Async.RunSynchronously
+        member __.SetStore (store : ICloudStore) = 
+            __.SetStoreAsync(store) |> Async.RunSynchronously
 
         /// <summary>
         ///     Asynchronously returns a manager object for handling storage of remote Node.
@@ -334,16 +334,16 @@
         /// <param name="workingDirectory">The path to be used as a working directory.</param>
         /// <param name="useTemporaryWorkDir">Use a temporary folder as a working directory.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
+        /// <param name="store">Store instance to be used with the Node.</param>
         static member SpawnAsync(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?storeDefinition : StoreDefinition) : Async<Node> = 
+                                    ?background : bool, ?store : ICloudStore) : Async<Node> = 
             async {
                 let debug = defaultArg debug false
                 let useTemporaryWorkDir = defaultArg useTemporaryWorkDir false
                 let workerPorts = defaultArg workerPorts []
                 let logFiles = defaultArg logFiles []
-                let storeDefinition = defaultArg storeDefinition MBraceSettings.StoreDefinition
+                let store = defaultArg store StoreRegistry.DefaultStoreInfo.Store
 
                 // build arguments
                 let args =
@@ -364,7 +364,7 @@
         
                 let! node = Node.SpawnAsync(args, ?background = background)
 
-                do! node.SetStoreConfigurationAsync storeDefinition
+                do! node.SetStoreAsync store
 
                 return node
             }
@@ -383,14 +383,14 @@
         /// <param name="workingDirectory">The path to be used as a working directory.</param>
         /// <param name="useTemporaryWorkDir">Use a temporary folder as a working directory.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
+        /// <param name="store">Store instance to be used with the Node.</param>
         static member Spawn(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?storeDefinition : StoreDefinition) : Node =
+                                    ?background : bool, ?store : ICloudStore) : Node =
 
             Node.SpawnAsync(?hostname = hostname, ?primaryPort = primaryPort, ?workerPorts = workerPorts, ?logFiles = logFiles,
                                         ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?workingDirectory = workingDirectory,
-                                        ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?storeDefinition = storeDefinition)
+                                        ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?store = store)
             |> Async.RunSynchronously
 
         /// <summary>
@@ -406,14 +406,14 @@
         /// <param name="permissions">Permissions for all nodes.</param>
         /// <param name="debug">Run in debug mode.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
+        /// <param name="store">Store instance to be used with the Node.</param>
         static member SpawnMultipleAsync(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : Async<Node list> =
+                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?store : ICloudStore) : Async<Node list> =
         
             let spawnSingle primary pool =
                     Node.SpawnAsync(?hostname = hostname, primaryPort = primary, workerPorts = pool, ?logFiles = logFiles,
                                             ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?background = background,
-                                                    ?storeDefinition = storeDefinition, useTemporaryWorkDir = true)
+                                                    ?store = store, useTemporaryWorkDir = true)
             async {
                 let workerPortsPerNode = defaultArg workerPortsPerNode 7
 
@@ -451,12 +451,12 @@
         /// <param name="permissions">Permissions for all nodes.</param>
         /// <param name="debug">Run in debug mode.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
-        /// <param name="storeDefinition">The Store provider to be used as the Node default.</param>
+        /// <param name="store">Store instance to be used with the Node.</param>
         static member SpawnMultiple(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?storeDefinition : StoreDefinition) : Node list =
+                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?store : ICloudStore) : Node list =
             Node.SpawnMultipleAsync(nodeCount, ?masterPort = masterPort, ?workerPortsPerNode = workerPortsPerNode, ?hostname = hostname,
                                             ?logFiles = logFiles, ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, 
-                                            ?background = background, ?storeDefinition = storeDefinition)
+                                            ?background = background, ?store = store)
             |> Async.RunSynchronously
 
         /// <summary>

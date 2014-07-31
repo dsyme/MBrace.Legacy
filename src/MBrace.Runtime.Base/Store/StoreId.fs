@@ -1,4 +1,4 @@
-﻿namespace Nessos.MBrace.Store
+﻿namespace Nessos.MBrace.Runtime
 
     open System
     open System.Text
@@ -28,7 +28,7 @@
         /// Generates a store identifier from given instance.
         static member Generate(store : ICloudStore) =
             let aqn = store.GetType().AssemblyQualifiedName
-            let hc = Hashcode.compute store.EndpointId
+            let hc = Hashcode.compute store.Id
             new StoreId(aqn, hc)
 
         member private this.CompareTo (that : StoreId) =
@@ -38,7 +38,7 @@
 
         override id.Equals(o:obj) =
             match o with
-            | :? StoreId as id' -> id.CompareTo id = 0
+            | :? StoreId as id' -> id.CompareTo id' = 0
             | _ -> false
 
         override id.GetHashCode() = hash (assemblyQualifiedName, hashcode)

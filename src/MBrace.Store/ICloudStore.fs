@@ -2,18 +2,40 @@
 
     open System
     open System.IO
+    open System.Runtime.Serialization
 
     /// A tag used by MutableCloudRefs to control concurrency.
     type Tag = string
 
-    /// Cloud filesystem abstraction.
-    type ICloudStore =
+    /// <summary>
+    ///     Serializable cloud store configuration and factory.
+    /// </summary>
+    type ICloudStoreConfiguration =
+        inherit ISerializable
 
-        /// A description of the implementation
+        /// Configuration identifier
+        abstract Id : string
+
+        /// <summary>
+        ///     Initializes CloudStore instance for given configuration.
+        /// </summary>
+        abstract Init: unit -> ICloudStore
+
+
+    /// <summary>
+    ///     Cloud storage abstraction.  
+    /// </summary>
+    and ICloudStore =
+
+        /// Store implementation name
         abstract Name : string
 
-        /// Unique store endpoint identifier
-        abstract EndpointId : string
+        /// Store endpoint identifier
+        abstract Id : string
+
+        /// Returns a serializable store configuration object
+        /// necessary for remotely activating the store instance.
+        abstract GetStoreConfiguration : unit -> ICloudStoreConfiguration
 
         // General-purpose methods
 
@@ -128,11 +150,3 @@
         /// <param name="name">file name.</param>
         /// <param name="writer">writer function; asynchronously write to the target stream.</param>
         abstract ForceUpdateMutable : container:string * name:string * writer:(Stream -> Async<unit>) -> Async<Tag>
-
-    /// A factory to create ICloudStore instances.
-    type ICloudStoreFactory =
-        /// <summary>
-        /// Create an ICloudStore from a connection string.
-        /// </summary>
-        /// <param name="connectionString">The connection string.</param>
-        abstract CreateStoreFromConnectionString: connectionString : string -> ICloudStore

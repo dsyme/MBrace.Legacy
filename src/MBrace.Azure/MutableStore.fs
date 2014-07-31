@@ -10,10 +10,10 @@
     open Nessos.MBrace.Store
     open Nessos.MBrace.Azure.Common
 
-    type MutableStore (conn) =
+    type internal MutableStore (account : CloudStorageAccount) =
 
-        let blobClient () = Clients.getBlobClient conn
-        let tableClient () = Clients.getTableClient conn
+        let blobClient () = Clients.getBlobClient account
+        let tableClient () = Clients.getTableClient account
         let getTable name = tableClient().GetTableReference(name)
 
         let getReadBlob (folder, file)  = async {

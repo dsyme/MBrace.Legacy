@@ -39,10 +39,7 @@ namespace Nessos.MBrace.Client
             let mbracedExe = parseResults.TryGetResult <@ MBraced_Path @>
 
             // parse working directory
-            let workingDirectory = parseResults.TryGetResult <@ Working_Directory @> 
-
-            // parse store provider
-            let storeProvider = StoreDefinition.LocalFS
+            let workingDirectory = parseResults.TryGetResult <@ Working_Directory @>
 
             let logger = Logger.createConsoleLogger()
 
@@ -50,8 +47,9 @@ namespace Nessos.MBrace.Client
             SystemConfiguration.InitializeConfiguration(logger, ?mbraceDaemonPath = mbracedExe, 
                                 ?workingDirectory = workingDirectory, useVagrantPickler = true, cleanupWorkingDirectory = false)
 
-            // activate store provider
-            let storeInfo = StoreRegistry.Activate(storeProvider, makeDefault = true)
+            // set the default store provider; use the local temp folder
+            let tmp = FileSystemStore.LocalTemp
+            let storeInfo = StoreRegistry.Register(tmp, makeDefault = true)
 
             ()
 
@@ -65,7 +63,6 @@ namespace Nessos.MBrace.Client
         static let mutable defaultContainer = None
 
         static let init = runOnce initClientConfiguration
-
         
         /// Gets the client's unique identifier.
         static member ClientId = init () ; VagrantRegistry.Instance.UUId
@@ -80,10 +77,12 @@ namespace Nessos.MBrace.Client
             with get () = init () ; SystemConfiguration.Logger
             and set l = init () ; SystemConfiguration.Logger <- l
 
-        /// Gets or sets the default StoreDefinition used by the client.
-        static member StoreDefinition
-            with get () = init () ; StoreRegistry.DefaultStoreInfo.Definition
-            and set (p : StoreDefinition) = init () ; StoreRegistry.Activate(p, makeDefault = true) |> ignore
+        /// Sets the default Store backend used by the client process.
+        static member SetDefaultStore(store : ICloudStore) : unit = 
+            let info = StoreRegistry.Register(store, makeDefault = true) in ()
+        
+        /// Default store used by the client
+        static member DefaultStore = StoreRegistry.DefaultStoreInfo.Store.Id
 
         /// Gets the path used by the client as a working directory.
         static member WorkingDirectory = init () ; SystemConfiguration.WorkingDirectory

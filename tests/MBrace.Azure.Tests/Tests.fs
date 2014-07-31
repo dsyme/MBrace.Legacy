@@ -1,11 +1,12 @@
 ﻿namespace Nessos.MBrace.Azure.Tests
 
+    open System.IO
+
     open NUnit.Framework
 
     open Nessos.MBrace.Store
     open Nessos.MBrace.Store.Tests
-    open System.IO
-    open System.Reflection
+    open Nessos.MBrace.Azure    
 
     [<TestFixture; Category("CustomStores")>]
     type ``WindowsAzure tests`` () =
@@ -13,7 +14,6 @@
 
         
         let conn = File.ReadAllText(Path.Combine(__SOURCE_DIRECTORY__, "../../temp/azure.txt"))
-        let factory = new Nessos.MBrace.Azure.AzureStoreFactory() :> ICloudStoreFactory
-        let store = factory.CreateStoreFromConnectionString(conn)
+        let store = AzureStore.Create conn :> ICloudStore
 
         override test.Store = store

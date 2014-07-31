@@ -86,14 +86,14 @@ namespace Nessos.MBrace.Client
         /// <param name="nodes">Collection of constituent MBrace Nodes.</param>
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
-        /// <param name="storeDefinition">Store provider that will be used by the runtime.</param>
-        static member BootAsync(nodes : Node list, ?replicationFactor, ?failoverFactor, ?storeDefinition : StoreDefinition) : Async<Runtime> = async {
+        /// <param name="store">Store instance that will be used by the runtime.</param>
+        static member BootAsync(nodes : Node list, ?replicationFactor, ?failoverFactor, ?store : ICloudStore) : Async<Runtime> = async {
             let failoverFactor = defaultArg failoverFactor 2
             let replicationFactor = defaultArg replicationFactor (if failoverFactor = 0 then 0 else 2)
             let storeId = 
-                match storeDefinition with 
+                match store with 
                 | None -> StoreRegistry.DefaultStoreInfo.Id
-                | Some p -> let info = StoreRegistry.Activate(p, makeDefault = false) in info.Id
+                | Some s -> let info = StoreRegistry.Register(s, makeDefault = false) in info.Id
 
             let nodes = nodes |> Seq.map (fun n -> n.Ref) |> Seq.toArray
             let! proxy = RuntimeProxy.bootNodes(nodes, replicationFactor, failoverFactor, Some storeId)
@@ -157,9 +157,9 @@ namespace Nessos.MBrace.Client
         /// <param name="nodes">Collection of constituent MBrace Nodes.</param>
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
-        /// <param name="storeDefinition">Store provider that will be used by the runtime.</param>
-        static member Boot(nodes : Node list, ?replicationFactor, ?failoverFactor, ?storeDefinition) : Runtime = 
-            Runtime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeDefinition = storeDefinition)
+        /// <param name="store">Store instance that will be used by the runtime.</param>
+        static member Boot(nodes : Node list, ?replicationFactor, ?failoverFactor, ?store) : Runtime = 
+            Runtime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store)
             |> Async.RunSynchronously
 
         /// <summary>
@@ -170,17 +170,17 @@ namespace Nessos.MBrace.Client
         /// <param name="hostname">Hostname/Address used for cluster communication.</param>
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
-        /// <param name="storeDefinition">Store provider that will be used by the runtime.</param>
+        /// <param name="store">Store provider that will be used by the runtime.</param>
         /// <param name="debug">Spawn nodes in debug mode.</param>
         /// <param name="background">Spawn nodes in background. Defaults to false.</param>
         static member InitLocalAsync(totalNodes : int, ?masterPort, ?hostname, ?replicationFactor : int, ?failoverFactor : int,
-                                        ?storeDefinition, ?debug, ?background) : Async<Runtime> =
+                                        ?store, ?debug, ?background) : Async<Runtime> =
             async {
                 if totalNodes < 3 then invalidArg "totalNodes" "should have at least 3 nodes."
-                let! nodes = Node.SpawnMultipleAsync(totalNodes, ?masterPort = masterPort, ?storeDefinition = storeDefinition,
+                let! nodes = Node.SpawnMultipleAsync(totalNodes, ?masterPort = masterPort, ?store = store,
                                                            ?hostname = hostname, ?debug = debug, ?background = background)
                 
-                return! Runtime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?storeDefinition = storeDefinition)
+                return! Runtime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store)
             }
 
         /// <summary>
@@ -191,13 +191,13 @@ namespace Nessos.MBrace.Client
         /// <param name="hostname">Hostname/Address used for cluster communication.</param>
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
-        /// <param name="storeDefinition">Store provider that will be used by the runtime.</param>
+        /// <param name="store">Store instance that will be used by the runtime.</param>
         /// <param name="debug">Spawn nodes in debug mode.</param>
         /// <param name="background">Spawn nodes in background. Defaults to false.</param>
         static member InitLocal(totalNodes : int, ?masterPort, ?hostname, ?replicationFactor : int, ?failoverFactor : int,
-                                        ?storeDefinition, ?debug, ?background) : Runtime =
+                                        ?store, ?debug, ?background) : Runtime =
             Runtime.InitLocalAsync(totalNodes, ?masterPort = masterPort, ?hostname = hostname, 
-                                            ?replicationFactor = replicationFactor, ?storeDefinition = storeDefinition, ?debug = debug, ?background = background)
+                                            ?replicationFactor = replicationFactor, ?store = store, ?debug = debug, ?background = background)
             |> Async.RunSynchronously
 
         /// <summary>

@@ -82,6 +82,7 @@
     <Compile Include="Serialization.fs" />
     <Compile Include="Vagrant.fs" />
     <Compile Include="Store\StoreUtils.fs" />
+    <Compile Include="Store\StoreId.fs" />
     <Compile Include="Store\CacheStore.fs" />
     <Compile Include="Store\LogStore.fs" />
     <Compile Include="Store\Primitives\CloudRef.fs" />
@@ -104,8 +105,8 @@
     <Compile Include="RuntimeBase\ProcessManager.fs" />
     <Compile Include="RuntimeBase\MBraceNode.fs" />
     <Compile Include="RuntimeBase\Utils.fs" />
-    <Compile Include="RuntimeBase\DaemonConfig.fs" />
-    <Compile Include="RuntimeBase\WorkerConfig.fs" />
+    <Compile Include="RuntimeBase\DaemonCLI.fs" />
+    <Compile Include="RuntimeBase\WorkerCLI.fs" />
     <Compile Include="RuntimeBase\Exceptions.fs" />
     <Compile Include="RuntimeBase\SystemConfig.fs" />
     <None Include="packages.config" />

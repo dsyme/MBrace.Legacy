@@ -15,7 +15,7 @@
     type StoreActivationInfo =
         {
             Id : StoreId
-            StoreDefinitionPickle : Pickle<StoreDefinition>
+            StoreConfigurationPickle : Pickle<ICloudStoreConfiguration>
             Dependencies : AssemblyId list
         }
 
@@ -23,7 +23,7 @@
     type StoreInfo = 
         {
             Store : ICloudStore
-            Definition : StoreDefinition
+            Configuration : ICloudStoreConfiguration
             Dependencies : Map<AssemblyId, Assembly>
             ActivationInfo : StoreActivationInfo
 
@@ -47,28 +47,22 @@
         static let localCacheStore : ICloudStore option ref = ref None
         static let registry = new ConcurrentDictionary<StoreId, StoreInfo> ()
 
-        static let activate (definition : StoreDefinition) =
-            let factory = Activator.CreateInstance definition.StoreFactoryType :?> ICloudStoreFactory
-            factory.CreateStoreFromConnectionString definition.ConnectionString
-
         static let getLocalCache () =
             match localCacheStore.Value with
             | None -> invalidOp "No local cache store has been registered."
             | Some c -> c
 
-        static member Activate (definition : StoreDefinition, makeDefault) =
+        static member Register (store : ICloudStore, makeDefault) =
             let mkStoreInfo (id : StoreId) =
-
-                let store = activate definition
-                let assemblies = VagrantRegistry.ComputeDependencies definition.StoreFactoryType
-
+                let storeConfig = store.GetStoreConfiguration()
+                let assemblies = VagrantRegistry.ComputeDependencies storeConfig
                 let ids = assemblies |> List.map VagrantUtils.ComputeAssemblyId
                 let dependencies = Seq.zip ids assemblies |> Map.ofSeq
 
                 let info = 
                     { 
                         Id = id
-                        StoreDefinitionPickle = Serialization.Pickle definition
+                        StoreConfigurationPickle = Serialization.Pickle storeConfig
                         Dependencies = ids
                     }
 
@@ -76,14 +70,14 @@
                 let cacheStore = getLocalCache()
                 let localCache = new CacheStore(sprintf "fscache-%d" <| hash id, cacheStore, store)
 
-                let cRefProvider = CloudRefProvider.Create(info.Id, store, inmem, localCache)
-                let cFileProvider = CloudFileProvider.Create(info.Id, store, localCache)
-                let mRefProvider = MutableCloudRefProvider.Create(info.Id, store)
-                let cSeqprovider = CloudSeqProvider.Create(info.Id, store, localCache)
+                let cRefProvider = CloudRefProvider.Create(id, store, inmem, localCache)
+                let cFileProvider = CloudFileProvider.Create(id, store, localCache)
+                let mRefProvider = MutableCloudRefProvider.Create(id, store)
+                let cSeqprovider = CloudSeqProvider.Create(id, store, localCache)
 
                 {
                     Store = store
-                    Definition = definition
+                    Configuration = storeConfig
                     Dependencies = dependencies
                     ActivationInfo = info
 
@@ -96,17 +90,15 @@
                     CacheStore = localCache
                 }
 
-            let info = registry.GetOrAdd(definition.Id, mkStoreInfo)
+            let id = StoreId.Generate store
+            let info = registry.GetOrAdd(id, mkStoreInfo)
             if makeDefault then defaultStore := Some info
             info
 
-        static member internal ActivateLocalCacheStore(definition : StoreDefinition) =
+        static member internal ActivateLocalCacheStore(cacheStore : ICloudStore) =
             lock localCacheStore (fun () ->
                 match localCacheStore.Value with
-                | None -> 
-                    let cacheStore = activate definition
-                    localCacheStore := Some cacheStore
-
+                | None -> localCacheStore := Some cacheStore
                 | Some _ -> invalidOp "A local cache store has already been registered.")
 
         static member Activate(activationInfo : StoreActivationInfo, makeDefault) =
@@ -114,8 +106,9 @@
             | Some info as r -> (if makeDefault then defaultStore := r) ; info
             | None ->
                 try
-                    let definition = Serialization.UnPickle activationInfo.StoreDefinitionPickle
-                    StoreRegistry.Activate(definition, makeDefault = makeDefault)
+                    let definition = Serialization.UnPickle activationInfo.StoreConfigurationPickle
+                    let store = definition.Init()
+                    StoreRegistry.Register(store, makeDefault = makeDefault)
                 with e ->
                     let msg = sprintf "Failed to activate store '%s'." activationInfo.Id.AssemblyQualifiedName
                     raise <| new Nessos.MBrace.StoreException(msg, e)

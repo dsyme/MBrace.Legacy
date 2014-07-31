@@ -2,12 +2,14 @@
 
     open System
     open System.IO
-    //open Nessos.MBrace.Store
+
+    open Microsoft.WindowsAzure.Storage
+
     open Nessos.MBrace.Azure.Common
 
-    type ImmutableStore (conn) =
-        let blob  = ImmutableBlobStoreProvider (conn)
-        let table = ImmutableTableStoreProvider(conn)
+    type internal ImmutableStore (account : CloudStorageAccount) =
+        let blob  = ImmutableBlobStoreProvider (account)
+        let table = ImmutableTableStoreProvider(account)
         
         member this.Name = sprintf "Blob/Table store : %s/%s" blob.Name table.Name
 

@@ -6,12 +6,12 @@
     open Microsoft.WindowsAzure.Storage
     open Microsoft.WindowsAzure.Storage.Table
 
-    module Limits =
+    module internal Limits =
         let PayloadSizePerProperty = 64L * 1024L
         let NumberOfProperties = 15L
         let MaxPayloadSize = NumberOfProperties * PayloadSizePerProperty
 
-    module Helpers = 
+    module internal Helpers = 
         let partitionIn n (a : byte []) =
             let n = ((float a.Length) / (float n) |> ceil |> int)
             [| for i in 0 .. n - 1 ->
@@ -40,7 +40,7 @@
 
         let ofBinary (bin : byte []) = new MemoryStream(bin) :> Stream
 
-    module Validation =
+    module internal Validation =
         let private lowercase = set {'a'..'z'}
         let private letters = lowercase + set {'A'..'z'}
         let private numbers = set {'0'..'9'}
@@ -59,14 +59,12 @@
             then ()
             else raise <| Exception(sprintf "Invalid file name %s. File name must : not contain characters in %A. Consider encoding the file name." name partition_key_black_list)
 
-    module Clients =
-        let getTableClient conn =
-            let account = CloudStorageAccount.Parse(conn) 
+    module internal Clients =
+        let getTableClient (account : CloudStorageAccount) =
             let client = account.CreateCloudTableClient()
             client
 
-        let getBlobClient conn =
-            let account = CloudStorageAccount.Parse(conn) 
+        let getBlobClient (account : CloudStorageAccount) =
             let client = account.CreateCloudBlobClient()
             
             client.DefaultRequestOptions.ParallelOperationThreadCount <- System.Nullable(4 * System.Environment.ProcessorCount)
@@ -77,7 +75,7 @@
     /// A lightweight object for low latency communication with the azure storage.
     /// Lightweight : payload size up to 15 * 64K = 960K.
     /// See 'http://www.windowsazure.com/en-us/develop/net/how-to-guides/table-services/'
-    type FatEntity (entityId, binary) =
+    type internal FatEntity (entityId, binary) =
         inherit TableEntity(entityId, String.Empty)
 
         let check (a : byte [] []) i = if a = null then null elif i >= a.Length then Array.empty else a.[i]
@@ -113,7 +111,7 @@
         
         new () = FatEntity (null, null)
 
-    type MutableFatEntity(entityId, isRef : bool, reference : string, bin) =
+    type internal MutableFatEntity(entityId, isRef : bool, reference : string, bin) =
         inherit FatEntity(entityId, bin)
         
         interface ITableEntity

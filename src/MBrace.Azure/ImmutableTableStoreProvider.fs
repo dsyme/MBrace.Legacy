@@ -9,10 +9,10 @@
     open Microsoft.WindowsAzure.Storage
     open Microsoft.WindowsAzure.Storage.Table
 
-    type ImmutableTableStoreProvider(connectionString : string) =
+    type internal ImmutableTableStoreProvider(account : CloudStorageAccount) =
        
         // get a new client every time because the client obj is not thread safe
-        let getClient () = Clients.getTableClient connectionString
+        let getClient () = Clients.getTableClient account
         let getTable name = getClient().GetTableReference(name)
 
         let read (folder, file) =

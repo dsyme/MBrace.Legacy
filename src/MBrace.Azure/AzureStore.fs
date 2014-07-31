@@ -2,28 +2,42 @@
 
     open System
     open System.IO
+    open System.Runtime.Serialization
+
+    open Microsoft.WindowsAzure.Storage
 
     open Nessos.MBrace.Store
     open Nessos.MBrace.Azure.Common
 
-    type AzureStore (conn) =
-        
-        // Check connection string and connectivity
-        do  
+    /// <summary>
+    ///     Azure Storage provider for MBrace.
+    /// </summary>
+    type AzureStore private (connectionString : string) =
+
+        let account = CloudStorageAccount.Parse(connectionString)
+        let immutableStore = ImmutableStore(account)
+        let mutableStore = MutableStore(account)
+        let generalStore = GeneralPurpose(account)
+
+        /// <summary>
+        ///     Initialize a new AzureStore instance with given connection string
+        /// </summary>
+        /// <param name="connectionString">Azure store connection string.</param>
+        static member Create(connectionString : string) =
+            // Check connection string and connectivity
             try
-                Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(conn) |> ignore
+                CloudStorageAccount.Parse connectionString |> ignore
                 //(Clients.getBlobClient  conn).GetContainerReference("azurestorecheck").Exists() |> ignore
                 //(Clients.getTableClient conn).GetTableReference("azurestorecheck").Exists() |> ignore
-            with ex ->
-                raise <| new Exception("Failed to create AzureStore", ex)
-        
-        let immutableStore = ImmutableStore(conn)
-        let mutableStore = MutableStore(conn)
-        let generalStore = GeneralPurpose(conn)
+            with ex -> raise <| new Exception("Failed to create AzureStore", ex)
+            
+            new AzureStore(connectionString)
 
         interface ICloudStore with
             member this.Name = immutableStore.Name
-            member this.EndpointId = conn
+            member this.Id = sprintf "Azure account: %s" account.Credentials.AccountName
+
+            member this.GetStoreConfiguration () = new AzureStoreConfiguration(connectionString) :> ICloudStoreConfiguration
 
             // Immutable
             member this.CreateImmutable(folder, file, serialize, asFile) =
@@ -90,14 +104,17 @@
                         raise <| Exception(sprintf "Cannot delete %s - %s" folder file, ex)
                 }
 
-    type AzureStoreFactory () =
-        interface ICloudStoreFactory with
-            member this.CreateStoreFromConnectionString (objectStore : string) = 
-                AzureStore(objectStore) :> ICloudStore
 
+    and internal AzureStoreConfiguration (connectionString : string) =
 
-    [<AutoOpen>]
-    module StoreProvider =
-        type StoreDefinition with
-            static member AzureStore (connectionString : string) =
-                StoreDefinition.Create<AzureStoreFactory>(connectionString)
+        private new (si : SerializationInfo, _ : StreamingContext) =
+            let connectionString = si.GetValue("connectionString", typeof<string>) :?> string
+            new AzureStoreConfiguration(connectionString)
+
+        interface ISerializable with
+            member __.GetObjectData(si : SerializationInfo, _ : StreamingContext) =
+                si.AddValue("connectionString", connectionString)
+
+        interface ICloudStoreConfiguration with
+            member this.Id = connectionString
+            member this.Init () = AzureStore.Create connectionString :> ICloudStore
