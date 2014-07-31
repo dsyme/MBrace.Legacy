@@ -31,7 +31,7 @@
         /// <summary>
         ///     Enumerates the values stored in given CloudSeq.
         /// </summary>
-        /// <param name="sequence">The CloudSeq to dererefence.</param>
+        /// <param name="sequence">The CloudSeq to dereference.</param>
         static member Read<'T>(sequence : ICloudSeq<'T>) : Cloud<seq<'T>> =
             cloud { return sequence :> _ }
 
