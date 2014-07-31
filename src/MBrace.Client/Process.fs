@@ -23,9 +23,7 @@
     
     open Microsoft.FSharp.Quotations
 
-    type internal RuntimeMsg = MBraceNode
     type internal ProcessManagerMsg = ProcessManager
-    type internal OSProcess = System.Diagnostics.Process
 
     /// Represents a process' result.
     type ProcessResult<'T> =
