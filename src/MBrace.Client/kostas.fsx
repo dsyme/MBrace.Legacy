@@ -4,13 +4,11 @@ open Nessos.MBrace
 open Nessos.MBrace.Client
 
 
-#r "../../bin/MBrace.Azure.dll"
-open Nessos.MBrace.Azure
-
-let azureConn = System.IO.File.ReadAllText("/mbrace/azure.txt")
-let azureStore = AzureStore.Create azureConn
-
-MBraceSettings.SetDefaultStore azureStore
+//#r "../../bin/MBrace.Azure.dll"
+//open Nessos.MBrace.Azure
+//let azureConn = System.IO.File.ReadAllText("/mbrace/azure.txt")
+//let azureStore = AzureStore.Create azureConn
+//MBraceSettings.SetDefaultStore azureStore
 
 //let nodes = [1..3] 
 //            |> List.map (fun n -> sprintf "mbrace://10.0.1.%d:2675" (3+n)) 
@@ -19,9 +17,6 @@ MBraceSettings.SetDefaultStore azureStore
 //nodes |> List.map (fun n -> n.Ping())
 //nodes |> List.iter (fun n -> n.ShowSystemLogs())
 
-
-
-let rt = MBrace.InitLocal 3
 
 MBraceSettings.DefaultTimeout <- 60 * 2 * 1000
 

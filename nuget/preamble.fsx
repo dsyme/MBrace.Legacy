@@ -5,6 +5,7 @@
 #r "tools/Vagrant.dll"
 #r "tools/MBrace.Core.dll"
 #r "tools/MBrace.Lib.dll"
+#r "tools/MBrace.Utils.dll"
 #r "tools/MBrace.Store.dll"
 #r "tools/MBrace.Runtime.Base.dll"
 #r "tools/MBrace.Client.dll"

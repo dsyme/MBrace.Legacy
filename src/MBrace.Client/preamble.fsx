@@ -4,6 +4,7 @@
 #r "Thespian.dll"
 #r "Vagrant.dll"
 #r "MBrace.Core.dll"
+#r "MBrace.Utils.dll"
 #r "MBrace.Lib.dll"
 #r "MBrace.Store.dll"
 #r "MBrace.Runtime.Base.dll"
