@@ -14,7 +14,7 @@
         inherit ServiceBase(ServiceName = "MBrace")
 
         let eventLog = new EventLog()
-        let serviceState = ref None : (Guid * Diagnostics.Process * Node) option ref
+        let serviceState = ref None : (Guid * Diagnostics.Process * MBraceNode) option ref
 
         let tryGetCurrentDaemon () =
             try
@@ -42,7 +42,7 @@
             let msg = sprintf' "Starting mbraced\nPath: %s\nArguments: %s" MBraceSettings.MBracedExecutablePath (String.concat " " args)
             eventLog.WriteEntry(msg)
 
-            let node = Node.Spawn(args, background = true)
+            let node = MBraceNode.Spawn(args, background = true)
 
             serviceState := Some(node.DeploymentId, node.Process.Value, node)
             let pid = node.Process.Value.Id

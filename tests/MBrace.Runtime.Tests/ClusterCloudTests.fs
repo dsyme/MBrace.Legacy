@@ -19,7 +19,7 @@ namespace Nessos.MBrace.Runtime.Tests
     type ``Cluster Cloud Tests``() =
         inherit ``Core Tests``()
 
-        let currentRuntime : Runtime option ref = ref None
+        let currentRuntime : MBraceRuntime option ref = ref None
         
         override __.Name = "Cluster Cloud Tests"
         override __.IsLocalTesting = false
@@ -39,7 +39,7 @@ namespace Nessos.MBrace.Runtime.Tests
                 | None -> ()
             
                 MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "mbraced.exe")
-                let runtime = Runtime.InitLocal(3, debug = true)
+                let runtime = MBraceRuntime.InitLocal(3, debug = true)
                 currentRuntime := Some runtime)
 
         [<TestFixtureTearDown>]

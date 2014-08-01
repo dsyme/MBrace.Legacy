@@ -93,14 +93,14 @@
                 return! NestedModule.nestedWorkflowThatInheritsCloudAttributeFromContainers ()
             }
 
-        let dummyRuntime = Unchecked.defaultof<Nessos.MBrace.Client.Runtime>
+        let dummyRuntime = Unchecked.defaultof<Nessos.MBrace.Client.MBraceRuntime>
 
         [<Cloud>]
         let blockThatReferencesMBraceClientValue () = cloud {
             return dummyRuntime.Nodes
         }
 
-        let invalidBinding = Unchecked.defaultof<int * Nessos.MBrace.Client.Runtime list option>
+        let invalidBinding = Unchecked.defaultof<int * Nessos.MBrace.Client.MBraceRuntime list option>
 
         [<Cloud>]
         let blockThatReferencesCompositeExpressionOfInvalidType = cloud {
@@ -161,7 +161,7 @@
 
         [<Test>]
         let ``Cloud block that references MBrace.Client type`` () =
-            shouldFailCompilation <@ cloud { return typeof<Nessos.MBrace.Client.Runtime> } @>
+            shouldFailCompilation <@ cloud { return typeof<Nessos.MBrace.Client.MBraceRuntime> } @>
 
         [<Test>]
         let ``Cloud block that attempts to update MBraceSettings`` () =

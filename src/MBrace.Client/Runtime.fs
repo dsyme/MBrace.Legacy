@@ -26,7 +26,7 @@ namespace Nessos.MBrace.Client
     ///     Provides a handle and administration API for a running MBrace cluster.
     /// </summary>
     [<NoEquality ; NoComparison ; AutoSerializable(false)>]
-    type Runtime private (runtime : ActorRef<MBraceNodeMsg>, disposables : IDisposable list) =
+    type MBraceRuntime private (runtime : ActorRef<MBraceNodeMsg>, disposables : IDisposable list) =
 
         static let handleError (e : exn) =
             match e with
@@ -67,14 +67,14 @@ namespace Nessos.MBrace.Client
 
         static let initOfProxyActor(actor : Actor<MBraceNodeMsg>) = 
             do actor.Start()
-            new Runtime(actor.Ref, [actor :> IDisposable])
+            new MBraceRuntime(actor.Ref, [actor :> IDisposable])
 
         /// <summary>
         ///     Asynchronously boots an MBrace runtime with given nodes/configuration.
         /// </summary>
         /// <param name="master">Designated initial master node in cluster.</param>
         /// <param name="config">Boot configuration.</param>
-        static member internal BootAsync (master : Node, config : BootConfiguration) : Async<Runtime> =
+        static member internal BootAsync (master : MBraceNode, config : BootConfiguration) : Async<MBraceRuntime> =
             async {
                 let! proxy = RuntimeProxy.boot(master.Ref, config)
                 return initOfProxyActor proxy
@@ -87,7 +87,7 @@ namespace Nessos.MBrace.Client
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
         /// <param name="store">Store instance that will be used by the runtime.</param>
-        static member BootAsync(nodes : Node list, ?replicationFactor, ?failoverFactor, ?store : ICloudStore) : Async<Runtime> = async {
+        static member BootAsync(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?store : ICloudStore) : Async<MBraceRuntime> = async {
             let failoverFactor = defaultArg failoverFactor 2
             let replicationFactor = defaultArg replicationFactor (if failoverFactor = 0 then 0 else 2)
             let storeId = 
@@ -105,10 +105,10 @@ namespace Nessos.MBrace.Client
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
         /// <param name="uri">Connection uri.</param>
-        static member ConnectAsync(uri: Uri): Async<Runtime> =
+        static member ConnectAsync(uri: Uri): Async<MBraceRuntime> =
             async {
                 try
-                    let node = Node uri
+                    let node = MBraceNode uri
                     let! proxy = RuntimeProxy.connect node.Ref
                     return initOfProxyActor proxy
 
@@ -120,36 +120,36 @@ namespace Nessos.MBrace.Client
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
         /// <param name="uri">Connection uri.</param>
-        static member Connect(uri: Uri): Runtime = Runtime.ConnectAsync(uri) |> Async.RunSynchronously
+        static member Connect(uri: Uri): MBraceRuntime = MBraceRuntime.ConnectAsync(uri) |> Async.RunSynchronously
 
         /// <summary>
         ///     Connect to an MBrace runtime with given hostname and TCP port.
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
         /// <param name="uri">Connection uri.</param>
-        static member ConnectAsync(host: string, port : int) : Async<Runtime> = 
-            Runtime.ConnectAsync(MBraceUri.hostPortToUri(host, port))
+        static member ConnectAsync(host: string, port : int) : Async<MBraceRuntime> = 
+            MBraceRuntime.ConnectAsync(MBraceUri.hostPortToUri(host, port))
 
         /// <summary>
         ///     Connect to an MBrace runtime with given hostname and TCP port.
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
         /// <param name="uri">Connection uri.</param>
-        static member Connect(host: string, port : int) : Runtime = Runtime.ConnectAsync(host, port) |> Async.RunSynchronously
+        static member Connect(host: string, port : int) : MBraceRuntime = MBraceRuntime.ConnectAsync(host, port) |> Async.RunSynchronously
 
         /// <summary>
         ///     Asynchronously connect to an MBrace runtime with given uri.
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
         /// <param name="uri">Connection uri.</param>
-        static member ConnectAsync(uri: string): Async<Runtime> = Runtime.ConnectAsync(Uri(uri))
+        static member ConnectAsync(uri: string): Async<MBraceRuntime> = MBraceRuntime.ConnectAsync(Uri(uri))
 
         /// <summary>
         ///     Connect to an MBrace runtime with given uri.
         ///     Uri can correspond to any of the nodes participating in the cluster.
         /// </summary>
         /// <param name="uri">Connection uri.</param>
-        static member Connect(uri: string): Runtime = Runtime.ConnectAsync(uri) |> Async.RunSynchronously
+        static member Connect(uri: string): MBraceRuntime = MBraceRuntime.ConnectAsync(uri) |> Async.RunSynchronously
 
         /// <summary>
         ///     Boots a collection of nodes to form an MBrace cluster.
@@ -158,8 +158,8 @@ namespace Nessos.MBrace.Client
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
         /// <param name="store">Store instance that will be used by the runtime.</param>
-        static member Boot(nodes : Node list, ?replicationFactor, ?failoverFactor, ?store) : Runtime = 
-            Runtime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store)
+        static member Boot(nodes : MBraceNode list, ?replicationFactor, ?failoverFactor, ?store) : MBraceRuntime = 
+            MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store)
             |> Async.RunSynchronously
 
         /// <summary>
@@ -174,13 +174,13 @@ namespace Nessos.MBrace.Client
         /// <param name="debug">Spawn nodes in debug mode.</param>
         /// <param name="background">Spawn nodes in background. Defaults to false.</param>
         static member InitLocalAsync(totalNodes : int, ?masterPort, ?hostname, ?replicationFactor : int, ?failoverFactor : int,
-                                        ?store, ?debug, ?background) : Async<Runtime> =
+                                        ?store, ?debug, ?background) : Async<MBraceRuntime> =
             async {
                 if totalNodes < 3 then invalidArg "totalNodes" "should have at least 3 nodes."
-                let! nodes = Node.SpawnMultipleAsync(totalNodes, ?masterPort = masterPort, ?store = store,
+                let! nodes = MBraceNode.SpawnMultipleAsync(totalNodes, ?masterPort = masterPort, ?store = store,
                                                            ?hostname = hostname, ?debug = debug, ?background = background)
                 
-                return! Runtime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store)
+                return! MBraceRuntime.BootAsync(nodes, ?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store)
             }
 
         /// <summary>
@@ -195,8 +195,8 @@ namespace Nessos.MBrace.Client
         /// <param name="debug">Spawn nodes in debug mode.</param>
         /// <param name="background">Spawn nodes in background. Defaults to false.</param>
         static member InitLocal(totalNodes : int, ?masterPort, ?hostname, ?replicationFactor : int, ?failoverFactor : int,
-                                        ?store, ?debug, ?background) : Runtime =
-            Runtime.InitLocalAsync(totalNodes, ?masterPort = masterPort, ?hostname = hostname, 
+                                        ?store, ?debug, ?background) : MBraceRuntime =
+            MBraceRuntime.InitLocalAsync(totalNodes, ?masterPort = masterPort, ?hostname = hostname, 
                                             ?replicationFactor = replicationFactor, ?store = store, ?debug = debug, ?background = background)
             |> Async.RunSynchronously
 
@@ -204,7 +204,7 @@ namespace Nessos.MBrace.Client
         ///     Connects to an existing MBrace runtime using the given ActorRef.
         /// </summary>
         /// <param name="ref">A Thespian ActoRef to master node.</param>
-        static member FromActorRef(ref : ActorRef<MBraceNodeMsg>) = new Runtime(ref, [])
+        static member FromActorRef(ref : ActorRef<MBraceNodeMsg>) = new MBraceRuntime(ref, [])
 
         //
         //  Cluster Management section
@@ -263,7 +263,7 @@ namespace Nessos.MBrace.Client
         ///     Asynchronously attaches a collection of nodes to an existing MBrace runtime.
         /// </summary>
         /// <param name="nodes">Nodes to be attached.</param>
-        member r.AttachAsync (nodes : seq<Node>) : Async<unit> =
+        member r.AttachAsync (nodes : seq<MBraceNode>) : Async<unit> =
             async {
                 for node in nodes do
                     do! postWithReplyAsync (fun ch -> Attach(ch, node.Ref))
@@ -273,13 +273,13 @@ namespace Nessos.MBrace.Client
         ///     Asynchronously attaches a node to an existing MBrace runtime.
         /// </summary>
         /// <param name="nodes">Node to be attached.</param>
-        member r.AttachAsync (node : Node) : Async<unit> = postWithReplyAsync(fun ch -> Attach(ch, node.Ref))
+        member r.AttachAsync (node : MBraceNode) : Async<unit> = postWithReplyAsync(fun ch -> Attach(ch, node.Ref))
 
         /// <summary>
         ///     Asynchronously detaches a node from existing MBrace runtime.
         /// </summary>
         /// <param name="node">Node to be detached.</param>
-        member r.DetachAsync (node: Node) : Async<unit> =
+        member r.DetachAsync (node: MBraceNode) : Async<unit> =
             async {
                 try
                     do! node.Ref.PostWithReply(Detach, MBraceSettings.DefaultTimeout)
@@ -316,19 +316,19 @@ namespace Nessos.MBrace.Client
         ///     Attaches a collection of Nodes to an existing MBrace runtime.
         /// </summary>
         /// <param name="nodes">Nodes to be attached.</param>
-        member r.Attach (nodes : seq<Node>) : unit = r.AttachAsync nodes |> Async.RunSynchronously
+        member r.Attach (nodes : seq<MBraceNode>) : unit = r.AttachAsync nodes |> Async.RunSynchronously
 
         /// <summary>
         ///     Attaches a Node to an existing MBrace runtime.
         /// </summary>
         /// <param name="node">Node to be attached.</param>
-        member r.Attach (node : Node) : unit = r.AttachAsync node |> Async.RunSynchronously
+        member r.Attach (node : MBraceNode) : unit = r.AttachAsync node |> Async.RunSynchronously
 
         /// <summary>
         ///     Detaches a node from existing MBrace runtime.
         /// </summary>
         /// <param name="node">Node to be detached.</param>
-        member r.Detach (node : Node) : unit = r.DetachAsync node |> Async.RunSynchronously
+        member r.Detach (node : MBraceNode) : unit = r.DetachAsync node |> Async.RunSynchronously
 
         /// <summary>
         ///     Spawns a specified number of local nodes and attaches to existing runtime.
@@ -350,7 +350,7 @@ namespace Nessos.MBrace.Client
         /// <param name="background">Spawn new nodes in background.</param>
         member r.AttachLocalAsync(totalNodes : int, ?permissions, ?debug, ?background) : Async<unit> =
             async { 
-                let! nodes = Node.SpawnMultipleAsync(totalNodes, ?permissions = permissions, ?debug = debug, ?background = background)
+                let! nodes = MBraceNode.SpawnMultipleAsync(totalNodes, ?permissions = permissions, ?debug = debug, ?background = background)
                 do! r.AttachAsync(nodes)
             }
 
@@ -392,28 +392,28 @@ namespace Nessos.MBrace.Client
         /// <summary>
         ///     List of MBrace Nodes that constitute the current cluster.
         /// </summary>
-        member r.Nodes : Node list = 
+        member r.Nodes : MBraceNode list = 
             match clusterConfiguration.TryGetLastSuccessfulValue() with
             | None -> mfailwith "Cannot extract runtime information." 
-            | Some info -> info.Nodes |> Seq.map (fun n -> Node(n)) |> Seq.toList
+            | Some info -> info.Nodes |> Seq.map (fun n -> MBraceNode(n)) |> Seq.toList
 
         /// <summary>
         ///     List of MBrace Nodes in current cluster that exist in this machine.
         /// </summary>
-        member r.LocalNodes : Node list = r.Nodes |> List.filter (fun node -> node.IsLocal)
+        member r.LocalNodes : MBraceNode list = r.Nodes |> List.filter (fun node -> node.IsLocal)
 
         /// <summary>
         ///     Current Master node in the MBrace cluster.
         /// </summary>
-        member r.Master : Node = let nI = clusterConfiguration.Value.MasterNode in Node(nI)
+        member r.Master : MBraceNode = let nI = clusterConfiguration.Value.MasterNode in MBraceNode(nI)
 
         /// <summary>
         ///     Alternative Master nodes in the MBrace cluster.
         /// </summary>
-        member r.Alts : Node list = 
+        member r.Alts : MBraceNode list = 
             clusterConfiguration.Value.Nodes 
             |> Seq.filter(fun nI -> nI.State = AltMaster) 
-            |> Seq.map (fun n -> Node(n)) 
+            |> Seq.map (fun n -> MBraceNode(n)) 
             |> Seq.toList
 
         /// <summary>

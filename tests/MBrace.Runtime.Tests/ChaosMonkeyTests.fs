@@ -39,7 +39,7 @@
 
         let rec chaosMonkey (conf: ChaosMonkeyConfiguration) 
                             (actions : ChaosAction list) 
-                            (runtime: Runtime): Async<unit> = async {
+                            (runtime: MBraceRuntime): Async<unit> = async {
             match actions with
             | [] -> 
                 logfn "CHAOS MONKEY COMPLETED" 
@@ -84,14 +84,14 @@
                                 else spawnCount
 
                             logfn "Spawning %d nodes..." spawnCount
-                            let nodes = Node.SpawnMultiple spawnCount
+                            let nodes = MBraceNode.SpawnMultiple spawnCount
                             logfn "Attaching nodes..."
                             do! runtime.AttachAsync nodes
                     | Attach ->
                         if nodeCount + 1 > conf.MaxNodesCount then 
                             logfn "Ignoring Attach"
                         else
-                            let node = Node.SpawnMultiple 1
+                            let node = MBraceNode.SpawnMultiple 1
                             logfn "Attaching %A" <| Seq.exactlyOne  node
                             do! runtime.AttachAsync node
                     | Detatch ->
