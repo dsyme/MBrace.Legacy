@@ -14,7 +14,7 @@
     /// </summary>
     type AzureStore private (connectionString : string) =
 
-        let account = CloudStorageAccount.Parse(connectionString)
+        let account = CloudStorageAccount.Parse(connectionString) 
         let immutableStore = ImmutableStore(account)
         let mutableStore = MutableStore(account)
         let generalStore = GeneralPurpose(account)
@@ -26,16 +26,16 @@
         static member Create(connectionString : string) =
             // Check connection string and connectivity
             try
-                CloudStorageAccount.Parse connectionString |> ignore
-                //(Clients.getBlobClient  conn).GetContainerReference("azurestorecheck").Exists() |> ignore
-                //(Clients.getTableClient conn).GetTableReference("azurestorecheck").Exists() |> ignore
+                let acc = CloudStorageAccount.Parse connectionString 
+                (Clients.getBlobClient  acc).GetContainerReference("azurestorecheck").Exists() |> ignore
+                (Clients.getTableClient acc).GetTableReference("azurestorecheck").Exists() |> ignore
             with ex -> raise <| new Exception("Failed to create AzureStore", ex)
             
             new AzureStore(connectionString)
 
         interface ICloudStore with
-            member this.Name = immutableStore.Name
-            member this.Id = sprintf "Azure account: %s" account.Credentials.AccountName
+            member this.Name = typeof<AzureStore>.FullName
+            member this.Id = sprintf "BlobEndpoint : %A; TableEndpoint : %A" account.BlobEndpoint account.TableEndpoint 
 
             member this.GetStoreConfiguration () = new AzureStoreConfiguration(connectionString) :> ICloudStoreConfiguration
 

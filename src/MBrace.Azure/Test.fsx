@@ -1,20 +1,21 @@
 ﻿//#region Preamble
+#r "../../bin/MBrace.Store.dll"
 #r "../../bin/MBrace.Runtime.Base.dll"
 #r "../../bin/MBrace.Azure.dll"
-#r "Microsoft.WindowsAzure.Storage.dll"
-#r "Microsoft.Data.OData.dll"
-#r "Microsoft.WindowsAzure.Configuration.dll"
+#r "../../bin/Microsoft.WindowsAzure.Storage.dll"
+#r "../../bin/Microsoft.Data.OData.dll"
+#r "../../bin/Microsoft.WindowsAzure.Configuration.dll"
 
 open Microsoft.WindowsAzure
 open Microsoft.WindowsAzure.Storage
 open Microsoft.WindowsAzure.Storage.Blob
-open Nessos.MBrace.Runtime.Store
 open Nessos.MBrace.Azure
+open Nessos.MBrace.Store
 open System.IO
 
 let name = @""
 let key  = @""
-let config = sprintf "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s" name key
+let config = sprintf "DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s" name key
 
 let serialize length payload =
     fun (stream : Stream) ->
@@ -29,7 +30,11 @@ let deserialize (stream : Stream) =
 let large : Stream -> unit = serialize (1024 * 1024 * 1) 42uy
 let small : Stream -> unit = serialize (64 * 1024 + 1) 43uy
 
-let store = AzureStore config :> ICloudStore
+let acc = CloudStorageAccount.Parse(config)
+acc.BlobStorageUri
+let store = AzureStore.Create config :> ICloudStore
+
+store.Id
 
 //#endregion
 
