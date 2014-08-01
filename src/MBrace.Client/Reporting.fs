@@ -5,6 +5,7 @@
     open Nessos.MBrace
     open Nessos.MBrace.Utils
     open Nessos.MBrace.Utils.PrettyPrinters
+    open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
     open Nessos.MBrace.Runtime.Logging
     open Nessos.MBrace.Runtime.Compiler
@@ -16,7 +17,6 @@
             |> Seq.map (fun e -> e.Print(showDate = true))
             |> String.concat "\n"
             |> printfn "%s"
-
 
     type CloudComputation =
 

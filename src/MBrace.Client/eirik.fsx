@@ -10,7 +10,7 @@ open Nessos.MBrace.Azure
 let azureConn = System.IO.File.ReadAllText("/mbrace/azure.txt")
 let azureStore = AzureStore.Create azureConn
 
-MBraceSettings.SetDefaultStore azureStore
+MBraceSettings.DefaultStore <- azureStore
 MBraceSettings.DefaultStore
 
 let runtime = MBrace.InitLocal(3, masterPort = 2673)
@@ -27,7 +27,7 @@ runtime.Shutdown()
 
 runtime.Boot()
 
-runtime.Reboot(store = azureStore)
+runtime.Reboot(store = FileSystemStore.LocalTemp)
 
 runtime.Nodes
 

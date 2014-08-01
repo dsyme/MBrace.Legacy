@@ -34,7 +34,7 @@
             new AzureStore(connectionString)
 
         interface ICloudStore with
-            member this.Name = typeof<AzureStore>.FullName
+            member this.Name = "AzureStore"
             member this.Id = sprintf "BlobEndpoint : %A; TableEndpoint : %A" account.BlobEndpoint account.TableEndpoint 
 
             member this.GetStoreConfiguration () = new AzureStoreConfiguration(connectionString) :> ICloudStoreConfiguration

@@ -138,3 +138,13 @@
             /// <param name="showLogs">Print user logs to StdOut.</param>
             static member RunLocal(computation : Expr<Cloud<'T>>, ?showLogs) : 'T =
                 MBrace.RunLocalAsync(computation, ?showLogs = showLogs) |> Async.RunSynchronously
+
+
+
+namespace Nessos.MBrace.Store
+
+    [<AutoOpen>]
+    module StoreExtensions =
+
+        let prettyPrintStore (store : ICloudStore) =
+            sprintf """{Name = "%s"; Id = "%s";}""" store.Name store.Id
