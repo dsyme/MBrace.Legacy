@@ -65,7 +65,8 @@ namespace Nessos.MBrace.Client
         //  Runtime Boot/Connect methods
         //
 
-        static let initOfProxyActor(actor : Actor<MBraceNodeMsg>) = 
+        static let initProxyActor(info : ClusterDeploymentInfo) =
+            let actor = RuntimeProxy.initRuntimeProxy info
             do actor.Start()
             new Runtime(actor.Ref, [actor :> IDisposable])
 
@@ -76,8 +77,8 @@ namespace Nessos.MBrace.Client
         /// <param name="config">Boot configuration.</param>
         static member internal BootAsync (master : Node, config : BootConfiguration) : Async<Runtime> =
             async {
-                let! proxy = RuntimeProxy.boot(master.Ref, config)
-                return initOfProxyActor proxy
+                let! info = RuntimeProxy.boot(master.Ref, config)
+                return initProxyActor info
             }
 
         /// <summary>
@@ -97,7 +98,7 @@ namespace Nessos.MBrace.Client
 
             let nodes = nodes |> Seq.map (fun n -> n.Ref) |> Seq.toArray
             let! proxy = RuntimeProxy.bootNodes(nodes, replicationFactor, failoverFactor, Some storeId)
-            return initOfProxyActor proxy
+            return initProxyActor proxy
         }
 
         /// <summary>
@@ -109,8 +110,8 @@ namespace Nessos.MBrace.Client
             async {
                 try
                     let node = Node uri
-                    let! proxy = RuntimeProxy.connect node.Ref
-                    return initOfProxyActor proxy
+                    let! info = RuntimeProxy.connect node.Ref
+                    return initProxyActor info
 
                 with e -> return handleError e
             }
@@ -215,7 +216,10 @@ namespace Nessos.MBrace.Client
         /// </summary>
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
-        member r.BootAsync (?replicationFactor, ?failoverFactor) : Async<unit> =
+        /// <param name="store">Store used with new runtime. Defaults to previously used store.</param>
+        member r.BootAsync (?replicationFactor, ?failoverFactor, ?store) : Async<unit> =
+            let storeId = store |> Option.map (fun s -> let i = StoreRegistry.Register(s, false) in i.Id)
+
             async {
                 if nodeConfiguration.Value.State <> Idle then
                     mfailwith "Cannot boot; runtime is already active."
@@ -229,10 +233,10 @@ namespace Nessos.MBrace.Client
                                 Nodes = nodes
                                 ReplicationFactor = defaultArg replicationFactor info.ReplicationFactor
                                 FailoverFactor = defaultArg failoverFactor info.FailoverFactor
-                                StoreId = None
+                                StoreId = storeId
                             }
 
-                        let! _ = postWithReplyAsync <| fun ch -> MasterBoot(ch,config)
+                        let! info = RuntimeProxy.boot(runtime, config)
 
                         return ()
             }
@@ -252,11 +256,12 @@ namespace Nessos.MBrace.Client
         /// </summary>
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
-        member r.RebootAsync (?replicationFactor, ?failoverFactor) : Async<unit> =
+        /// <param name="store">Store used with new runtime. Defaults to previously used store.</param>
+        member r.RebootAsync (?replicationFactor, ?failoverFactor, ?store) : Async<unit> =
             async {
                 do! r.ShutdownAsync()
 
-                return! r.BootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor)
+                return! r.BootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store)
             }
 
         /// <summary>
@@ -295,8 +300,9 @@ namespace Nessos.MBrace.Client
         /// </summary>
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
-        member r.Boot (?replicationFactor, ?failoverFactor) : unit = 
-            r.BootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor) |> Async.RunSynchronously
+        /// <param name="store">Store used with new runtime. Defaults to previously used store.</param>
+        member r.Boot (?replicationFactor, ?failoverFactor, ?store) : unit = 
+            r.BootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store) |> Async.RunSynchronously
 
 
         /// <summary>
@@ -309,8 +315,9 @@ namespace Nessos.MBrace.Client
         /// </summary>
         /// <param name="replicationFactor">Master node replication factor. Defaults to 2.</param>
         /// <param name="failoverFactor">Alternative master node failover factor. Defaults to 2.</param>
-        member r.Reboot(?replicationFactor, ?failoverFactor) : unit = 
-            r.RebootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor) |> Async.RunSynchronously
+        /// <param name="store">Store used with new runtime. Defaults to previously used store.</param>
+        member r.Reboot(?replicationFactor, ?failoverFactor, ?store) : unit = 
+            r.RebootAsync(?replicationFactor = replicationFactor, ?failoverFactor = failoverFactor, ?store = store) |> Async.RunSynchronously
 
         /// <summary>
         ///     Attaches a collection of Nodes to an existing MBrace runtime.
