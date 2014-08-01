@@ -4,11 +4,13 @@ open Nessos.MBrace
 open Nessos.MBrace.Client
 
 
-//#r "../../bin/MBrace.Azure.dll"
-//open Nessos.MBrace.Azure
-//let azureConn = System.IO.File.ReadAllText("/mbrace/azure.txt")
-//let azureStore = AzureStore.Create azureConn
-//MBraceSettings.SetDefaultStore azureStore
+#r "../../bin/MBrace.Azure.dll"
+open Nessos.MBrace.Azure
+
+let azureConn = System.IO.File.ReadAllText("/mbrace/azure.txt")
+let azureStore = AzureStore.Create azureConn
+
+MBraceSettings.DefaultStore <- azureStore
 
 //let nodes = [1..3] 
 //            |> List.map (fun n -> sprintf "mbrace://10.0.1.%d:2675" (3+n)) 
@@ -18,27 +20,19 @@ open Nessos.MBrace.Client
 //nodes |> List.iter (fun n -> n.ShowSystemLogs())
 
 
-MBraceSettings.DefaultTimeout <- 60 * 2 * 1000
+
 let rt = MBrace.InitLocal 3
+
+MBraceSettings.DefaultTimeout <- 60 * 2 * 1000
+
 rt.Run <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
 
 
 rt.GetProcessInfo()
 
-let store = Store.FileSystemStore.LocalTemp :> Store.ICloudStore
-store.
 
-type IFoo =
-    abstract Name : string
-    abstract Id : string
 
-let x = { new System.Object() with
-            override this.ToString() = "foobar"
-        }
-x
-printfn "%A" x
-x
-fsi.AddPrinter<IFoo>(fun f -> f.Id)
+
 
 
 [<Cloud>]

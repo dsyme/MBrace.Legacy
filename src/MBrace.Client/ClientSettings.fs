@@ -77,12 +77,10 @@ namespace Nessos.MBrace.Client
             with get () = init () ; SystemConfiguration.Logger
             and set l = init () ; SystemConfiguration.Logger <- l
 
-        /// Sets the default Store backend used by the client process.
-        static member SetDefaultStore(store : ICloudStore) : unit = 
-            let info = StoreRegistry.Register(store, makeDefault = true) in ()
-        
-        /// Default store used by the client
-        static member DefaultStore = StoreRegistry.DefaultStoreInfo.Store.Id
+        /// Gets or sets the default store instance used by the client process.
+        static member DefaultStore
+            with get () = StoreRegistry.DefaultStoreInfo.Store
+            and set store = let info = StoreRegistry.Register(store, makeDefault = true) in ()
 
         /// Gets the path used by the client as a working directory.
         static member WorkingDirectory = init () ; SystemConfiguration.WorkingDirectory

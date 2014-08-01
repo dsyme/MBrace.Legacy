@@ -23,7 +23,7 @@
                         reply <| Value (MissingAssemblies missingDependencies)
                     else
                         let info = StoreRegistry.Activate(info, makeDefault = true)
-                        ctx.LogInfo <| sprintf "activated store '%s'." info.Id.AssemblyQualifiedName
+                        ctx.LogInfo <| sprintf "using store '%s' with id '%s'." info.Store.Name info.Store.Id
                         reply <| Value StoreLoadResponse.Success
             with e ->
                 ctx.LogError e

@@ -11,6 +11,9 @@
 #r "MBrace.Client.dll"
 
 open System.IO
+open Nessos.MBrace.Store
 open Nessos.MBrace.Client
+
+fsi.AddPrinter prettyPrintStore
 
 MBraceSettings.MBracedExecutablePath <- Path.Combine(__SOURCE_DIRECTORY__, "../../bin/mbraced.exe")

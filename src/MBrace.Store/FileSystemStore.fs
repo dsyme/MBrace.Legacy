@@ -71,7 +71,7 @@
             FileSystemStore.Create(localFsPath, create = true, cleanup = false)
 
         interface ICloudStore with
-            override self.Name = "FileSystem"
+            override self.Name = "FileSystemStore"
             override self.Id = fullPath
 
             override self.GetStoreConfiguration () =
