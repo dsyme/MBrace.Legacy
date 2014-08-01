@@ -235,17 +235,24 @@ Target "AzurePkg" (fun _ ->
             Dependencies = 
                 [
                     "MBrace.Store",                                 RequireExactly release.NugetVersion
-                    "Microsoft.Data.Edm",                           "5.6.0"
-                    "Microsoft.Data.OData",                         "5.6.0"
-                    "Microsoft.Data.Services.Client",               "5.6.0"
-                    "Microsoft.WindowsAzure.ConfigurationManager",  "1.8.0.0"
-                    "Newtonsoft.Json",                              "6.0.3" 
-                    "System.Spatial",                               "5.6.0"
-                    "WindowsAzure.Storage",                         "4.1.0"
+//                    "Microsoft.Data.Edm",                           "5.6.0"
+//                    "Microsoft.Data.OData",                         "5.6.0"
+//                    "Microsoft.Data.Services.Client",               "5.6.0"
+//                    "Microsoft.WindowsAzure.ConfigurationManager",  "1.8.0.0"
+//                    "Newtonsoft.Json",                              "6.0.3" 
+//                    "System.Spatial",                               "5.6.0"
+//                    "WindowsAzure.Storage",                         "4.1.0"
                 ]
             Files =
                 [
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Azure.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Microsoft.Data.Edm.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Microsoft.Data.OData.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Microsoft.Data.Services.Client.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Microsoft.WindowsAzure.Configuration.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Microsoft.WindowsAzure.Storage.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\System.Spatial.dll"
+                    yield! addAssembly @"lib\net45" @"..\bin\Newtonsoft.Json.dll"
                 ]
         })
         ("nuget/MBrace.nuspec")
