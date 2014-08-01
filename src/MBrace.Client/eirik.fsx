@@ -18,8 +18,8 @@ let runtime = MBrace.InitLocal(3, masterPort = 2673)
 //let nodes = Node.SpawnMultiple(3, masterPort = 2673)
 
 let n = Node.Spawn()
-n.SetStoreConfiguration azureStore
-n.SetStoreConfiguration FileSystemStore.LocalTemp
+n.SetStore azureStore
+n.SetStore FileSystemStore.LocalTemp
 runtime.Attach n
 
 

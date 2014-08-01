@@ -212,8 +212,9 @@
         static member Create(path : string) = new FileSystemStoreConfiguration(path)
 
         interface ICloudStoreConfiguration with
-            member __.Id = sprintf "FileSystemStore:%s" path
-            member this.Init () = FileSystemStore.Create path :> ICloudStore
+            member __.Name = "FileSystemStore"
+            member __.Id = path
+            member __.Init () = FileSystemStore.Create path :> ICloudStore
 
         private new (si : SerializationInfo, _ : StreamingContext) =
             new FileSystemStoreConfiguration(si.Read "path")

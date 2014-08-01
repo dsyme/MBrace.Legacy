@@ -154,5 +154,6 @@
                 si.Write "connectionString" connectionString
 
         interface ICloudStoreConfiguration with
-            member this.Id = connectionString
-            member this.Init () = SqlServerStore.Create connectionString :> ICloudStore
+            member __.Name = "SqlServerStore"
+            member __.Id = connectionString
+            member __.Init () = SqlServerStore.Create connectionString :> ICloudStore

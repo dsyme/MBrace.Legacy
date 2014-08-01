@@ -13,7 +13,10 @@
     type ICloudStoreConfiguration =
         inherit ISerializable
 
-        /// Configuration identifier
+        /// Store implementation name
+        abstract Name : string
+
+        /// Store configuration identifier
         abstract Id : string
 
         /// <summary>

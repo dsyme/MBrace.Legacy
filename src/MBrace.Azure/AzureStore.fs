@@ -116,5 +116,6 @@
                 si.AddValue("connectionString", connectionString)
 
         interface ICloudStoreConfiguration with
+            member this.Name = "AzureStore"
             member this.Id = connectionString
             member this.Init () = AzureStore.Create connectionString :> ICloudStore
