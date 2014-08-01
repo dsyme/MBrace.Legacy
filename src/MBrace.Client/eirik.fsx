@@ -27,6 +27,8 @@ runtime.Shutdown()
 
 runtime.Boot()
 
+runtime.Reboot(store = azureStore)
+
 runtime.Nodes
 
 runtime.Master

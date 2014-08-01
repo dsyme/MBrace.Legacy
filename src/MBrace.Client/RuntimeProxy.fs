@@ -59,21 +59,18 @@
         let! state = node.PostWithReply((fun ch -> GetClusterDeploymentInfo(ch, false)), MBraceSettings.DefaultTimeout)
 
         // download store activation info if required
-        let! info = async {
+        match StoreRegistry.TryGetStoreInfo state.StoreId with
+        | Some info -> ()
+        | None ->
+            let! storeManager = node.PostWithReply (GetStoreManager, MBraceSettings.DefaultTimeout)
+            let! info = StoreManager.downloadStore false storeManager
+            return ()
 
-            match StoreRegistry.TryGetStoreInfo state.StoreId with
-            | Some info -> return info
-            | None ->
-                let! storeManager = node.PostWithReply (GetStoreManager, MBraceSettings.DefaultTimeout)
-                return! StoreManager.downloadStore false storeManager
-        }
-
-        return initRuntimeProxy state
+        return state
     }
 
     /// <summary>
-    ///     Boots a given collection of MBrace nodes to a runtime with given configuration;
-    ///     then initializes a proxy actor on the deployment configuration.
+    ///     Boots a given collection of MBrace nodes to a runtime with given configuration.
     /// </summary>
     /// <param name="master"></param>
     /// <param name="config"></param>
@@ -88,9 +85,14 @@
 
         // boot delays mostly occuring in local runtimes;
         // create a dynamic timeout scheme based on number of local cores.
-        let bootTimeout = min ((40000 / min Environment.ProcessorCount 4) * config.Nodes.Length) 120000
-        let! state = master.PostWithReply((fun ch -> MasterBoot(ch, config)), bootTimeout)
-        return initRuntimeProxy state
+        let bootTimeout =
+            match MBraceSettings.DefaultTimeout with
+            | 0 -> 0
+            | dt ->
+                let loadFactor = max 1 (config.Nodes.Length / min Environment.ProcessorCount 4)
+                min (dt * loadFactor) (max dt 120000)
+
+        return! master.PostWithReply((fun ch -> MasterBoot(ch, config)), bootTimeout)
     }
 
     /// <summary>
@@ -116,7 +118,7 @@
         let masterCandidates = nodeInfo |> Array.filter (fun n -> n.Permissions.HasFlag Permissions.Master)
 
         if masterCandidates.Length = 0 then
-            invalidArg "none" "None of the nodes are permitted to be run in the master role."
+            invalidArg "nodes" "None of the nodes are permitted to be run in the master role."
         if masterCandidates.Length < failoverFactor then
             invalidArg "nodes" "insufficient number of master candidates to satisfy failover factor."
         elif failoverFactor > 0 && replicationFactor = 0 then

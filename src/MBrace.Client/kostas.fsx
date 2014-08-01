@@ -25,8 +25,20 @@ rt.Run <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
 
 rt.GetProcessInfo()
 
+let store = Store.FileSystemStore.LocalTemp :> Store.ICloudStore
+store.
 
+type IFoo =
+    abstract Name : string
+    abstract Id : string
 
+let x = { new System.Object() with
+            override this.ToString() = "foobar"
+        }
+x
+printfn "%A" x
+x
+fsi.AddPrinter<IFoo>(fun f -> f.Id)
 
 
 [<Cloud>]
