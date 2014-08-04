@@ -37,30 +37,50 @@
 
 <h1>FileSystemStore</h1>
 <div class="xmldoc">
-<p>An ICloudStore implementation that uses the local filesystem as a backend.</p>
+<p>Store implementation that uses a  filesystem as backend.</p>
 </div>
-  <h3>Constructors</h3>
+  <h3>Static members</h3>
   <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Constructor</td><td>Description</td></tr>
+      <tr><td>Static member</td><td>Description</td></tr>
     </thead>
     <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '202', 202)" onmouseover="showTip(event, '202', 202)">
-            new(path, ?name)
+          <code onmouseout="hideTip(event, '233', 233)" onmouseover="showTip(event, '233', 233)">
+            Create(path, ?create, ?cleanup)
           </code>
-          <div class="tip" id="202">
-            <strong>Signature:</strong> (path:string * name:string option) -&gt; FileSystemStore<br />
+          <div class="tip" id="233">
+            <strong>Signature:</strong> (path:string * create:bool option * cleanup:bool option) -&gt; FileSystemStore<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/FileSystemStore.fs#L12-12" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/FileSystemStore.fs#L45-45" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>Creates a new FileSystemStore instance on given path.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '234', 234)" onmouseover="showTip(event, '234', 234)">
+            LocalTemp
+          </code>
+          <div class="tip" id="234">
+            <strong>Signature:</strong> FileSystemStore<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/FileSystemStore.fs#L69-69" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Initializes a FileSystemStore instance on the local system's temp path.</p>
+
         </td>
       </tr>
     </tbody>

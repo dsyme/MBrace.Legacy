@@ -409,28 +409,21 @@ object that is stored in the underlying CloudStore.</p>
           <td class="type-name">
             <a href="nessos-mbrace-store-filesystemstore.html">FileSystemStore</a>
           </td>
-          <td class="xmldoc"><p>An ICloudStore implementation that uses the local filesystem as a backend.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
-            <a href="nessos-mbrace-store-filesystemstorefactory.html">FileSystemStoreFactory</a>
-          </td>
-          <td class="xmldoc"><p>FileSystem Store factory implementation.</p>
+          <td class="xmldoc"><p>Store implementation that uses a  filesystem as backend.</p>
 </td>
         </tr>
         <tr>
           <td class="type-name">
             <a href="nessos-mbrace-store-icloudstore.html">ICloudStore</a>
           </td>
-          <td class="xmldoc"><p>Cloud filesystem abstraction.</p>
+          <td class="xmldoc"><p>Cloud storage abstraction.</p>
 </td>
         </tr>
         <tr>
           <td class="type-name">
-            <a href="nessos-mbrace-store-icloudstorefactory.html">ICloudStoreFactory</a>
+            <a href="nessos-mbrace-store-icloudstoreconfiguration.html">ICloudStoreConfiguration</a>
           </td>
-          <td class="xmldoc"><p>A factory to create ICloudStore instances.</p>
+          <td class="xmldoc"><p>Serializable cloud store configuration and factory.</p>
 </td>
         </tr>
         <tr>
@@ -442,34 +435,23 @@ object that is stored in the underlying CloudStore.</p>
         </tr>
         <tr>
           <td class="type-name">
-            <a href="nessos-mbrace-store-sqlserverstorefactory.html">SqlServerStoreFactory</a>
-          </td>
-          <td class="xmldoc"><p>SqlServer Store factory implementation.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
-            <a href="nessos-mbrace-store-storedefinition.html">StoreDefinition</a>
-          </td>
-          <td class="xmldoc"><p>Represents the storage provider used by CloudRefs etc.
-This can be the local filesystem (for local usage),
-a shared filesystem (like a UNC path)
-or any custom provider that implements the ICloudStore interface.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
-            <a href="nessos-mbrace-store-storeid.html">StoreId</a>
-          </td>
-          <td class="xmldoc"><p>Provides a unique identification token for a given store instance</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
             <a href="nessos-mbrace-store-tag.html">Tag</a>
           </td>
           <td class="xmldoc"><p>A tag used by MutableCloudRefs to control concurrency.</p>
 </td>
+        </tr>
+    </tbody>
+  </table>
+  <table class="table table-bordered module-list">
+    <thead>
+      <tr><td>Module</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td class="module-name">
+            <a href="nessos-mbrace-store-storeextensions.html">StoreExtensions</a>
+          </td>
+          <td class="xmldoc"></td>
         </tr>
     </tbody>
   </table>
@@ -492,6 +474,20 @@ or any custom provider that implements the ICloudStore interface.</p>
         <tr>
           <td class="type-name">
             <a href="nessos-mbrace-client-mbrace.html">MBrace</a>
+          </td>
+          <td class="xmldoc"><p>Provides a handle and administration API for a running MBrace cluster.</p>
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="nessos-mbrace-client-mbracenode.html">MBraceNode</a>
+          </td>
+          <td class="xmldoc"><p>Provides a handle and administration API for remote MBrace nodes.</p>
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="nessos-mbrace-client-mbraceruntime.html">MBraceRuntime</a>
           </td>
           <td class="xmldoc"><p>Provides a handle and administration API for a running MBrace cluster.</p>
 </td>
@@ -554,23 +550,9 @@ or any custom provider that implements the ICloudStore interface.</p>
         </tr>
         <tr>
           <td class="type-name">
-            <a href="nessos-mbrace-client-runtime.html">Runtime</a>
-          </td>
-          <td class="xmldoc"><p>Provides a handle and administration API for a running MBrace cluster.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
             <a href="nessos-mbrace-client-storeclient.html">StoreClient</a>
           </td>
           <td class="xmldoc"><p>Provides methods for interacting with the store and the primitives without the need for a runtime.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
-            <a href="nessos-mbrace-client-storedefinition.html">StoreDefinition</a>
-          </td>
-          <td class="xmldoc"><p>Store configuration descriptor (Implementation/Connection string).</p>
 </td>
         </tr>
     </tbody>

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>Introducing your project
+    <title>Using MBrace on Windows Azure IaaS [Draft]
 </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="An open source framework for large-scale distributed computation and data processing written in F#."/>
@@ -33,28 +33,271 @@
       <div class="row">
         <div class="span9" id="main">
           
-<h1>Introducing your project</h1>
+<h1>Using MBrace on Windows Azure IaaS [Draft]</h1>
 
-<p>Say more</p>
+<p>In this tutorial you will learn how to setup MBrace on Windows Azure IaaS. 
+As a prerequisite you need to have a Windows Azure account, basic knowledge of the Azure computing/virtual machine services and
+optionally Microsoft Visual Studio (or any environment supporting F#).</p>
+
+<p>Typically you will need some virtual machines to run the MBrace daemons/nodes and a client
+that manages the runtime (usually the client runs on an F# interactive instance). Any nodes in a MBrace runtime
+as well as any clients, should be part of the same network in order to work properly. Because of this restriction
+in this tutorial you have two choices: you can either use one of the virtual machines as a client or you can use
+the Windows Azure VPN service to join the virtual network created in Azure and access the runtime from a remote client (your on-premises computer).</p>
+
+<h2>Creating a Windows Azure virtual machine</h2>
+
+<h3>Creating a virtual network</h3>
+
+<p>At this point you should decide if you are going to use a remote client or use one of
+the virtual machines that you are going to create as a client. If you choose the first 
+option you need to create a virtual network, create and upload certificated and finally configure your VPN client. 
+The process is described in <a href="http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx">this</a> tutorial.
+You can skip this step if you want to use a client in one of your virtual machines, as a virtual network will be automatically created
+for you during the virtual machine creation.</p>
+
+<h3>Creating a virtual machine</h3>
+
+<p>Now you need to create your virtual machines. You can follow 
+<a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-tutorial/">this</a> tutorial
+to create a virtual machine (you can skip the 'How to attach a data disk to the new virtual machine' section).
+If you have created a virtual network then you <strong>must</strong> specify 
+the virtual network when you create the virtual machine. 
+You can't join the virtual machine to a virtual network after you create the VM.
+Note that although there are no minimal requirements for the VM size it's recommented to use at least a Medium (2 cores, 3.5GB Memory) instance.
+After the virtual machine is created log on to it.</p>
+
+<h2>Installing the MBrace Runtime</h2>
+
+<p>In order to get a MBrace node running on a machine you just need to download the <a href="http://nuget.org">MBrace.Runtime</a> package.
+Any dependencies and executables are located in the <em>tools</em> subdirectory. Alternatively you can use <a href="http://github.com/nessos/">MBrace.Installer.zip</a>
+which contains a powershell script that helps you install MBrace by downloading <em>.NET 4.5</em> if it's needed, downloading the
+runtime nuget package, adding firewall exceptions for the MBrace executables and finally installing the MBrace runtime as a Windows Service.
+Open a PowerShell prompt as administrator and run the <em>Install-MBrace.ps1</em> script.
+Before running the installation script you probably need to enable script execution in PowerShell; you can do this using the <a href="http://technet.microsoft.com/en-us/library/ee176961.aspx">Set-ExecutionPolicy</a> cmdlet.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+<span class="l">22: </span>
+<span class="l">23: </span>
+<span class="l">24: </span>
+<span class="l">25: </span>
+<span class="l">26: </span>
+<span class="l">27: </span>
+<span class="l">28: </span>
+<span class="l">29: </span>
+<span class="l">30: </span>
+<span class="l">31: </span>
+<span class="l">32: </span>
+<span class="l">33: </span>
+<span class="l">34: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="i">c</span><span class="o">:</span>
+
+<span class="i">NAME</span>
+    <span class="i">C</span><span class="o">:</span>
+
+<span class="i">SYNOPSIS</span>
+    <span class="i">Installation</span> <span class="i">script</span> <span class="k">for</span> <span class="i">the</span> <span class="i">MBrace</span> <span class="i">runtime</span><span class="o">.</span>
+
+
+<span class="i">SYNTAX</span>
+    <span class="i">C</span><span class="o">:</span>
+
+
+<span class="i">DESCRIPTION</span>
+    <span class="i">This</span> <span class="i">script</span> <span class="i">implements</span> <span class="i">the</span> <span class="i">following</span> <span class="i">workflow</span><span class="o">:</span>
+        <span class="o">*</span> <span class="i">Installs</span> <span class="o">.</span><span class="i">NET</span> <span class="n">4.5</span> <span class="k">if</span> <span class="i">it&#39;s</span> <span class="i">needed</span><span class="o">.</span>
+        <span class="o">*</span> <span class="i">Downloads</span> <span class="i">the</span> <span class="i">NuGet</span> <span class="i">standalone</span> <span class="k">and</span> <span class="i">the</span> <span class="i">latest</span> <span class="i">MBrace</span><span class="o">.</span><span class="i">Runtime</span> <span class="i">package</span><span class="o">.</span>
+        <span class="o">*</span> <span class="i">Adds</span> <span class="i">firewall</span> <span class="i">exceptions</span> <span class="k">for</span> <span class="i">the</span> <span class="i">mbraced</span> <span class="k">and</span> <span class="i">mbrace</span><span class="o">.</span><span class="i">worker</span> <span class="i">executables</span><span class="o">.</span>
+        <span class="o">*</span> <span class="i">Installs</span> <span class="k">and</span> <span class="i">starts</span> <span class="i">the</span> <span class="i">MBrace</span> <span class="i">Windows</span> <span class="i">service</span><span class="o">.</span>
+    <span class="i">Note</span> <span class="i">that</span> <span class="i">administrator</span> <span class="i">rights</span> <span class="i">are</span> <span class="i">required</span><span class="o">.</span>
+
+
+<span class="i">RELATED</span> <span class="i">LINKS</span>
+    <span class="i">http</span><span class="o">:</span><span class="c">//github.com/Nessos/MBrace</span>
+    <span class="i">http</span><span class="o">:</span><span class="c">//nessos.github.io/MBrace</span>
+
+<span class="i">c</span><span class="o">:</span>
+<span class="i">c</span><span class="o">:</span>
+<span class="o">*</span> <span class="i">Checking</span> <span class="k">for</span> <span class="i">admin</span> <span class="i">permissions</span><span class="o">..</span><span class="o">.</span>
+<span class="o">*</span> <span class="i">Checking</span> <span class="k">if</span> <span class="o">.</span><span class="i">NET</span> <span class="n">4.5</span> <span class="i">installed</span><span class="o">..</span><span class="o">.</span>
+<span class="o">*</span> <span class="i">Downloading</span> <span class="i">NuGet</span><span class="o">..</span><span class="o">.</span>
+<span class="o">*</span> <span class="i">Downloading</span> <span class="i">MBrace</span><span class="o">.</span><span class="i">Runtime</span><span class="o">..</span><span class="o">.</span>
+<span class="o">*</span> <span class="i">Adding</span> <span class="i">firewall</span> <span class="i">rules</span><span class="o">..</span><span class="o">.</span>
+<span class="o">*</span> <span class="i">Installing</span> <span class="i">MBrace</span> <span class="i">service</span><span class="o">..</span><span class="o">.</span></pre>
+</td>
+</tr>
+</table>
+
+<p>At this point you should have the <em>MBrace</em> service running. You can confirm this by using the Get-Service MBrace cmdlet or the Services tool.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
 <span class="l">4: </span>
+<span class="l">5: </span>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
-<span class="prep">#r</span> <span class="s">&quot;</span><span class="s">FSharp</span><span class="s">.</span><span class="s">ProjectTemplate</span><span class="s">.</span><span class="s">dll</span><span class="s">&quot;</span>
-<span class="k">open</span> <span class="i">FSharp</span><span class="o">.</span><span class="i">ProjectTemplate</span>
+<span class="i">c</span><span class="o">:</span>
 
-<span class="i">Library</span><span class="o">.</span><span class="i">hello</span> <span class="n">0</span></pre>
+<span class="i">Status</span>   <span class="i">Name</span>               <span class="i">DisplayName</span>
+<span class="o">------</span>   <span class="o">----</span>               <span class="o">-----------</span>
+<span class="i">Running</span>  <span class="i">MBrace</span>             <span class="i">MBrace</span> <span class="i">Runtime</span></pre>
 </td>
 </tr>
 </table>
 
+<h2>Configuring MBrace</h2>
+
+<p>Now you need to make any configurations to the MBrace daemon by changing the mbraced.exe.config file.
+You can configure settings like the working directory, ports used by the runtime, etc. 
+Normally you don't need to change this file and you can skip this step, unless you are using a remote client and a VPN.
+In this case you need to change the <em>hostname</em> setting from its default value to the internal IP of the virtual machine.
+You can find the internal IP either using the <em>ipconfig</em> command or from the Azure Management Portal.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="o">&lt;</span><span class="i">add</span> <span class="i">key</span><span class="o">=</span><span class="s">&quot;</span><span class="s">hostname</span><span class="s">&quot;</span> <span class="i">value</span><span class="o">=</span><span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">4</span><span class="s">&quot;</span> <span class="o">/&gt;</span></pre>
+</td>
+</tr>
+</table>
+
+<p>Leaving the <em>hostname</em> setting to it's default value means that the runtime will use the machine's
+hostname as a node identifier. In the case of VPN your computer (the client) might not be able to
+resolve this hostname to an IP (unless you use a DNS server). Using the VM's IP instead of its hostname
+makes sure that the client will be able to communicate with this node.
+Finally you need to restart the service in order to load the new configuration.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="i">c</span><span class="o">:</span></pre>
+</td>
+</tr>
+</table>
+
+<h2>Creating your cluster</h2>
+
+<p>After setting up the first virtual machine you need to replicate it in order to create a cluster of nodes.
+You can either create the new virtual machines just like the first one and then install the runtime in each of them,
+or you can use the first machine as a template and create your cluster.
+For the second option you need to run sysprep on the virtual machine and then create a custom
+virtual machine. This process is described <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/">here</a>
+for the sysprep part and <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/">here</a> for the custom virtual machine creation.
+You just need to make sure that during the creation you choose the same <em>Cloud Service</em> and <em>Virtual Network</em> for all of your machines.
+You also need to make sure that each mbraced.exe.config file contains the right <em>hostname</em> configuration.</p>
+
+<h2>Booting the MBrace Runtime</h2>
+
+<p>At this point your virtual machines are running and the MBrace nodes are idle.
+At your client machine, if you use VPN make sure that you are connected and you can ping some of the remote machines.
+In any case you need to install the F# interactive in your client (or optionally Visual Studio or any environment supporting F#).
+Now you need to install the <a href="http://nuget.org/">MBrace.Client</a> package.
+In your solution open the <code>mbrace-intro.fsx</code>. In the <em>Connect to a remote runtime</em> section
+change nodes hostname and ports.
+In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 14)" onmouseover="showTip(event, 'fs12', 14)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 15)" onmouseover="showTip(event, 'fs13', 15)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 16)" onmouseover="showTip(event, 'fs14', 16)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 17)" onmouseover="showTip(event, 'fs15', 17)" class="i">MBraceNode</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">&quot;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs16', 18)" onmouseover="showTip(event, 'fs16', 18)" class="i">string</span>(<span class="n">3</span><span class="o">+</span><span onmouseout="hideTip(event, 'fs14', 19)" onmouseover="showTip(event, 'fs14', 19)" class="i">i</span>), <span class="n">2675</span>))</pre>
+</td>
+</tr>
+</table>
+
+<p>Or use the hostnames</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 20)" onmouseover="showTip(event, 'fs11', 20)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 21)" onmouseover="showTip(event, 'fs12', 21)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 22)" onmouseover="showTip(event, 'fs13', 22)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 23)" onmouseover="showTip(event, 'fs14', 23)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 24)" onmouseover="showTip(event, 'fs15', 24)" class="i">MBraceNode</span>(<span class="s">&quot;</span><span class="s">clusterVM</span><span class="s">&quot;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs16', 25)" onmouseover="showTip(event, 'fs16', 25)" class="i">string</span> <span onmouseout="hideTip(event, 'fs14', 26)" onmouseover="showTip(event, 'fs14', 26)" class="i">i</span>, <span class="n">2675</span>))</pre>
+</td>
+</tr>
+</table>
+
+<p>Now ping the nodes to ensure connectivity</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs11', 27)" onmouseover="showTip(event, 'fs11', 27)" class="i">nodes</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 28)" onmouseover="showTip(event, 'fs12', 28)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 29)" onmouseover="showTip(event, 'fs17', 29)" class="i">iter</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs18', 30)" onmouseover="showTip(event, 'fs18', 30)" class="i">n</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs19', 31)" onmouseover="showTip(event, 'fs19', 31)" class="i">printfn</span> <span class="s">&quot;</span><span class="s">Node</span><span class="s"> </span><span class="s">%</span><span class="s">A</span><span class="s"> </span><span class="s">:</span><span class="s"> </span><span class="s">%</span><span class="s">s</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs18', 32)" onmouseover="showTip(event, 'fs18', 32)" class="i">n</span> <span class="o">&lt;|</span> <span class="k">try</span> <span onmouseout="hideTip(event, 'fs18', 33)" onmouseover="showTip(event, 'fs18', 33)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 34)" onmouseover="showTip(event, 'fs20', 34)" class="i">Ping</span>()<span class="o">.</span><span class="i">ToString</span>() <span class="k">with</span> _ <span class="k">-&gt;</span> <span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>At this point, before actually booting a runtime you need to configure which store
+will be used by the runtime. By default each node will use its filesystem .</p>
+
+<h2>Your first computation</h2>
+
+<h2>Useful references</h2>
+
+<ul>
+<li><a href="http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx">Configure a Point-to-Site VPN in the Management Portal</a></li>
+<li><a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-tutorial/">Create a Virtual Machine Running Windows Server</a></li>
+<li><a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/">How to Capture a Windows Virtual Machine to Use as a Template</a></li>
+<li><a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/">How to Create a Custom Virtual Machine</a></li>
+<li><a href="http://azure.microsoft.com/en-us/documentation/articles/install-configure-powershell/">How to install and configure Azure PowerShell</a></li>
+</ul>
+
 <p>Some more info</p>
 
+<div class="tip" id="fs1">namespace Nessos</div>
+<div class="tip" id="fs2">namespace Nessos.MBrace</div>
+<div class="tip" id="fs3">namespace Nessos.MBrace.Store</div>
+<div class="tip" id="fs4">namespace Nessos.MBrace.Client</div>
+<div class="tip" id="fs5">type MBraceSettings =<br />&#160;&#160;private new : unit -&gt; MBraceSettings<br />&#160;&#160;static member AssemblyCacheDirectory : string<br />&#160;&#160;static member ClientId : Guid<br />&#160;&#160;static member DefaultContainer : string<br />&#160;&#160;static member DefaultStore : ICloudStore<br />&#160;&#160;static member DefaultTimeout : int<br />&#160;&#160;static member LocalCacheStoreDirectory : string<br />&#160;&#160;static member Logger : ISystemLogger<br />&#160;&#160;static member MBracedExecutablePath : string<br />&#160;&#160;static member WorkingDirectory : string<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceSettings</div>
+<div class="tip" id="fs6">property MBraceSettings.MBracedExecutablePath: string</div>
+<div class="tip" id="fs7">namespace System</div>
+<div class="tip" id="fs8">namespace System.IO</div>
+<div class="tip" id="fs9">type Path =<br />&#160;&#160;static val DirectorySeparatorChar : char<br />&#160;&#160;static val AltDirectorySeparatorChar : char<br />&#160;&#160;static val VolumeSeparatorChar : char<br />&#160;&#160;static val InvalidPathChars : char[]<br />&#160;&#160;static val PathSeparator : char<br />&#160;&#160;static member ChangeExtension : path:string * extension:string -&gt; string<br />&#160;&#160;static member Combine : params paths:string[] -&gt; string + 3 overloads<br />&#160;&#160;static member GetDirectoryName : path:string -&gt; string<br />&#160;&#160;static member GetExtension : path:string -&gt; string<br />&#160;&#160;static member GetFileName : path:string -&gt; string<br />&#160;&#160;...<br /><br />Full name: System.IO.Path</div>
+<div class="tip" id="fs10">System.IO.Path.Combine(params paths: string []) : string<br />System.IO.Path.Combine(path1: string, path2: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string, path4: string) : string</div>
+<div class="tip" id="fs11">val nodes : MBraceNode list<br /><br />Full name: Tutorial.nodes</div>
+<div class="tip" id="fs12">Multiple items<br />module List<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type List&lt;&#39;T&gt; =<br />&#160;&#160;| ( [] )<br />&#160;&#160;| ( :: ) of Head: &#39;T * Tail: &#39;T list<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IEnumerable&lt;&#39;T&gt;<br />&#160;&#160;member Head : &#39;T<br />&#160;&#160;member IsEmpty : bool<br />&#160;&#160;member Item : index:int -&gt; &#39;T with get<br />&#160;&#160;member Length : int<br />&#160;&#160;member Tail : &#39;T list<br />&#160;&#160;static member Cons : head:&#39;T * tail:&#39;T list -&gt; &#39;T list<br />&#160;&#160;static member Empty : &#39;T list<br /><br />Full name: Microsoft.FSharp.Collections.List&lt;_&gt;</div>
+<div class="tip" id="fs13">val map : mapping:(&#39;T -&gt; &#39;U) -&gt; list:&#39;T list -&gt; &#39;U list<br /><br />Full name: Microsoft.FSharp.Collections.List.map</div>
+<div class="tip" id="fs14">val i : int</div>
+<div class="tip" id="fs15">Multiple items<br />type MBraceNode =<br />&#160;&#160;new : uri:string -&gt; MBraceNode<br />&#160;&#160;new : uri:Uri -&gt; MBraceNode<br />&#160;&#160;private new : info:NodeDeploymentInfo -&gt; MBraceNode<br />&#160;&#160;private new : nref:ActorRef&lt;MBraceNodeMsg&gt; -&gt; MBraceNode<br />&#160;&#160;new : hostname:string * port:int -&gt; MBraceNode<br />&#160;&#160;private new : nodeRef:ActorRef&lt;MBraceNodeMsg&gt; * uri:Uri -&gt; MBraceNode<br />&#160;&#160;member GetInfo : ?includePerformanceCounters:bool -&gt; string<br />&#160;&#160;member GetInfoAsync : ?includePerformanceCounters:bool -&gt; Async&lt;string&gt;<br />&#160;&#160;member private GetNodeInfoAsync : getPerformanceCounters:bool -&gt; Async&lt;NodeDeploymentInfo&gt;<br />&#160;&#160;member GetPerformanceCounters : unit -&gt; NodePerformanceInfo<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceNode<br /><br />--------------------<br />new : uri:System.Uri -&gt; MBraceNode<br />new : uri:string -&gt; MBraceNode<br />new : hostname:string * port:int -&gt; MBraceNode</div>
+<div class="tip" id="fs16">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />Full name: Microsoft.FSharp.Core.Operators.string<br /><br />--------------------<br />type string = System.String<br /><br />Full name: Microsoft.FSharp.Core.string</div>
+<div class="tip" id="fs17">val iter : action:(&#39;T -&gt; unit) -&gt; list:&#39;T list -&gt; unit<br /><br />Full name: Microsoft.FSharp.Collections.List.iter</div>
+<div class="tip" id="fs18">val n : MBraceNode</div>
+<div class="tip" id="fs19">val printfn : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printfn</div>
+<div class="tip" id="fs20">member MBraceNode.Ping : ?timeout:int -&gt; System.TimeSpan</div>
 
         </div>
         <div class="span3">

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>StoreId - MBrace</title>
+    <title>ICloudStoreConfiguration - MBrace</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
@@ -35,9 +35,9 @@
 
 
 
-<h1>StoreId</h1>
+<h1>ICloudStoreConfiguration</h1>
 <div class="xmldoc">
-<p>Provides a unique identification token for a given store instance</p>
+<p>Serializable cloud store configuration and factory.</p>
 </div>
   <h3>Instance members</h3>
   <table class="table table-bordered member-list">
@@ -48,65 +48,60 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '206', 206)" onmouseover="showTip(event, '206', 206)">
-            AssemblyQualifiedName
+          <code onmouseout="hideTip(event, '198', 198)" onmouseover="showTip(event, '198', 198)">
+            Id
           </code>
-          <div class="tip" id="206">
+          <div class="tip" id="198">
             <strong>Signature:</strong> string<br />
+              <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/StoreId.fs#L21-21" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L20-20" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Assembly qualified name for the store implementation</p>
+          <p>Store configuration identifier</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '207', 207)" onmouseover="showTip(event, '207', 207)">
-            HashCode
+          <code onmouseout="hideTip(event, '199', 199)" onmouseover="showTip(event, '199', 199)">
+            Init()
           </code>
-          <div class="tip" id="207">
-            <strong>Signature:</strong> byte []<br />
+          <div class="tip" id="199">
+            <strong>Signature:</strong> unit -&gt; ICloudStore<br />
+              <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/StoreId.fs#L24-24" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L25-25" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Contains a cryptographic hash generated from the connection string</p>
+          <p>Initializes CloudStore instance for given configuration.</p>
 
         </td>
       </tr>
-    </tbody>
-  </table>
-  <h3>Static members</h3>
-  <table class="table table-bordered member-list">
-    <thead>
-      <tr><td>Static member</td><td>Description</td></tr>
-    </thead>
-    <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '208', 208)" onmouseover="showTip(event, '208', 208)">
-            Generate(store)
+          <code onmouseout="hideTip(event, '200', 200)" onmouseover="showTip(event, '200', 200)">
+            Name
           </code>
-          <div class="tip" id="208">
-            <strong>Signature:</strong> store:ICloudStore -&gt; StoreId<br />
+          <div class="tip" id="200">
+            <strong>Signature:</strong> string<br />
+              <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/StoreId.fs#L29-29" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L17-17" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Generates a store identifier from given instance.</p>
+          <p>Store implementation name</p>
 
         </td>
       </tr>
