@@ -12,6 +12,7 @@
 #r "MBrace.Runtime.Base.dll"
 #r "MBrace.Client.dll"
 
+open Nessos.MBrace
 open Nessos.MBrace.Store
 open Nessos.MBrace.Client
 
@@ -60,17 +61,18 @@ runtime nuget package, adding firewall exceptions for the MBrace executables and
 Open a PowerShell prompt as administrator and run the _Install-MBrace.ps1_ script.
 Before running the installation script you probably need to enable script execution in PowerShell; you can do this using the [Set-ExecutionPolicy](http://technet.microsoft.com/en-us/library/ee176961.aspx) cmdlet.
 
-    c:\\mbrace > help .\\Install-MBrace.ps1
+    [lang=batchfile]
+    c:\mbrace > help .\Install-MBrace.ps1
     
     NAME
-        C:\\mbrace\\Install-MBrace.ps1
+        C:\mbrace\Install-MBrace.ps1
     
     SYNOPSIS
         Installation script for the MBrace runtime.
     
     
     SYNTAX
-        C:\\mbrace\\Install-MBrace.ps1 [-AddToPath] [-Service] [<CommonParameters>]
+        C:\mbrace\Install-MBrace.ps1 [-AddToPath] [-Service] [<CommonParameters>]
     
     
     DESCRIPTION
@@ -86,8 +88,8 @@ Before running the installation script you probably need to enable script execut
         http://github.com/Nessos/MBrace
         http://nessos.github.io/MBrace
             
-    c:\\mbrace > Set-ExecutionPolicy Unrestricted
-    c:\\mbrace > .\Install-MBrace.ps1
+    c:\mbrace > Set-ExecutionPolicy Unrestricted
+    c:\mbrace > .\Install-MBrace.ps1
     * Checking for admin permissions...
     * Checking if .NET 4.5 installed...
     * Downloading NuGet...
@@ -98,8 +100,9 @@ Before running the installation script you probably need to enable script execut
 
 At this point you should have the _MBrace_ service running. You can confirm this by using the Get-Service MBrace cmdlet or the Services tool.
 
-    c:\\mbrace > Get-Service MBrace
-        
+    [lang=batchfile]
+    c:\mbrace > Get-Service MBrace
+            
     Status   Name               DisplayName
     ------   ----               -----------
     Running  MBrace             MBrace Runtime
@@ -109,18 +112,20 @@ At this point you should have the _MBrace_ service running. You can confirm this
 Now you need to make any configurations to the MBrace daemon by changing the mbraced.exe.config file.
 You can configure settings like the working directory, ports used by the runtime, etc. 
 Normally you don't need to change this file and you can skip this step, unless you are using a remote client and a VPN.
-In this case you need to change the _hostname_ setting from its default value to the internal IP of the virtual machine.
-You can find the internal IP either using the _ipconfig_ command or from the Azure Management Portal.
+In this case you need to change the _hostname_ setting from its default value to the internal IP of the virtual machine 
+or the subnet of previously the virtual network in CIDR format.
+you can specify a subnet and
 
-    <add key="hostname" value="10.0.1.4" />
+    <add key="hostname" value="10.0.1.0/27" />
 
 Leaving the _hostname_ setting to it's default value means that the runtime will use the machine's
 hostname as a node identifier. In the case of VPN your computer (the client) might not be able to
-resolve this hostname to an IP (unless you use a DNS server). Using the VM's IP instead of its hostname
+resolve this hostname to an IP (unless you use a DNS server). Using the VM's IP or a subnet instead of its hostname
 makes sure that the client will be able to communicate with this node.
 Finally you need to restart the service in order to load the new configuration.
-
-    c:\\mbrace > Restart-Service MBrace
+    
+    [lang=batchfile]
+    c:\mbrace > Restart-Service MBrace
 
 
 ## Creating your cluster
@@ -132,14 +137,13 @@ For the second option you need to run sysprep on the virtual machine and then cr
 virtual machine. This process is described [here](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/)
 for the sysprep part and [here](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/) for the custom virtual machine creation.
 You just need to make sure that during the creation you choose the same _Cloud Service_ and _Virtual Network_ for all of your machines.
-You also need to make sure that each mbraced.exe.config file contains the right _hostname_ configuration.
 
 ## Booting the MBrace Runtime
 
 At this point your virtual machines are running and the MBrace nodes are idle.
 At your client machine, if you use VPN make sure that you are connected and you can ping some of the remote machines.
 In any case you need to install the F# interactive in your client (or optionally Visual Studio or any environment supporting F#).
-Now you need to install the [MBrace.Client](http://nuget.org/) package.
+Now you need to install the [MBrace.Client](http://www.nuget.org/packages/MBrace.Client) package.
 In your solution open the `mbrace-intro.fsx`. In the _Connect to a remote runtime_ section
 change nodes hostname and ports.
 In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:
@@ -160,12 +164,36 @@ nodes |> List.iter (fun n -> printfn "Node %A : %s" n <| try n.Ping().ToString()
 
 (**
 At this point, before actually booting a runtime you need to configure which store
-will be used by the runtime. By default each node will use its filesystem .
+will be used by the runtime. By default each node will use its local filesystem, 
+but in our case we are going the use Windows Azure Storage as our backend. You need
+to download the [MBrace.Azure](http://www.nuget.org/packages/MBrace.Azure) package.
+
+Now create a new StoreDefinition and set it as default for your client.
+
 *)
 
-(**
+#r "../bin/MBrace.Azure.dll"
 
-## Your first computation
+open Nessos.MBrace.Azure
+
+let name = "yourAccountName"
+let key = "yourAccountKey"
+let connectionString = sprintf "DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s" name key
+
+let azureStore = AzureStore.Create connectionString
+
+MBraceSettings.DefaultStore <- azureStore
+
+(**
+Finally boot the runtime (the MBrace.Azure package will be uploaded to the runtime)
+and send your first cloud computation.
+*)
+
+let runtime = MBrace.Boot nodes
+
+runtime.Run <@ cloud { return 42 } @>
+
+(**
 
 ## Useful references
 * [Configure a Point-to-Site VPN in the Management Portal](http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx)
@@ -173,9 +201,4 @@ will be used by the runtime. By default each node will use its filesystem .
 * [How to Capture a Windows Virtual Machine to Use as a Template](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/)
 * [How to Create a Custom Virtual Machine](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/)
 * [How to install and configure Azure PowerShell](http://azure.microsoft.com/en-us/documentation/articles/install-configure-powershell/)
-*)
-
-
-(**
-Some more info
 *)
