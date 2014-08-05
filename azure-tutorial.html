@@ -52,7 +52,7 @@ the Windows Azure VPN service to join the virtual network created in Azure and a
 <p>At this point you should decide if you are going to use a remote client or use one of
 the virtual machines that you are going to create as a client. If you choose the first 
 option you need to create a virtual network, create and upload certificated and finally configure your VPN client. 
-The process is described in <a href="http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx">this</a> tutorial.
+The process is described in <a href="http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx">here</a>.
 You can skip this step if you want to use a client in one of your virtual machines, as a virtual network will be automatically created
 for you during the virtual machine creation.</p>
 
@@ -70,10 +70,10 @@ After the virtual machine is created log on to it.</p>
 <h2>Installing the MBrace Runtime</h2>
 
 <p>In order to get a MBrace node running on a machine you just need to download the <a href="http://nuget.org">MBrace.Runtime</a> package.
-Any dependencies and executables are located in the <em>tools</em> subdirectory. Alternatively you can use <a href="http://github.com/nessos/">MBrace.Installer.zip</a>
-which contains a powershell script that helps you install MBrace by downloading <em>.NET 4.5</em> if it's needed, downloading the
+Any dependencies and executables are located in the <code>tools</code> subdirectory. Alternatively you can use <a href="http://github.com/nessos/">MBrace.Installer.zip</a>
+which contains a powershell script that helps you install MBrace by downloading <code>.NET 4.5</code> if it's needed, downloading the
 runtime nuget package, adding firewall exceptions for the MBrace executables and finally installing the MBrace runtime as a Windows Service.
-Open a PowerShell prompt as administrator and run the <em>Install-MBrace.ps1</em> script.
+Open a PowerShell prompt as administrator and run the <code>Install-MBrace.ps1</code> script.
 Before running the installation script you probably need to enable script execution in PowerShell; you can do this using the <a href="http://technet.microsoft.com/en-us/library/ee176961.aspx">Set-ExecutionPolicy</a> cmdlet.</p>
 
 <table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; help .\Install-MBrace.ps1
@@ -91,11 +91,11 @@ SYNTAX
 
 DESCRIPTION
     This script implements the following workflow:
-        * Installs .NET 4.5 if it&#39;s needed.
-        * Downloads the NuGet standalone and the latest MBrace.Runtime package.
-        * Adds firewall exceptions for the mbraced and mbrace.worker executables.
-        * Installs and starts the MBrace Windows service.
-    Note that administrator rights are required.
+        * Install .NET 4.5 if it&#39;s needed.
+        * Download the NuGet standalone and the latest MBrace.Runtime package.
+        * Add firewall exceptions for the mbraced and mbrace.worker executables.
+        * Install and starts the MBrace Windows service.
+    Note that administrator permissions are required.
 
 
 RELATED LINKS
@@ -111,7 +111,7 @@ c:\mbrace &gt; .\Install-MBrace.ps1
 * Adding firewall rules...
 * Installing MBrace service...</pre></td></tr></table>
 
-<p>At this point you should have the <em>MBrace</em> service running. You can confirm this by using the Get-Service MBrace cmdlet or the Services tool.</p>
+<p>At this point you should have the <em>MBrace</em> service running. You can confirm this by using the <code>Get-Service</code> cmdlet or the Services tool.</p>
 
 <table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; Get-Service MBrace
 
@@ -124,9 +124,8 @@ Running  MBrace             MBrace Runtime</pre></td></tr></table>
 <p>Now you need to make any configurations to the MBrace daemon by changing the mbraced.exe.config file.
 You can configure settings like the working directory, ports used by the runtime, etc. 
 Normally you don't need to change this file and you can skip this step, unless you are using a remote client and a VPN.
-In this case you need to change the <em>hostname</em> setting from its default value to the internal IP of the virtual machine 
-or the subnet of previously the virtual network in CIDR format.
-you can specify a subnet and</p>
+In this case you need to change the <code>hostname</code> setting from its default value to the internal IP of the virtual machine 
+or the subnet of the previously virtual network in CIDR format.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
@@ -205,7 +204,8 @@ will be used by the runtime. By default each node will use its local filesystem,
 but in our case we are going the use Windows Azure Storage as our backend. You need
 to download the <a href="http://www.nuget.org/packages/MBrace.Azure">MBrace.Azure</a> package.</p>
 
-<p>Now create a new StoreDefinition and set it as default for your client.</p>
+<p>Now create a new <code>StoreDefinition</code> and set it as default for your client. 
+You can find your storage account name and key using the Azure Management Portal, in the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-manage-storage-account/#regeneratestoragekeys">Storage</a> page.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -274,7 +274,7 @@ and send your first cloud computation.</p>
 <div class="tip" id="fs8">namespace System.IO</div>
 <div class="tip" id="fs9">type Path =<br />&#160;&#160;static val DirectorySeparatorChar : char<br />&#160;&#160;static val AltDirectorySeparatorChar : char<br />&#160;&#160;static val VolumeSeparatorChar : char<br />&#160;&#160;static val InvalidPathChars : char[]<br />&#160;&#160;static val PathSeparator : char<br />&#160;&#160;static member ChangeExtension : path:string * extension:string -&gt; string<br />&#160;&#160;static member Combine : params paths:string[] -&gt; string + 3 overloads<br />&#160;&#160;static member GetDirectoryName : path:string -&gt; string<br />&#160;&#160;static member GetExtension : path:string -&gt; string<br />&#160;&#160;static member GetFileName : path:string -&gt; string<br />&#160;&#160;...<br /><br />Full name: System.IO.Path</div>
 <div class="tip" id="fs10">System.IO.Path.Combine(params paths: string []) : string<br />System.IO.Path.Combine(path1: string, path2: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string, path4: string) : string</div>
-<div class="tip" id="fs11">val nodes : MBraceNode list<br /><br />Full name: Tutorial.nodes</div>
+<div class="tip" id="fs11">val nodes : MBraceNode list<br /><br />Full name: Azure-tutorial.nodes</div>
 <div class="tip" id="fs12">Multiple items<br />module List<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type List&lt;&#39;T&gt; =<br />&#160;&#160;| ( [] )<br />&#160;&#160;| ( :: ) of Head: &#39;T * Tail: &#39;T list<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IEnumerable&lt;&#39;T&gt;<br />&#160;&#160;member Head : &#39;T<br />&#160;&#160;member IsEmpty : bool<br />&#160;&#160;member Item : index:int -&gt; &#39;T with get<br />&#160;&#160;member Length : int<br />&#160;&#160;member Tail : &#39;T list<br />&#160;&#160;static member Cons : head:&#39;T * tail:&#39;T list -&gt; &#39;T list<br />&#160;&#160;static member Empty : &#39;T list<br /><br />Full name: Microsoft.FSharp.Collections.List&lt;_&gt;</div>
 <div class="tip" id="fs13">val map : mapping:(&#39;T -&gt; &#39;U) -&gt; list:&#39;T list -&gt; &#39;U list<br /><br />Full name: Microsoft.FSharp.Collections.List.map</div>
 <div class="tip" id="fs14">val i : int</div>
@@ -285,15 +285,15 @@ and send your first cloud computation.</p>
 <div class="tip" id="fs19">val printfn : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printfn</div>
 <div class="tip" id="fs20">member MBraceNode.Ping : ?timeout:int -&gt; System.TimeSpan</div>
 <div class="tip" id="fs21">namespace Nessos.MBrace.Azure</div>
-<div class="tip" id="fs22">val name : string<br /><br />Full name: Tutorial.name</div>
-<div class="tip" id="fs23">val key : string<br /><br />Full name: Tutorial.key</div>
-<div class="tip" id="fs24">val connectionString : string<br /><br />Full name: Tutorial.connectionString</div>
+<div class="tip" id="fs22">val name : string<br /><br />Full name: Azure-tutorial.name</div>
+<div class="tip" id="fs23">val key : string<br /><br />Full name: Azure-tutorial.key</div>
+<div class="tip" id="fs24">val connectionString : string<br /><br />Full name: Azure-tutorial.connectionString</div>
 <div class="tip" id="fs25">val sprintf : format:Printf.StringFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.sprintf</div>
-<div class="tip" id="fs26">val azureStore : AzureStore<br /><br />Full name: Tutorial.azureStore</div>
+<div class="tip" id="fs26">val azureStore : AzureStore<br /><br />Full name: Azure-tutorial.azureStore</div>
 <div class="tip" id="fs27">type AzureStore =<br />&#160;&#160;interface ICloudStore<br />&#160;&#160;private new : connectionString:string -&gt; AzureStore<br />&#160;&#160;static member Create : connectionString:string -&gt; AzureStore<br /><br />Full name: Nessos.MBrace.Azure.AzureStore</div>
 <div class="tip" id="fs28">static member AzureStore.Create : connectionString:string -&gt; AzureStore</div>
 <div class="tip" id="fs29">property MBraceSettings.DefaultStore: ICloudStore</div>
-<div class="tip" id="fs30">val runtime : MBraceRuntime<br /><br />Full name: Tutorial.runtime</div>
+<div class="tip" id="fs30">val runtime : MBraceRuntime<br /><br />Full name: Azure-tutorial.runtime</div>
 <div class="tip" id="fs31">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
 <div class="tip" id="fs32">static member MBraceRuntime.Boot : nodes:MBraceNode list * ?replicationFactor:int * ?failoverFactor:int * ?store:ICloudStore -&gt; MBraceRuntime</div>
 <div class="tip" id="fs33">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; &#39;T</div>
@@ -312,7 +312,7 @@ and send your first cloud computation.</p>
             <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
             
             <li class="nav-header">Getting started</li>
-            <li><a href="/MBrace/tutorial.html">Sample tutorial</a></li>
+            <li><a href="/MBrace/azure-tutorial.html">Windows Azure tutorial</a></li>
 
             <li class="nav-header">Documentation</li>
             <li><a href="/MBrace/reference/index.html">API Reference</a></li>
