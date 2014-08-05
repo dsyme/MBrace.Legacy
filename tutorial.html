@@ -76,6 +76,137 @@ runtime nuget package, adding firewall exceptions for the MBrace executables and
 Open a PowerShell prompt as administrator and run the <em>Install-MBrace.ps1</em> script.
 Before running the installation script you probably need to enable script execution in PowerShell; you can do this using the <a href="http://technet.microsoft.com/en-us/library/ee176961.aspx">Set-ExecutionPolicy</a> cmdlet.</p>
 
+<table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; help .\Install-MBrace.ps1
+
+NAME
+    C:\mbrace\Install-MBrace.ps1
+
+SYNOPSIS
+    Installation script for the MBrace runtime.
+
+
+SYNTAX
+    C:\mbrace\Install-MBrace.ps1 [-AddToPath] [-Service] [&lt;CommonParameters&gt;]
+
+
+DESCRIPTION
+    This script implements the following workflow:
+        * Installs .NET 4.5 if it&#39;s needed.
+        * Downloads the NuGet standalone and the latest MBrace.Runtime package.
+        * Adds firewall exceptions for the mbraced and mbrace.worker executables.
+        * Installs and starts the MBrace Windows service.
+    Note that administrator rights are required.
+
+
+RELATED LINKS
+    http://github.com/Nessos/MBrace
+    http://nessos.github.io/MBrace
+
+c:\mbrace &gt; Set-ExecutionPolicy Unrestricted
+c:\mbrace &gt; .\Install-MBrace.ps1
+* Checking for admin permissions...
+* Checking if .NET 4.5 installed...
+* Downloading NuGet...
+* Downloading MBrace.Runtime...
+* Adding firewall rules...
+* Installing MBrace service...</pre></td></tr></table>
+
+<p>At this point you should have the <em>MBrace</em> service running. You can confirm this by using the Get-Service MBrace cmdlet or the Services tool.</p>
+
+<table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; Get-Service MBrace
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  MBrace             MBrace Runtime</pre></td></tr></table>
+
+<h2>Configuring MBrace</h2>
+
+<p>Now you need to make any configurations to the MBrace daemon by changing the mbraced.exe.config file.
+You can configure settings like the working directory, ports used by the runtime, etc. 
+Normally you don't need to change this file and you can skip this step, unless you are using a remote client and a VPN.
+In this case you need to change the <em>hostname</em> setting from its default value to the internal IP of the virtual machine 
+or the subnet of previously the virtual network in CIDR format.
+you can specify a subnet and</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="o">&lt;</span><span class="i">add</span> <span class="i">key</span><span class="o">=</span><span class="s">&quot;</span><span class="s">hostname</span><span class="s">&quot;</span> <span class="i">value</span><span class="o">=</span><span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">0</span><span class="s">/</span><span class="s">27</span><span class="s">&quot;</span> <span class="o">/&gt;</span></pre>
+</td>
+</tr>
+</table>
+
+<p>Leaving the <em>hostname</em> setting to it's default value means that the runtime will use the machine's
+hostname as a node identifier. In the case of VPN your computer (the client) might not be able to
+resolve this hostname to an IP (unless you use a DNS server). Using the VM's IP or a subnet instead of its hostname
+makes sure that the client will be able to communicate with this node.
+Finally you need to restart the service in order to load the new configuration.</p>
+
+<table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; Restart-Service MBrace</pre></td></tr></table>
+
+<h2>Creating your cluster</h2>
+
+<p>After setting up the first virtual machine you need to replicate it in order to create a cluster of nodes.
+You can either create the new virtual machines just like the first one and then install the runtime in each of them,
+or you can use the first machine as a template and create your cluster.
+For the second option you need to run sysprep on the virtual machine and then create a custom
+virtual machine. This process is described <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/">here</a>
+for the sysprep part and <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/">here</a> for the custom virtual machine creation.
+You just need to make sure that during the creation you choose the same <em>Cloud Service</em> and <em>Virtual Network</em> for all of your machines.</p>
+
+<h2>Booting the MBrace Runtime</h2>
+
+<p>At this point your virtual machines are running and the MBrace nodes are idle.
+At your client machine, if you use VPN make sure that you are connected and you can ping some of the remote machines.
+In any case you need to install the F# interactive in your client (or optionally Visual Studio or any environment supporting F#).
+Now you need to install the <a href="http://www.nuget.org/packages/MBrace.Client">MBrace.Client</a> package.
+In your solution open the <code>mbrace-intro.fsx</code>. In the <em>Connect to a remote runtime</em> section
+change nodes hostname and ports.
+In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 15)" onmouseover="showTip(event, 'fs11', 15)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 16)" onmouseover="showTip(event, 'fs12', 16)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 17)" onmouseover="showTip(event, 'fs13', 17)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 18)" onmouseover="showTip(event, 'fs14', 18)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 19)" onmouseover="showTip(event, 'fs15', 19)" class="i">MBraceNode</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">&quot;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs16', 20)" onmouseover="showTip(event, 'fs16', 20)" class="i">string</span>(<span class="n">3</span><span class="o">+</span><span onmouseout="hideTip(event, 'fs14', 21)" onmouseover="showTip(event, 'fs14', 21)" class="i">i</span>), <span class="n">2675</span>))</pre>
+</td>
+</tr>
+</table>
+
+<p>Or use the hostnames</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 22)" onmouseover="showTip(event, 'fs11', 22)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 23)" onmouseover="showTip(event, 'fs12', 23)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 24)" onmouseover="showTip(event, 'fs13', 24)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 25)" onmouseover="showTip(event, 'fs14', 25)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 26)" onmouseover="showTip(event, 'fs15', 26)" class="i">MBraceNode</span>(<span class="s">&quot;</span><span class="s">clusterVM</span><span class="s">&quot;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs16', 27)" onmouseover="showTip(event, 'fs16', 27)" class="i">string</span> <span onmouseout="hideTip(event, 'fs14', 28)" onmouseover="showTip(event, 'fs14', 28)" class="i">i</span>, <span class="n">2675</span>))</pre>
+</td>
+</tr>
+</table>
+
+<p>Now ping the nodes to ensure connectivity</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs11', 29)" onmouseover="showTip(event, 'fs11', 29)" class="i">nodes</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 30)" onmouseover="showTip(event, 'fs12', 30)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 31)" onmouseover="showTip(event, 'fs17', 31)" class="i">iter</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs18', 32)" onmouseover="showTip(event, 'fs18', 32)" class="i">n</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs19', 33)" onmouseover="showTip(event, 'fs19', 33)" class="i">printfn</span> <span class="s">&quot;</span><span class="s">Node</span><span class="s"> </span><span class="s">%</span><span class="s">A</span><span class="s"> </span><span class="s">:</span><span class="s"> </span><span class="s">%</span><span class="s">s</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs18', 34)" onmouseover="showTip(event, 'fs18', 34)" class="i">n</span> <span class="o">&lt;|</span> <span class="k">try</span> <span onmouseout="hideTip(event, 'fs18', 35)" onmouseover="showTip(event, 'fs18', 35)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 36)" onmouseover="showTip(event, 'fs20', 36)" class="i">Ping</span>()<span class="o">.</span><span class="i">ToString</span>() <span class="k">with</span> _ <span class="k">-&gt;</span> <span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>At this point, before actually booting a runtime you need to configure which store
+will be used by the runtime. By default each node will use its local filesystem, 
+but in our case we are going the use Windows Azure Storage as our backend. You need
+to download the <a href="http://www.nuget.org/packages/MBrace.Azure">MBrace.Azure</a> package.</p>
+
+<p>Now create a new StoreDefinition and set it as default for your client.</p>
+
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
 <span class="l"> 2: </span>
@@ -88,183 +219,40 @@ Before running the installation script you probably need to enable script execut
 <span class="l"> 9: </span>
 <span class="l">10: </span>
 <span class="l">11: </span>
-<span class="l">12: </span>
-<span class="l">13: </span>
-<span class="l">14: </span>
-<span class="l">15: </span>
-<span class="l">16: </span>
-<span class="l">17: </span>
-<span class="l">18: </span>
-<span class="l">19: </span>
-<span class="l">20: </span>
-<span class="l">21: </span>
-<span class="l">22: </span>
-<span class="l">23: </span>
-<span class="l">24: </span>
-<span class="l">25: </span>
-<span class="l">26: </span>
-<span class="l">27: </span>
-<span class="l">28: </span>
-<span class="l">29: </span>
-<span class="l">30: </span>
-<span class="l">31: </span>
-<span class="l">32: </span>
-<span class="l">33: </span>
-<span class="l">34: </span>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
-<span class="i">c</span><span class="o">:</span>
+<span class="prep">#r</span> <span class="s">&quot;</span><span class="s">.</span><span class="s">.</span><span class="s">/</span><span class="s">bin</span><span class="s">/</span><span class="s">MBrace</span><span class="s">.</span><span class="s">Azure</span><span class="s">.</span><span class="s">dll</span><span class="s">&quot;</span>
 
-<span class="i">NAME</span>
-    <span class="i">C</span><span class="o">:</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 37)" onmouseover="showTip(event, 'fs1', 37)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 38)" onmouseover="showTip(event, 'fs2', 38)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs21', 39)" onmouseover="showTip(event, 'fs21', 39)" class="i">Azure</span>
 
-<span class="i">SYNOPSIS</span>
-    <span class="i">Installation</span> <span class="i">script</span> <span class="k">for</span> <span class="i">the</span> <span class="i">MBrace</span> <span class="i">runtime</span><span class="o">.</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs22', 40)" onmouseover="showTip(event, 'fs22', 40)" class="i">name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">yourAccountName</span><span class="s">&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs23', 41)" onmouseover="showTip(event, 'fs23', 41)" class="i">key</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">yourAccountKey</span><span class="s">&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 42)" onmouseover="showTip(event, 'fs24', 42)" class="i">connectionString</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs25', 43)" onmouseover="showTip(event, 'fs25', 43)" class="i">sprintf</span> <span class="s">&quot;</span><span class="s">DefaultEndpointsProtocol</span><span class="s">=</span><span class="s">https</span><span class="s">;</span><span class="s">AccountName</span><span class="s">=</span><span class="s">%</span><span class="s">s</span><span class="s">;</span><span class="s">AccountKey</span><span class="s">=</span><span class="s">%</span><span class="s">s</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs22', 44)" onmouseover="showTip(event, 'fs22', 44)" class="i">name</span> <span onmouseout="hideTip(event, 'fs23', 45)" onmouseover="showTip(event, 'fs23', 45)" class="i">key</span>
 
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs26', 46)" onmouseover="showTip(event, 'fs26', 46)" class="i">azureStore</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs27', 47)" onmouseover="showTip(event, 'fs27', 47)" class="i">AzureStore</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs28', 48)" onmouseover="showTip(event, 'fs28', 48)" class="i">Create</span> <span onmouseout="hideTip(event, 'fs24', 49)" onmouseover="showTip(event, 'fs24', 49)" class="i">connectionString</span>
 
-<span class="i">SYNTAX</span>
-    <span class="i">C</span><span class="o">:</span>
-
-
-<span class="i">DESCRIPTION</span>
-    <span class="i">This</span> <span class="i">script</span> <span class="i">implements</span> <span class="i">the</span> <span class="i">following</span> <span class="i">workflow</span><span class="o">:</span>
-        <span class="o">*</span> <span class="i">Installs</span> <span class="o">.</span><span class="i">NET</span> <span class="n">4.5</span> <span class="k">if</span> <span class="i">it&#39;s</span> <span class="i">needed</span><span class="o">.</span>
-        <span class="o">*</span> <span class="i">Downloads</span> <span class="i">the</span> <span class="i">NuGet</span> <span class="i">standalone</span> <span class="k">and</span> <span class="i">the</span> <span class="i">latest</span> <span class="i">MBrace</span><span class="o">.</span><span class="i">Runtime</span> <span class="i">package</span><span class="o">.</span>
-        <span class="o">*</span> <span class="i">Adds</span> <span class="i">firewall</span> <span class="i">exceptions</span> <span class="k">for</span> <span class="i">the</span> <span class="i">mbraced</span> <span class="k">and</span> <span class="i">mbrace</span><span class="o">.</span><span class="i">worker</span> <span class="i">executables</span><span class="o">.</span>
-        <span class="o">*</span> <span class="i">Installs</span> <span class="k">and</span> <span class="i">starts</span> <span class="i">the</span> <span class="i">MBrace</span> <span class="i">Windows</span> <span class="i">service</span><span class="o">.</span>
-    <span class="i">Note</span> <span class="i">that</span> <span class="i">administrator</span> <span class="i">rights</span> <span class="i">are</span> <span class="i">required</span><span class="o">.</span>
-
-
-<span class="i">RELATED</span> <span class="i">LINKS</span>
-    <span class="i">http</span><span class="o">:</span><span class="c">//github.com/Nessos/MBrace</span>
-    <span class="i">http</span><span class="o">:</span><span class="c">//nessos.github.io/MBrace</span>
-
-<span class="i">c</span><span class="o">:</span>
-<span class="i">c</span><span class="o">:</span>
-<span class="o">*</span> <span class="i">Checking</span> <span class="k">for</span> <span class="i">admin</span> <span class="i">permissions</span><span class="o">..</span><span class="o">.</span>
-<span class="o">*</span> <span class="i">Checking</span> <span class="k">if</span> <span class="o">.</span><span class="i">NET</span> <span class="n">4.5</span> <span class="i">installed</span><span class="o">..</span><span class="o">.</span>
-<span class="o">*</span> <span class="i">Downloading</span> <span class="i">NuGet</span><span class="o">..</span><span class="o">.</span>
-<span class="o">*</span> <span class="i">Downloading</span> <span class="i">MBrace</span><span class="o">.</span><span class="i">Runtime</span><span class="o">..</span><span class="o">.</span>
-<span class="o">*</span> <span class="i">Adding</span> <span class="i">firewall</span> <span class="i">rules</span><span class="o">..</span><span class="o">.</span>
-<span class="o">*</span> <span class="i">Installing</span> <span class="i">MBrace</span> <span class="i">service</span><span class="o">..</span><span class="o">.</span></pre>
+<span onmouseout="hideTip(event, 'fs5', 50)" onmouseover="showTip(event, 'fs5', 50)" class="i">MBraceSettings</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs29', 51)" onmouseover="showTip(event, 'fs29', 51)" class="i">DefaultStore</span> <span class="o">&lt;-</span> <span onmouseout="hideTip(event, 'fs26', 52)" onmouseover="showTip(event, 'fs26', 52)" class="i">azureStore</span></pre>
 </td>
 </tr>
 </table>
 
-<p>At this point you should have the <em>MBrace</em> service running. You can confirm this by using the Get-Service MBrace cmdlet or the Services tool.</p>
+<p>Finally boot the runtime (the MBrace.Azure package will be uploaded to the runtime)
+and send your first cloud computation.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
-<span class="l">4: </span>
-<span class="l">5: </span>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
-<span class="i">c</span><span class="o">:</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs30', 53)" onmouseover="showTip(event, 'fs30', 53)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs31', 54)" onmouseover="showTip(event, 'fs31', 54)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs32', 55)" onmouseover="showTip(event, 'fs32', 55)" class="i">Boot</span> <span onmouseout="hideTip(event, 'fs11', 56)" onmouseover="showTip(event, 'fs11', 56)" class="i">nodes</span>
 
-<span class="i">Status</span>   <span class="i">Name</span>               <span class="i">DisplayName</span>
-<span class="o">------</span>   <span class="o">----</span>               <span class="o">-----------</span>
-<span class="i">Running</span>  <span class="i">MBrace</span>             <span class="i">MBrace</span> <span class="i">Runtime</span></pre>
+<span onmouseout="hideTip(event, 'fs30', 57)" onmouseover="showTip(event, 'fs30', 57)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs33', 58)" onmouseover="showTip(event, 'fs33', 58)" class="i">Run</span> &lt;@ <span onmouseout="hideTip(event, 'fs34', 59)" onmouseover="showTip(event, 'fs34', 59)" class="i">cloud</span> { <span class="k">return</span> <span class="n">42</span> } @&gt;</pre>
 </td>
 </tr>
 </table>
-
-<h2>Configuring MBrace</h2>
-
-<p>Now you need to make any configurations to the MBrace daemon by changing the mbraced.exe.config file.
-You can configure settings like the working directory, ports used by the runtime, etc. 
-Normally you don't need to change this file and you can skip this step, unless you are using a remote client and a VPN.
-In this case you need to change the <em>hostname</em> setting from its default value to the internal IP of the virtual machine.
-You can find the internal IP either using the <em>ipconfig</em> command or from the Azure Management Portal.</p>
-
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="o">&lt;</span><span class="i">add</span> <span class="i">key</span><span class="o">=</span><span class="s">&quot;</span><span class="s">hostname</span><span class="s">&quot;</span> <span class="i">value</span><span class="o">=</span><span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">4</span><span class="s">&quot;</span> <span class="o">/&gt;</span></pre>
-</td>
-</tr>
-</table>
-
-<p>Leaving the <em>hostname</em> setting to it's default value means that the runtime will use the machine's
-hostname as a node identifier. In the case of VPN your computer (the client) might not be able to
-resolve this hostname to an IP (unless you use a DNS server). Using the VM's IP instead of its hostname
-makes sure that the client will be able to communicate with this node.
-Finally you need to restart the service in order to load the new configuration.</p>
-
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="i">c</span><span class="o">:</span></pre>
-</td>
-</tr>
-</table>
-
-<h2>Creating your cluster</h2>
-
-<p>After setting up the first virtual machine you need to replicate it in order to create a cluster of nodes.
-You can either create the new virtual machines just like the first one and then install the runtime in each of them,
-or you can use the first machine as a template and create your cluster.
-For the second option you need to run sysprep on the virtual machine and then create a custom
-virtual machine. This process is described <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/">here</a>
-for the sysprep part and <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/">here</a> for the custom virtual machine creation.
-You just need to make sure that during the creation you choose the same <em>Cloud Service</em> and <em>Virtual Network</em> for all of your machines.
-You also need to make sure that each mbraced.exe.config file contains the right <em>hostname</em> configuration.</p>
-
-<h2>Booting the MBrace Runtime</h2>
-
-<p>At this point your virtual machines are running and the MBrace nodes are idle.
-At your client machine, if you use VPN make sure that you are connected and you can ping some of the remote machines.
-In any case you need to install the F# interactive in your client (or optionally Visual Studio or any environment supporting F#).
-Now you need to install the <a href="http://nuget.org/">MBrace.Client</a> package.
-In your solution open the <code>mbrace-intro.fsx</code>. In the <em>Connect to a remote runtime</em> section
-change nodes hostname and ports.
-In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:</p>
-
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 14)" onmouseover="showTip(event, 'fs12', 14)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 15)" onmouseover="showTip(event, 'fs13', 15)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 16)" onmouseover="showTip(event, 'fs14', 16)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 17)" onmouseover="showTip(event, 'fs15', 17)" class="i">MBraceNode</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">&quot;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs16', 18)" onmouseover="showTip(event, 'fs16', 18)" class="i">string</span>(<span class="n">3</span><span class="o">+</span><span onmouseout="hideTip(event, 'fs14', 19)" onmouseover="showTip(event, 'fs14', 19)" class="i">i</span>), <span class="n">2675</span>))</pre>
-</td>
-</tr>
-</table>
-
-<p>Or use the hostnames</p>
-
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 20)" onmouseover="showTip(event, 'fs11', 20)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 21)" onmouseover="showTip(event, 'fs12', 21)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 22)" onmouseover="showTip(event, 'fs13', 22)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 23)" onmouseover="showTip(event, 'fs14', 23)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 24)" onmouseover="showTip(event, 'fs15', 24)" class="i">MBraceNode</span>(<span class="s">&quot;</span><span class="s">clusterVM</span><span class="s">&quot;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs16', 25)" onmouseover="showTip(event, 'fs16', 25)" class="i">string</span> <span onmouseout="hideTip(event, 'fs14', 26)" onmouseover="showTip(event, 'fs14', 26)" class="i">i</span>, <span class="n">2675</span>))</pre>
-</td>
-</tr>
-</table>
-
-<p>Now ping the nodes to ensure connectivity</p>
-
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span onmouseout="hideTip(event, 'fs11', 27)" onmouseover="showTip(event, 'fs11', 27)" class="i">nodes</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 28)" onmouseover="showTip(event, 'fs12', 28)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs17', 29)" onmouseover="showTip(event, 'fs17', 29)" class="i">iter</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs18', 30)" onmouseover="showTip(event, 'fs18', 30)" class="i">n</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs19', 31)" onmouseover="showTip(event, 'fs19', 31)" class="i">printfn</span> <span class="s">&quot;</span><span class="s">Node</span><span class="s"> </span><span class="s">%</span><span class="s">A</span><span class="s"> </span><span class="s">:</span><span class="s"> </span><span class="s">%</span><span class="s">s</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs18', 32)" onmouseover="showTip(event, 'fs18', 32)" class="i">n</span> <span class="o">&lt;|</span> <span class="k">try</span> <span onmouseout="hideTip(event, 'fs18', 33)" onmouseover="showTip(event, 'fs18', 33)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 34)" onmouseover="showTip(event, 'fs20', 34)" class="i">Ping</span>()<span class="o">.</span><span class="i">ToString</span>() <span class="k">with</span> _ <span class="k">-&gt;</span> <span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span>)</pre>
-</td>
-</tr>
-</table>
-
-<p>At this point, before actually booting a runtime you need to configure which store
-will be used by the runtime. By default each node will use its filesystem .</p>
-
-<h2>Your first computation</h2>
 
 <h2>Useful references</h2>
 
@@ -275,8 +263,6 @@ will be used by the runtime. By default each node will use its filesystem .</p>
 <li><a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/">How to Create a Custom Virtual Machine</a></li>
 <li><a href="http://azure.microsoft.com/en-us/documentation/articles/install-configure-powershell/">How to install and configure Azure PowerShell</a></li>
 </ul>
-
-<p>Some more info</p>
 
 <div class="tip" id="fs1">namespace Nessos</div>
 <div class="tip" id="fs2">namespace Nessos.MBrace</div>
@@ -298,6 +284,20 @@ will be used by the runtime. By default each node will use its filesystem .</p>
 <div class="tip" id="fs18">val n : MBraceNode</div>
 <div class="tip" id="fs19">val printfn : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printfn</div>
 <div class="tip" id="fs20">member MBraceNode.Ping : ?timeout:int -&gt; System.TimeSpan</div>
+<div class="tip" id="fs21">namespace Nessos.MBrace.Azure</div>
+<div class="tip" id="fs22">val name : string<br /><br />Full name: Tutorial.name</div>
+<div class="tip" id="fs23">val key : string<br /><br />Full name: Tutorial.key</div>
+<div class="tip" id="fs24">val connectionString : string<br /><br />Full name: Tutorial.connectionString</div>
+<div class="tip" id="fs25">val sprintf : format:Printf.StringFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.sprintf</div>
+<div class="tip" id="fs26">val azureStore : AzureStore<br /><br />Full name: Tutorial.azureStore</div>
+<div class="tip" id="fs27">type AzureStore =<br />&#160;&#160;interface ICloudStore<br />&#160;&#160;private new : connectionString:string -&gt; AzureStore<br />&#160;&#160;static member Create : connectionString:string -&gt; AzureStore<br /><br />Full name: Nessos.MBrace.Azure.AzureStore</div>
+<div class="tip" id="fs28">static member AzureStore.Create : connectionString:string -&gt; AzureStore</div>
+<div class="tip" id="fs29">property MBraceSettings.DefaultStore: ICloudStore</div>
+<div class="tip" id="fs30">val runtime : MBraceRuntime<br /><br />Full name: Tutorial.runtime</div>
+<div class="tip" id="fs31">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
+<div class="tip" id="fs32">static member MBraceRuntime.Boot : nodes:MBraceNode list * ?replicationFactor:int * ?failoverFactor:int * ?store:ICloudStore -&gt; MBraceRuntime</div>
+<div class="tip" id="fs33">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; &#39;T</div>
+<div class="tip" id="fs34">val cloud : CloudBuilder<br /><br />Full name: Nessos.MBrace.CloudBuilder.cloud</div>
 
         </div>
         <div class="span3">
