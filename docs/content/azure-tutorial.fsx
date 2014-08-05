@@ -38,7 +38,7 @@ the Windows Azure VPN service to join the virtual network created in Azure and a
 At this point you should decide if you are going to use a remote client or use one of
 the virtual machines that you are going to create as a client. If you choose the first 
 option you need to create a virtual network, create and upload certificated and finally configure your VPN client. 
-The process is described in [this](http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx) tutorial.
+The process is described in [here](http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx).
 You can skip this step if you want to use a client in one of your virtual machines, as a virtual network will be automatically created
 for you during the virtual machine creation.
 
@@ -55,10 +55,10 @@ After the virtual machine is created log on to it.
 ## Installing the MBrace Runtime
 
 In order to get a MBrace node running on a machine you just need to download the [MBrace.Runtime](http://nuget.org) package.
-Any dependencies and executables are located in the _tools_ subdirectory. Alternatively you can use [MBrace.Installer.zip](http://github.com/nessos/)
-which contains a powershell script that helps you install MBrace by downloading _.NET 4.5_ if it's needed, downloading the
+Any dependencies and executables are located in the `tools` subdirectory. Alternatively you can use [MBrace.Installer.zip](http://github.com/nessos/)
+which contains a powershell script that helps you install MBrace by downloading `.NET 4.5` if it's needed, downloading the
 runtime nuget package, adding firewall exceptions for the MBrace executables and finally installing the MBrace runtime as a Windows Service.
-Open a PowerShell prompt as administrator and run the _Install-MBrace.ps1_ script.
+Open a PowerShell prompt as administrator and run the `Install-MBrace.ps1` script.
 Before running the installation script you probably need to enable script execution in PowerShell; you can do this using the [Set-ExecutionPolicy](http://technet.microsoft.com/en-us/library/ee176961.aspx) cmdlet.
 
     [lang=batchfile]
@@ -77,11 +77,11 @@ Before running the installation script you probably need to enable script execut
     
     DESCRIPTION
         This script implements the following workflow:
-            * Installs .NET 4.5 if it's needed.
-            * Downloads the NuGet standalone and the latest MBrace.Runtime package.
-            * Adds firewall exceptions for the mbraced and mbrace.worker executables.
-            * Installs and starts the MBrace Windows service.
-        Note that administrator rights are required.
+            * Install .NET 4.5 if it's needed.
+            * Download the NuGet standalone and the latest MBrace.Runtime package.
+            * Add firewall exceptions for the mbraced and mbrace.worker executables.
+            * Install and starts the MBrace Windows service.
+        Note that administrator permissions are required.
     
     
     RELATED LINKS
@@ -98,7 +98,7 @@ Before running the installation script you probably need to enable script execut
     * Installing MBrace service...
 
 
-At this point you should have the _MBrace_ service running. You can confirm this by using the Get-Service MBrace cmdlet or the Services tool.
+At this point you should have the _MBrace_ service running. You can confirm this by using the `Get-Service` cmdlet or the Services tool.
 
     [lang=batchfile]
     c:\mbrace > Get-Service MBrace
@@ -112,9 +112,8 @@ At this point you should have the _MBrace_ service running. You can confirm this
 Now you need to make any configurations to the MBrace daemon by changing the mbraced.exe.config file.
 You can configure settings like the working directory, ports used by the runtime, etc. 
 Normally you don't need to change this file and you can skip this step, unless you are using a remote client and a VPN.
-In this case you need to change the _hostname_ setting from its default value to the internal IP of the virtual machine 
-or the subnet of previously the virtual network in CIDR format.
-you can specify a subnet and
+In this case you need to change the `hostname` setting from its default value to the internal IP of the virtual machine 
+or the subnet of the previously virtual network in CIDR format.
 
     <add key="hostname" value="10.0.1.0/27" />
 
@@ -168,7 +167,8 @@ will be used by the runtime. By default each node will use its local filesystem,
 but in our case we are going the use Windows Azure Storage as our backend. You need
 to download the [MBrace.Azure](http://www.nuget.org/packages/MBrace.Azure) package.
 
-Now create a new StoreDefinition and set it as default for your client.
+Now create a new `StoreDefinition` and set it as default for your client. 
+You can find your storage account name and key using the Azure Management Portal, in the [Storage](https://azure.microsoft.com/en-us/documentation/articles/storage-manage-storage-account/#regeneratestoragekeys) page.
 
 *)
 
