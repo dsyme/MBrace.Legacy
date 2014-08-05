@@ -218,9 +218,18 @@
         let resolveAddress (hostname : string) (port : int) =
             // check if valid local hostname
             try
-                if Dns.GetHostAddresses hostname |> Array.forall isLocalIpAddress then
+                match hostname with
+                | IPSubnet.CIDR _ ->
+                    let hostname' = Dns.GetHostAddresses(Dns.GetHostName())
+                                    |> Seq.filter (fun ip -> ip.AddressFamily = Sockets.AddressFamily.InterNetwork)
+                                    |> Seq.map string
+                                    |> Seq.tryFind (fun ip -> IPSubnet.contains hostname ip)
+                    match hostname' with
+                    | Some h -> Address(h, port)
+                    | None   -> exiter.Exit(sprintf "invalid hostname '%s'. No matching IP found." hostname, id = 1)
+                | hostname when Dns.GetHostAddresses hostname |> Array.forall isLocalIpAddress ->
                     Address(hostname, port)
-                else
+                | _ ->
                     exiter.Exit(sprintf "invalid hostname '%s'." hostname, id = 1)
             with _ -> exiter.Exit(sprintf "invalid hostname '%s'." hostname, id = 1)
 

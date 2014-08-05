@@ -114,6 +114,7 @@
 
             // resolve primary address
             let address = resolveAddress hostname primaryPort
+            let hostname = address.HostnameOrAddress
 
             //
             // begin boot

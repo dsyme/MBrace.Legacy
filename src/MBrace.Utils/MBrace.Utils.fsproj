@@ -57,6 +57,7 @@
     <Compile Include="Concurrency.fs" />
     <Compile Include="Stream.fs" />
     <Compile Include="String.fs" />
+    <Compile Include="Network.fs" />
     <Compile Include="Exiter.fs" />
     <Compile Include="IoC.fs" />
     <Compile Include="Reflection.fs" />
