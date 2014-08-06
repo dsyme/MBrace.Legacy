@@ -28,8 +28,9 @@ optionally Microsoft Visual Studio (or any environment supporting F#).
 
 Typically you will need some virtual machines to run the MBrace daemons/nodes and a client
 that manages the runtime (usually the client runs on an F# interactive instance). Any nodes in a MBrace runtime
-as well as any clients, should be part of the same network in order to work properly. Because of this restriction
-in this tutorial you have two choices: you can either use one of the virtual machines as a client or you can use
+as well as any clients, should be part of the same network in order to work properly. 
+
+Because of this restriction in this tutorial you have two choices: you can either use one of the virtual machines as a client or you can use
 the Windows Azure VPN service to join the virtual network created in Azure and access the runtime from a remote client (your on-premises computer).
 
 ## Creating a Windows Azure virtual machine
@@ -39,6 +40,7 @@ At this point you should decide if you are going to use a remote client or use o
 the virtual machines that you are going to create as a client. If you choose the first 
 option you need to create a virtual network, create and upload certificated and finally configure your VPN client. 
 The process is described in [here](http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx).
+
 You can skip this step if you want to use a client in one of your virtual machines, as a virtual network will be automatically created
 for you during the virtual machine creation.
 
@@ -49,6 +51,7 @@ to create a virtual machine (you can skip the 'How to attach a data disk to the 
 If you have created a virtual network then you __must__ specify 
 the virtual network when you create the virtual machine. 
 You can't join the virtual machine to a virtual network after you create the VM.
+
 Note that although there are no minimal requirements for the VM size it's recommented to use at least a Medium (2 cores, 3.5GB Memory) instance.
 After the virtual machine is created log on to it.
 
@@ -58,6 +61,7 @@ In order to get a MBrace node running on a machine you just need to download the
 Any dependencies and executables are located in the `tools` subdirectory. Alternatively you can use [MBrace.Installer.zip](http://github.com/nessos/)
 which contains a powershell script that helps you install MBrace by downloading `.NET 4.5` if it's needed, downloading the
 runtime nuget package, adding firewall exceptions for the MBrace executables and finally installing the MBrace runtime as a Windows Service.
+
 Open a PowerShell prompt as administrator and run the `Install-MBrace.ps1` script.
 Before running the installation script you probably need to enable script execution in PowerShell; you can do this using the [Set-ExecutionPolicy](http://technet.microsoft.com/en-us/library/ee176961.aspx) cmdlet.
 
@@ -111,6 +115,7 @@ At this point you should have the _MBrace_ service running. You can confirm this
 ## Configuring MBrace
 Now you need to make any configurations to the MBrace daemon by changing the mbraced.exe.config file.
 You can configure settings like the working directory, ports used by the runtime, etc. 
+
 Normally you don't need to change this file and you can skip this step, unless you are using a remote client and a VPN.
 In this case you need to change the `hostname` setting from its default value to the internal IP of the virtual machine 
 or the subnet of the previously virtual network in CIDR format.
@@ -121,6 +126,7 @@ Leaving the _hostname_ setting to it's default value means that the runtime will
 hostname as a node identifier. In the case of VPN your computer (the client) might not be able to
 resolve this hostname to an IP (unless you use a DNS server). Using the VM's IP or a subnet instead of its hostname
 makes sure that the client will be able to communicate with this node.
+
 Finally you need to restart the service in order to load the new configuration.
     
     [lang=batchfile]
@@ -132,7 +138,7 @@ Finally you need to restart the service in order to load the new configuration.
 After setting up the first virtual machine you need to replicate it in order to create a cluster of nodes.
 You can either create the new virtual machines just like the first one and then install the runtime in each of them,
 or you can use the first machine as a template and create your cluster.
-For the second option you need to run sysprep on the virtual machine and then create a custom
+For the second option you need to run `sysprep` on the virtual machine and then create a custom
 virtual machine. This process is described [here](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/)
 for the sysprep part and [here](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/) for the custom virtual machine creation.
 You just need to make sure that during the creation you choose the same _Cloud Service_ and _Virtual Network_ for all of your machines.
@@ -141,8 +147,10 @@ You just need to make sure that during the creation you choose the same _Cloud S
 
 At this point your virtual machines are running and the MBrace nodes are idle.
 At your client machine, if you use VPN make sure that you are connected and you can ping some of the remote machines.
+
 In any case you need to install the F# interactive in your client (or optionally Visual Studio or any environment supporting F#).
 Now you need to install the [MBrace.Client](http://www.nuget.org/packages/MBrace.Client) package.
+
 In your solution open the `mbrace-intro.fsx`. In the _Connect to a remote runtime_ section
 change nodes hostname and ports.
 In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:
