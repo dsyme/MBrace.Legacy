@@ -1,6 +1,6 @@
 .PHONY: FORCE all clean distclean
 
-FILE=mbrace
+FILE=mbrace-manual
 .SUFFIXES: .pdf .ps .dvi .tex
 .PHONY: clean distclean  
 
