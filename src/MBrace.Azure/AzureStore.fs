@@ -32,6 +32,20 @@
             with ex -> raise <| new Exception("Failed to create AzureStore", ex)
             
             new AzureStore(connectionString)
+        
+        /// <summary>
+        ///     Initialize an Azure Store instance with given credentials
+        /// </summary>
+        /// <param name="accountName">Azure account name.</param>
+        /// <param name="accountKey">Azure account key base64 encoding.</param>
+        /// <param name="endpointsProtocol">Endpoints protocol. Defaults to https.</param>
+        static member Create(accountName : string, accountKey : string, ?endpointsProtocol) =
+            let endpointsProtocol = defaultArg endpointsProtocol "https"
+            let connectionString = 
+                sprintf "DefaultEndpointsProtocol=%s;AccountName=%s;AccountKey=%s" 
+                    endpointsProtocol accountName accountKey
+
+            AzureStore.Create(connectionString)
 
         interface ICloudStore with
             member this.Name = "AzureStore"

@@ -178,9 +178,8 @@ open Nessos.MBrace.Azure
 
 let name = "yourAccountName"
 let key = "yourAccountKey"
-let connectionString = sprintf "DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s" name key
 
-let azureStore = AzureStore.Create connectionString
+let azureStore = AzureStore.Create(accountName = name, accountKey = key)
 
 MBraceSettings.DefaultStore <- azureStore
 
