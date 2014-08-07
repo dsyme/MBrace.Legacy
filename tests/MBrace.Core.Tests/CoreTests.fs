@@ -604,7 +604,7 @@
             let f = 
                 <@ cloud {
                     let! s = CloudSeq.New(folder, [1..10])
-                    let! fs = CloudFile.Get(s.Container)
+                    let! fs = CloudFile.GetFilesInContainer s.Container
                     let  s = Seq.head fs
                     return s
                 } @>
