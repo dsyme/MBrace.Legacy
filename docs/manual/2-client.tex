@@ -179,23 +179,6 @@ Moreover, patterns like the one described above are very common in repl environm
 This has allowed us overcome the above problem for certain data types using a technique
 that involves code erasure of value initializers in the assemblies compiled by the shell.
 
-While this works well for most grounded types, erasure in higher-order types such as lambdas,
-object expressions and workflows is not possible, often resulting in a warning message being 
-output by the shell:
-\begin{verbatim}
-    > let f = () ; fun x -> x + 1
-	
-   val f : int -> int
-
-   > runtime.Run <@ cloud { return f 41 } @>
-   Warning: Cloud block encloses value 'f'. Consider converting to a function.
-   val it : int = 42
-\end{verbatim}
-In this case, the warning occurs since the \fsharp{} compiler represents \texttt f with
-a \dotnet{} property, rather than a method. The simplest workaround would be to convert 
-the value into a thunk, or adopting an argument passing style as in the example
-given previously.
-
 \subsubsection*{Non-Serializable Objects}
 
 \noindent Consider the following snippet:
@@ -271,7 +254,7 @@ of cloud workflows. Every computer participating in an \mbrace{} runtime is know
 \emph{node}. In this section we offer an overview of how the \mbrace{} client stack can be
 used to initialize, manage and monitor remote \mbrace{} runtimes.
 
-\subsubsection*{The \texttt{MBraceNode} Type}
+\subsubsection*{The MBraceNode Type}
 
 An \mbrace{} \emph{node} represents any physical machine that runs the \emph{\mbrace{}} daemon, 
 the server-side component of the framework. Every \mbrace{} daemon accepts connections from a predetermined 
@@ -307,7 +290,7 @@ node.GetLogs()
 |> Seq.filter (fun log -> log.DateTime > DateTime.Now - TimeSpan.FromDays 1.0)
 \end{lstlisting}
 
-\subsubsection*{The \texttt{MBraceRuntime} Type}
+\subsubsection*{The MBraceRuntime Type}
 
 An \mbrace{} runtime can be \emph{booted} once access to a collection of at least two nodes,
 all running within the same subnet, has been established. This can be done like so:

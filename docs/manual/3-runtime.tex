@@ -130,18 +130,6 @@ respect to the working directory.
 \item[Log Level] Specifies the log level: 0 for info, 1 for warnings, 2 for errors.
 \item[ProcessDomain Executable] The location of the worker process executable.
 Relative paths evaluated with respect to the main \texttt{mbraced.exe} path.
-\item[Store Provider/Endpoint]
-These two keys are used to specify the global storage provider that the daemon uses.
-\begin{itemize}
-\item The \textsf{Store Provider} key specifies the type of store provider used:
-\texttt{FileSystem} for local files systems or UNC shares, \texttt{SqlServer} for
-storing in an SQL server, or any assembly qualified name to user implementations
-of the \texttt{IStoreProvider} interface.
-\item The \textsf{Store Endpoint} key specifies the connection string used to connect
-to the aforementioned store provider. In \texttt{FileSystem} providers one simply needs
-to specify a path, whereas more complex schema such as the Azure Blob Storage provider
-require special connection strings.
-\end{itemize}
 \end{description}
 
 \subsubsection*{Deploying the \TitularMbrace{} Daemon}
