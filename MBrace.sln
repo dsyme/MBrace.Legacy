@@ -99,6 +99,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{4C2F
 	ProjectSection(SolutionItems) = preProject
 		docs\content\azure-tutorial.fsx = docs\content\azure-tutorial.fsx
 		docs\content\index.fsx = docs\content\index.fsx
+		docs\content\programming-model.fsx = docs\content\programming-model.fsx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{298103B8-C3A7-4EA6-A108-7F8B41F4FD1A}"
@@ -116,6 +117,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{F53605EB
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Core.Tests", "tests\MBrace.Core.Tests\MBrace.Core.Tests.fsproj", "{064533DC-B2B5-49E2-9428-A5B5FA1DDD6F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tex", "tex", "{908EB26E-3FC1-4EF2-9C6D-0F710607EB57}"
+	ProjectSection(SolutionItems) = preProject
+		docs\tex\0-introduction.tex = docs\tex\0-introduction.tex
+		docs\tex\1-workflows.tex = docs\tex\1-workflows.tex
+		docs\tex\2-client.tex = docs\tex\2-client.tex
+		docs\tex\3-runtime.tex = docs\tex\3-runtime.tex
+		docs\tex\appendix.tex = docs\tex\appendix.tex
+		docs\tex\Makefile = docs\tex\Makefile
+		docs\tex\mbrace-full.png = docs\tex\mbrace-full.png
+		docs\tex\mbrace-manual.tex = docs\tex\mbrace-manual.tex
+		docs\tex\mbrace.png = docs\tex\mbrace.png
+		docs\tex\preamble.tex = docs\tex\preamble.tex
+		docs\tex\runtime.png = docs\tex\runtime.png
+		docs\tex\shell.png = docs\tex\shell.png
+		docs\tex\thebibliography.tex = docs\tex\thebibliography.tex
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -283,5 +301,6 @@ Global
 		{298103B8-C3A7-4EA6-A108-7F8B41F4FD1A} = {5F7AB181-FCDB-4BC3-9486-D2E6CBF0E06F}
 		{F53605EB-3D25-4ADF-9BBD-D8638A35EA71} = {5F7AB181-FCDB-4BC3-9486-D2E6CBF0E06F}
 		{064533DC-B2B5-49E2-9428-A5B5FA1DDD6F} = {4420A617-86A3-47ED-9D71-3321D6B24045}
+		{908EB26E-3FC1-4EF2-9C6D-0F710607EB57} = {5F7AB181-FCDB-4BC3-9486-D2E6CBF0E06F}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,67 @@
+\documentclass[9pt,a4paper]{article}
+
+%
+%	Version number
+%
+\newcommand{\version}{0.5.0}
+
+\input{preamble.tex}
+
+\newcommand{\showheader}[1]{%
+%
+\begin{center}
+\begin{tabular}{@{} l}
+\includegraphics[width=0.2\textwidth]{#1}
+\end{tabular}%
+%
+\hspace{3em}
+%
+\begin{tabular}{ @{\hspace{\stretch{5}}} r }
+{\huge An Introduction and Developer's Guide}\\[1.2em]
+{\huge to Cloud Computing with \TitularMbrace}\\[3em]
+{{v\mbox{.} \version},\hspace{1em}%
+\copyright{} 2014 Nessos Information Technologies, SA.}
+\end{tabular}%
+\end{center}%
+}
+
+
+%\newcommand{\mbrace}%
+%{\mbox{\normalfont\texttt{{\footnotesize \{}\hspace{-0.1em}\textsf m\hspace{-0.1em}{\footnotesize \}}brace}}}
+\newcommand{\mbrace}{mbrace}
+\newcommand{\Mbrace}{\mbrace}
+\newcommand{\TitularMbrace}{MBrace}
+\newcommand{\fsharp}{F\texttt \#}
+\newcommand{\csharp}{C\texttt \#}
+\newcommand{\dotnet}{\texttt{\hbox{.}NET}}
+
+\newcommand{\samehref}[1]{\href{#1}{\texttt{#1}}}
+\newcommand{\centertt}[1]{\begin{center}\texttt{#1}\end{center}}
+\newcommand{\selfnote}[1]{{\color{red}\textbf{#1}}}
+\newcommand{\uq}{\char"0D}
+
+
+%% use standard fonts
+\renewcommand{\rmdefault}{ptm}
+
+
+\begin{document}%
+%
+\showheader{mbrace.png}
+%
+%
+\input{0-introduction.tex}
+%
+\input{1-workflows.tex}
+%
+\input{2-client.tex}
+%
+\input{3-runtime.tex}
+%
+\appendix
+%
+\input{appendix.tex}
+%
+\input{thebibliography.tex}
+
+\end{document}

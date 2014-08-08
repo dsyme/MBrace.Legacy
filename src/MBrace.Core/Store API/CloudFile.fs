@@ -54,7 +54,7 @@
             CloudExpr.wrap <| ReadCloudFile(cloudFile, deserialize, typeof<'Result>)
 
         /// <summary> 
-        ///     Create a CloudFile from an existing file.
+        ///     Returns an existing CloudFile of given container and name.
         /// </summary>
         /// <param name="container">The container (folder) of the file.</param>
         /// <param name="name">The filename.</param>
@@ -62,10 +62,10 @@
             CloudExpr.wrap <| GetCloudFile(container, name)
 
         /// <summary> 
-        ///     Return all the files (as CloudFiles) in a folder.
+        ///     Returns all CloudFiles in given container.
         /// </summary>
         /// <param name="container">The container (folder) to search.</param>
-        static member Get(container : string) : Cloud<ICloudFile []> =
+        static member GetFilesInContainer(container : string) : Cloud<ICloudFile []> =
             CloudExpr.wrap <| GetCloudFiles(container)
 
         /// <summary>

@@ -1,0 +1,66 @@
+%
+%	Appendix
+%
+
+\section*{Appendix}
+
+\subsection*{Future Work}
+
+\Mbrace{} is a large project that faces multiple technical challenges. As such,
+it remains (as of the private alpha release) a work in progress with many important
+features still under development. In this section we discuss some of the features
+which we consider to be important milestones in the future of the \mbrace{} project.
+
+\subsubsection*{\csharp{}-LINQ support}
+CloudLinq% 
+\footnote{\samehref{https://github.com/nessos/CloudLinq}}
+is a satellite project for \mbrace{} aiming at providing an idiomatic 
+API for the immensely popular \csharp{} language in the
+form of a LINQ provider%
+\footnote{\samehref{http://msdn.microsoft.com/en-us/library/vstudio/bb397926.aspx}}
+for data parallelism. This would allow building cloud workflows using simple
+LINQ-style queries:
+\begin{lstlisting}[language=CSharp]
+var result =  from c in Customers.AsCloudQueryExpr()
+			  where c.City == "Athens"
+			  orderby c.Name
+			  select c.Name, c.City
+\end{lstlisting}
+CloudLinq can achieve excellent performance by taking advantage of LinqOptimizer%
+\footnote{\samehref{https://github.com/nessos/LinqOptimizer}}
+which is an optimizer for Linq and compiles declarative queries into fast imperative code. Another interesting direction is the combination
+of CloudLinq with GpuLinq%
+\footnote{\samehref{https://github.com/nessos/GpuLinq}}
+in order to compile queries to OpenCL kernel code for fast execution on GPU powered cloud instances.
+
+
+
+\subsubsection*{Mono Support}
+
+The Mono project%
+\footnote{The Mono project, \samehref{http://www.mono-project.com/}.}
+is a popular open source implementation of Microsoft's \dotnet{} framework.
+The Mono framework is in the unique position of offering a truly cross-platform
+\dotnet{} development experience as it supports most major operating systems,
+including Linux and Mac OS X.
+
+Just like the \fsharp{} language itself, we believe that a big part of \mbrace{}'s 
+future lies with Mono and the open source community in general. Providing support
+for the Mono framework is strategically important since it opens up the market
+to diverse developer cultures and data center infrastructures.
+
+
+% TODO: fill out the following sections
+
+%\subsection*{Web UI}
+
+%\subsection*{Internals Discussion}
+%
+%\subsubsection*{The Distributed Actor Framework}
+%
+%\subsubsection*{Serialization}
+%
+%\subsubsection*{The Monadic Trampoline}
+
+
+
