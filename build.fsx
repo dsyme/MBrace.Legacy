@@ -202,11 +202,18 @@ Target "ClientPkg" (fun _ ->
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Utils.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Base.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Client.dll"
-                    yield  addFile     @"" @"preamble.fsx"
+                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.dll"
+                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.xml"
+                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.sigdata" // Intellisense
+                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.optdata" // Intellisense
+                    yield  addFile     @"tools" @"install.ps1"  
+                    yield  addFile     @"" @"preamble.fsx"            // TODO : Broken       
+                    yield  addFile     @"content" "mbrace-intro.fsx"  // TODO : Broken
                 ]
             Dependencies = 
                 [
                     "FsPickler",                                    "0.9.9"
+                    "FsPickler.Json",                               "0.9.9"
                     "Thespian",                                     "0.0.9"
                     "UnionArgParser",                               "0.7.0"
                     "Vagrant",                                      "0.2.3"
@@ -344,6 +351,7 @@ Target "ReleaseDocs" (fun _ ->
 Target "Default" DoNothing
 Target "Release" DoNothing
 Target "PrepareRelease" DoNothing
+Target "Nuget" DoNothing
 Target "Help" (fun _ -> PrintTargets() )
 
 "Clean"
@@ -356,14 +364,20 @@ Target "Help" (fun _ -> PrintTargets() )
 "Clean"
   ==> "PrepareRelease"
   ==> "Build"
-  ==> "GenerateDocs"
-  ==> "ReleaseDocs"
+  ==> "MBraceIntroScript"
   ==> "CorePkg"
   ==> "StorePkg"
   ==> "ClientPkg"
-  ==> "MBraceIntroScript"
   ==> "RuntimePkg"
   ==> "AzurePkg"
+  ==> "Nuget"
+
+"Clean"
+  ==> "PrepareRelease"
+  ==> "Build"
+  ==> "Nuget"
+  ==> "GenerateDocs"
+  ==> "ReleaseDocs"
   ==> "Release"
 
 // start build
