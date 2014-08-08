@@ -14,7 +14,7 @@
 	Install MBrace Windows service. This parameter defaults to true.
 .NOTES  
 	File Name  : Install-MBrace.ps1  
-	Requires   : PowerShell 4.0
+	Requires   : PowerShell 3.0
 .LINK  
 	http://github.com/Nessos/MBrace
 	http://nessos.github.io/MBrace
@@ -33,7 +33,10 @@ function Has-Net45
 
 function Download-Nuget
 {
-	Invoke-WebRequest "http://nuget.org/nuget.exe" -OutFile nuget.exe 
+	$url = 'http://nuget.org/nuget.exe'
+	$target = "$PSScriptRoot\nuget.exe"
+	write-host "Downloading file $url to $target"
+	(New-Object net.webclient).DownloadFile($url, $target)
 }
 
 function CheckIf-Admin
@@ -43,7 +46,9 @@ function CheckIf-Admin
 
 function Install-Net45
 {
-	 Start-Process -FilePath .\dotNetFx45_Full_setup.exe -ArgumentList /q, /norestart 
+	$dotnetInstaller = "$psscriptroot\dotNetFx45_Full_setup.exe"
+	write-host "Running $dotnetInstaller"
+	Start-Process -FilePath $dotnetInstaller -ArgumentList /q, /norestart 
 }
 
 function Download-MBrace
@@ -55,18 +60,24 @@ function Download-MBrace
 function Add-FirewallRules
 {
 	$path = "$PSScriptRoot\MBrace.Runtime\tools" 
-	netsh.exe advfirewall firewall delete name = 'MBrace Daemon' | Out-Null
-	netsh.exe advfirewall firewall delete name = 'MBrace Worker' | Out-Null
-	netsh.exe advfirewall firewall add rule name = 'MBrace Daemon' dir=in action=allow program="$path\mbraced.exe" enable=yes        | out-null
-	netsh.exe advfirewall firewall add rule name = 'MBrace Worker' dir=in action=allow program="$path\mbrace.worker.exe" enable=yes  | out-null
+	write-host "Deleting existing rules"
+	netsh.exe advfirewall firewall delete rule name = 'MBrace Daemon' | out-null
+	netsh.exe advfirewall firewall delete rule name = 'MBrace Worker' | out-null
+	write-host "Adding rules"
+	netsh.exe advfirewall firewall add rule name = 'MBrace Daemon' dir=in action=allow program="$path\mbraced.exe" enable=yes       | out-null
+	netsh.exe advfirewall firewall add rule name = 'MBrace Worker' dir=in action=allow program="$path\mbrace.worker.exe" enable=yes | out-null
 }
 
 function Install-MBraceService
 {
 	$path = "$PSScriptRoot\MBrace.Runtime\tools\mbracesvc.exe"
+	write-host "Stopping any existing MBrace services"
 	Stop-Service -Name 'MBrace' -Force -ErrorAction SilentlyContinue
-	sc.exe delete 'MBrace' | Out-Null
-	New-Service  -Name 'MBrace' -DisplayName 'MBrace Runtime' -BinaryPathName $path -StartupType Automatic | Out-Null
+	write-host "Deleting any existing MBrace services"
+	sc.exe delete 'MBrace' | out-null
+	write-host "Creating new service"
+	$svc = New-Service  -Name 'MBrace' -DisplayName 'MBrace Runtime' -BinaryPathName $path -StartupType Automatic 
+	write-host "Starting MBrace"
 	Start-Service -Name 'MBrace'
 }
 
@@ -89,6 +100,8 @@ function Add-ToPath
 	if(($ENV:PATH | Select-String -SimpleMatch $toolsDir) -eq $null) {
 		$newPath=$oldPath+";$toolsDir"
 		Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH –Value $newPath
+	} else {
+		write-host "Found in PATH"
 	}
 }
 
