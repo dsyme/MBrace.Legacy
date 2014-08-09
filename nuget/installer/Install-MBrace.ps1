@@ -1,4 +1,4 @@
-﻿<#  
+<#  
 .SYNOPSIS  
 	Installation script for the MBrace runtime.
 .DESCRIPTION  
@@ -12,6 +12,8 @@
 	Add the MBrace.Runtime/tools directory to PATH environment variable. This parameter defaults to false.
 .PARAMETER Service
 	Install MBrace Windows service. This parameter defaults to true.
+.PARAMETER Directory
+	Installation directory. This parameter defaults to the Program Files directory.
 .NOTES  
 	File Name  : Install-MBrace.ps1  
 	Requires   : PowerShell 3.0
@@ -20,7 +22,15 @@
 	http://nessos.github.io/MBrace
 #>
 
-param([switch]$AddToPath = $false, [switch]$Service = $true)
+param([switch]$AddToPath = $false, [switch]$Service = $true, [string]$Directory = "$($env:ProgramFiles)\MBrace")
+
+function SetUp-Directory
+{
+	if(!(Test-Path $Directory)) {
+		write-host "Creating directory $Directory"
+		$_ = mkdir $Directory
+	}
+}
 
 function Has-Net45
 {
@@ -34,7 +44,7 @@ function Has-Net45
 function Download-Nuget
 {
 	$url = 'http://nuget.org/nuget.exe'
-	$target = "$PSScriptRoot\nuget.exe"
+	$target = "$Directory\nuget.exe"
 	write-host "Downloading file $url to $target"
 	(New-Object net.webclient).DownloadFile($url, $target)
 }
@@ -54,12 +64,12 @@ function Install-Net45
 function Download-MBrace
 {
 	#Start-Process -FilePath ./nuget.exe -ArgumentList "install", "MBrace.Runtime", "-Prerelease" -Wait -NoNewWindow
-	.\nuget.exe install MBrace.Runtime -Prerelease -ExcludeVersion
+	& "$Directory\nuget.exe" install MBrace.Runtime -Prerelease -ExcludeVersion -OutputDirectory $Directory
 }
 
 function Add-FirewallRules
 {
-	$path = "$PSScriptRoot\MBrace.Runtime\tools" 
+	$path = "$Directory\MBrace.Runtime\tools" 
 	write-host "Deleting existing rules"
 	netsh.exe advfirewall firewall delete rule name = 'MBrace Daemon' | out-null
 	netsh.exe advfirewall firewall delete rule name = 'MBrace Worker' | out-null
@@ -70,7 +80,7 @@ function Add-FirewallRules
 
 function Install-MBraceService
 {
-	$path = "$PSScriptRoot\MBrace.Runtime\tools\mbracesvc.exe"
+	$path = "$Directory\MBrace.Runtime\tools\mbracesvc.exe"
 	write-host "Stopping any existing MBrace services"
 	Stop-Service -Name 'MBrace' -Force -ErrorAction SilentlyContinue
 	write-host "Deleting any existing MBrace services"
@@ -89,38 +99,31 @@ function Execute-Step([string]$message, [scriptblock]$block)
 	}
 	catch {
 		Write-Host "failed"
-		Exit-Script
+		exit
 	}
 }
 
 function Add-ToPath 
 {
 	$oldPath=(Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).Path
-	$toolsDir = "$PSScriptRoot\MBrace.Runtime\tools\"
+	$toolsDir = "$Directory\MBrace.Runtime\tools\"
 	if(($ENV:PATH | Select-String -SimpleMatch $toolsDir) -eq $null) {
 		$newPath=$oldPath+";$toolsDir"
-		Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH –Value $newPath
+		Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
 	} else {
 		write-host "Found in PATH"
 	}
 }
 
-function Exit-Script
-{
-	Stop-Transcript
-	exit
-}
-
-Start-Transcript -Path "mbraceinstaller$(Get-Date -Format "ddMMyyyyHHmmss").txt"
-
 $isAdmin = Execute-Step "Checking for admin permissions" { CheckIf-Admin }
-if(!$isAdmin) { Write-Host "Admin permissions required"; Exit-Script }
+if(!$isAdmin) { Write-Host "Admin permissions required"; exit }
 $net45 = Execute-Step "Checking if .NET 4.5 installed" { Has-Net45 }
 if(!$net45) { Execute-Step "Installing .NET 4.5" { Install-Net45 } }
+Execute-Step "Checking installation directory" { SetUp-Directory }
 Execute-Step "Downloading NuGet" { Download-Nuget }
 Execute-Step "Downloading MBrace.Runtime" { Download-MBrace }
 Execute-Step "Adding firewall rules" { Add-FirewallRules }
 if($Service) { Execute-Step "Installing MBrace service" { Install-MBraceService } }
 if($AddToPath) { Execute-Step "Adding to PATH" { Add-ToPath } }
 
-Exit-Script
+write-host "Done..."
