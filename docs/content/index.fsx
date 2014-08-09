@@ -42,13 +42,13 @@ let lineCount () = cloud {
     let! files = CloudFile.GetFilesInContainer "path/to/container"
 
     // read the contents of a file and return its line count
-    let countSingle f = cloud {
+    let count f = cloud {
         let! text = CloudFile.ReadAllText f
         return text.Split('\n').Length
     }
     
     // perform line count in parallel
-    let! sizes = files |> Array.map countSingle |> Cloud.Parallel
+    let! sizes = files |> Array.map count |> Cloud.Parallel
     return Array.sum sizes
 }
 
@@ -57,10 +57,19 @@ let proc = runtime.CreateProcess <@ lineCount () @> // send computation to the r
 let lines = proc.AwaitResult () // await completion
 
 (**
-## Documentation & Technical Overview
+## Documentation & Tutorials
 
-Coming soon.
- 
+A collection of tutorials, technical overviews and API references of the library.
+
+  * [The Programming Model](programming-model.html) An overview of the MBrace programming model.
+
+  * [Azure Tutorial](azure-tutorial.html) Getting started with MBrace on Windows Azure.
+
+  * [API Reference](reference/index.html) contains automatically generated documentation for all types, modules
+    and functions in the library.
+
+
+
 ## Contributing and copyright
 
 The project is hosted on [GitHub][gh] where you can [report issues][issues], fork 
