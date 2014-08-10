@@ -79,8 +79,8 @@ namespace Nessos.MBrace.Client
 
         /// Gets or sets the default store instance used by the client process.
         static member DefaultStore
-            with get () = StoreRegistry.DefaultStoreInfo.Store
-            and set store = let info = StoreRegistry.Register(store, makeDefault = true) in ()
+            with get () = init (); StoreRegistry.DefaultStoreInfo.Store
+            and set store = init (); let info = StoreRegistry.Register(store, makeDefault = true) in ()
 
         /// Gets the path used by the client as a working directory.
         static member WorkingDirectory = init () ; SystemConfiguration.WorkingDirectory
