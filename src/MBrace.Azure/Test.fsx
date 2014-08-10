@@ -19,7 +19,7 @@ let config = sprintf "DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%
 
 let serialize length payload =
     fun (stream : Stream) ->
-        stream.Write(Array.create length payload, 0, length)
+        async { stream.Write(Array.create length payload, 0, length) }
 
 let deserialize (stream : Stream) =
     let b = ref 0
@@ -27,8 +27,8 @@ let deserialize (stream : Stream) =
             b := stream.ReadByte()
             if !b <> -1 then yield byte !b |]
 
-let large : Stream -> unit = serialize (1024 * 1024 * 1) 42uy
-let small : Stream -> unit = serialize (64 * 1024 + 1) 43uy
+let large = serialize (1024 * 1024 * 1) 42uy
+let small = serialize (64 * 1024 + 1) 43uy
 
 let acc = CloudStorageAccount.Parse(config)
 acc.BlobStorageUri
@@ -41,8 +41,10 @@ store.Id
 store.Name
 
 //#region Immutable store
-store.Create("test", "foo", serialize 65 0uy)
-let o = deserialize <| store.Read("test", "foo")
+store.CreateImmutable("test", "foo3", serialize 65 0uy, false) |> Async.RunSynchronously
+let o = store.ReadImmutable("test", "foo3")
+        |> Async.RunSynchronously
+        |> deserialize
 
 store.Exists("test")
 store.Exists("test","foo")

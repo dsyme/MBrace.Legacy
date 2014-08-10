@@ -75,7 +75,9 @@
     /// A lightweight object for low latency communication with the azure storage.
     /// Lightweight : payload size up to 15 * 64K = 960K.
     /// See 'http://www.windowsazure.com/en-us/develop/net/how-to-guides/table-services/'
-    type internal FatEntity (entityId, binary) =
+    /// WARNING : See the above link for any restrictions such as having a parameterless ctor,
+    /// and public properties.
+    type FatEntity (entityId, binary) =
         inherit TableEntity(entityId, String.Empty)
 
         let check (a : byte [] []) i = if a = null then null elif i >= a.Length then Array.empty else a.[i]
@@ -111,7 +113,7 @@
         
         new () = FatEntity (null, null)
 
-    type internal MutableFatEntity(entityId, isRef : bool, reference : string, bin) =
+    type MutableFatEntity(entityId, isRef : bool, reference : string, bin) =
         inherit FatEntity(entityId, bin)
         
         interface ITableEntity
