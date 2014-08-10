@@ -26,25 +26,23 @@ In this tutorial you will learn how to setup MBrace on Windows Azure IaaS.
 As a prerequisite you need to have a Windows Azure account, basic knowledge of the Azure computing/virtual machine services and
 optionally Microsoft Visual Studio (or any environment supporting F#).
 
-Typically you will need some virtual machines to run the MBrace daemons/nodes and a client
+Typically you need some virtual machines to run the MBrace daemons/nodes and a client
 that manages the runtime (usually the client runs on an F# interactive instance). Any nodes in a MBrace runtime
 as well as any clients, should be part of the same network in order to work properly. 
 
 Because of this restriction in this tutorial you have two choices: you can either use one of the virtual machines as a client or you can use
 the Windows Azure VPN service to join the virtual network created in Azure and access the runtime from a remote client (your on-premises computer).
 
-## Creating a Windows Azure virtual machine
-
-### Creating a virtual network
+## Creating a virtual network
 At this point you should decide if you are going to use a remote client or use one of
 the virtual machines that you are going to create as a client. If you choose the first 
-option you need to create a virtual network, create and upload certificated and finally configure your VPN client. 
+option you need to create a virtual network, create and upload certificates and finally configure your VPN client. 
 The process is described in [here](http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx).
 
 You can skip this step if you want to use a client in one of your virtual machines, as a virtual network will be automatically created
 for you during the virtual machine creation.
 
-### Creating a virtual machine
+## Creating a virtual machine
 Now you need to create your virtual machines. You can follow 
 [this](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-tutorial/) tutorial
 to create a virtual machine (you can skip the 'How to attach a data disk to the new virtual machine' section).
@@ -52,8 +50,8 @@ If you have created a virtual network then you __must__ specify
 the virtual network when you create the virtual machine. 
 You can't join the virtual machine to a virtual network after you create the VM.
 
-Note that although there are no minimal requirements for the VM size it's recommented to use at least a Medium (2 cores, 3.5GB Memory) instance.
-After the virtual machine is created log on to it.
+Note that although there are no minimal requirements for the VM size it's recommented to use at least 
+a Medium (A2) (2 cores, 3.5GB Memory) instance. After the virtual machine is created log on to it.
 
 ## Installing the MBrace Runtime
 
@@ -63,7 +61,8 @@ which contains a powershell script that helps you install MBrace by downloading 
 runtime nuget package, adding firewall exceptions for the MBrace executables and finally installing the MBrace runtime as a Windows Service.
 
 Open a PowerShell prompt as administrator and run the `Install-MBrace.ps1` script.
-Before running the installation script you probably need to enable script execution in PowerShell; you can do this using the [Set-ExecutionPolicy](http://technet.microsoft.com/en-us/library/ee176961.aspx) cmdlet.
+Before running the installation script you probably need to enable script execution in PowerShell;
+you can do this using the [Set-ExecutionPolicy](http://technet.microsoft.com/en-us/library/ee176961.aspx) cmdlet.
 
     [lang=batchfile]
     c:\mbrace > help .\Install-MBrace.ps1
