@@ -491,6 +491,90 @@ The following workflow stores the downloaded content of a web page and returns a
 </tr>
 </table>
 
+<p>*</p>
+
+<h3>Example: Data Sharding</h3>
+
+<p>An interesting aspect of cloud refs is the ability to define large, distributed data structures. 
+For example, one could define a distributed binary tree like so:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">type</span> <span onmouseout="hideTip(event, 'fs96', 222)" onmouseover="showTip(event, 'fs96', 222)" class="i">CloudTree</span><span class="o">&lt;</span><span class="o">&#39;</span><span class="i">T</span><span class="o">&gt;</span> <span class="o">=</span> 
+    | <span onmouseout="hideTip(event, 'fs97', 223)" onmouseover="showTip(event, 'fs97', 223)" class="i">Empty</span>
+    | <span onmouseout="hideTip(event, 'fs98', 224)" onmouseover="showTip(event, 'fs98', 224)" class="i">Leaf</span> <span class="k">of</span> <span class="o">&#39;</span><span class="i">T</span>
+    | <span onmouseout="hideTip(event, 'fs99', 225)" onmouseover="showTip(event, 'fs99', 225)" class="i">Branch</span> <span class="k">of</span> <span onmouseout="hideTip(event, 'fs100', 226)" onmouseover="showTip(event, 'fs100', 226)" class="i">TreeRef</span><span class="o">&lt;</span><span class="o">&#39;</span><span class="i">T</span><span class="o">&gt;</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs100', 227)" onmouseover="showTip(event, 'fs100', 227)" class="i">TreeRef</span><span class="o">&lt;</span><span class="o">&#39;</span><span class="i">T</span><span class="o">&gt;</span>
+
+<span class="k">and</span> <span onmouseout="hideTip(event, 'fs100', 228)" onmouseover="showTip(event, 'fs100', 228)" class="i">TreeRef</span><span class="o">&lt;</span><span class="o">&#39;</span><span class="i">T</span><span class="o">&gt;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs93', 229)" onmouseover="showTip(event, 'fs93', 229)" class="i">ICloudRef</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs96', 230)" onmouseover="showTip(event, 'fs96', 230)" class="i">CloudTree</span><span class="o">&lt;</span><span class="o">&#39;</span><span class="i">T</span><span class="o">&gt;</span><span class="o">&gt;</span></pre>
+</td>
+</tr>
+</table>
+
+<p>The cloud tree gives rise to a number of naturally distributable combinators. For example</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span class="k">rec</span> <span onmouseout="hideTip(event, 'fs101', 231)" onmouseover="showTip(event, 'fs101', 231)" class="i">map</span> (<span onmouseout="hideTip(event, 'fs102', 232)" onmouseover="showTip(event, 'fs102', 232)" class="i">f</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">T</span> <span class="k">-&gt;</span> <span class="o">&#39;</span><span class="i">S</span>) (<span onmouseout="hideTip(event, 'fs103', 233)" onmouseover="showTip(event, 'fs103', 233)" class="i">ttree</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs100', 234)" onmouseover="showTip(event, 'fs100', 234)" class="i">TreeRef</span><span class="o">&lt;</span><span class="o">&#39;</span><span class="i">T</span><span class="o">&gt;</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 235)" onmouseover="showTip(event, 'fs6', 235)" class="i">cloud</span> { 
+    <span class="k">match</span> <span onmouseout="hideTip(event, 'fs103', 236)" onmouseover="showTip(event, 'fs103', 236)" class="i">ttree</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs104', 237)" onmouseover="showTip(event, 'fs104', 237)" class="i">Value</span> <span class="k">with</span>
+    | <span onmouseout="hideTip(event, 'fs97', 238)" onmouseover="showTip(event, 'fs97', 238)" class="i">Empty</span> <span class="k">-&gt;</span> <span class="k">return!</span> <span onmouseout="hideTip(event, 'fs89', 239)" onmouseover="showTip(event, 'fs89', 239)" class="i">CloudRef</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs90', 240)" onmouseover="showTip(event, 'fs90', 240)" class="i">New</span> <span onmouseout="hideTip(event, 'fs97', 241)" onmouseover="showTip(event, 'fs97', 241)" class="i">Empty</span>
+    | <span onmouseout="hideTip(event, 'fs98', 242)" onmouseover="showTip(event, 'fs98', 242)" class="i">Leaf</span> <span onmouseout="hideTip(event, 'fs72', 243)" onmouseover="showTip(event, 'fs72', 243)" class="i">t</span> <span class="k">-&gt;</span> <span class="k">return!</span> <span onmouseout="hideTip(event, 'fs89', 244)" onmouseover="showTip(event, 'fs89', 244)" class="i">CloudRef</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs90', 245)" onmouseover="showTip(event, 'fs90', 245)" class="i">New</span> <span class="o">&lt;|</span> <span onmouseout="hideTip(event, 'fs98', 246)" onmouseover="showTip(event, 'fs98', 246)" class="i">Leaf</span> (<span onmouseout="hideTip(event, 'fs102', 247)" onmouseover="showTip(event, 'fs102', 247)" class="i">f</span> <span onmouseout="hideTip(event, 'fs72', 248)" onmouseover="showTip(event, 'fs72', 248)" class="i">t</span>)
+    | <span onmouseout="hideTip(event, 'fs99', 249)" onmouseover="showTip(event, 'fs99', 249)" class="i">Branch</span>(<span onmouseout="hideTip(event, 'fs105', 250)" onmouseover="showTip(event, 'fs105', 250)" class="i">l</span>,<span onmouseout="hideTip(event, 'fs106', 251)" onmouseover="showTip(event, 'fs106', 251)" class="i">r</span>) <span class="k">-&gt;</span>
+        <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs107', 252)" onmouseover="showTip(event, 'fs107', 252)" class="i">l&#39;</span>,<span onmouseout="hideTip(event, 'fs108', 253)" onmouseover="showTip(event, 'fs108', 253)" class="i">r&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs101', 254)" onmouseover="showTip(event, 'fs101', 254)" class="i">map</span> <span onmouseout="hideTip(event, 'fs102', 255)" onmouseover="showTip(event, 'fs102', 255)" class="i">f</span> <span onmouseout="hideTip(event, 'fs105', 256)" onmouseover="showTip(event, 'fs105', 256)" class="i">l</span> <span class="o">&lt;||&gt;</span> <span onmouseout="hideTip(event, 'fs101', 257)" onmouseover="showTip(event, 'fs101', 257)" class="i">map</span> <span onmouseout="hideTip(event, 'fs102', 258)" onmouseover="showTip(event, 'fs102', 258)" class="i">f</span> <span onmouseout="hideTip(event, 'fs106', 259)" onmouseover="showTip(event, 'fs106', 259)" class="i">r</span> 
+        <span class="k">return!</span> <span onmouseout="hideTip(event, 'fs89', 260)" onmouseover="showTip(event, 'fs89', 260)" class="i">CloudRef</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs90', 261)" onmouseover="showTip(event, 'fs90', 261)" class="i">New</span> <span class="o">&lt;|</span> <span onmouseout="hideTip(event, 'fs99', 262)" onmouseover="showTip(event, 'fs99', 262)" class="i">Branch</span>(<span class="i">l&#39;</span>, <span onmouseout="hideTip(event, 'fs108', 263)" onmouseover="showTip(event, 'fs108', 263)" class="i">r&#39;</span>)
+}</pre>
+</td>
+</tr>
+</table>
+
+<p>and also</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span class="k">rec</span> <span onmouseout="hideTip(event, 'fs109', 264)" onmouseover="showTip(event, 'fs109', 264)" class="i">reduce</span> (<span onmouseout="hideTip(event, 'fs110', 265)" onmouseover="showTip(event, 'fs110', 265)" class="i">id</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">R</span>) (<span onmouseout="hideTip(event, 'fs111', 266)" onmouseover="showTip(event, 'fs111', 266)" class="i">reduceF</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">R</span> <span class="k">-&gt;</span> <span class="o">&#39;</span><span class="i">R</span> <span class="k">-&gt;</span> <span class="o">&#39;</span><span class="i">R</span>) (<span onmouseout="hideTip(event, 'fs112', 267)" onmouseover="showTip(event, 'fs112', 267)" class="i">rtree</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs100', 268)" onmouseover="showTip(event, 'fs100', 268)" class="i">TreeRef</span><span class="o">&lt;</span><span class="o">&#39;</span><span class="i">R</span><span class="o">&gt;</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 269)" onmouseover="showTip(event, 'fs6', 269)" class="i">cloud</span> { 
+    <span class="k">match</span> <span onmouseout="hideTip(event, 'fs112', 270)" onmouseover="showTip(event, 'fs112', 270)" class="i">rtree</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs113', 271)" onmouseover="showTip(event, 'fs113', 271)" class="i">Value</span> <span class="k">with</span>
+    | <span onmouseout="hideTip(event, 'fs97', 272)" onmouseover="showTip(event, 'fs97', 272)" class="i">Empty</span> <span class="k">-&gt;</span> <span class="k">return</span> <span onmouseout="hideTip(event, 'fs110', 273)" onmouseover="showTip(event, 'fs110', 273)" class="i">id</span>
+    | <span onmouseout="hideTip(event, 'fs98', 274)" onmouseover="showTip(event, 'fs98', 274)" class="i">Leaf</span> <span onmouseout="hideTip(event, 'fs76', 275)" onmouseover="showTip(event, 'fs76', 275)" class="i">r</span> <span class="k">-&gt;</span> <span class="k">return</span> <span onmouseout="hideTip(event, 'fs76', 276)" onmouseover="showTip(event, 'fs76', 276)" class="i">r</span>
+    | <span onmouseout="hideTip(event, 'fs99', 277)" onmouseover="showTip(event, 'fs99', 277)" class="i">Branch</span>(<span onmouseout="hideTip(event, 'fs114', 278)" onmouseover="showTip(event, 'fs114', 278)" class="i">l</span>,<span onmouseout="hideTip(event, 'fs115', 279)" onmouseover="showTip(event, 'fs115', 279)" class="i">r</span>) <span class="k">-&gt;</span>
+        <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs76', 280)" onmouseover="showTip(event, 'fs76', 280)" class="i">r</span>,<span onmouseout="hideTip(event, 'fs77', 281)" onmouseover="showTip(event, 'fs77', 281)" class="i">r&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs109', 282)" onmouseover="showTip(event, 'fs109', 282)" class="i">reduce</span> <span onmouseout="hideTip(event, 'fs110', 283)" onmouseover="showTip(event, 'fs110', 283)" class="i">id</span> <span onmouseout="hideTip(event, 'fs111', 284)" onmouseover="showTip(event, 'fs111', 284)" class="i">reduceF</span> <span onmouseout="hideTip(event, 'fs114', 285)" onmouseover="showTip(event, 'fs114', 285)" class="i">l</span> <span class="o">&lt;||&gt;</span> <span onmouseout="hideTip(event, 'fs109', 286)" onmouseover="showTip(event, 'fs109', 286)" class="i">reduce</span> <span onmouseout="hideTip(event, 'fs110', 287)" onmouseover="showTip(event, 'fs110', 287)" class="i">id</span> <span onmouseout="hideTip(event, 'fs111', 288)" onmouseover="showTip(event, 'fs111', 288)" class="i">reduceF</span> <span onmouseout="hideTip(event, 'fs115', 289)" onmouseover="showTip(event, 'fs115', 289)" class="i">r</span> 
+        <span class="k">return</span> <span onmouseout="hideTip(event, 'fs111', 290)" onmouseover="showTip(event, 'fs111', 290)" class="i">reduceF</span> <span onmouseout="hideTip(event, 'fs76', 291)" onmouseover="showTip(event, 'fs76', 291)" class="i">r</span> <span onmouseout="hideTip(event, 'fs77', 292)" onmouseover="showTip(event, 'fs77', 292)" class="i">r&#39;</span>
+}</pre>
+</td>
+</tr>
+</table>
+
+<p>The above functions enable distributed MapReduce workflows that are 
+driven by the structural properties of the cloud tree.
+The use of cloud refs accounts for data parallelism in a way not achievable
+by the previous MapReduce example.</p>
+
 <div class="tip" id="fs1">namespace Nessos</div>
 <div class="tip" id="fs2">namespace Nessos.MBrace</div>
 <div class="tip" id="fs3">namespace Nessos.MBrace.Lib</div>
@@ -586,6 +670,26 @@ The following workflow stores the downloaded content of a web page and returns a
 <div class="tip" id="fs93">Multiple items<br />type ICloudRef =<br />&#160;&#160;interface<br />&#160;&#160;&#160;&#160;inherit ICloudDisposable<br />&#160;&#160;&#160;&#160;abstract member Container : string<br />&#160;&#160;&#160;&#160;abstract member Name : string<br />&#160;&#160;&#160;&#160;abstract member Type : Type<br />&#160;&#160;&#160;&#160;abstract member Value : obj<br />&#160;&#160;end<br /><br />Full name: Nessos.MBrace.ICloudRef<br /><br />--------------------<br />type ICloudRef&lt;&#39;T&gt; =<br />&#160;&#160;interface<br />&#160;&#160;&#160;&#160;inherit ICloudRef<br />&#160;&#160;&#160;&#160;abstract member TryValue : &#39;T option<br />&#160;&#160;&#160;&#160;abstract member Value : &#39;T<br />&#160;&#160;end<br /><br />Full name: Nessos.MBrace.ICloudRef&lt;_&gt;</div>
 <div class="tip" id="fs94">Multiple items<br />val byte : value:&#39;T -&gt; byte (requires member op_Explicit)<br /><br />Full name: Microsoft.FSharp.Core.Operators.byte<br /><br />--------------------<br />type byte = System.Byte<br /><br />Full name: Microsoft.FSharp.Core.byte</div>
 <div class="tip" id="fs95">property ICloudRef.Value: byte []</div>
+<div class="tip" id="fs96">type CloudTree&lt;&#39;T&gt; =<br />&#160;&#160;| Empty<br />&#160;&#160;| Leaf of &#39;T<br />&#160;&#160;| Branch of TreeRef&lt;&#39;T&gt; * TreeRef&lt;&#39;T&gt;<br /><br />Full name: Programming-model.CloudTree&lt;_&gt;</div>
+<div class="tip" id="fs97">union case CloudTree.Empty: CloudTree&lt;&#39;T&gt;</div>
+<div class="tip" id="fs98">union case CloudTree.Leaf: &#39;T -&gt; CloudTree&lt;&#39;T&gt;</div>
+<div class="tip" id="fs99">union case CloudTree.Branch: TreeRef&lt;&#39;T&gt; * TreeRef&lt;&#39;T&gt; -&gt; CloudTree&lt;&#39;T&gt;</div>
+<div class="tip" id="fs100">type TreeRef&lt;&#39;T&gt; = ICloudRef&lt;CloudTree&lt;&#39;T&gt;&gt;<br /><br />Full name: Programming-model.TreeRef&lt;_&gt;</div>
+<div class="tip" id="fs101">val map : f:(&#39;T -&gt; &#39;S) -&gt; ttree:TreeRef&lt;&#39;T&gt; -&gt; Cloud&lt;ICloudRef&lt;CloudTree&lt;&#39;S&gt;&gt;&gt;<br /><br />Full name: Programming-model.map</div>
+<div class="tip" id="fs102">val f : (&#39;T -&gt; &#39;S)</div>
+<div class="tip" id="fs103">val ttree : TreeRef&lt;&#39;T&gt;</div>
+<div class="tip" id="fs104">property ICloudRef.Value: CloudTree&lt;&#39;T&gt;</div>
+<div class="tip" id="fs105">val l : TreeRef&lt;&#39;T&gt;</div>
+<div class="tip" id="fs106">val r : TreeRef&lt;&#39;T&gt;</div>
+<div class="tip" id="fs107">val l&#39; : ICloudRef&lt;CloudTree&lt;&#39;S&gt;&gt;</div>
+<div class="tip" id="fs108">val r&#39; : ICloudRef&lt;CloudTree&lt;&#39;S&gt;&gt;</div>
+<div class="tip" id="fs109">val reduce : id:&#39;R -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; &#39;R) -&gt; rtree:TreeRef&lt;&#39;R&gt; -&gt; Cloud&lt;&#39;R&gt;<br /><br />Full name: Programming-model.reduce</div>
+<div class="tip" id="fs110">val id : &#39;R</div>
+<div class="tip" id="fs111">val reduceF : (&#39;R -&gt; &#39;R -&gt; &#39;R)</div>
+<div class="tip" id="fs112">val rtree : TreeRef&lt;&#39;R&gt;</div>
+<div class="tip" id="fs113">property ICloudRef.Value: CloudTree&lt;&#39;R&gt;</div>
+<div class="tip" id="fs114">val l : TreeRef&lt;&#39;R&gt;</div>
+<div class="tip" id="fs115">val r : TreeRef&lt;&#39;R&gt;</div>
 
         </div>
         <div class="span3">
