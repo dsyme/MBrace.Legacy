@@ -90,6 +90,7 @@ let buildDocumentation () =
         layoutRoots = layoutRoots )
 
 // Generate
+CleanDir output
 CreateDir output
 copyFiles()
 buildDocumentation()
