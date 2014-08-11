@@ -46,7 +46,7 @@ distributed computation.</p>
 
 <h2>Cloud workflows</h2>
 
-<p>In MBrace, the unit of computation is a <em>cloud workflow</em>:</p>
+<p>In MBrace, the unit of computation is a <em>cloud workflow:</em></p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
@@ -334,12 +334,162 @@ an invalid url, creating an exception. In general, uncaught exceptions
 bubble up through <code>Cloud.Parallel</code> triggering cancellation of all
 outstanding child computations (just like <code>Async.Parallel</code>).</p>
 
-<p>The interesting bit here is that the exception continuation
+<p>The interesting bit here is that the exception handling clause
 will almost certainly be executed in a different machine than the one
 in which it was originally thrown. This is due to the interpreted
 nature of the monadic skeleton of cloud workflows, which allows
 exceptions, environments, closures to be passed around worker machines
 in a seemingly transparent manner.</p>
+
+<h3>Example: Defining a MapReduce workflow</h3>
+
+<p>Cloud worklows in conjunctions with parallel combinators can be used
+to articulate MapReduce-like workflows. A simplistic version follows:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs65', 157)" onmouseover="showTip(event, 'fs65', 157)" class="i">mapReduce</span> (<span onmouseout="hideTip(event, 'fs66', 158)" onmouseover="showTip(event, 'fs66', 158)" class="i">map</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">T</span> <span class="k">-&gt;</span> <span class="o">&#39;</span><span class="i">R</span>) (<span onmouseout="hideTip(event, 'fs67', 159)" onmouseover="showTip(event, 'fs67', 159)" class="i">reduce</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">R</span> <span class="k">-&gt;</span> <span class="o">&#39;</span><span class="i">R</span> <span class="k">-&gt;</span> <span class="o">&#39;</span><span class="i">R</span>)
+                (<span onmouseout="hideTip(event, 'fs68', 160)" onmouseover="showTip(event, 'fs68', 160)" class="i">identity</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">R</span>) (<span onmouseout="hideTip(event, 'fs69', 161)" onmouseover="showTip(event, 'fs69', 161)" class="i">inputs</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">T</span> <span onmouseout="hideTip(event, 'fs70', 162)" onmouseover="showTip(event, 'fs70', 162)" class="i">list</span>) <span class="o">=</span>
+
+    <span class="k">let</span> <span class="k">rec</span> <span onmouseout="hideTip(event, 'fs71', 163)" onmouseover="showTip(event, 'fs71', 163)" class="i">aux</span> <span onmouseout="hideTip(event, 'fs69', 164)" onmouseover="showTip(event, 'fs69', 164)" class="i">inputs</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 165)" onmouseover="showTip(event, 'fs6', 165)" class="i">cloud</span> {
+        <span class="k">match</span> <span onmouseout="hideTip(event, 'fs69', 166)" onmouseover="showTip(event, 'fs69', 166)" class="i">inputs</span> <span class="k">with</span>
+        | [] <span class="k">-&gt;</span> <span class="k">return</span> <span onmouseout="hideTip(event, 'fs68', 167)" onmouseover="showTip(event, 'fs68', 167)" class="i">identity</span>
+        | [<span onmouseout="hideTip(event, 'fs72', 168)" onmouseover="showTip(event, 'fs72', 168)" class="i">t</span>] <span class="k">-&gt;</span> <span class="k">return</span> <span onmouseout="hideTip(event, 'fs66', 169)" onmouseover="showTip(event, 'fs66', 169)" class="i">map</span> <span onmouseout="hideTip(event, 'fs72', 170)" onmouseover="showTip(event, 'fs72', 170)" class="i">t</span>
+        | _ <span class="k">-&gt;</span>
+            <span class="k">let</span> <span onmouseout="hideTip(event, 'fs73', 171)" onmouseover="showTip(event, 'fs73', 171)" class="i">left</span>,<span onmouseout="hideTip(event, 'fs74', 172)" onmouseover="showTip(event, 'fs74', 172)" class="i">right</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs75', 173)" onmouseover="showTip(event, 'fs75', 173)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs62', 174)" onmouseover="showTip(event, 'fs62', 174)" class="i">split</span> <span onmouseout="hideTip(event, 'fs69', 175)" onmouseover="showTip(event, 'fs69', 175)" class="i">inputs</span>
+            <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs76', 176)" onmouseover="showTip(event, 'fs76', 176)" class="i">r</span>, <span onmouseout="hideTip(event, 'fs77', 177)" onmouseover="showTip(event, 'fs77', 177)" class="i">r&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs71', 178)" onmouseover="showTip(event, 'fs71', 178)" class="i">aux</span> <span onmouseout="hideTip(event, 'fs73', 179)" onmouseover="showTip(event, 'fs73', 179)" class="i">left</span> <span class="o">&lt;||&gt;</span> <span onmouseout="hideTip(event, 'fs71', 180)" onmouseover="showTip(event, 'fs71', 180)" class="i">aux</span> <span onmouseout="hideTip(event, 'fs74', 181)" onmouseover="showTip(event, 'fs74', 181)" class="i">right</span>
+            <span class="k">return</span> <span onmouseout="hideTip(event, 'fs67', 182)" onmouseover="showTip(event, 'fs67', 182)" class="i">reduce</span> <span onmouseout="hideTip(event, 'fs76', 183)" onmouseover="showTip(event, 'fs76', 183)" class="i">r</span> <span onmouseout="hideTip(event, 'fs77', 184)" onmouseover="showTip(event, 'fs77', 184)" class="i">r&#39;</span>
+    }
+
+    <span onmouseout="hideTip(event, 'fs71', 185)" onmouseover="showTip(event, 'fs71', 185)" class="i">aux</span> <span onmouseout="hideTip(event, 'fs69', 186)" onmouseover="showTip(event, 'fs69', 186)" class="i">inputs</span></pre>
+</td>
+</tr>
+</table>
+
+<p>The workflow follows a divide-and-conquer approach, 
+recursively partioning input data until trivial cases are met. 
+Recursive calls are passed through the <code>&lt;||&gt;</code> operator,
+thus achieving the effect the distributed parallelism.</p>
+
+<p>It should be noted that this is indeed a naive conception of mapReduce,
+as it does enable data parallelism nor does it take into account cluster granularity. 
+For a more in-depthexposition of mapReduce, please refer to the MBrace manual.</p>
+
+<h2>Non-deterministic parallelism</h2>
+
+<p>MBrace provides the <code>Cloud.Choice</code> combinator that utilizes
+parallelism for non-deterministic algorithms.
+Cloud workflows of type <code>Cloud&lt;'T option&gt;</code> are said to be non-deterministic
+in the sense that their return type indicates either success with <code>Some</code> result 
+or a negative answer with <code>None</code>.</p>
+
+<p><code>Cloud.Choice</code> combines a collection of arbitrary nondeterministic computations
+into one in which everything executes in parallel: it either returns <code>Some</code> result
+whenever a child happens to complete with <code>Some</code> result (cancelling all pending jobs)
+or <code>None</code> when all children have completed with <code>None</code>. It can be thought of as
+a distributed equivalent to the <code>Seq.tryPick</code> function found in the F# core library.</p>
+
+<p>The following example defines a distributed search function based on <code>Cloud.Choice</code>:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+<span class="l">9: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs78', 187)" onmouseover="showTip(event, 'fs78', 187)" class="i">tryFind</span> (<span onmouseout="hideTip(event, 'fs79', 188)" onmouseover="showTip(event, 'fs79', 188)" class="i">f</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">T</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs80', 189)" onmouseover="showTip(event, 'fs80', 189)" class="i">bool</span>) (<span onmouseout="hideTip(event, 'fs81', 190)" onmouseover="showTip(event, 'fs81', 190)" class="i">ts</span> <span class="o">:</span> <span class="o">&#39;</span><span class="i">T</span> <span onmouseout="hideTip(event, 'fs70', 191)" onmouseover="showTip(event, 'fs70', 191)" class="i">list</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 192)" onmouseover="showTip(event, 'fs6', 192)" class="i">cloud</span> {
+    <span class="k">let</span> <span onmouseout="hideTip(event, 'fs82', 193)" onmouseover="showTip(event, 'fs82', 193)" class="i">select</span> <span onmouseout="hideTip(event, 'fs72', 194)" onmouseover="showTip(event, 'fs72', 194)" class="i">t</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 195)" onmouseover="showTip(event, 'fs6', 195)" class="i">cloud</span> {
+        <span class="k">return</span>
+            <span class="k">if</span> <span onmouseout="hideTip(event, 'fs79', 196)" onmouseover="showTip(event, 'fs79', 196)" class="i">f</span> <span onmouseout="hideTip(event, 'fs72', 197)" onmouseover="showTip(event, 'fs72', 197)" class="i">t</span> <span class="k">then</span> <span onmouseout="hideTip(event, 'fs83', 198)" onmouseover="showTip(event, 'fs83', 198)" class="i">Some</span> <span onmouseout="hideTip(event, 'fs72', 199)" onmouseover="showTip(event, 'fs72', 199)" class="i">t</span>
+            <span class="k">else</span> <span onmouseout="hideTip(event, 'fs84', 200)" onmouseover="showTip(event, 'fs84', 200)" class="i">None</span>
+    }
+
+    <span class="k">return!</span> <span onmouseout="hideTip(event, 'fs81', 201)" onmouseover="showTip(event, 'fs81', 201)" class="i">ts</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs75', 202)" onmouseover="showTip(event, 'fs75', 202)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs53', 203)" onmouseover="showTip(event, 'fs53', 203)" class="i">map</span> <span class="i">select</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs25', 204)" onmouseover="showTip(event, 'fs25', 204)" class="i">Cloud</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs85', 205)" onmouseover="showTip(event, 'fs85', 205)" class="i">Choice</span>
+}</pre>
+</td>
+</tr>
+</table>
+
+<h2>Distributed Data</h2>
+
+<p>Cloud workflows offer a programming model for distributed computation. 
+But what happens when it comes to big data? While the distributable 
+execution environments of mbrace do offer a limited form of data distribution, 
+their scope is inherently local and almost certainly do not scale to the demands 
+of modern big data applications.  MBrace offers a plethora of mechanisms for managing
+data in a more global and massive scale. These provide an essential decoupling 
+between distributed computation and distributed data.</p>
+
+<h3>Cloud Ref</h3>
+
+<p>The mbrace programming model offers access to persistable and distributed data 
+entities known as cloud refs. Cloud refs very much resemble references found in 
+the ML family of languages but are "monadic" in nature. In other words, their 
+declaration entails a scheduling decision by the runtime. 
+The following workflow stores the downloaded content of a web page and returns a cloud ref to it:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs86', 206)" onmouseover="showTip(event, 'fs86', 206)" class="i">getTextRef</span> () <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 207)" onmouseover="showTip(event, 'fs6', 207)" class="i">cloud</span> {
+    <span class="c">// download a piece of data</span>
+    <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs87', 208)" onmouseover="showTip(event, 'fs87', 208)" class="i">text</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs64', 209)" onmouseover="showTip(event, 'fs64', 209)" class="i">download</span> <span class="s">&quot;</span><span class="s">http</span><span class="s">:</span><span class="s">/</span><span class="s">/</span><span class="s">www</span><span class="s">.</span><span class="s">m</span><span class="s">-</span><span class="s">brace</span><span class="s">.</span><span class="s">net</span><span class="s">/</span><span class="s">&quot;</span>
+    <span class="c">// store data to a new CloudRef</span>
+    <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs88', 210)" onmouseover="showTip(event, 'fs88', 210)" class="i">cref</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs89', 211)" onmouseover="showTip(event, 'fs89', 211)" class="i">CloudRef</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs90', 212)" onmouseover="showTip(event, 'fs90', 212)" class="i">New</span> <span onmouseout="hideTip(event, 'fs87', 213)" onmouseover="showTip(event, 'fs87', 213)" class="i">text</span>
+    <span class="c">// return the ref</span>
+    <span class="k">return</span> <span onmouseout="hideTip(event, 'fs88', 214)" onmouseover="showTip(event, 'fs88', 214)" class="i">cref</span>
+}</pre>
+</td>
+</tr>
+</table>
+
+<p>Dereferencing a cloud ref can be done by getting its <code>.Value</code> property:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs91', 215)" onmouseover="showTip(event, 'fs91', 215)" class="i">dereference</span> (<span onmouseout="hideTip(event, 'fs92', 216)" onmouseover="showTip(event, 'fs92', 216)" class="i">data</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs93', 217)" onmouseover="showTip(event, 'fs93', 217)" class="i">ICloudRef</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs94', 218)" onmouseover="showTip(event, 'fs94', 218)" class="i">byte</span> []<span class="o">&gt;</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 219)" onmouseover="showTip(event, 'fs6', 219)" class="i">cloud</span> {
+    <span class="k">return</span> <span onmouseout="hideTip(event, 'fs92', 220)" onmouseover="showTip(event, 'fs92', 220)" class="i">data</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs95', 221)" onmouseover="showTip(event, 'fs95', 221)" class="i">Value</span>
+}</pre>
+</td>
+</tr>
+</table>
 
 <div class="tip" id="fs1">namespace Nessos</div>
 <div class="tip" id="fs2">namespace Nessos.MBrace</div>
@@ -402,6 +552,40 @@ in a seemingly transparent manner.</p>
 <div class="tip" id="fs59">Multiple items<br />type WebException =<br />&#160;&#160;inherit InvalidOperationException<br />&#160;&#160;new : unit -&gt; WebException + 4 overloads<br />&#160;&#160;member GetObjectData : serializationInfo:SerializationInfo * streamingContext:StreamingContext -&gt; unit<br />&#160;&#160;member Response : WebResponse<br />&#160;&#160;member Status : WebExceptionStatus<br /><br />Full name: System.Net.WebException<br /><br />--------------------<br />System.Net.WebException() : unit<br />System.Net.WebException(message: string) : unit<br />System.Net.WebException(message: string, innerException: exn) : unit<br />System.Net.WebException(message: string, status: System.Net.WebExceptionStatus) : unit<br />System.Net.WebException(message: string, innerException: exn, status: System.Net.WebExceptionStatus, response: System.Net.WebResponse) : unit</div>
 <div class="tip" id="fs60">val e : System.Net.WebException</div>
 <div class="tip" id="fs61">val raise : exn:System.Exception -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.Operators.raise</div>
+<div class="tip" id="fs62">val split : ts:&#39;a -&gt; &#39;a * &#39;a<br /><br />Full name: Programming-model.List.split<br /><em><br /><br />&#160;splits a list into two halves</em></div>
+<div class="tip" id="fs63">val ts : &#39;a</div>
+<div class="tip" id="fs64">val download : (string -&gt; Cloud&lt;string []&gt;)<br /><br />Full name: Programming-model.download</div>
+<div class="tip" id="fs65">val mapReduce : map:(&#39;T -&gt; &#39;R) -&gt; reduce:(&#39;R -&gt; &#39;R -&gt; &#39;R) -&gt; identity:&#39;R -&gt; inputs:&#39;T list -&gt; Cloud&lt;&#39;R&gt;<br /><br />Full name: Programming-model.mapReduce</div>
+<div class="tip" id="fs66">val map : (&#39;T -&gt; &#39;R)</div>
+<div class="tip" id="fs67">val reduce : (&#39;R -&gt; &#39;R -&gt; &#39;R)</div>
+<div class="tip" id="fs68">val identity : &#39;R</div>
+<div class="tip" id="fs69">val inputs : &#39;T list</div>
+<div class="tip" id="fs70">type &#39;T list = List&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.list&lt;_&gt;</div>
+<div class="tip" id="fs71">val aux : (&#39;T list -&gt; Cloud&lt;&#39;R&gt;)</div>
+<div class="tip" id="fs72">val t : &#39;T</div>
+<div class="tip" id="fs73">val left : &#39;T list</div>
+<div class="tip" id="fs74">val right : &#39;T list</div>
+<div class="tip" id="fs75">Multiple items<br />module List<br /><br />from Programming-model<br /><br />--------------------<br />module List<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type List&lt;&#39;T&gt; =<br />&#160;&#160;| ( [] )<br />&#160;&#160;| ( :: ) of Head: &#39;T * Tail: &#39;T list<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IEnumerable&lt;&#39;T&gt;<br />&#160;&#160;member Head : &#39;T<br />&#160;&#160;member IsEmpty : bool<br />&#160;&#160;member Item : index:int -&gt; &#39;T with get<br />&#160;&#160;member Length : int<br />&#160;&#160;member Tail : &#39;T list<br />&#160;&#160;static member Cons : head:&#39;T * tail:&#39;T list -&gt; &#39;T list<br />&#160;&#160;static member Empty : &#39;T list<br /><br />Full name: Microsoft.FSharp.Collections.List&lt;_&gt;</div>
+<div class="tip" id="fs76">val r : &#39;R</div>
+<div class="tip" id="fs77">val r&#39; : &#39;R</div>
+<div class="tip" id="fs78">val tryFind : f:(&#39;T -&gt; bool) -&gt; ts:&#39;T list -&gt; Cloud&lt;&#39;T option&gt;<br /><br />Full name: Programming-model.tryFind</div>
+<div class="tip" id="fs79">val f : (&#39;T -&gt; bool)</div>
+<div class="tip" id="fs80">type bool = System.Boolean<br /><br />Full name: Microsoft.FSharp.Core.bool</div>
+<div class="tip" id="fs81">val ts : &#39;T list</div>
+<div class="tip" id="fs82">val select : (&#39;T -&gt; Cloud&lt;&#39;T option&gt;)</div>
+<div class="tip" id="fs83">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
+<div class="tip" id="fs84">union case Option.None: Option&lt;&#39;T&gt;</div>
+<div class="tip" id="fs85">static member Cloud.Choice : computations:seq&lt;Cloud&lt;&#39;T option&gt;&gt; -&gt; Cloud&lt;&#39;T option&gt;</div>
+<div class="tip" id="fs86">val getTextRef : unit -&gt; Cloud&lt;ICloudRef&lt;string []&gt;&gt;<br /><br />Full name: Programming-model.getTextRef</div>
+<div class="tip" id="fs87">val text : string []</div>
+<div class="tip" id="fs88">val cref : ICloudRef&lt;string []&gt;</div>
+<div class="tip" id="fs89">Multiple items<br />module CloudRef<br /><br />from Nessos.MBrace.Lib<br /><br />--------------------<br />type CloudRef =<br />&#160;&#160;static member Get : container:string -&gt; Cloud&lt;ICloudRef []&gt;<br />&#160;&#160;static member Get : container:string * id:string -&gt; Cloud&lt;ICloudRef&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member New : value:&#39;T -&gt; Cloud&lt;ICloudRef&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member New : container:string * value:&#39;T -&gt; Cloud&lt;ICloudRef&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member Read : cref:ICloudRef&lt;&#39;T&gt; -&gt; Cloud&lt;&#39;T&gt;<br />&#160;&#160;static member TryGet : container:string * id:string -&gt; Cloud&lt;ICloudRef&lt;&#39;T&gt; option&gt;<br /><br />Full name: Nessos.MBrace.CloudRef</div>
+<div class="tip" id="fs90">static member CloudRef.New : value:&#39;T -&gt; Cloud&lt;ICloudRef&lt;&#39;T&gt;&gt;<br />static member CloudRef.New : container:string * value:&#39;T -&gt; Cloud&lt;ICloudRef&lt;&#39;T&gt;&gt;</div>
+<div class="tip" id="fs91">val dereference : data:ICloudRef&lt;byte []&gt; -&gt; Cloud&lt;byte []&gt;<br /><br />Full name: Programming-model.dereference</div>
+<div class="tip" id="fs92">val data : ICloudRef&lt;byte []&gt;</div>
+<div class="tip" id="fs93">Multiple items<br />type ICloudRef =<br />&#160;&#160;interface<br />&#160;&#160;&#160;&#160;inherit ICloudDisposable<br />&#160;&#160;&#160;&#160;abstract member Container : string<br />&#160;&#160;&#160;&#160;abstract member Name : string<br />&#160;&#160;&#160;&#160;abstract member Type : Type<br />&#160;&#160;&#160;&#160;abstract member Value : obj<br />&#160;&#160;end<br /><br />Full name: Nessos.MBrace.ICloudRef<br /><br />--------------------<br />type ICloudRef&lt;&#39;T&gt; =<br />&#160;&#160;interface<br />&#160;&#160;&#160;&#160;inherit ICloudRef<br />&#160;&#160;&#160;&#160;abstract member TryValue : &#39;T option<br />&#160;&#160;&#160;&#160;abstract member Value : &#39;T<br />&#160;&#160;end<br /><br />Full name: Nessos.MBrace.ICloudRef&lt;_&gt;</div>
+<div class="tip" id="fs94">Multiple items<br />val byte : value:&#39;T -&gt; byte (requires member op_Explicit)<br /><br />Full name: Microsoft.FSharp.Core.Operators.byte<br /><br />--------------------<br />type byte = System.Byte<br /><br />Full name: Microsoft.FSharp.Core.byte</div>
+<div class="tip" id="fs95">property ICloudRef.Value: byte []</div>
 
         </div>
         <div class="span3">
@@ -418,10 +602,12 @@ in a seemingly transparent manner.</p>
             <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
             
             <li class="nav-header">Getting started</li>
+            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
             <li><a href="/MBrace/azure-tutorial.html">Azure tutorial</a></li>
 
             <li class="nav-header">Documentation</li>
-            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a href="/MBrace/files/mbrace-manual.pdf">MBrace Manual</a></li>
             <li><a href="/MBrace/reference/index.html">API Reference</a></li>
           </ul>
         </div>

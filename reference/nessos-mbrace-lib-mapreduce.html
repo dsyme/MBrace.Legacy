@@ -91,10 +91,10 @@ or sequential execution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
+          <code onmouseout="hideTip(event, '17', 17)" onmouseover="showTip(event, '17', 17)">
             mapReduce mapF reduceF identity values
           </code>
-          <div class="tip" id="18">
+          <div class="tip" id="17">
             <strong>Signature:</strong> mapF:(&#39;T -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:&#39;R -&gt; values:&#39;T list -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R          </div>
         </td>
@@ -111,10 +111,10 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '19', 19)" onmouseover="showTip(event, '19', 19)">
+          <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
             mapReduce&#39; (...)
           </code>
-          <div class="tip" id="19">
+          <div class="tip" id="18">
             <strong>Signature:</strong> mapF:(&#39;T -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:(unit -&gt; Cloud&lt;&#39;R&gt;) -&gt; container:&#39;Container -&gt; containerF:(&#39;Container -&gt; ContainerState&lt;&#39;Container,&#39;T&gt;) -&gt; context:ParallelismContext -&gt; depth:int -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R, 'Container          </div>
         </td>
@@ -129,10 +129,10 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
+          <code onmouseout="hideTip(event, '19', 19)" onmouseover="showTip(event, '19', 19)">
             mapReduce&#39;&#39; (...)
           </code>
-          <div class="tip" id="20">
+          <div class="tip" id="19">
             <strong>Signature:</strong> mapF:(&#39;T -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:(unit -&gt; Cloud&lt;&#39;R&gt;) -&gt; container:&#39;Container -&gt; containerF:(&#39;Container -&gt; ContainerState&lt;&#39;Container,&#39;T&gt;) -&gt; context:ParallelismContext -&gt; depth:int -&gt; execute:(Cloud&lt;&#39;R&gt; -&gt; Cloud&lt;&#39;R&gt; -&gt; Cloud&lt;&#39;R * &#39;R&gt;) -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R, 'Container          </div>
         </td>
@@ -147,10 +147,10 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
+          <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
             mapReduceArray (...)
           </code>
-          <div class="tip" id="21">
+          <div class="tip" id="20">
             <strong>Signature:</strong> mapF:(&#39;T [] -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:(unit -&gt; Cloud&lt;&#39;R&gt;) -&gt; values:&#39;T [] -&gt; partition:int -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R          </div>
         </td>
@@ -166,10 +166,10 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
+          <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
             mapReduceCloudTree (...)
           </code>
-          <div class="tip" id="22">
+          <div class="tip" id="21">
             <strong>Signature:</strong> mapF:(&#39;T -&gt; Cloud&lt;&#39;R&gt;) -&gt; reduceF:(&#39;R -&gt; &#39;R -&gt; Cloud&lt;&#39;R&gt;) -&gt; identity:(unit -&gt; Cloud&lt;&#39;R&gt;) -&gt; values:ICloudRef&lt;CloudTree&lt;&#39;T&gt;&gt; -&gt; Cloud&lt;&#39;R&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'R          </div>
         </td>
@@ -185,10 +185,10 @@ splitting in half.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
+          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
             nextJobsNumber ()
           </code>
-          <div class="tip" id="23">
+          <div class="tip" id="22">
             <strong>Signature:</strong> unit -&gt; Cloud&lt;int&gt;<br />
                       </div>
         </td>
@@ -219,10 +219,12 @@ splitting in half.</p>
             <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
             
             <li class="nav-header">Getting started</li>
+            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
             <li><a href="/MBrace/azure-tutorial.html">Azure tutorial</a></li>
 
             <li class="nav-header">Documentation</li>
-            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a href="/MBrace/files/mbrace-manual.pdf">MBrace Manual</a></li>
             <li><a href="/MBrace/reference/index.html">API Reference</a></li>
           </ul>
         </div>
