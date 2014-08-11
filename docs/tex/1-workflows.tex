@@ -649,6 +649,15 @@ let ftree : TreeRef<(string * int) []> = runtime.Run <@ map mapF wtree @>
 // use reduce to calculate the aggregate frequency
 let freq : (string * int) [] = runtime.Run <@ reduce [||] reduceF ftree @>
 \end{lstlisting}
+The above functions enable distributed MapReduce workflows that are 
+driven by the structural properties of the cloud tree.
+The use of cloud refs accounts for data parallelism in a way not achievable
+by the previous MapReduce examples.
+
+It is possible to define a MapReduce workflow that combines both control
+over runtime granularity \emph{and} effective data parallelism through sharding.
+Examples of this can be found in the MapReduce implementations of the \texttt{MBrace.Lib}
+assembly.
 
 \subsubsection*{Mutable Cloud Refs}
 \label{mutableCloudRef}
