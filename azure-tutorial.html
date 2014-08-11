@@ -39,26 +39,24 @@
 As a prerequisite you need to have a Windows Azure account, basic knowledge of the Azure computing/virtual machine services and
 optionally Microsoft Visual Studio (or any environment supporting F#).</p>
 
-<p>Typically you will need some virtual machines to run the MBrace daemons/nodes and a client
+<p>Typically you need some virtual machines to run the MBrace daemons/nodes and a client
 that manages the runtime (usually the client runs on an F# interactive instance). Any nodes in a MBrace runtime
 as well as any clients, should be part of the same network in order to work properly.</p>
 
 <p>Because of this restriction in this tutorial you have two choices: you can either use one of the virtual machines as a client or you can use
 the Windows Azure VPN service to join the virtual network created in Azure and access the runtime from a remote client (your on-premises computer).</p>
 
-<h2>Creating a Windows Azure virtual machine</h2>
-
-<h3>Creating a virtual network</h3>
+<h2>Creating a virtual network</h2>
 
 <p>At this point you should decide if you are going to use a remote client or use one of
 the virtual machines that you are going to create as a client. If you choose the first 
-option you need to create a virtual network, create and upload certificated and finally configure your VPN client. 
+option you need to create a virtual network, create and upload certificates and finally configure your VPN client. 
 The process is described in <a href="http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx">here</a>.</p>
 
 <p>You can skip this step if you want to use a client in one of your virtual machines, as a virtual network will be automatically created
 for you during the virtual machine creation.</p>
 
-<h3>Creating a virtual machine</h3>
+<h2>Creating a virtual machine</h2>
 
 <p>Now you need to create your virtual machines. You can follow 
 <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-tutorial/">this</a> tutorial
@@ -67,8 +65,8 @@ If you have created a virtual network then you <strong>must</strong> specify
 the virtual network when you create the virtual machine. 
 You can't join the virtual machine to a virtual network after you create the VM.</p>
 
-<p>Note that although there are no minimal requirements for the VM size it's recommented to use at least a Medium (2 cores, 3.5GB Memory) instance.
-After the virtual machine is created log on to it.</p>
+<p>Note that although there are no minimal requirements for the VM size it's recommented to use at least 
+a Medium (A2) (2 cores, 3.5GB Memory) instance. After the virtual machine is created log on to it.</p>
 
 <h2>Installing the MBrace Runtime</h2>
 
@@ -78,7 +76,8 @@ which contains a powershell script that helps you install MBrace by downloading 
 runtime nuget package, adding firewall exceptions for the MBrace executables and finally installing the MBrace runtime as a Windows Service.</p>
 
 <p>Open a PowerShell prompt as administrator and run the <code>Install-MBrace.ps1</code> script.
-Before running the installation script you probably need to enable script execution in PowerShell; you can do this using the <a href="http://technet.microsoft.com/en-us/library/ee176961.aspx">Set-ExecutionPolicy</a> cmdlet.</p>
+Before running the installation script you probably need to enable script execution in PowerShell;
+you can do this using the <a href="http://technet.microsoft.com/en-us/library/ee176961.aspx">Set-ExecutionPolicy</a> cmdlet.</p>
 
 <table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; help .\Install-MBrace.ps1
 
@@ -305,7 +304,9 @@ and send your first cloud computation.</p>
 
         </div>
         <div class="span3">
-          <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />  
+		  <a target="_blank" href="http://www.m-brace.net/">
+            <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />
+		  </a>
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
             <li class="nav-header">MBrace</li>
             <li><a href="/MBrace/index.html">Home page</a></li>
