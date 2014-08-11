@@ -596,40 +596,59 @@ and enhanced access speeds. In the sections ahead we will describe
 An interesting aspect of cloud refs is the ability to define large, distributed
 data structures. For example, one could define a distributed binary tree like so:
 \begin{lstlisting}
-type DistribTree<'T> = 
-	| Leaf
-	| Branch of 'T * ICloudRef<DistribTree<'T>> * ICloudRef<DistribTree<'T>>
-	
-// initialize a simple distributed tree
-[<Cloud>]
-let rec populate (depth : int) : Cloud<DistribTree<int>> =
-    cloud {
-        if depth = 0 then
-            return! CloudRef.New Leaf
-        else
-            let! left, right = populate (depth - 1) <||> populate (depth - 1)
-            return! CloudRef.New <| Branch(depth, left, right)
-    }
-    
-let treeRef = runtime.Run <@ populate 5 @>
-\end{lstlisting}
-Once initiated, the distributed structure can be traversed by future computations.
-\begin{lstlisting}
-[<Cloud>]
-let rec getBranchCount (tRef : ICloudRef<DistribTree<int>>) =
-    cloud {
-        match tRef.Value with
-        | Leaf -> return 0
-        | Branch(_,l,r) ->
-            let! lc, rc = getBranchCount l <||> getBranchCount r
-            return 1 + lc + rc
-    }
-    
-runtime.Run <@ getBranchCount treeRef @>
-\end{lstlisting}
+type CloudTree<'T> = 
+	| Empty
+    | Leaf of 'T
+	| Branch of TreeRef<'T> * TreeRef<'T>
 
-%Cloud refs can only be initialized and dereferenced, which means that they
-%are immutable by design. 
+and TreeRef<'T> = ICloudRef<CloudTree<'T>>
+\end{lstlisting}
+The cloud tree gives rise to a number of naturally distributable operations like
+\begin{lstlisting}
+let rec map (f : 'T -> 'S) (ttree : TreeRef<'T>) = cloud {
+    match ttree.Value with
+    | Empty -> return! CloudRef.New Empty
+    | Leaf t -> return! CloudRef.New <| Leaf (f t)
+    | Branch(l,r) ->
+        let! l',r' = map f l <||> map f r
+        return! CloudRef.New <| Branch(l', r')
+}
+\end{lstlisting}
+and
+\begin{lstlisting}
+let rec reduce (id : 'R) (reduceF : 'R -> 'R -> 'R) (rtree : TreeRef<'R>) = cloud {
+    match rtree.Value with
+    | Empty -> return id
+    | Leaf r -> return r
+    | Branch(l,r) ->
+        let! r,r' = reduce id reduceF l <||> reduce id reduceF r
+        return reduceF r r'
+}
+\end{lstlisting}
+Cloud trees can be materialized materialized from an original data set like so:
+\begin{lstlisting}
+let rec initTree (values : 'T list) : TreeRef<'T> =
+    cloud {
+        match values with
+        | [] -> return! CloudRef.New Empty
+        | [t] -> return! CloudRef.New <| Leaf t
+        | _ ->
+            let left, right = List.split values
+            let! l = initTree left 
+            let! r = initTree right
+            return! CloudRef.New <| Branch(l,r)
+   }
+\end{lstlisting}
+We can now use the above definitions to perform MapReduce-like queries on distributed data.
+Recall the Shakespeare wordcount example:
+\begin{lstlisting}
+// create a cloud tree containing the works of Shakespeare
+let wtree : TreeRef<string> = runtime.Run <@ initTree works @>
+// use map to calculate individual frequences
+let ftree : TreeRef<(string * int) []> = runtime.Run <@ map mapF wtree @>
+// use reduce to calculate the aggregate frequency
+let freq : (string * int) [] = runtime.Run <@ reduce [||] reduceF ftree @>
+\end{lstlisting}
 
 \subsubsection*{Mutable Cloud Refs}
 \label{mutableCloudRef}
