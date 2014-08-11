@@ -316,3 +316,54 @@ Dereferencing a cloud ref can be done by getting its `.Value` property:
 let dereference (data : ICloudRef<byte []>) = cloud {
     return data.Value
 }
+
+(**
+
+### Example: Data Sharding
+
+An interesting aspect of cloud refs is the ability to define large, distributed data structures. 
+For example, one could define a distributed binary tree like so:
+
+*)
+
+type CloudTree<'T> = 
+    | Empty
+    | Leaf of 'T
+    | Branch of TreeRef<'T> * TreeRef<'T>
+
+and TreeRef<'T> = ICloudRef<CloudTree<'T>>
+
+(**
+
+The cloud tree gives rise to a number of naturally distributable combinators. For example
+
+*)
+
+let rec map (f : 'T -> 'S) (ttree : TreeRef<'T>) = cloud { 
+    match ttree.Value with
+    | Empty -> return! CloudRef.New Empty
+    | Leaf t -> return! CloudRef.New <| Leaf (f t)
+    | Branch(l,r) ->
+        let! l',r' = map f l <||> map f r 
+        return! CloudRef.New <| Branch(l', r')
+}
+
+(** and also *)
+
+let rec reduce (id : 'R) (reduceF : 'R -> 'R -> 'R) (rtree : TreeRef<'R>) = cloud { 
+    match rtree.Value with
+    | Empty -> return id
+    | Leaf r -> return r
+    | Branch(l,r) ->
+        let! r,r' = reduce id reduceF l <||> reduce id reduceF r 
+        return reduceF r r'
+}
+
+(**
+
+The above functions enable distributed MapReduce workflows that are 
+driven by the structural properties of the cloud tree.
+The use of cloud refs accounts for data parallelism in a way not achievable
+by the previous MapReduce example.
+
+*)
