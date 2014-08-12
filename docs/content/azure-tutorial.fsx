@@ -73,26 +73,28 @@ you can do this using the [Set-ExecutionPolicy](http://technet.microsoft.com/en-
     SYNOPSIS
         Installation script for the MBrace runtime.
     
-    
     SYNTAX
-        C:\mbrace\Install-MBrace.ps1 [-AddToPath] [-Service] [<CommonParameters>]
-    
-    
+        C:\mbrace\Install-MBrace.ps1 [-AddToPath] [-Service] [[-Directory] <String>] [<CommonParameters>]
+
+
     DESCRIPTION
         This script implements the following workflow:
-            * Install .NET 4.5 if it's needed.
-            * Download the NuGet standalone and the latest MBrace.Runtime package.
-            * Add firewall exceptions for the mbraced and mbrace.worker executables.
-            * Install and starts the MBrace Windows service.
-        Note that administrator permissions are required.
-    
-    
+    	    * Install .NET 4.5 if it's needed.
+    	    * Download the NuGet standalone and the latest MBrace.Runtime package.
+    	    * Add firewall exceptions for the mbraced and mbrace.worker executables.
+    	    * Install and starts the MBrace Windows service.
+    	Note that administrator rights are required.
+
+
     RELATED LINKS
         http://github.com/Nessos/MBrace
-        http://nessos.github.io/MBrace
+    	http://nessos.github.io/MBrace
+    	http://www.m-brace.net/
+
             
-    c:\mbrace > Set-ExecutionPolicy Unrestricted
-    c:\mbrace > .\Install-MBrace.ps1
+        c:\mbrace > Set-ExecutionPolicy Unrestricted
+        c:\mbrace > .\Install-MBrace.ps1
+    
     * Checking for admin permissions...
     * Checking if .NET 4.5 installed...
     * Downloading NuGet...
@@ -147,10 +149,10 @@ You just need to make sure that during the creation you choose the same _Cloud S
 At this point your virtual machines are running and the MBrace nodes are idle.
 At your client machine, if you use VPN make sure that you are connected and you can ping some of the remote machines.
 
-In any case you need to install the F# interactive in your client (or optionally Visual Studio or any environment supporting F#).
-Now you need to install the [MBrace.Client](http://www.nuget.org/packages/MBrace.Client) package.
+In any case you need to install the F# interactive in your client (or optionally Visual Studio or any environment supporting F#)
+as well as the [MBrace.Runtime](http://www.nuget.org/packages/MBrace.Runtime) package.
 
-In your solution open the `mbrace-intro.fsx`. In the _Connect to a remote runtime_ section
+In your solution open the `mbrace-tutorial.fsx`. In the _initialize a runtime of remote nodes_ section
 change nodes hostname and ports.
 In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:
 *)

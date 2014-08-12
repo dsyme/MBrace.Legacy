@@ -20,6 +20,7 @@
 .LINK  
 	http://github.com/Nessos/MBrace
 	http://nessos.github.io/MBrace
+	http://www.m-brace.net/
 #>
 
 param([switch]$AddToPath = $false, [switch]$Service = $true, [string]$Directory = "$($env:ProgramFiles)\MBrace")
