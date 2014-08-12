@@ -4,7 +4,7 @@
 #I "../../bin/"
 #I "../../src/MBrace.Client/"
 
-#load "preamble.fsx"
+#load "bootstrap.fsx"
 open Nessos.MBrace
 open Nessos.MBrace.Lib
 open Nessos.MBrace.Client
@@ -23,7 +23,7 @@ manifested through computation expressions in F#.
   <div class="span6">
     <div class="well well-small" id="nuget">
       The MBrace framework can be <a href="https://nuget.org/packages/MBrace.Runtime">installed from NuGet</a>:
-      <pre>PM> Install-Package MBrace.Runtime</pre>
+      <pre>PM> Install-Package MBrace.Runtime -Pre</pre>
     </div>
   </div>
   <div class="span1"></div>
