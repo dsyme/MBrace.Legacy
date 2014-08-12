@@ -188,7 +188,7 @@ Target "ClientPkg" (fun _ ->
         { p with   
             Authors = authors
             Project = "MBrace.Client"
-            Summary = "Client API for interfacing with remote MBrace runtimes."
+            Summary = "Client API for interfacing with MBrace runtimes."
             Description = description
             Version = nugetVersion
             ReleaseNotes = String.concat " " release.Notes
@@ -202,13 +202,6 @@ Target "ClientPkg" (fun _ ->
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Utils.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Runtime.Base.dll"
                     yield! addAssembly @"lib\net45" @"..\bin\MBrace.Client.dll"
-                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.dll"
-                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.xml"
-                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.sigdata" // Intellisense
-                    yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.optdata" // Intellisense
-                    yield  addFile     @"tools" @"install.ps1"  
-                    yield  addFile     @"" @"preamble.fsx"            // TODO : Broken       
-                    yield  addFile     @"content" "mbrace-intro.fsx"  // TODO : Broken
                 ]
             Dependencies = 
                 [
@@ -267,13 +260,13 @@ Target "AzurePkg" (fun _ ->
 
 Target "MBraceIntroScript" (fun _ ->
     let newFile = 
-        File.ReadLines("./nuget/mbrace-intro.fsx")
+        File.ReadLines("./nuget/mbrace-tutorial.fsx")
         |> Seq.map (fun line -> 
             if line.StartsWith """#load "../packages/MBrace.Runtime""" then 
-                sprintf """#load "../packages/MBrace.Runtime.%s/preamble.fsx" """ release.NugetVersion
+                sprintf """#load "../packages/MBrace.Runtime.%s/bootstrap.fsx" """ release.NugetVersion
             else line)
         |> Seq.toArray
-    File.WriteAllLines("./nuget/mbrace-intro.fsx", newFile)
+    File.WriteAllLines("./nuget/mbrace-tutorial.fsx", newFile)
 )
 
 Target "RuntimePkg" (fun _ ->
@@ -319,9 +312,9 @@ Target "RuntimePkg" (fun _ ->
                     yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.xml"
                     yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.sigdata"
                     yield  addFile     @"tools" @"..\lib\fsharp\FSharp.Core.optdata"
-                    yield  addFile     @"" @"preamble.fsx"
+                    yield  addFile     @"" @"bootstrap.fsx"
                     yield  addFile     @"tools" @"install.ps1"  
-                    yield  addFile     @"content" "mbrace-intro.fsx"
+                    yield  addFile     @"content" "mbrace-tutorial.fsx"
                 ]                   
         })                          
         ("nuget/MBrace.nuspec")

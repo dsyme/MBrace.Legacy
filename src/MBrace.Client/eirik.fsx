@@ -1,4 +1,4 @@
-﻿#load "preamble.fsx"
+﻿#load "bootstrap.fsx"
 
 open Nessos.MBrace
 open Nessos.MBrace.Client

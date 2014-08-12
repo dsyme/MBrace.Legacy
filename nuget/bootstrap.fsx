@@ -1,4 +1,5 @@
-﻿//  Loads the minimal set of assemblies required to initialize an MBrace session
+﻿//  Loads the minimal set of assemblies required to initialize MBrace
+//  in an F# interactive session.
 
 #I __SOURCE_DIRECTORY__
 #r "tools/Thespian.dll"
@@ -10,6 +11,12 @@
 #r "tools/MBrace.Runtime.Base.dll"
 #r "tools/MBrace.Client.dll"
 
+open System.IO
+open Nessos.MBrace.Store
 open Nessos.MBrace.Client
 
+// set printers for Client Objects
+fsi.AddPrinter prettyPrintStore
+
+// set local MBrace executable location
 MBraceSettings.MBracedExecutablePath <- System.IO.Path.Combine(__SOURCE_DIRECTORY__, "./tools/mbraced.exe")

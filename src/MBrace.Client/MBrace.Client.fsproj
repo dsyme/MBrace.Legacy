@@ -60,7 +60,7 @@
     <Compile Include="RuntimeProxy.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Extensions.fs" />
-    <None Include="preamble.fsx" />
+    <None Include="bootstrap.fsx" />
     <None Include="eirik.fsx" />
     <None Include="jan.fsx" />
     <None Include="kostas.fsx" />

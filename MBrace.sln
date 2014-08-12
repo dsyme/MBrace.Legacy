@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Utils", "src\MBrace.Utils\MBrace.Utils.fsproj", "{945A209F-371C-4047-B6D4-CD271A6D7D1A}"
 EndProject
@@ -65,11 +65,11 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Store.Tests", "tests
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{6E315C67-9D30-4500-A80E-EEEAECAD46C6}"
 	ProjectSection(SolutionItems) = preProject
+		nuget\bootstrap.fsx = nuget\bootstrap.fsx
 		nuget\init.ps1 = nuget\init.ps1
 		nuget\install.ps1 = nuget\install.ps1
-		nuget\mbrace-intro.fsx = nuget\mbrace-intro.fsx
+		nuget\mbrace-tutorial.fsx = nuget\mbrace-tutorial.fsx
 		nuget\MBrace.nuspec = nuget\MBrace.nuspec
-		nuget\preamble.fsx = nuget\preamble.fsx
 		nuget\uninstall.ps1 = nuget\uninstall.ps1
 	EndProjectSection
 EndProject

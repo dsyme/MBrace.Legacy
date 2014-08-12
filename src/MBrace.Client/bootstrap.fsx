@@ -1,4 +1,5 @@
-﻿//  Loads the minimal set of assemblies required to initialize an MBrace session
+﻿//  Loads the minimal set of assemblies required to initialize MBrace
+//  in an F# interactive session.
 #I "../../bin/"
 
 #r "Thespian.dll"

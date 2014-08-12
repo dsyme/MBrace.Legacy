@@ -111,7 +111,7 @@ namespace Nessos.MBrace.Client
         static member ConnectAsync(uri: Uri): Async<MBraceRuntime> =
             async {
                 try
-                    let node = MBraceNode uri
+                    let node = MBraceNode.Connect uri
                     let! info = RuntimeProxy.connect node.Ref
                     return initProxyActor info
 

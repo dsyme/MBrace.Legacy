@@ -7,7 +7,7 @@
 	  <owners>@authors@</owners>
 	  <licenseUrl>https://github.com/nessos/MBrace/blob/master/License.md</licenseUrl>
 	  <projectUrl>https://github.com/nessos/MBrace</projectUrl>
-	  <iconUrl>https://avatars1.githubusercontent.com/u/5538081</iconUrl>
+	  <iconUrl>http://nessos.github.io/MBrace/img/mbrace.png</iconUrl>
 	  <requireLicenseAcceptance>false</requireLicenseAcceptance>
 	  <summary>@summary@</summary>
 	  <description>@description@</description>

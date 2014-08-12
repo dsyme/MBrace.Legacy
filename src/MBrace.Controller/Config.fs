@@ -119,7 +119,7 @@
         let tryParseSession (sessionFile : string) =
             let tryGetNode (uri : Uri, gId : Guid) =
                 try 
-                    let n = new MBraceNode(uri)
+                    let n = MBraceNode.Connect(uri)
                     if n.DeploymentId <> gId || n.Process.IsNone then None
                     else Some n
                 with _ -> None

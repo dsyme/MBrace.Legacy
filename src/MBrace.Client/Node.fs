@@ -57,16 +57,19 @@
 
         internal new (info : NodeDeploymentInfo) = MBraceNode(info.Reference, info.Uri)
 
-        /// Create a new Node object. No node is spawned.
-        new (uri: Uri) =
+        /// Connect to an existing MBrace node.
+        static member Connect(uri: Uri) =
             let nref = uri |> MBraceUri.mbraceUriToActorUri Serialization.SerializerRegistry.DefaultName |> ActorRef.fromUri
-            MBraceNode(nref, uri)
+            let n = new MBraceNode(nref, uri)
+            let _ = n.IsActive
+            n
 
-        /// Create a new Node object. No node is spawned.
-        new (hostname : string, port : int) = MBraceNode(MBraceUri.hostPortToUri(hostname, port))
+        /// Connect to an existing MBrace node.
+        static member Connect(hostname : string, port : int) = 
+            MBraceNode.Connect(MBraceUri.hostPortToUri(hostname, port))
 
-         /// Create a new Node object. No node is spawned.
-        new (uri : string) = MBraceNode(new Uri(uri))
+        /// Connect to an existing MBrace node.
+        static member Connect(uri : string) = MBraceNode.Connect(new Uri(uri))
 
         /// Gets the System.Diagnostics.Process object that corresponds to a local MBrace node.
         member __.Process : Process option = snd nodeInfo.Value
