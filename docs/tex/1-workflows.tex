@@ -162,7 +162,6 @@ let cloudProc = runtime.CreateProcess <@ lineCount () @>
 cloudProc.AwaitResult()
 \end{lstlisting}
 %
-\subsubsection*{Expressivity}
 %
 Cloud workflows can be used to create user defined higher-order functions. 
 For example, we could define a distributed variant of the classic filter combinator:
@@ -202,7 +201,7 @@ let rec ackermann m n =
     }
 \end{lstlisting}
 %
-\subsubsection*{Language Construct Support}
+\subsubsection*{Language Constructs}
 %
 Cloud workflows offer a multiplicity of overloaded language constructs,
 including sequential operations such as \texttt{for} loops:
