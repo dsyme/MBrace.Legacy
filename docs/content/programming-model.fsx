@@ -4,14 +4,14 @@
 #I "../../bin/"
 #I "../../src/MBrace.Client/"
 
-#load "preamble.fsx"
+#load "bootstrap.fsx"
 open Nessos.MBrace
 open Nessos.MBrace.Lib
 open Nessos.MBrace.Client
 
 (**
 
-# The MBrace Programming model
+# Programming model [Draft]
 
 The MBrace programming model is based on F# 
 [computation expressions](http://msdn.microsoft.com/en-us/library/dd233182.aspx),

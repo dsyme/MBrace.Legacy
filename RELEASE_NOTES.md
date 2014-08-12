@@ -1,2 +1,2 @@
-#### 0.5.0
-* Future release.
+#### 0.5.0-alpha
+* Initial release.
