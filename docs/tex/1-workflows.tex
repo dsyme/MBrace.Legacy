@@ -220,38 +220,17 @@ cloud {
 }
 \end{lstlisting}
 %
-While these operations execute sequentially with the expected semantics,
-the fact that they compose with arbitrary cloud workflows make them powerful
-tools in scenaria where distributed, iterative algorithms are required.
-In pseudocode:
-\begin{lstlisting}
-cloud {
-    let completed = ref false
-    let data = ref ``initial data``
-    while not !completed do
-        let! data' = ``distributed computation`` !data
-        data := data'
-        completed := ``satisfies finalization condition`` !data
-
-    return !data
-}
-\end{lstlisting}
-%
-Patterns like this appear in a wide range of important algorithms in
-fields such as numerical analysis and machine learning.
-
 An important feature supported by cloud workflows is exception handling. 
 Exceptions can be raised and caught in cloud workflows just as in any other piece 
 of \fsharp{} or \dotnet{} code. 
 \begin{lstlisting}
 cloud {
     try
-        let! x = cloud { return 0 }
-        let! y = cloud { return failwith "error!" }
+        let! x = cloud { return 1 / 0 }
         return x + y
-    with 
-    | e ->
-        do! Cloud.Logf "encountered error: %A" e
+    with :? System.DivideByZeroException as e ->
+        // log and reraise
+        do! Cloud.Logf "error: %O" e
         return raise e
 }
 \end{lstlisting}
@@ -263,12 +242,12 @@ stack winds across multiple machines. Thus as exceptions are raised, they are pa
 around multiple nodes before they are, if ever, returned to the user as a failed
 computation result.
 
-This is a good demonstration of what we feel is one of the biggest strengths of \mbrace.
+This is a good demonstration of what is one of the strengths of \mbrace.
 Error handling in particular and computation state in general have a global and hierarchical
 scope rather than one that is fragmented and localized.
-This is achieved thanks to symbolic and distributed interpretation of what is known as the 
-\emph{free monad of continuations}\cite{data-types-ala-carte, scala-trampolines}, 
-or what we like to call the ``monadic skeleton'' of a cloud workflow.
+This is achieved thanks to symbolic and distributed interpretation of what is known as
+\emph{monadic trampolines}\cite{data-types-ala-carte, scala-trampolines}, 
+also known as the ``monadic skeleton'' of a cloud workflow.
 
 
 \subsubsection*{Example: Defining MapReduce}
