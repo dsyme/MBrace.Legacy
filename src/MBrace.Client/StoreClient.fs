@@ -12,6 +12,8 @@
     [<Sealed; AutoSerializable(false)>]
     type StoreClient internal (info : StoreInfo) =
 
+        static do MBraceSettings.Init()
+
         let newId () = Guid.NewGuid().ToString()
         let defaultContainer = MBraceSettings.DefaultContainer
 

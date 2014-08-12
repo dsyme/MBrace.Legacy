@@ -32,6 +32,8 @@
     [<Sealed; NoEquality; NoComparison; AutoSerializable(false)>]
     type MBraceNode private (nodeRef: ActorRef<MBraceNodeMsg>, uri : Uri) as self =
 
+        static do MBraceSettings.Init()
+
         let handleError (e : exn) : 'T =
             match e with
             | MessageHandlingExceptionRec (MBraceExn e)

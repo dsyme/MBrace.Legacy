@@ -63,6 +63,9 @@ namespace Nessos.MBrace.Client
         static let mutable defaultContainer = None
 
         static let init = runOnce initClientConfiguration
+
+        /// force initialization
+        static member internal Init () = init ()
         
         /// Gets the client's unique identifier.
         static member ClientId = init () ; VagrantRegistry.Instance.UUId

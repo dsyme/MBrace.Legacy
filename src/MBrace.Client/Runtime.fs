@@ -28,6 +28,8 @@ namespace Nessos.MBrace.Client
     [<NoEquality ; NoComparison ; AutoSerializable(false)>]
     type MBraceRuntime private (runtime : ActorRef<MBraceNodeMsg>, disposables : IDisposable list) =
 
+        static do MBraceSettings.Init()
+
         static let handleError (e : exn) =
             match e with
             | CommunicationExceptionRec e -> mfailwithInner e.InnerException "Error communicating with runtime."
