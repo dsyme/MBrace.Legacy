@@ -16,7 +16,7 @@ let info =
     "project-author", "Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"
     "project-summary", "An open source framework for large-scale distributed computation and data processing written in F#."
     "project-github", githubLink
-    "project-nuget", "http://www.nuget.org/packages/MBrace" ]
+    "project-nuget", "http://www.nuget.org/packages/MBrace.Runtime" ]
 
 // --------------------------------------------------------------------------------------
 // For typical project, no changes are needed below
