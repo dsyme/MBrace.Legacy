@@ -126,7 +126,7 @@
                             | Some e -> new StreamReader(stream, e)
                         return sr.ReadToEnd()
                     }
-                    return! CloudFile.Read(file, reader)
+                    return! CloudFile.ReadAsync(file, reader)
                 }
 
             /// <summary>
@@ -161,7 +161,7 @@
                         do! asyncCopyTo(stream, ms)
                         return ms.ToArray()
                     }
-                    return! CloudFile.Read(file, reader)
+                    return! CloudFile.ReadAsync(file, reader)
                 }
 
             /// <summary>

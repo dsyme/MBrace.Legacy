@@ -626,7 +626,7 @@
             let f () =
                 <@ cloud { 
                     let! cf = CloudFile.Create(fun stream -> async { stream.WriteByte(10uy) })
-                    return! CloudFile.Read(cf, fun stream -> async { stream.WriteByte(20uy) })
+                    return! CloudFile.ReadAsync(cf, fun stream -> async { stream.WriteByte(20uy) })
                 } @>
                 |> test.ExecuteExpression
             shouldFailwith<CloudException> f

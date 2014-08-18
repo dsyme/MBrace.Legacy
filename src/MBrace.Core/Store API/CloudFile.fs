@@ -45,13 +45,29 @@
             }
 
         /// <summary> 
+        ///     Create a new file in the storage provider.
+        ///     Use the serialize function to write to the underlying stream.
+        /// </summary>
+        /// <param name="serializer">The function that writes data to the underlying stream.</param>
+        static member Create(serializer : Stream -> unit) : Cloud<ICloudFile> =
+            CloudFile.Create(async.Return << serializer)
+
+        /// <summary> 
         ///     Read the contents of a CloudFile using the given deserialize/reader function.
         /// </summary>
         /// <param name="cloudFile">The CloudFile to read.</param>
         /// <param name="deserialize">The function that reads data from the underlying stream.</param>
-        static member Read(cloudFile : ICloudFile, deserialize : (Stream -> Async<'Result>)) : Cloud<'Result> =
+        static member ReadAsync(cloudFile : ICloudFile, deserialize : (Stream -> Async<'Result>)) : Cloud<'Result> =
             let deserialize stream = async { let! o = deserialize stream in return o :> obj }
             CloudExpr.wrap <| ReadCloudFile(cloudFile, deserialize, typeof<'Result>)
+
+        /// <summary> 
+        ///     Read the contents of a CloudFile using the given deserialize/reader function.
+        /// </summary>
+        /// <param name="cloudFile">The CloudFile to read.</param>
+        /// <param name="deserialize">The function that reads data from the underlying stream.</param>
+        static member Read(cloudFile : ICloudFile, deserializer : (Stream -> 'Result)) : Cloud<'Result> =
+            CloudFile.ReadAsync(cloudFile, async.Return << deserializer)
 
         /// <summary> 
         ///     Returns an existing CloudFile of given container and name.

@@ -5,9 +5,14 @@
 #I "../../src/MBrace.Client/"
 
 #load "bootstrap.fsx"
+
+#r "FsPickler.dll"
+
 open Nessos.MBrace
 open Nessos.MBrace.Lib
 open Nessos.MBrace.Client
+
+open Nessos.FsPickler
 
 (**
 
@@ -288,7 +293,7 @@ of modern big data applications.  MBrace offers a plethora of mechanisms for man
 data in a more global and massive scale. These provide an essential decoupling 
 between distributed computation and distributed data.
 
-### Cloud Ref
+### Cloud Refs
 
 The mbrace programming model offers access to persistable and distributed data 
 entities known as cloud refs. Cloud refs very much resemble references found in 
@@ -348,7 +353,7 @@ let rec map (f : 'T -> 'S) (ttree : TreeRef<'T>) = cloud {
         return! CloudRef.New <| Branch(l', r')
 }
 
-(** and also *)
+(** and *)
 
 let rec reduce (id : 'R) (reduceF : 'R -> 'R -> 'R) (rtree : TreeRef<'R>) = cloud { 
     match rtree.Value with
@@ -365,5 +370,140 @@ The above functions enable distributed MapReduce workflows that are
 driven by the structural properties of the cloud tree.
 The use of cloud refs accounts for data parallelism in a way not achievable
 by the previous MapReduce example.
+
+### Cloud Sequences
+
+While cloud refs are useful for storing relatively small chunks of data, 
+they might not scale well when it comes to large collections of objects.
+Evaluating a cloud ref that points to a big array may place unnecessary 
+memory strain on the runtime. For that reason, mbrace offers the `CloudSeq` 
+primitive, a construct similar to the CloudRef that offers access to a collection 
+of values with on-demand fetching semantics. The CloudSeq implements the .NET 
+`IEnumerable` interface and is immutable, just like `CloudRef`.
+
+*)
+
+let getLines (url : string) =
+    cloud {
+        let! lines = download url
+        let! cseq = CloudSeq.New lines
+        return cseq :> seq<string>
+    }
+
+(**
+
+### Cloud Files
+
+Like Cloud refs and Cloud sequences, CloudFile is an immutable storage primitive 
+that a references a file saved in the global store. 
+In other words, it is an interface for storing or accessing binary blobs in the runtime.
+
+*)
+
+cloud {
+    // look up a store container for files
+    let! files = CloudFile.GetFilesInContainer "path/to/container"
+
+    // read a cloud file and return its word count
+    let getWordCount (f : ICloudFile) = cloud {
+        let! text = CloudFile.ReadAllText f
+        let count =
+            text.Split(' ')
+            |> Seq.groupBy id
+            |> Seq.map (fun (token,instances) -> token, Seq.length instances)
+            |> Seq.toArray
+
+        return f.Name, count
+    }
+
+    // perform computation in parallel
+    let! results = files |> Seq.map getWordCount |> Cloud.Parallel
+
+    // persist results into a new Cloud file
+    let fsp = FsPickler.CreateBinary()
+    let! file = CloudFile.Create(fun fs -> fsp.Serialize(fs, results))
+    return file
+}
+
+(**
+
+### Mutable Cloud Refs
+
+The `MutableCloudRef` primitive is, similarly to the CloudRef, 
+a reference to data saved in the underlying storage provider. 
+However,
+
+  * MutableCloudRefs are mutable. The value of a mutable cloud ref can be updated and, as a result,
+    its values are never cached. Mutable cloud refs can be updated conditionally using the 
+    `MutableCloudRef.Set` methods or forcibly using the `MutableCloudRef.Force` method.
+
+  * MutableCloudRefs can be deallocated manually. This can be done using the `MutableCloudRef.Free` method.
+    The MutableCloudRef is a powerful primitive that can be used to create runtime-wide synchronization 
+    mechanisms like locks, semaphores, etc.
+
+The following demonstrates simple use of the mutable cloud ref:
+
+*)
+
+let race () = cloud {
+    let! mr = MutableCloudRef.New(0)
+    let! _ =
+        MutableCloudRef.Force(mr,1)
+            <||>
+        MutableCloudRef.Force(mr,2)
+
+    return! MutableCloudRef.Read(mr)
+}
+
+(**
+
+The snippet will return a result of either 1 or 2, depending on which update operation was run last.
+
+The following snippet implements an optimistic incrementing function acting on a mutable cloud ref:
+
+*)
+
+let increment (counter : IMutableCloudRef<int>) = cloud {
+    let rec spin () = cloud {
+        let! v = MutableCloudRef.Read counter
+        let! ok = MutableCloudRef.Set(counter, v + 1)
+        if ok then return ()
+        else
+            return! spin ()
+    }
+
+    return! spin ()
+}
+
+(**  The same effect can be achieved using the included MutableCloudRef.SpinSet method *)
+[<Cloud>]
+let increment' counter = MutableCloudRef.SpinSet(counter, fun x -> x + 1)
+
+(**
+
+## Misc Primitives
+
+In this section we describe some of the other 
+[primitives](reference/nessos-mbrace-cloud.html) offered by MBrace.
+
+  * `Cloud.GetWorkerCount` : Returns the current number of cluster nodes as reported by the runtime.
+
+  * `Cloud.GetProcessId` : Gets the runtime-assigned cloud process id for the currently executing workflow.
+
+  * `Cloud.GetTaskid` : Gets the runtime-assigned id for the currently executing task. 
+    Tasks are units of computation executed by worker nodes.
+
+  * `Cloud.ToLocal` : Dynamically converts a cloud workflow so that it is wholly executed within
+    the current worker node using thread parallelism semantics. Useful in divide-and-conquer workflows
+    in order to minimize communication after a certain depth.
+
+  * `Cloud.Log` : appends an entry to the cloud process log; this operation introduces runtime communication.
+
+  * `Cloud.Trace` : Dynamically wraps a cloud computation so that trace information is included with
+    the user logs. Workflows carrying the `NoTraceInfo` attribute are excluded.
+
+
+For more information and examples on the programming model, please refer to the 
+[MBrace manual](mbrace-manual.pdf).
 
 *)
