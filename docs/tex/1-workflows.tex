@@ -656,7 +656,7 @@ runtime-wide synchronization mechanisms like locks, semaphores, etc.
 The following demonstrates simple use of the mutable cloud ref:
 \begin{lstlisting}
 [<Cloud>]
-let example1 () = cloud {
+let race () = cloud {
     let! mr = MutableCloudRef.New(0)
  
     let! _ = 
@@ -675,11 +675,15 @@ acting on a mutable cloud ref:
 \begin{lstlisting}
 [<Cloud>]
 let increment (counter : IMutableCloudRef<int>) = cloud {
-    let flag = ref false
-    while not !flag do
+    let rec spin () = cloud {
         let! v = MutableCloudRef.Read counter
         let! ok = MutableCloudRef.Set(counter, v + 1)
-        flag := ok
+        if ok then return ()
+        else
+            return! spin ()
+    }
+
+    return! spin ()
 }
 \end{lstlisting}
 The same effect can be achieved using the included 
@@ -771,12 +775,16 @@ apply to \texttt{ICloudDisposable} entities. For instance,
 \begin{lstlisting}
 cloud {
 	try
-		use! cref = CloudRef.New ``huge array``
-		let success = ref false
-	
-		while not success.Value do
-			let! s = ``distributed computation`` cref
-			success := s
+        use! cref = CloudRef.New [|1 .. 10000000|]
+
+        let doStuff () = cloud {
+            let array = cref.Value
+            return Array.sum array
+        }
+
+        let! _ = Cloud.Parallel [| doStuff () ; doStuff () ; Cloud.failwith "error" |]
+
+        return ()
 
 		// scope of cloud ref ends here, 
 		// workflow implicitly disposes it
