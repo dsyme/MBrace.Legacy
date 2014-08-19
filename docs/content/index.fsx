@@ -57,6 +57,18 @@ let proc = runtime.CreateProcess <@ lineCount () @> // send computation to the r
 let lines = proc.AwaitResult () // await completion
 
 (**
+
+## Demo
+
+For a quick dive into MBrace and some of its examples, try downloading the 
+[`MBrace.Demos`](https://github.com/nessos/MBrace.Demos) solution.
+
+    [lang=bash]
+    git clone https://github.com/nessos/MBrace.Demos
+
+Open and build with Visual Studio 2012/13, 
+then run the available samples from F# interactive.
+
 ## Documentation & Tutorials
 
 A collection of tutorials, technical overviews and API references of the library.
