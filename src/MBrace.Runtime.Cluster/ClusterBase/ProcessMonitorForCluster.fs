@@ -28,19 +28,32 @@ let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)
             match state.State.Process.DataMap.TryFind record.ProcessId with
             | Some { State = Running } ->
                 try
+                    // currently, TaskManager experiences delays when multiple tasks are being posted
+                    // giving rise to the following issue : https://github.com/nessos/MBrace/issues/2
+                    // This is possibly Thespian related, so implementing a workaround here until addressed;
+                    // since GetTaskCount is a message merely forwarded to the TaskLog,
+                    // simply eliminate the middleman and post directly. 
+                    // This should be changed back whenever fixed.
+
                     //FaultPoint
                     //SystemCorruptionException => system inconsistency;; SYSTEM FAULT
-                    let! r = Cluster.ClusterManager <!- fun ch -> ResolveActivationRefs(ch, { Definition = empDef/"process"/"taskManager"/"taskManager"; InstanceId = record.ProcessId })
+//                    let! r = Cluster.ClusterManager <!- fun ch -> ResolveActivationRefs(ch, { Definition = empDef/"process"/"taskManager"/"taskManager"; InstanceId = record.ProcessId })
+                    let! r = Cluster.ClusterManager <!- fun ch -> ResolveActivationRefs(ch, { Definition = empDef/"process"/"state"/"replicated"/"state"; InstanceId = record.ProcessId })
 
                     if r.Length > 0 then
                         //Throws
                         //InvalidCastException => rethrow as SystemCorruptionException
-                        let taskManager = r.[0] :?> ActorRef<TaskManager> |> ReliableActorRef.FromRef
+//                        let taskManager = r.[0] :?> ActorRef<TaskManager> |> ReliableActorRef.FromRef
+                        let taskLog = 
+                            r.[0] :?> ActorRef<CombinedAsyncReplicated<ContinuationMap, ContinuationMapDump, TaskLog, TaskLogEntry[]>>
+                            |> ActorExtensions.ActorRef.map FwdRight
 
                         //FaultPoint
                         //FailureException => node failure ;; do not hande node failure ;; return 0
-                        let! count = taskManager <!- GetActiveTaskCount
-                        return count
+
+//                        return! taskManager <!- GetActiveTaskCount
+                        return! taskLog <!- fun ch -> AsyncSingular(Choice1Of2 <| GetCount ch)
+
                     else return 0
                 with FailureException _ -> return 0
                      | :? InvalidCastException as e -> return! Async.Raise <| SystemCorruptionException("System services corruption detected.", e)
