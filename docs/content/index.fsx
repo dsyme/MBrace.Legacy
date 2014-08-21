@@ -29,6 +29,17 @@ manifested through computation expressions in F#.
   <div class="span1"></div>
 </div>
 
+## Demo
+
+For a quick dive into MBrace and applications, try checking out the 
+[`MBrace.Demos`](https://github.com/nessos/MBrace.Demos) solution.
+
+    [lang=bash]
+    git clone https://github.com/nessos/MBrace.Demos
+
+Open and build with Visual Studio 2012/13, 
+then run the available samples from F# interactive.
+
 ## Example
 
 This simple example demonstrates an MBrace computation in which files are read
@@ -58,22 +69,11 @@ let lines = proc.AwaitResult () // await completion
 
 (**
 
-## Demo
-
-For a quick dive into MBrace and some of its examples, try downloading the 
-[`MBrace.Demos`](https://github.com/nessos/MBrace.Demos) solution.
-
-    [lang=bash]
-    git clone https://github.com/nessos/MBrace.Demos
-
-Open and build with Visual Studio 2012/13, 
-then run the available samples from F# interactive.
-
 ## Documentation & Tutorials
 
 A collection of tutorials, technical overviews and API references of the library.
 
-  * [The Programming Model](programming-model.html) An overview of the MBrace programming model.
+  * [Programming Model](programming-model.html) An overview of the MBrace programming model.
 
   * [Azure Tutorial](azure-tutorial.html) Getting started with MBrace on Windows Azure.
 

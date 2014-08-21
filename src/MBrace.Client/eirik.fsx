@@ -59,3 +59,7 @@ x.Value
 let comp = Array.init 1000 (fun _ -> Cloud.Sleep 500 ) |> Cloud.Parallel
 
 runtime.Run comp
+
+let p = runtime.CreateProcess comp
+
+runtime.ShowProcessInfo()
