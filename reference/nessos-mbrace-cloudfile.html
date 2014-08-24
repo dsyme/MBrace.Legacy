@@ -130,28 +130,9 @@ Use the serialize function to write to the underlying stream.</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '59', 59)" onmouseover="showTip(event, '59', 59)">
-            Get(container, name)
+            Enumerate(container)
           </code>
           <div class="tip" id="59">
-            <strong>Signature:</strong> (container:string * name:string) -&gt; Cloud&lt;ICloudFile&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Store API/CloudFile.fs#L77-77" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Returns an existing CloudFile of given container and name.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '60', 60)" onmouseover="showTip(event, '60', 60)">
-            GetFilesInContainer(container)
-          </code>
-          <div class="tip" id="60">
             <strong>Signature:</strong> container:string -&gt; Cloud&lt;ICloudFile []&gt;<br />
                       </div>
         </td>
@@ -161,6 +142,25 @@ Use the serialize function to write to the underlying stream.</p>
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
           <p>Returns all CloudFiles in given container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '60', 60)" onmouseover="showTip(event, '60', 60)">
+            Get(container, name)
+          </code>
+          <div class="tip" id="60">
+            <strong>Signature:</strong> (container:string * name:string) -&gt; Cloud&lt;ICloudFile&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Store API/CloudFile.fs#L77-77" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an existing CloudFile of given container and name.</p>
 
         </td>
       </tr>
