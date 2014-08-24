@@ -11,6 +11,8 @@
         /// <param name="value">The value to be stored.</param>
         static member New<'T>(value : 'T) : Cloud<ICloudRef<'T>> = 
             cloud {
+                // TODO : container name should be specified by runtime,
+                // not the Core library
                 let! pid = Cloud.GetProcessId()
                 return! CloudRef.New<'T>(sprintf "process%d" pid, value)
             }

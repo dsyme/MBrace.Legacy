@@ -108,7 +108,7 @@
                         for line in lines do
                             do! asyncWriteLine(sw, line)
                     }
-                    return! CloudFile.Create(container, name, writer)
+                    return! CloudFile.New(container, name, writer)
                 }
 
             /// <summary>
@@ -126,7 +126,7 @@
                             | Some e -> new StreamReader(stream, e)
                         return sr.ReadToEnd()
                     }
-                    return! CloudFile.ReadAsync(file, reader)
+                    return! CloudFile.Read(file, reader)
                 }
 
             /// <summary>
@@ -146,7 +146,7 @@
                             | Some e -> new StreamWriter(stream, e)
                         do! asyncWriteText(sw, text)
                     }
-                    return! CloudFile.Create(container, name, writer)
+                    return! CloudFile.New(container, name, writer)
                 }
         
             /// <summary>
@@ -161,7 +161,7 @@
                         do! asyncCopyTo(stream, ms)
                         return ms.ToArray()
                     }
-                    return! CloudFile.ReadAsync(file, reader)
+                    return! CloudFile.Read(file, reader)
                 }
 
             /// <summary>
@@ -177,5 +177,5 @@
                         do! asyncWriteBytes(stream, buffer, 0, buffer.Length)
                     }
                 
-                    return! CloudFile.Create(container, name, writer)
+                    return! CloudFile.New(container, name, writer)
                 }

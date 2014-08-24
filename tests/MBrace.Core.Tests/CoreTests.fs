@@ -567,7 +567,7 @@
                 <@ cloud {
                     let container = Guid.NewGuid().ToString()
                     let words = words ()
-                    let! f = CloudFile.Create(container, "cloudfile.txt",
+                    let! f = CloudFile.New(container, "cloudfile.txt",
                                 (fun (stream : Stream) -> async {
                                     use sw = new StreamWriter(stream)
                                     words |> Array.iter (sw.WriteLine) }))
@@ -586,7 +586,7 @@
             let bytes = 
                 <@ cloud {
                     let container = Guid.NewGuid().ToString()
-                    let! f = CloudFile.Create(container, "cloudfile.txt",
+                    let! f = CloudFile.New(container, "cloudfile.txt",
                                     fun (stream : Stream) -> async {
                                             let b = mk n
                                             stream.Write(b, 0, b.Length)
@@ -625,8 +625,8 @@
         member test.``4. Primitives : CloudFile attempt to write on stream`` () =
             let f () =
                 <@ cloud { 
-                    let! cf = CloudFile.Create(fun stream -> async { stream.WriteByte(10uy) })
-                    return! CloudFile.ReadAsync(cf, fun stream -> async { stream.WriteByte(20uy) })
+                    let! cf = CloudFile.New(fun stream -> async { stream.WriteByte(10uy) })
+                    return! CloudFile.Read(cf, fun stream -> async { stream.WriteByte(20uy) })
                 } @>
                 |> test.ExecuteExpression
             shouldFailwith<CloudException> f

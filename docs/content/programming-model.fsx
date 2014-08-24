@@ -401,11 +401,11 @@ In other words, it is an interface for storing or accessing binary blobs in the 
 *)
 
 cloud {
-    // look up a store container for files
-    let! files = CloudFile.GetFilesInContainer "path/to/container"
+    // enumerate all files from underlying storage container
+    let! files = CloudFile.Enumerate "path/to/container"
 
     // read a cloud file and return its word count
-    let getWordCount (f : ICloudFile) = cloud {
+    let wordCount (f : ICloudFile) = cloud {
         let! text = CloudFile.ReadAllText f
         let count =
             text.Split(' ')
@@ -417,11 +417,11 @@ cloud {
     }
 
     // perform computation in parallel
-    let! results = files |> Seq.map getWordCount |> Cloud.Parallel
+    let! results = files |> Seq.map wordCount |> Cloud.Parallel
 
-    // persist results into a new Cloud file
-    let fsp = FsPickler.CreateBinary()
-    let! file = CloudFile.Create(fun fs -> fsp.Serialize(fs, results))
+    // persist results to a new Cloud file
+    let serializer = FsPickler.CreateXml()
+    let! file = CloudFile.New(fun fs -> async { return serializer.Serialize(fs, results) })
     return file
 }
 
