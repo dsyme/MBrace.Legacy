@@ -450,7 +450,7 @@
                 let! x = CloudRef.New(container, 40)
                 let! y = CloudRef.New(container, 1)
                 let! z = CloudRef.New(container, 1)
-                let! refs = CloudRef.Get(container)
+                let! refs = CloudRef.Enumerate container
                 let refs = refs |> Array.map unbox<ICloudRef<int>>
                 return refs 
                        |> Seq.map (fun r -> r.Value)
@@ -553,7 +553,7 @@
                 let! x = CloudSeq.New(container, [40])
                 let! y = CloudSeq.New(container, [1])
                 let! z = CloudSeq.New(container, [1])
-                let! s = CloudSeq.Get(container)
+                let! s = CloudSeq.Enumerate container
                 let seqs = s |> Seq.cast<ICloudSeq<int>>
                 return seqs 
                        |> Seq.concat
@@ -604,7 +604,7 @@
             let f = 
                 <@ cloud {
                     let! s = CloudSeq.New(folder, [1..10])
-                    let! fs = CloudFile.GetFilesInContainer s.Container
+                    let! fs = CloudFile.Enumerate s.Container
                     let  s = Seq.head fs
                     return s
                 } @>

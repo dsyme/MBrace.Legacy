@@ -49,8 +49,8 @@ from a distributed storage container and the total line count is returned.
 
 [<Cloud>]
 let lineCount () = cloud {
-    // get all files from container in runtime storage provider.
-    let! files = CloudFile.GetFilesInContainer "path/to/container"
+    // enumerate all files from underlying storage container
+    let! files = CloudFile.Enumerate "path/to/container"
 
     // read the contents of a file and return its line count
     let count f = cloud {

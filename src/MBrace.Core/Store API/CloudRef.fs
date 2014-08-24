@@ -24,14 +24,14 @@
             CloudExpr.wrap <| NewRefByNameExpr (container, value, typeof<'T>)
 
         /// <summary>
-        ///     Returns an array of all CloudRefs contained in the specified folder.
+        ///     Returns a collection of all CloudRefs contained in the specified folder.
         /// </summary>
         /// <param name="container">Containing folder of the CloudRef in the underlying store.</param>
-        static member Get(container : string) : Cloud<ICloudRef []> = 
+        static member Enumerate(container : string) : Cloud<ICloudRef []> = 
             CloudExpr.wrap <| GetRefsByNameExpr (container)
 
         /// <summary>
-        ///     Returns a CloudRef that already exists in the specified contained with the given identifier.
+        ///     Returns a CloudRef that already exists in the specified container with the given identifier.
         /// </summary>
         /// <param name="container">Containing folder of the CloudRef in the underlying store.</param>
         /// <param name="id">CloudRef Id.</param>

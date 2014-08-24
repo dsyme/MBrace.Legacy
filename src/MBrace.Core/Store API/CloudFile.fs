@@ -81,7 +81,7 @@
         ///     Returns all CloudFiles in given container.
         /// </summary>
         /// <param name="container">The container (folder) to search.</param>
-        static member GetFilesInContainer(container : string) : Cloud<ICloudFile []> =
+        static member Enumerate(container : string) : Cloud<ICloudFile []> =
             CloudExpr.wrap <| GetCloudFiles(container)
 
         /// <summary>

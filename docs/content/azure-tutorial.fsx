@@ -157,12 +157,17 @@ change nodes hostname and ports.
 In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:
 *)
 
-let nodes = [1..3] |> List.map (fun i -> MBraceNode("10.0.1." + string(3+i), 2675))
+let nodes =
+    [
+        MBraceNode.Connect("10.0.0.4", 2675)
+        MBraceNode.Connect("10.0.0.5", 2675)
+        MBraceNode.Connect("10.0.0.6", 2675)
+    ]
 
 (**
 Or use the hostnames
 *)
-let nodes = [1..3] |> List.map (fun i -> MBraceNode("clusterVM" + string i, 2675))
+let nodes = [1..3] |> List.map (fun i -> MBraceNode.Connect(sprintf "clusterVM%d" i, 2675))
 
 (**
 Now ping the nodes to ensure connectivity
