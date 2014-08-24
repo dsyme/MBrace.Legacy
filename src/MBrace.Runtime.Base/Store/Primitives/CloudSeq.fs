@@ -180,7 +180,7 @@
 
         member this.GetContainedSeqs(container : string) : Async<ICloudSeq []> =
             async {
-                let! files = store.GetAllFiles(container)
+                let! files = store.EnumerateFiles(container)
                     
                 // TODO : find a better heuristic?
                 let cseqIds =

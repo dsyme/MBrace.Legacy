@@ -94,13 +94,13 @@
                     return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read) :> _
                 }
                   
-            override self.GetAllFiles(folder : string) : Async<string []> =
+            override self.EnumerateFiles(folder : string) : Async<string []> =
                 async {
                     let path = Path.Combine(path, folder)
                     return Directory.GetFiles(path) |> Array.map Path.GetFileName
                 }
 
-            override self.GetAllContainers () : Async<string []> =
+            override self.EnumerateContainers () : Async<string []> =
                 async {
                     return Directory.GetDirectories(path) |> Array.map Path.GetFileName
                 }

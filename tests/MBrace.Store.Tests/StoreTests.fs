@@ -59,7 +59,7 @@
 
         [<Test>]
         member test.``A.2 Check with GetFolders.`` () = 
-            test.Store.GetAllContainers()
+            test.Store.EnumerateContainers()
             |> Async.RunSynchronously
             |> Seq.exists ((=) test.Temp)
             |> should equal false
@@ -94,12 +94,12 @@
             |> Async.RunSynchronously    
             |> should equal true
 
-            test.Store.GetAllContainers ()   
+            test.Store.EnumerateContainers ()   
             |> Async.RunSynchronously    
             |> Seq.exists ((=) c)
             |> should equal true
 
-            test.Store.GetAllFiles c
+            test.Store.EnumerateFiles c
             |> Async.RunSynchronously
             |> Seq.exists ((=) f)
             |> should equal true

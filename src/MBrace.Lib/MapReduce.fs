@@ -109,9 +109,11 @@ namespace Nessos.MBrace.Lib
                 | [] -> return identity
                 | [value] -> return! mapF value
                 | _ -> 
-                    let (leftList, rightList) = List.split values
-                    let! (left, right) = 
-                        (mapReduce mapF reduceF identity leftList) <||> 
-                                    (mapReduce mapF reduceF identity rightList)
+                    let leftList, rightList = List.split values
+                    let! left, right = 
+                        (mapReduce mapF reduceF identity leftList)
+                            <||> 
+                        (mapReduce mapF reduceF identity rightList)
+
                     return! reduceF left right
             }

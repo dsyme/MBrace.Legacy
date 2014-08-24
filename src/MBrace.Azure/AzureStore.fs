@@ -96,10 +96,10 @@
             member this.ContainerExists(folder) =
                 generalStore.Exists(folder)
 
-            member this.GetAllFiles(folder) =
+            member this.EnumerateFiles(folder) =
                 generalStore.GetFiles(folder)
 
-            member this.GetAllContainers () =
+            member this.EnumerateContainers () =
                 generalStore.GetFolders ()
 
             member this.DeleteContainer(folder) =

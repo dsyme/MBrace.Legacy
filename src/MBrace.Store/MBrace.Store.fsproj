@@ -63,7 +63,6 @@
     <Compile Include="FileSystemStore.fs" />
     <Compile Include="SqlServerStore\Common.fs" />
     <Compile Include="SqlServerStore\SqlServerStore.fs" />
-    <None Include="SqlServerStore\Test.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

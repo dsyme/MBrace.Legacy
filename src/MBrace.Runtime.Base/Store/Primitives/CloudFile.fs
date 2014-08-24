@@ -84,6 +84,6 @@
 
         member this.GetContainedFiles(container) : Async<ICloudFile []> =
             async {
-                let! files = store.GetAllFiles(container)
+                let! files = store.EnumerateFiles(container)
                 return files |> Array.map (fun name -> CloudFile(name, container, storeId) :> ICloudFile)
             } |> onListError container

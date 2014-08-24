@@ -125,7 +125,7 @@
 
 
     /// [omit]
-    /// A module containing some useful operators for cloud computations.
+    /// Contains common operators for cloud computation.
 
     [<AutoOpen>]
     module CloudOperators =

@@ -61,13 +61,13 @@
             override this.CopyFrom(folder, file, stream, asFile) =
                 is.CreateImmutable(folder, file, (fun target -> async { return! stream.CopyToAsync(stream).ContinueWith(ignore) |> Async.AwaitTask }), asFile = asFile)
                 
-            override this.GetAllFiles folder =
+            override this.EnumerateFiles folder =
                 async {
                     return! sqlHelper.collect "select [File] from Blobs where Folder = @folder"
                                 [| new SqlParameter("@folder", folder) |]
                 }
                 
-            override this.GetAllContainers () =
+            override this.EnumerateContainers () =
                 async {
                     return! sqlHelper.collect "select distinct Folder from Blobs" [||]
                 }

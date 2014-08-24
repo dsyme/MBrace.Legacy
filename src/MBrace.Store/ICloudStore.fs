@@ -4,7 +4,7 @@
     open System.IO
     open System.Runtime.Serialization
 
-    /// A tag used by MutableCloudRefs to control concurrency.
+    /// Tag used by MutableCloudRefs to control concurrency.
     type Tag = string
 
     /// <summary>
@@ -60,7 +60,7 @@
         ///     Gets all files that exist in given container
         /// </summary>
         /// <param name="container">file container.</param>
-        abstract GetAllFiles        : container:string -> Async<string []>
+        abstract EnumerateFiles        : container:string -> Async<string []>
 
         /// <summary>
         ///     Checks if container exists in given path
@@ -75,7 +75,7 @@
         abstract DeleteContainer    : container:string -> Async<unit>
 
         /// Get all container paths that exist in file system
-        abstract GetAllContainers   : unit -> Async<string []>
+        abstract EnumerateContainers   : unit -> Async<string []>
         
         //
         // Immutable file section

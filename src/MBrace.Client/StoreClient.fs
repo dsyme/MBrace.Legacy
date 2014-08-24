@@ -8,7 +8,7 @@
     open Nessos.MBrace.Runtime
     open Nessos.Thespian.ConcurrencyTools
 
-    /// Provides methods for interacting with the store and the primitives without the need for a runtime.
+    /// Provides methods for interacting with cloud storage.
     [<Sealed; AutoSerializable(false)>]
     type StoreClient internal (info : StoreInfo) =
 
@@ -52,7 +52,7 @@
         /// Returns an array of the CloudRefs contained in the specified folder.
         /// </summary>
         /// <param name="container">The folder to search.</param>
-        member this.GetCloudRefsAsync(container : string) : Async<ICloudRef []> =
+        member this.EnumerateCloudRefsAsync(container : string) : Async<ICloudRef []> =
             info.CloudRefProvider.GetContainedRefs(container)
 
         /// <summary>
@@ -75,7 +75,7 @@
         /// Returns an array of the CloudRefs contained in the specified folder.
         /// </summary>
         /// <param name="container">The folder to search.</param>
-        member this.GetCloudRefs(container : string) : ICloudRef [] =
+        member this.EnumerateCloudRefs(container : string) : ICloudRef [] =
             Async.RunSynchronously <|info.CloudRefProvider.GetContainedRefs(container)
 
         /// <summary>
@@ -99,7 +99,7 @@
         /// <summary>
         /// Returns an array of the CloudRefs contained in default container.
         /// </summary>
-        member this.GetCloudRefsAsync() : Async<ICloudRef []> =
+        member this.EnumerateCloudRefsAsync() : Async<ICloudRef []> =
             info.CloudRefProvider.GetContainedRefs(defaultContainer)
 
         /// <summary>
@@ -119,7 +119,7 @@
         /// <summary>
         /// Returns an array of the CloudRefs contained in default container.
         /// </summary>
-        member this.GetCloudRefs() : ICloudRef [] =
+        member this.EnumerateCloudRefs() : ICloudRef [] =
             Async.RunSynchronously <|info.CloudRefProvider.GetContainedRefs(defaultContainer)
 
         /// <summary>
@@ -147,7 +147,7 @@
         ///     Returns an array of the CloudSeqs contained in the specified folder.
         /// </summary>
         /// <param name="container">The folder to search.</param>
-        member this.GetCloudSeqsAsync(container : string) : Async<ICloudSeq []> =
+        member this.EnumerateCloudSeqsAsync(container : string) : Async<ICloudSeq []> =
             info.CloudSeqProvider.GetContainedSeqs(container)
 
         /// <summary>
@@ -170,7 +170,7 @@
         ///     Returns an array of the CloudSeqs contained in the specified folder.
         /// </summary>
         /// <param name="container">The folder to search.</param>
-        member this.GetCloudSeqs(container : string) : ICloudSeq [] =
+        member this.EnumerateCloudSeqs(container : string) : ICloudSeq [] =
             Async.RunSynchronously <| info.CloudSeqProvider.GetContainedSeqs(container)
 
         /// <summary>
@@ -195,7 +195,7 @@
         /// <summary>
         ///     Returns an array of the CloudSeqs contained default container.
         /// </summary>
-        member this.GetCloudSeqsAsync() : Async<ICloudSeq []> =
+        member this.EnumerateCloudSeqsAsync() : Async<ICloudSeq []> =
             info.CloudSeqProvider.GetContainedSeqs(defaultContainer)
 
         /// <summary>
@@ -215,7 +215,7 @@
         /// <summary>
         ///     Returns an array of the CloudSeqs contained in default container.
         /// </summary>
-        member this.GetCloudSeqs() : ICloudSeq [] =
+        member this.EnumerateCloudSeqs() : ICloudSeq [] =
             Async.RunSynchronously <| info.CloudSeqProvider.GetContainedSeqs(defaultContainer)
 
         /// <summary>
@@ -241,7 +241,7 @@
 
         /// <summary> Return all the files (as CloudFiles) in a folder.</summary>
         /// <param name="container">The container (folder) to search.</param>
-        member this.GetCloudFilesAsync(container : string) : Async<ICloudFile []> =
+        member this.EnumerateCloudFilesAsync(container : string) : Async<ICloudFile []> =
             info.CloudFileProvider.GetContainedFiles(container)
 
         /// <summary> Create a CloudFile from an existing file.</summary>
@@ -262,7 +262,7 @@
 
         /// <summary> Return all the files (as CloudFiles) in a folder.</summary>
         /// <param name="container">The container (folder) to search.</param>
-        member this.GetCloudFiles(container : string) : ICloudFile [] =
+        member this.EnumerateCloudFiles(container : string) : ICloudFile [] =
             Async.RunSynchronously <| info.CloudFileProvider.GetContainedFiles(container)
 
         /// <summary> Create a CloudFile from an existing file.</summary>
@@ -284,8 +284,8 @@
         member this.CreateCloudFileAsync(name : string, writer : Stream -> Async<unit>) : Async<ICloudFile> =
             info.CloudFileProvider.Create(defaultContainer, name, writer)
 
-        /// <summary> Return all the files (as CloudFiles) in default container.</summary>
-        member this.GetCloudFilesAsync() : Async<ICloudFile []> =
+        /// <summary> Returns CloudFiles to all contents in the default container.</summary>
+        member this.EnumerateCloudFilesAsync() : Async<ICloudFile []> =
             info.CloudFileProvider.GetContainedFiles(defaultContainer)
 
         /// <summary> Create a CloudFile from an existing file in default container.</summary>
@@ -302,8 +302,8 @@
         member this.CreateCloudFile(name : string, writer : Stream -> Async<unit>) : ICloudFile =
             Async.RunSynchronously <| info.CloudFileProvider.Create(defaultContainer, name, writer)
 
-        /// <summary> Return all the files (as CloudFiles) in default container.</summary>
-        member this.GetCloudFiles() : ICloudFile [] =
+        /// <summary> Returns CloudFiles to all contents in the default container.</summary>
+        member this.EnumerateCloudFiles() : ICloudFile [] =
             Async.RunSynchronously <| info.CloudFileProvider.GetContainedFiles(defaultContainer)
 
         /// <summary> Create a CloudFile from an existing file in default container.</summary>
@@ -419,13 +419,13 @@
 
         ///<summary>Retrieves the name of all containers from store.</summary>
         ///<remarks>This method lists all existing containers whether they were created from mbrace or not.</remarks>
-        member this.GetContainersAsync() : Async<string []> =
-            info.Store.GetAllContainers()
+        member this.EnumerateContainersAsync() : Async<string []> =
+            info.Store.EnumerateContainers()
 
         ///<summary>Retrieves the name of all containers from store.</summary>
         ///<remarks>This method lists all existing containers whether they were created from mbrace or not.</remarks>
-        member this.GetContainers() : string [] =
-            Async.RunSynchronously <| this.GetContainersAsync()
+        member this.EnumerateContainers() : string [] =
+            Async.RunSynchronously <| this.EnumerateContainersAsync()
             
         /// <summary>Checks if container exists in the given path.</summary>
         /// <param name="container">The container to search for.</param>

@@ -205,8 +205,8 @@ Target "ClientPkg" (fun _ ->
                 ]
             Dependencies = 
                 [
-                    "FsPickler",                                    "0.9.9"
-                    "FsPickler.Json",                               "0.9.9"
+                    "FsPickler",                                    "0.9.11"
+                    "FsPickler.Json",                               "0.9.11"
                     "Thespian",                                     "0.0.9"
                     "UnionArgParser",                               "0.7.0"
                     "Vagrant",                                      "0.2.3"
@@ -234,14 +234,7 @@ Target "AzurePkg" (fun _ ->
             Publish = hasBuildParam "nugetkey"
             Dependencies = 
                 [
-                    "MBrace.Store",                                 RequireExactly release.NugetVersion
-//                    "Microsoft.Data.Edm",                           "5.6.0"
-//                    "Microsoft.Data.OData",                         "5.6.0"
-//                    "Microsoft.Data.Services.Client",               "5.6.0"
-//                    "Microsoft.WindowsAzure.ConfigurationManager",  "1.8.0.0"
-//                    "Newtonsoft.Json",                              "6.0.3" 
-//                    "System.Spatial",                               "5.6.0"
-//                    "WindowsAzure.Storage",                         "4.1.0"
+                    "MBrace.Store", RequireExactly release.NugetVersion
                 ]
             Files =
                 [

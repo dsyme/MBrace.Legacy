@@ -121,7 +121,7 @@
                 if not containerExists then
                     return [||]
                 else   
-                    let! files = store.GetAllFiles container
+                    let! files = store.EnumerateFiles container
 
                     let readEntries (f : string) : Async<'LogEntry []> = async {
                         use! stream = store.ReadImmutable(container, f)
@@ -160,7 +160,7 @@
             let! containerExists = store.ContainerExists container
 
             if containerExists then 
-                let! files = store.GetAllFiles container
+                let! files = store.EnumerateFiles container
                 let files = files |> Seq.filter (fun file -> isLogFile file && not <| logsRead.Contains file)
 
                 if not <| Seq.isEmpty files then

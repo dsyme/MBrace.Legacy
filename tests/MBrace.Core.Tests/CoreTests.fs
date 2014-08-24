@@ -834,7 +834,7 @@
             let cr' = sc.GetCloudFile( cr.Name) 
             let l' = cr.Read() |> Async.RunSynchronously
             l'.AsyncRead(a.Length) |> Async.RunSynchronously |> should equal a
-            sc.GetContainers() |> Seq.exists (fun n -> n = MBraceSettings.DefaultContainer) |> should equal true
+            sc.EnumerateContainers() |> Seq.exists (fun n -> n = MBraceSettings.DefaultContainer) |> should equal true
             sc.ContainerExists(MBraceSettings.DefaultContainer) |> should equal true
             sc.DeleteContainer()
 

@@ -90,7 +90,7 @@
         }
 
         let getIds (container : string) : Async<string []> = async {
-            let! files = store.GetAllFiles(container)
+            let! files = store.EnumerateFiles(container)
             return 
                 files
                 |> Seq.filter (fun w -> w.EndsWith <| sprintf' ".%s" extension)

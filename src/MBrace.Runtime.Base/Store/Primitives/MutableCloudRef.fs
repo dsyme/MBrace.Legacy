@@ -102,7 +102,7 @@
         }
 
         let getIds (container : string) : Async<string []> = async {
-            let! files = store.GetAllFiles(container)
+            let! files = store.EnumerateFiles(container)
             return files 
                     |> Seq.filter (fun w -> w.EndsWith extension)
                     |> Seq.map (fun w -> w.Substring(0, w.Length - extension.Length - 1))
