@@ -14,6 +14,7 @@
     open Nessos.MBrace.Client
     open Nessos.MBrace.Lib
     open Nessos.MBrace.Lib.Concurrency
+    open Nessos.MBrace.Core.Tests.TestFunctions
 
     [<TestFixture; AbstractClass>]
     type ``Core Tests`` () =

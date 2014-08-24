@@ -4,12 +4,17 @@
 
     [<AutoOpen>]
     module internal Utils =
+
         type Async with
             static member AwaitTask (task : System.Threading.Tasks.Task) : Async<unit> =
                 task.ContinueWith (ignore) |> Async.AwaitTask
 
-        let asyncCopyTo (source : Stream, dest : Stream) : Async<unit> =
-            Async.AwaitTask(source.CopyToAsync(dest))
+        type Stream with
+            static member AsyncCopy(source : Stream, dest : Stream) =
+                Async.AwaitTask(source.CopyToAsync(dest))
+
+        /// base-2 logarithm for integers
+        let log2 (n : int) = int <| ceil (log(float n) / log 2.)
 
         [<RequireQualifiedAccess>]
         module List =
@@ -29,8 +34,10 @@
         module Array =
             /// split array in half
             let split (data : 'T []) : ('T [] * 'T []) =
-                let half = data.Length / 2
-                (data |> Seq.take half |> Seq.toArray, data |> Seq.skip half |> Seq.toArray)
+                if data.Length < 2 then [||], data
+                else
+                    let half = data.Length / 2
+                    data.[ .. half - 1], data.[half .. ]
 
 
             /// split array into given number of segments

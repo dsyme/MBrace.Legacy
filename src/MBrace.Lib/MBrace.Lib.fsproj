@@ -60,9 +60,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="MapReduce.fs" />
     <Compile Include="Cloud.fs" />
     <Compile Include="CloudFile.fs" />
+    <Compile Include="CloudTree.fs" />
+    <Compile Include="MapReduce.fs" />
     <Compile Include="Concurrency.fs" />
     <Compile Include="Memoization.fs" />
   </ItemGroup>

@@ -8,8 +8,10 @@
     [<RequireQualifiedAccessAttribute>]
     module Memoization = 
     
-        /// <summary>Memoize the given function using the StoreProvider and
-        /// MutableCloudRefs as a lookup.</summary>
+        /// <summary>
+        ///     Memoize the given function using the StoreProvider and
+        ///     MutableCloudRefs as a lookup.
+        /// </summary>
         /// <param name="cacheName"> The container name to be used by the StoreProvider.</param>
         /// <param name="encode"> The function that maps the function's domain to valid Store filenames.</param>
         /// <param name="f"> The function to memoize.</param>

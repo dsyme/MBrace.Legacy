@@ -12,11 +12,18 @@
         /// Creates a new empty MVar.
         let newEmpty<'T> : Cloud<MVar<'T>> = MutableCloudRef.New(None)
 
-        /// Create a new MVar containing the given value.
+        /// <summary>
+        ///     Create a new MVar containing the given value.
+        /// </summary>
+        /// <param name="value">initial value.</param>
         let newValue<'T> value : Cloud<MVar<'T>> = MutableCloudRef.New(Some value)
 
-        /// Puts a value in the MVar. This function will block until the MVar is empty
-        /// and the put succeeds.
+        /// <summary>
+        ///     Puts a value in the MVar. This function will block until the MVar is empty
+        ///     and the put succeeds.
+        /// </summary>
+        /// <param name="mvar">MVar to be accessed.</param>
+        /// <param name="value">value to be substituted.</param>
         let rec put (mvar : MVar<'T>) value = 
             cloud {
                 let! v = MutableCloudRef.Read(mvar)
@@ -28,8 +35,11 @@
                     return! put mvar value
             }
 
+        /// <summary>
         /// Takes the MVar's value. This function will block until the MVar is non-empty
         /// and the take succeeds.
+        /// </summary>
+        /// <param name="mvar">MVar to be accessed.</param>
         let rec take (mvar : MVar<'T>) =
             cloud {
                 let! v = MutableCloudRef.Read(mvar)
@@ -43,7 +53,7 @@
             }
 
     type private Stream<'T> = MVar<Item<'T>>
-    and  private Item<'T> = Item of 'T * Stream<'T>
+    and private Item<'T> = Item of 'T * Stream<'T>
 
     /// An implementation of a Channel using the MVar abstraction.
     type Channel<'T> = private Channel of (MVar<Stream<'T>> * MVar<Stream<'T>>)
@@ -61,7 +71,11 @@
                 return Channel(readVar, writeVar)
             }
 
-        /// Writes a value to a Channel.
+        /// <summary>
+        ///     Writes a value to a Channel.
+        /// </summary>
+        /// <param name="chan">channel.</param>
+        /// <param name="value">value written to be writted to channel.</param>
         let write<'T> (chan : Channel<'T>) (value : 'T) : Cloud<unit> =
             cloud {
                 let (Channel(_, writeVar)) = chan
@@ -71,7 +85,10 @@
                 do! MVar.put oldHole (Item(value, newHole))
             }
 
-        /// Reads a value from a Channel.
+        /// <summary>
+        ///     Reads a value from a Channel.  
+        /// </summary>
+        /// <param name="chan">input channel.</param>
         let read<'T> (chan : Channel<'T>) : Cloud<'T> = 
             cloud {
                 let (Channel(readVar,_)) = chan

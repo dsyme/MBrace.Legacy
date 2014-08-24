@@ -1,119 +1,119 @@
-namespace Nessos.MBrace.Lib
+module Nessos.MBrace.Lib.MapReduce
 
-    /// A collection of sample MapReduce implementations
-    module MapReduce =
+    open Nessos.MBrace
 
-        open Nessos.MBrace
-
-        /// A classic ML list implemented using CloudRefs.
-        type CloudList<'T> = Nil | Cons of 'T * ICloudRef<CloudList<'T>>
-
-        /// A binary tree structure implemented with CloudRef for the parent-child connection.
-        type CloudTree<'T> = Empty | Leaf of 'T | Branch of (ICloudRef<CloudTree<'T>> * ICloudRef<CloudTree<'T>>)
-
-        type ContainerState<'Container, 'T> =
-            | Blank
-            | Single of 'T
-            | Split of 'Container * 'Container
+    /// <summary>
+    ///     Represents a binary-decomposable recursive type abstraction for Map-Reduce workflows
+    /// </summary>
+    type ContainerState<'Container, 'T> =
+        | Empty
+        | Leaf of 'T
+        | Branch of 'Container * 'Container
     
-        /// A representation of the current execution context.
-        /// The context can be cloud distribution, local distribution across cpu cores,
-        /// or sequential execution.
-        type ParallelismContext = 
-            | CloudParallel 
-            | LocalParallel 
-            | LocalSequential
+    /// A representation of the current execution context.
+    /// The context can be cloud distribution, local distribution across cpu cores,
+    /// or sequential execution.
+    type private ParallelismContext = 
+        | CloudParallel 
+        | LocalParallel 
+        | Sequential
 
-        [<Cloud>]
-        /// Get the next number of tasks to be spawn.
-        let nextJobsNumber () = 
-            cloud { 
-                let! workers = Cloud.GetWorkerCount()
-                return ((log(float workers) / log 2.) |> int) + 1
-            }
+    /// <summary>
+    ///     A distributed divide-and-conquer MapReduce workflow.
+    ///     Branches out until cluster size is exhausted; thereby continuing with thread local parallel semantics.
+    ///     Works with any input that can be decomposed to a binary tree-like structure.
+    /// </summary>
+    /// <param name="decomposeF">input data decompose function.</param>
+    /// <param name="mapF">map function.</param>
+    /// <param name="reduceF">reduce function.</param>
+    /// <param name="identity">identity element.</param>
+    /// <param name="input">initial input data.</param>
+    [<Cloud>]
+    let mapReduce (decomposeF : 'I -> Cloud<ContainerState<'I, 'T>>)
+                    (mapF : 'T -> Cloud<'R>) (reduceF : 'R -> 'R -> Cloud<'R>) 
+                    (identity : unit -> Cloud<'R>) (input : 'I) =
 
-        [<Cloud>]
-        let rec mapReduce'' (mapF : 'T -> Cloud<'R>) 
-                            (reduceF : 'R -> 'R -> Cloud<'R>) (identity : unit -> Cloud<'R>) 
-                            (container : 'Container)
-                            (containerF : 'Container -> ContainerState<'Container, 'T>) 
-                            (context : ParallelismContext)
-                            (depth : int)
-                            (execute : Cloud<'R> -> Cloud<'R> -> Cloud<'R * 'R>) : Cloud<'R> =
-            cloud {
-                let state = containerF container
-                match state with
-                | Blank -> return! identity ()
-                | Single value -> return! mapF value
-                | Split (leftContainer, rightContainer) -> 
-                    let! (left, right) = 
-                        execute    (mapReduce' mapF reduceF identity leftContainer containerF  context depth)
-                                    (mapReduce' mapF reduceF identity rightContainer containerF context depth)
-                    return! reduceF left right
-            }
+        let rec aux context depth (input : 'I) = cloud {
 
-        and [<Cloud>] mapReduce' (mapF : 'T -> Cloud<'R>) 
-                            (reduceF : 'R -> 'R -> Cloud<'R>) (identity : unit -> Cloud<'R>) 
-                            (container : 'Container)
-                            (containerF : 'Container -> ContainerState<'Container, 'T>) 
-                            (context : ParallelismContext) (depth : int) : Cloud<'R> =
-            cloud {
-                match context, depth with
-                | CloudParallel, 0 ->
-                    let! depth' = local <| nextJobsNumber()
-                    return! mapReduce'' mapF reduceF identity container containerF  LocalParallel depth' (fun c1 c2 -> local <| c1 <||> c2)
-                | CloudParallel, _ ->
-                    return! mapReduce'' mapF reduceF identity container containerF CloudParallel (depth - 1) (<||>)
-                | LocalParallel, 0 ->
-                    return! mapReduce'' mapF reduceF identity container containerF LocalSequential depth (<.>)
-                | LocalParallel, _ ->
-                    return! mapReduce'' mapF reduceF identity container containerF LocalParallel (depth - 1) (fun c1 c2 -> local <| c1 <||> c2)
-                | LocalSequential, _ ->
-                    return! mapReduce'' mapF reduceF identity container containerF LocalSequential depth (<.>)
-            }
+            let! result = decomposeF input
 
-        /// An implementation of map-reduce when the input is an array.
-        and [<Cloud>] mapReduceArray (mapF : 'T [] -> Cloud<'R>) 
-                            (reduceF : 'R -> 'R -> Cloud<'R>) (identity : unit -> Cloud<'R>) 
-                            (values : 'T []) (partition : int) : Cloud<'R> =
-            cloud {
-                let! depth = nextJobsNumber()
-                return! mapReduce' mapF reduceF identity values (fun (values : 'T []) -> 
-                                                                    match values.Length with
-                                                                    | 0 -> Blank
-                                                                    | n when n <= partition -> Single values
-                                                                    | _ -> values |> Array.split |> Split) CloudParallel depth
-            }
+            match context, depth, result with
+            | _, _, Empty -> return! identity ()
+            | _, _, Leaf t -> return! mapF t
+            | CloudParallel, 0, _ ->
+                let cores = System.Environment.ProcessorCount
+                let depth = log2 cores
+                return! Cloud.ToLocal <| aux LocalParallel depth input
+
+            | LocalParallel, 0, _ -> return! aux Sequential 0 input
+            | (CloudParallel | LocalParallel), d, Branch(left, right) ->
+                let! r1,r2 = aux context (depth - 1) left <||> aux context (depth - 1) right
+                return! reduceF r1 r2
+
+            | Sequential, _, Branch(left, right) ->
+                let! r1 = aux Sequential 0 left
+                let! r2 = aux Sequential 0 right
+                return! reduceF r1 r2
+        }
+
+        cloud {
+            let! workers = Cloud.GetWorkerCount()
+            let depth = log2 workers
+            return! aux CloudParallel depth input
+        }
+
+
+    [<RequireQualifiedAccess>]
+    module Seq =
         
-        /// An implementation of map-reduce when walking a binary tree.
-        and [<Cloud>] mapReduceCloudTree (mapF : 'T -> Cloud<'R>) 
-                                    (reduceF : 'R -> 'R -> Cloud<'R>) (identity : unit -> Cloud<'R>) 
-                                    (values : ICloudRef<CloudTree<'T>>) : Cloud<'R> =
-            cloud {
-                let! depth = nextJobsNumber()
-                return! mapReduce' mapF reduceF identity values (fun (clouRefTree : ICloudRef<CloudTree<'T>>) -> 
-                                                                    match clouRefTree.Value with
-                                                                    | Empty -> Blank
-                                                                    | Leaf value -> Single value
-                                                                    | Branch (left, right) -> Split (left, right)) CloudParallel depth
-            }
-
+        /// <summary>
+        ///     A distributed divide-and-conquer MapReduce workflow.
+        ///     Branches out until cluster size is exhausted; thereby continuing with thread local parallel semantics.
+        /// </summary>
+        /// <param name="mapF">map function.</param>
+        /// <param name="reduceF">reduce function.</param>
+        /// <param name="identity">identity element.</param>
+        /// <param name="input">initial input data.</param>
         [<Cloud>]
-        /// An implementation of the classic recursive map-reduce with
-        /// splitting in half.
-        let rec mapReduce   (mapF : 'T -> Cloud<'R>) 
-                            (reduceF : 'R -> 'R -> Cloud<'R>) (identity : 'R) 
-                            (values : 'T list) : Cloud<'R> =
-            cloud {
-                match values with
-                | [] -> return identity
-                | [value] -> return! mapF value
-                | _ -> 
-                    let leftList, rightList = List.split values
-                    let! left, right = 
-                        (mapReduce mapF reduceF identity leftList)
-                            <||> 
-                        (mapReduce mapF reduceF identity rightList)
+        let mapReduce (mapF : 'T -> Cloud<'R>) 
+                        (reduceF : 'R -> 'R -> Cloud<'R>)
+                        (identity : unit -> Cloud<'R>) (input : seq<'T>) : Cloud<'R> =
 
-                    return! reduceF left right
+            let decompose (input : 'T []) = cloud {
+                return
+                    match input.Length with
+                    | 0 -> Empty
+                    | 1 -> Leaf <| input.[0]
+                    | _ -> let l,r = Array.split input in Branch(l,r)
             }
+
+            mapReduce decompose mapF reduceF identity (Seq.toArray input)
+
+
+    [<RequireQualifiedAccess>]
+    module CloudTree =
+
+        type private Container<'T> = ContainerState<CloudTreeRef<'T>, 'T>
+
+        /// <summary>
+        ///     A distributed divide-and-conquer MapReduce workflow.
+        ///     Branches out until cluster size is exhausted; thereby continuing with thread local parallel semantics.
+        /// </summary>
+        /// <param name="mapF">map function.</param>
+        /// <param name="reduceF">reduce function.</param>
+        /// <param name="identity">identity element.</param>
+        /// <param name="input">initial input data.</param>
+        [<Cloud>]
+        let mapReduce (mapF : 'T -> Cloud<'R>) 
+                        (reduceF : 'R -> 'R -> Cloud<'R>)
+                        (identity : unit -> Cloud<'R>) (input : CloudTreeRef<'T>) : Cloud<'R> =
+
+            let decompose (tree : CloudTreeRef<'T>) : Cloud<Container<'T>> = cloud {
+                return
+                    match tree.Value with
+                    | CloudTree.Empty -> Container<'T>.Empty
+                    | CloudTree.Leaf t -> Container<'T>.Leaf t
+                    | CloudTree.Branch(l,r) -> Container<'T>.Branch(l,r)
+            }
+
+            mapReduce decompose mapF reduceF identity input

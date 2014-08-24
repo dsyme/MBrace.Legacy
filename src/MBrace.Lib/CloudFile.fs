@@ -158,7 +158,7 @@
                 cloud {
                     let reader (stream : Stream) = async {
                         use ms = new MemoryStream()
-                        do! asyncCopyTo(stream, ms)
+                        do! Stream.AsyncCopy(stream, ms)
                         return ms.ToArray()
                     }
                     return! CloudFile.Read(file, reader)

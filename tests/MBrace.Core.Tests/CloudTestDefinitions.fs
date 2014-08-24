@@ -266,6 +266,7 @@
             }
 
         type CloudList<'T> = Nil | Cons of 'T * ICloudRef<CloudList<'T>>
+
         [<Cloud>]
         let rec testBuildCloudList a = 
             cloud {
@@ -285,7 +286,9 @@
                     return 1 + result
                 | Nil -> return 0
             }
+
         type CloudTree<'T> = Leaf of 'T | Node of ICloudRef<CloudTree<'T>> * ICloudRef<CloudTree<'T>>
+
         [<Cloud>]
         let rec testBuildCloudTree a = 
             cloud {
@@ -295,6 +298,7 @@
                     let! left, right = testBuildCloudTree (a - 1) <.> testBuildCloudTree (a - 1)
                     return! CloudRef.New <| Node (left, right)
             }
+
         [<Cloud>]
         let rec testReduceCloudTree (cloudRefTree : ICloudRef<CloudTree<_>>) = 
             cloud {
