@@ -57,9 +57,11 @@ function CheckIf-Admin
 
 function Install-Net45
 {
-	$dotnetInstaller = "$psscriptroot\dotNetFx45_Full_setup.exe"
-	write-host "Running $dotnetInstaller"
-	Start-Process -FilePath $dotnetInstaller -ArgumentList /q, /norestart 
+	$url = "https://github.com/nessos/MBrace/raw/master/nuget/installer/dotNetFx45_Full_setup.exe"
+	$target = "$Directory\dotNetFx45_Full_setup.exe"
+	$(New-Object net.webclient).DownloadFile($url, $target)
+	write-host "Running $target"
+	Start-Process -FilePath $target -ArgumentList /q, /norestart 
 }
 
 function Download-MBrace
