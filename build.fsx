@@ -207,9 +207,9 @@ Target "ClientPkg" (fun _ ->
                 [
                     "FsPickler",                                    "0.9.11"
                     "FsPickler.Json",                               "0.9.11"
-                    "Thespian",                                     "0.0.9"
-                    "UnionArgParser",                               "0.7.0"
-                    "Vagrant",                                      "0.2.3"
+                    "Thespian",                                     "0.0.11"
+                    "UnionArgParser",                               "0.7.1"
+                    "Vagrant",                                      "0.2.5"
                     "MBrace.Core",                                  RequireExactly release.NugetVersion
                     "MBrace.Store",                                 RequireExactly release.NugetVersion
                 ]
