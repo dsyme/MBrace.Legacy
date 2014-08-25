@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>ICloudStore - MBrace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/MBrace/content/style.css" />
+    <script type="text/javascript" src="/MBrace/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/nessos/MBrace">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/MBrace/index.html">MBrace</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>ICloudStore</h1>
+<div class="xmldoc">
+<p>Cloud storage abstraction.</p>
+</div>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '237', 237)" onmouseover="showTip(event, '237', 237)">
+            ContainerExists(container)
+          </code>
+          <div class="tip" id="237">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;bool&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L69-69" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Checks if container exists in given path</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '263', 263)" onmouseover="showTip(event, '263', 263)">
+            CopyFrom(...)
+          </code>
+          <div class="tip" id="263">
+            <strong>Signature:</strong> (container:string * name:string * source:Stream * asFile:bool) -&gt; Async&lt;unit&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L91-91" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new immutable file in from stream.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '264', 264)" onmouseover="showTip(event, '264', 264)">
+            CopyTo(container, name, target)
+          </code>
+          <div class="tip" id="264">
+            <strong>Signature:</strong> (container:string * name:string * target:Stream) -&gt; Async&lt;unit&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L99-99" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Reads an existing immutable file to target stream.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '265', 265)" onmouseover="showTip(event, '265', 265)">
+            CreateImmutable(...)
+          </code>
+          <div class="tip" id="265">
+            <strong>Signature:</strong> (container:string * name:string * writer:(Stream -&gt; Async&lt;unit&gt;) * asFile:bool) -&gt; Async&lt;unit&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L108-108" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new immutable file in store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '266', 266)" onmouseover="showTip(event, '266', 266)">
+            CreateMutable(container, name, writer)
+          </code>
+          <div class="tip" id="266">
+            <strong>Signature:</strong> (container:string * name:string * writer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; Async&lt;Tag&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L129-129" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new mutable file in store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '267', 267)" onmouseover="showTip(event, '267', 267)">
+            Delete(container, name)
+          </code>
+          <div class="tip" id="267">
+            <strong>Signature:</strong> (container:string * name:string) -&gt; Async&lt;unit&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L57-57" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Deletes file in given path</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '268', 268)" onmouseover="showTip(event, '268', 268)">
+            DeleteContainer(container)
+          </code>
+          <div class="tip" id="268">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;unit&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L75-75" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Deletes container in given path</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '269', 269)" onmouseover="showTip(event, '269', 269)">
+            EnumerateContainers()
+          </code>
+          <div class="tip" id="269">
+            <strong>Signature:</strong> unit -&gt; Async&lt;string []&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L78-78" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Get all container paths that exist in file system</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '270', 270)" onmouseover="showTip(event, '270', 270)">
+            EnumerateFiles(container)
+          </code>
+          <div class="tip" id="270">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;string []&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L63-63" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets all files that exist in given container</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '271', 271)" onmouseover="showTip(event, '271', 271)">
+            Exists(container, name)
+          </code>
+          <div class="tip" id="271">
+            <strong>Signature:</strong> (container:string * name:string) -&gt; Async&lt;bool&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L50-50" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Checks if file exists in given path</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '272', 272)" onmouseover="showTip(event, '272', 272)">
+            ForceUpdateMutable(...)
+          </code>
+          <div class="tip" id="272">
+            <strong>Signature:</strong> (container:string * name:string * writer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; Async&lt;Tag&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L155-155" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Force update a mutable file in store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '273', 273)" onmouseover="showTip(event, '273', 273)">
+            GetStoreConfiguration()
+          </code>
+          <div class="tip" id="273">
+            <strong>Signature:</strong> unit -&gt; ICloudStoreConfiguration<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L41-41" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns a serializable store configuration object
+necessary for remotely activating the store instance.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '274', 274)" onmouseover="showTip(event, '274', 274)">
+            Id
+          </code>
+          <div class="tip" id="274">
+            <strong>Signature:</strong> string<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L37-37" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Store endpoint identifier</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '275', 275)" onmouseover="showTip(event, '275', 275)">
+            Name
+          </code>
+          <div class="tip" id="275">
+            <strong>Signature:</strong> string<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L34-34" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Store implementation name</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '276', 276)" onmouseover="showTip(event, '276', 276)">
+            ReadImmutable(container, name)
+          </code>
+          <div class="tip" id="276">
+            <strong>Signature:</strong> (container:string * name:string) -&gt; Async&lt;Stream&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L116-116" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Reads an existing immutable file from store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '277', 277)" onmouseover="showTip(event, '277', 277)">
+            ReadMutable(container, name)
+          </code>
+          <div class="tip" id="277">
+            <strong>Signature:</strong> (container:string * name:string) -&gt; Async&lt;Stream * Tag&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L137-137" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Reads a mutable file from store</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '278', 278)" onmouseover="showTip(event, '278', 278)">
+            TryUpdateMutable(...)
+          </code>
+          <div class="tip" id="278">
+            <strong>Signature:</strong> (container:string * name:string * writer:(Stream -&gt; Async&lt;unit&gt;) * tag:Tag) -&gt; Async&lt;bool * Tag&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Store/ICloudStore.fs#L147-147" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Attempt to update mutable file in store.</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+		      <a target="_blank" href="http://www.m-brace.net/">
+            <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />
+		      </a>
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">MBrace</li>
+            <li><a href="/MBrace/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://www.nuget.org/packages/MBrace.Runtime">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/nessos/MBrace">Source Code on GitHub</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/LICENSE.md">License</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting started</li>
+            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
+            <li><a href="/MBrace/azure-tutorial.html">Azure tutorial</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace Manual</a></li>
+            <li><a href="/MBrace/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/nessos/MBrace"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>

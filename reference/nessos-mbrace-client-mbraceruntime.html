@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>MBraceRuntime - MBrace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/MBrace/content/style.css" />
+    <script type="text/javascript" src="/MBrace/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/nessos/MBrace">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/MBrace/index.html">MBrace</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>MBraceRuntime</h1>
+<div class="xmldoc">
+<p>Provides a handle and administration API for a running MBrace cluster.</p>
+</div>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '379', 379)" onmouseover="showTip(event, '379', 379)">
+            Active
+          </code>
+          <div class="tip" id="379">
+            <strong>Signature:</strong> bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L431-431" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets if the current runtime is active (booted).</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '380', 380)" onmouseover="showTip(event, '380', 380)">
+            Alts
+          </code>
+          <div class="tip" id="380">
+            <strong>Signature:</strong> MBraceNode list<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L422-422" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Alternative Master nodes in the MBrace cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '381', 381)" onmouseover="showTip(event, '381', 381)">
+            Attach(node)
+          </code>
+          <div class="tip" id="381">
+            <strong>Signature:</strong> node:MBraceNode -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L334-334" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Attaches a Node to an existing MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '382', 382)" onmouseover="showTip(event, '382', 382)">
+            Attach(nodes)
+          </code>
+          <div class="tip" id="382">
+            <strong>Signature:</strong> nodes:seq&lt;MBraceNode&gt; -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L328-328" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Attaches a collection of Nodes to an existing MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '383', 383)" onmouseover="showTip(event, '383', 383)">
+            AttachAsync(node)
+          </code>
+          <div class="tip" id="383">
+            <strong>Signature:</strong> node:MBraceNode -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L283-283" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously attaches a node to an existing MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '384', 384)" onmouseover="showTip(event, '384', 384)">
+            AttachAsync(nodes)
+          </code>
+          <div class="tip" id="384">
+            <strong>Signature:</strong> nodes:seq&lt;MBraceNode&gt; -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L273-273" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously attaches a collection of nodes to an existing MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '385', 385)" onmouseover="showTip(event, '385', 385)">
+            AttachLocal(...)
+          </code>
+          <div class="tip" id="385">
+            <strong>Signature:</strong> (totalNodes:int * permissions:Permissions option * debug:bool option * background:bool option) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L349-349" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Spawns a specified number of local nodes and attaches to existing runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '386', 386)" onmouseover="showTip(event, '386', 386)">
+            AttachLocalAsync(...)
+          </code>
+          <div class="tip" id="386">
+            <strong>Signature:</strong> (totalNodes:int * permissions:Permissions option * debug:bool option * background:bool option) -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L360-360" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously spawns a specified number of local nodes and attaches to existing runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '387', 387)" onmouseover="showTip(event, '387', 387)">
+            Boot(...)
+          </code>
+          <div class="tip" id="387">
+            <strong>Signature:</strong> (replicationFactor:int option * failoverFactor:int option * store:&#39;?57265 option) -&gt; unit<br />
+                          <strong>Type parameters:</strong> '?57265          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L306-306" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Boots a new MBrace runtime in Nodes specified by runtime object.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '388', 388)" onmouseover="showTip(event, '388', 388)">
+            BootAsync(...)
+          </code>
+          <div class="tip" id="388">
+            <strong>Signature:</strong> (replicationFactor:int option * failoverFactor:int option * store:&#39;?57257 option) -&gt; Async&lt;unit&gt;<br />
+                          <strong>Type parameters:</strong> '?57257          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L222-222" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously boots a new MBrace in nodes specified by runtime object.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '389', 389)" onmouseover="showTip(event, '389', 389)">
+            ClearAllProcessInfo()
+          </code>
+          <div class="tip" id="389">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L672-672" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Deletes <em>all</em> process information from runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '390', 390)" onmouseover="showTip(event, '390', 390)">
+            ClearAllProcessInfoAsync()
+          </code>
+          <div class="tip" id="390">
+            <strong>Signature:</strong> unit -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L667-667" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously deletes <em>all</em> process information from runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '391', 391)" onmouseover="showTip(event, '391', 391)">
+            ClearProcessInfo(pid)
+          </code>
+          <div class="tip" id="391">
+            <strong>Signature:</strong> pid:ProcessId -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L662-662" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Deletes process info from runtime by given id.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '392', 392)" onmouseover="showTip(event, '392', 392)">
+            ClearProcessInfoAsync(pid)
+          </code>
+          <div class="tip" id="392">
+            <strong>Signature:</strong> pid:ProcessId -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L656-656" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously deletes the process info from runtime by given id.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '393', 393)" onmouseover="showTip(event, '393', 393)">
+            CreateProcess(block, ?name)
+          </code>
+          <div class="tip" id="393">
+            <strong>Signature:</strong> (block:Cloud&lt;&#39;T&gt; * name:&#39;?57309 option) -&gt; Process&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T, '?57309          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L572-572" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Synchronously creates a new cloud computation in runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '394', 394)" onmouseover="showTip(event, '394', 394)">
+            CreateProcess(expr, ?name)
+          </code>
+          <div class="tip" id="394">
+            <strong>Signature:</strong> (expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * name:&#39;?57300 option) -&gt; Process&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T, '?57300          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L536-536" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Synchronously creates a new cloud computation in runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '395', 395)" onmouseover="showTip(event, '395', 395)">
+            CreateProcess(computation)
+          </code>
+          <div class="tip" id="395">
+            <strong>Signature:</strong> computation:CloudComputation&lt;&#39;T&gt; -&gt; Process&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L505-505" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Synchronously Cceates a new cloud computation in runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '396', 396)" onmouseover="showTip(event, '396', 396)">
+            CreateProcessAsync(block, ?name)
+          </code>
+          <div class="tip" id="396">
+            <strong>Signature:</strong> (block:Cloud&lt;&#39;T&gt; * name:string option) -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L581-581" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously creates a new cloud computation in runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '397', 397)" onmouseover="showTip(event, '397', 397)">
+            CreateProcessAsync(expr, ?name)
+          </code>
+          <div class="tip" id="397">
+            <strong>Signature:</strong> (expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * name:string option) -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L544-544" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously creates a new cloud computation in runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '398', 398)" onmouseover="showTip(event, '398', 398)">
+            CreateProcessAsync(computation)
+          </code>
+          <div class="tip" id="398">
+            <strong>Signature:</strong> computation:CloudComputation&lt;&#39;T&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L512-512" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously creates a new cloud computation in runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '399', 399)" onmouseover="showTip(event, '399', 399)">
+            Detach(node)
+          </code>
+          <div class="tip" id="399">
+            <strong>Signature:</strong> node:MBraceNode -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L340-340" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Detaches a node from existing MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '400', 400)" onmouseover="showTip(event, '400', 400)">
+            DetachAsync(node)
+          </code>
+          <div class="tip" id="400">
+            <strong>Signature:</strong> node:MBraceNode -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L289-289" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously detaches a node from existing MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '401', 401)" onmouseover="showTip(event, '401', 401)">
+            GetAllProcesses()
+          </code>
+          <div class="tip" id="401">
+            <strong>Signature:</strong> unit -&gt; Process []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L650-650" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets all running or completed process from the runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '402', 402)" onmouseover="showTip(event, '402', 402)">
+            GetAllProcessesAsync()
+          </code>
+          <div class="tip" id="402">
+            <strong>Signature:</strong> unit -&gt; Async&lt;Process []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L645-645" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously gets all running or completed process from the runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '403', 403)" onmouseover="showTip(event, '403', 403)">
+            GetProcess(pid)
+          </code>
+          <div class="tip" id="403">
+            <strong>Signature:</strong> pid:ProcessId -&gt; Process&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L640-640" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets cloud process in runtime by given id.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '404', 404)" onmouseover="showTip(event, '404', 404)">
+            GetProcess(pid)
+          </code>
+          <div class="tip" id="404">
+            <strong>Signature:</strong> pid:ProcessId -&gt; Process<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L627-627" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets cloud process in runtime by given id.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '405', 405)" onmouseover="showTip(event, '405', 405)">
+            GetProcessAsync(pid)
+          </code>
+          <div class="tip" id="405">
+            <strong>Signature:</strong> pid:ProcessId -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L633-633" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously gets the cloud process in runtime by given id.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '406', 406)" onmouseover="showTip(event, '406', 406)">
+            GetProcessAsync(pid)
+          </code>
+          <div class="tip" id="406">
+            <strong>Signature:</strong> pid:ProcessId -&gt; Async&lt;Process&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L621-621" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously gets cloud process in runtime by given id.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '407', 407)" onmouseover="showTip(event, '407', 407)">
+            GetProcessInfo()
+          </code>
+          <div class="tip" id="407">
+            <strong>Signature:</strong> unit -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L693-693" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets printed runtime process information.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '408', 408)" onmouseover="showTip(event, '408', 408)">
+            GetProcessInfoAsync()
+          </code>
+          <div class="tip" id="408">
+            <strong>Signature:</strong> unit -&gt; Async&lt;string&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L688-688" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously gets printed runtime process information.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '409', 409)" onmouseover="showTip(event, '409', 409)">
+            GetStoreClient()
+          </code>
+          <div class="tip" id="409">
+            <strong>Signature:</strong> unit -&gt; StoreClient<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L494-494" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets a client object for managing store definitions in given runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '410', 410)" onmouseover="showTip(event, '410', 410)">
+            GetSystemLogs()
+          </code>
+          <div class="tip" id="410">
+            <strong>Signature:</strong> unit -&gt; SystemLogEntry []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L459-459" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets all system logs generated by the MBrace cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '411', 411)" onmouseover="showTip(event, '411', 411)">
+            GetSystemLogsAsync()
+          </code>
+          <div class="tip" id="411">
+            <strong>Signature:</strong> unit -&gt; Async&lt;SystemLogEntry []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L464-464" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously gets all system logs generated by the MBrace cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '412', 412)" onmouseover="showTip(event, '412', 412)">
+            Id
+          </code>
+          <div class="tip" id="412">
+            <strong>Signature:</strong> Guid<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L399-399" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>UUID identifying the current MBrace cluster deployment.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '413', 413)" onmouseover="showTip(event, '413', 413)">
+            IsLocalRuntime
+          </code>
+          <div class="tip" id="413">
+            <strong>Signature:</strong> bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L436-436" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets if the current runtime is running (entirely) in the local machine.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '414', 414)" onmouseover="showTip(event, '414', 414)">
+            Kill()
+          </code>
+          <div class="tip" id="414">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L483-483" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Violently kills all nodes in a local runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '415', 415)" onmouseover="showTip(event, '415', 415)">
+            KillProcess(pid)
+          </code>
+          <div class="tip" id="415">
+            <strong>Signature:</strong> pid:ProcessId -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L615-615" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Kills cloud process with given id.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '416', 416)" onmouseover="showTip(event, '416', 416)">
+            KillProcessAsync(pid)
+          </code>
+          <div class="tip" id="416">
+            <strong>Signature:</strong> pid:ProcessId -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L609-609" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously kills the cloud process with given id.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '417', 417)" onmouseover="showTip(event, '417', 417)">
+            LocalNodes
+          </code>
+          <div class="tip" id="417">
+            <strong>Signature:</strong> MBraceNode list<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L412-412" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>List of MBrace Nodes in current cluster that exist in this machine.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '418', 418)" onmouseover="showTip(event, '418', 418)">
+            Master
+          </code>
+          <div class="tip" id="418">
+            <strong>Signature:</strong> MBraceNode<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L417-417" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Current Master node in the MBrace cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '419', 419)" onmouseover="showTip(event, '419', 419)">
+            Nodes
+          </code>
+          <div class="tip" id="419">
+            <strong>Signature:</strong> MBraceNode list<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L404-404" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>List of MBrace Nodes that constitute the current cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '420', 420)" onmouseover="showTip(event, '420', 420)">
+            Ping(?silent, ?timeout)
+          </code>
+          <div class="tip" id="420">
+            <strong>Signature:</strong> (silent:bool option * timeout:int option) -&gt; TimeSpan<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L393-393" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Pings the remote node, returning the response timespan.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '421', 421)" onmouseover="showTip(event, '421', 421)">
+            PingAsync(?silent, ?timeout)
+          </code>
+          <div class="tip" id="421">
+            <strong>Signature:</strong> (silent:bool option * timeout:int option) -&gt; Async&lt;TimeSpan&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L375-375" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously pings the remote node, returning the response timespan.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '422', 422)" onmouseover="showTip(event, '422', 422)">
+            Reboot(...)
+          </code>
+          <div class="tip" id="422">
+            <strong>Signature:</strong> (replicationFactor:int option * failoverFactor:int option * store:&#39;?57268 option) -&gt; unit<br />
+                          <strong>Type parameters:</strong> '?57268          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L321-321" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Reboots the MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '423', 423)" onmouseover="showTip(event, '423', 423)">
+            RebootAsync(...)
+          </code>
+          <div class="tip" id="423">
+            <strong>Signature:</strong> (replicationFactor:int option * failoverFactor:int option * store:&#39;?57260 option) -&gt; Async&lt;unit&gt;<br />
+                          <strong>Type parameters:</strong> '?57260          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L262-262" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously reboots the MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '424', 424)" onmouseover="showTip(event, '424', 424)">
+            Run(block, ?name)
+          </code>
+          <div class="tip" id="424">
+            <strong>Signature:</strong> (block:Cloud&lt;&#39;T&gt; * name:string option) -&gt; &#39;T<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L601-601" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Synchronously creates a new cloud computation in runtime and awaits its result.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '425', 425)" onmouseover="showTip(event, '425', 425)">
+            Run(expr, ?name)
+          </code>
+          <div class="tip" id="425">
+            <strong>Signature:</strong> (expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * name:string option) -&gt; &#39;T<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L562-562" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously create a new cloud computation in runtime and await its result.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '426', 426)" onmouseover="showTip(event, '426', 426)">
+            Run(computation)
+          </code>
+          <div class="tip" id="426">
+            <strong>Signature:</strong> computation:CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L529-529" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Synchronously creates a new cloud computation in runtime and awaits its result.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '427', 427)" onmouseover="showTip(event, '427', 427)">
+            RunAsync(block, ?name)
+          </code>
+          <div class="tip" id="427">
+            <strong>Signature:</strong> (block:Cloud&lt;&#39;T&gt; * name:string option) -&gt; Async&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L591-591" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously creates a new cloud computation in runtime and awaits its result.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '428', 428)" onmouseover="showTip(event, '428', 428)">
+            RunAsync(expr, ?name)
+          </code>
+          <div class="tip" id="428">
+            <strong>Signature:</strong> (expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * name:string option) -&gt; Async&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L553-553" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously creates a new cloud computation in runtime and awaits its result.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '429', 429)" onmouseover="showTip(event, '429', 429)">
+            RunAsync(computation)
+          </code>
+          <div class="tip" id="429">
+            <strong>Signature:</strong> computation:CloudComputation&lt;&#39;T&gt; -&gt; Async&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L519-519" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously creates a new cloud computation in runtime and awaits its result.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '430', 430)" onmouseover="showTip(event, '430', 430)">
+            ShowInfo(?showPerformanceCounters)
+          </code>
+          <div class="tip" id="430">
+            <strong>Signature:</strong> (showPerformanceCounters:bool option) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L442-442" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Prints a report on the cluster status to StdOut.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '431', 431)" onmouseover="showTip(event, '431', 431)">
+            ShowProcessInfo()
+          </code>
+          <div class="tip" id="431">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L683-683" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Prints runtime process information to StdOut.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '432', 432)" onmouseover="showTip(event, '432', 432)">
+            ShowProcessInfoAsync()
+          </code>
+          <div class="tip" id="432">
+            <strong>Signature:</strong> unit -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L677-677" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously prints runtime process information to StdOut.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '433', 433)" onmouseover="showTip(event, '433', 433)">
+            ShowSystemLogs()
+          </code>
+          <div class="tip" id="433">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L469-469" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Prints all system logs generated by the MBrace cluster to StdOut.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '434', 434)" onmouseover="showTip(event, '434', 434)">
+            ShowSystemLogsAsync()
+          </code>
+          <div class="tip" id="434">
+            <strong>Signature:</strong> unit -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L474-474" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously prints all system logs generated by the MBrace cluster to StdOut.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '435', 435)" onmouseover="showTip(event, '435', 435)">
+            Shutdown()
+          </code>
+          <div class="tip" id="435">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L313-313" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Shuts down the MBrace runtime.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '436', 436)" onmouseover="showTip(event, '436', 436)">
+            ShutdownAsync()
+          </code>
+          <div class="tip" id="436">
+            <strong>Signature:</strong> unit -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L249-249" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously shuts down the MBrace runtime.</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '443', 443)" onmouseover="showTip(event, '443', 443)">
+            Boot(...)
+          </code>
+          <div class="tip" id="443">
+            <strong>Signature:</strong> (nodes:MBraceNode list * replicationFactor:int option * failoverFactor:int option * store:ICloudStore option) -&gt; MBraceRuntime<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L164-164" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Boots a collection of nodes to form an MBrace cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '445', 445)" onmouseover="showTip(event, '445', 445)">
+            BootAsync(...)
+          </code>
+          <div class="tip" id="445">
+            <strong>Signature:</strong> (nodes:MBraceNode list * replicationFactor:int option * failoverFactor:int option * store:ICloudStore option) -&gt; Async&lt;MBraceRuntime&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L93-93" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously boots a collection of nodes to form an MBrace cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '446', 446)" onmouseover="showTip(event, '446', 446)">
+            Connect(uri)
+          </code>
+          <div class="tip" id="446">
+            <strong>Signature:</strong> uri:string -&gt; MBraceRuntime<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L155-155" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Connect to an MBrace runtime with given uri.
+Uri can correspond to any of the nodes participating in the cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '447', 447)" onmouseover="showTip(event, '447', 447)">
+            Connect(host, port)
+          </code>
+          <div class="tip" id="447">
+            <strong>Signature:</strong> (host:string * port:int) -&gt; MBraceRuntime<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L141-141" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Connect to an MBrace runtime with given hostname and TCP port.
+Uri can correspond to any of the nodes participating in the cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '448', 448)" onmouseover="showTip(event, '448', 448)">
+            Connect(uri)
+          </code>
+          <div class="tip" id="448">
+            <strong>Signature:</strong> uri:Uri -&gt; MBraceRuntime<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L126-126" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Connect to an MBrace runtime with given uri.
+Uri can correspond to any of the nodes participating in the cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '449', 449)" onmouseover="showTip(event, '449', 449)">
+            ConnectAsync(uri)
+          </code>
+          <div class="tip" id="449">
+            <strong>Signature:</strong> uri:string -&gt; Async&lt;MBraceRuntime&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L148-148" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously connect to an MBrace runtime with given uri.
+Uri can correspond to any of the nodes participating in the cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '450', 450)" onmouseover="showTip(event, '450', 450)">
+            ConnectAsync(host, port)
+          </code>
+          <div class="tip" id="450">
+            <strong>Signature:</strong> (host:string * port:int) -&gt; Async&lt;MBraceRuntime&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L133-133" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Connect to an MBrace runtime with given hostname and TCP port.
+Uri can correspond to any of the nodes participating in the cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '451', 451)" onmouseover="showTip(event, '451', 451)">
+            ConnectAsync(uri)
+          </code>
+          <div class="tip" id="451">
+            <strong>Signature:</strong> uri:Uri -&gt; Async&lt;MBraceRuntime&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L111-111" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously connect to an MBrace runtime with given uri.
+Uri can correspond to any of the nodes participating in the cluster.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '452', 452)" onmouseover="showTip(event, '452', 452)">
+            FromActorRef(ref)
+          </code>
+          <div class="tip" id="452">
+            <strong>Signature:</strong> ref:ActorRef&lt;MBraceNodeMsg&gt; -&gt; MBraceRuntime<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L210-210" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Connects to an existing MBrace runtime using the given ActorRef.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '453', 453)" onmouseover="showTip(event, '453', 453)">
+            InitLocal(...)
+          </code>
+          <div class="tip" id="453">
+            <strong>Signature:</strong> (totalNodes:int * masterPort:int option * hostname:string option * replicationFactor:int option * failoverFactor:int option * store:ICloudStore option * debug:bool option * background:bool option) -&gt; MBraceRuntime<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L200-200" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Spawn and initialize a local MBrace cluster of given size.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '454', 454)" onmouseover="showTip(event, '454', 454)">
+            InitLocalAsync(...)
+          </code>
+          <div class="tip" id="454">
+            <strong>Signature:</strong> (totalNodes:int * masterPort:int option * hostname:string option * replicationFactor:int option * failoverFactor:int option * store:ICloudStore option * debug:bool option * background:bool option) -&gt; Async&lt;MBraceRuntime&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/Runtime.fs#L179-179" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously spawn and initialize a local MBrace cluster of given size.</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+		      <a target="_blank" href="http://www.m-brace.net/">
+            <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />
+		      </a>
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">MBrace</li>
+            <li><a href="/MBrace/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://www.nuget.org/packages/MBrace.Runtime">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/nessos/MBrace">Source Code on GitHub</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/LICENSE.md">License</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting started</li>
+            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
+            <li><a href="/MBrace/azure-tutorial.html">Azure tutorial</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace Manual</a></li>
+            <li><a href="/MBrace/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/nessos/MBrace"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>
