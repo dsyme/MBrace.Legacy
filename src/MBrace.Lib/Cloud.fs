@@ -96,7 +96,7 @@
         }
 
         /// <summary>
-        ///     Lifts a function returning 'b to a function returning Cloud<'b>
+        ///     Lifts a lambda to a monadic function.
         /// </summary>
         /// <param name="f">function to be lifted.</param>
         [<Cloud>]
@@ -104,7 +104,7 @@
             fun x -> cloud { return f x }
 
         /// <summary>
-        ///     Like lift but with two curried arguments.  
+        ///     Lifts a lambda to a monadic function.
         /// </summary>
         /// <param name="f">function to be lifted.</param>
         [<Cloud>]

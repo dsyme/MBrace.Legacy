@@ -36,8 +36,8 @@
             }
 
         /// <summary>
-        /// Takes the MVar's value. This function will block until the MVar is non-empty
-        /// and the take succeeds.
+        ///     Dereferences an MVar. 
+        ///     This function will block until the MVar is non-empty.
         /// </summary>
         /// <param name="mvar">MVar to be accessed.</param>
         let rec take (mvar : MVar<'T>) =

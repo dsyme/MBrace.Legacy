@@ -12,10 +12,10 @@
         ///     Memoize the given function using the StoreProvider and
         ///     MutableCloudRefs as a lookup.
         /// </summary>
-        /// <param name="cacheName"> The container name to be used by the StoreProvider.</param>
-        /// <param name="encode"> The function that maps the function's domain to valid Store filenames.</param>
-        /// <param name="f"> The function to memoize.</param>
-        /// <returns> The function that uses memoization.</returns>
+        /// <param name="cacheName">container name to be used by the StoreProvider.</param>
+        /// <param name="encode">function mapping the function domain to valid Store filenames.</param>
+        /// <param name="f">function to be memoized.</param>
+        /// <returns>memoized function.</returns>
         let memoize (cacheName : string) (encode : 'a -> string) 
                     (f : 'a -> Cloud<'b>) : ('a -> Cloud<'b>) = 
             fun a ->
