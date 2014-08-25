@@ -70,12 +70,15 @@ a Medium (A2) (2 cores, 3.5GB Memory) instance. After the virtual machine is cre
 
 <h2>Installing the MBrace Runtime</h2>
 
-<p>In order to get a MBrace node running on a machine you need to download the <a href="http://nuget.org">MBrace.Runtime</a> package.
-Any dependencies and executables are located in the <code>tools</code> subdirectory. Alternatively you can use <a href="http://github.com/nessos/">MBrace.Installer.zip</a>
-which contains a powershell script that helps you install MBrace by downloading <code>.NET 4.5</code> if it's needed, downloading the
-runtime nuget package, adding firewall exceptions for the MBrace executables and finally installing the MBrace runtime as a Windows Service.</p>
+<p>In order to get a MBrace node running on a machine you need to download 
+the <a href="http://nuget.org/packages/MBrace.Runtime">MBrace.Runtime</a> package.
+Any dependencies and executables are located in the <code>tools</code> subdirectory. Alternatively you can 
+use the <a href="http://github.com/nessos/MBrace/raw/master/nuget/installer/Install-MBrace.ps1">Install-MBrace.ps1</a> powershell script that helps you install 
+MBrace by downloading <code>.NET 4.5</code> if it's needed, downloading the
+runtime nuget package, adding firewall exceptions for the MBrace executables and finally 
+installing the MBrace runtime as a Windows Service.</p>
 
-<p>Open a PowerShell prompt as administrator and run the <code>Install-MBrace.ps1</code> script.
+<p>Open a PowerShell prompt as administrator, download and run <code>Install-MBrace.ps1</code> script.
 Before running the installation script you probably need to enable script execution in PowerShell;
 you can do this using the <a href="http://technet.microsoft.com/en-us/library/ee176961.aspx">Set-ExecutionPolicy</a> cmdlet.</p>
 
