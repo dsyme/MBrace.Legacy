@@ -92,7 +92,7 @@
 
         let exiter = new ConsoleProcessExiter(true) :> IExiter
 
-        let argParser = UnionArgParser<Configuration>("USAGE: mbracectl [start|stop|status] ... options")
+        let argParser = UnionArgParser.Create<Configuration>("USAGE: mbracectl [start|stop|status] ... options")
 
         let tryParseSessionFile (path : string) =
             try

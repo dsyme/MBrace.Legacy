@@ -6,7 +6,7 @@ root=`dirname $0`
 location="$root/bin"
 pkgs=`ls "$location" | grep '.nupkg$'`
 
-if [ -z $pkgs ]; then
+if [ -z "$pkgs" ]; then
     echo "no nuget packages found."
     exit 0
 fi

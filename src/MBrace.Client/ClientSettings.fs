@@ -31,7 +31,7 @@ namespace Nessos.MBrace.Client
 
         let initClientConfiguration () =
             
-            let parser = new UnionArgParser<AppConfigParameter>()
+            let parser = UnionArgParser.Create<AppConfigParameter>()
             let thisAssembly = System.Reflection.Assembly.GetExecutingAssembly()
             let parseResults = parser.ParseAppSettings(thisAssembly)
             

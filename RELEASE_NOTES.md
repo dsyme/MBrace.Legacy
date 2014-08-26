@@ -1,3 +1,6 @@
+#### 0.5.4-alpha
+* Fix compatibility issue.
+
 #### 0.5.3-alpha
 * API improvements.
 

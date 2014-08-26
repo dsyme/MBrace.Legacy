@@ -293,7 +293,7 @@
                     return! Stream.AsyncCopy(source, target)
                 }
 
-                let fileName = ufng.GetFileName path
+                let fileName = ufng.GetFileName <| Path.GetFileName path
                 return! sc.CreateCloudFileAsync(container, fileName, writer)
             }
 

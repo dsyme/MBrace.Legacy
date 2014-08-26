@@ -18,7 +18,7 @@
     [<AutoOpen>]
     module internal Config =
 
-        let config = new UnionArgParser<Configuration>()
+        let config = UnionArgParser.Create<Configuration>()
 
         let exiter = new ConsoleProcessExiter() :> IExiter
 

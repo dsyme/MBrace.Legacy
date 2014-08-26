@@ -32,4 +32,4 @@
                     | Port _ -> "Port argument."
                     | Store_Activator _ -> "Store activation info."
 
-        let workerConfig = new UnionArgParser<WorkerConfig>("WARNING: not intended for manual use.")
+        let workerConfig = UnionArgParser.Create<WorkerConfig>("WARNING: not intended for manual use.")

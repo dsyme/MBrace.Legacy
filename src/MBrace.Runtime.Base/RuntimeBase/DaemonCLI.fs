@@ -47,7 +47,7 @@
                     | MBrace_ProcessDomain_Executable _ -> "sets the location of the mbraces.process executable."
 
 
-        let mbracedParser = new UnionArgParser<MBracedConfig>("USAGE: mbraced.exe [options]")           
+        let mbracedParser = UnionArgParser.Create<MBracedConfig>("USAGE: mbraced.exe [options]")           
 
         // Node spawning infrastructure
 
