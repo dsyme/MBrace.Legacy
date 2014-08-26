@@ -284,7 +284,7 @@
             let ufng = new UniqueFileNameGenerator()
             let container =
                 match container with
-                | None -> Guid.NewGuid().ToString("N")
+                | None -> let g = Guid.NewGuid().ToString("N") in sprintf "folder%s" g
                 | Some container -> container
 
             let upload (path : string) = async {
