@@ -4,6 +4,7 @@
     open System.IO
 
     open Nessos.MBrace
+    open Nessos.MBrace.Utils
     open Nessos.MBrace.Store
     open Nessos.MBrace.Runtime
     open Nessos.Thespian.ConcurrencyTools
@@ -272,6 +273,41 @@
             Async.RunSynchronously <| info.CloudFileProvider.GetExisting(container, id)
 
 
+        /// <summary>
+        ///     Uploads given collection of local files to the runtime store.
+        ///     Returns an array of CloudFiles that point to the uploaded resources.
+        /// </summary>
+        /// <param name="paths">Array of paths to local files.</param>
+        /// <param name="container">Container to place CloudFiles. Defaults to auto-generated container.</param>
+        /// <returns>an array of CloudFiles.</returns>
+        member sc.UploadFilesAsync(paths : string [], ?container) =
+            let ufng = new UniqueFileNameGenerator()
+            let container =
+                match container with
+                | None -> Guid.NewGuid().ToString("N")
+                | Some container -> container
+
+            let upload (path : string) = async {
+                let writer (target : Stream) = async {
+                    use source = File.OpenRead path
+                    return! Stream.AsyncCopy(source, target)
+                }
+
+                let fileName = ufng.GetFileName path
+                return! sc.CreateCloudFileAsync(container, fileName, writer)
+            }
+
+            paths |> Array.map upload |> Async.Parallel
+
+        /// <summary>
+        ///     Uploads given collection of local files to the runtime store.
+        ///     Returns an array of CloudFiles that point to the uploaded resources.
+        /// </summary>
+        /// <param name="paths">Array of paths to local files.</param>
+        /// <param name="container">Container to place CloudFiles. Defaults to auto-generated container.</param>
+        /// <returns>an array of CloudFiles.</returns>
+        member sc.UploadFiles(paths : string [], ?container) = 
+            sc.UploadFilesAsync(paths, ?container = container) |> Async.RunSynchronously
         
         // Default container methods.
 

@@ -224,3 +224,17 @@ namespace Nessos.MBrace.Utils
                 | _ -> false
 
             override x.GetHashCode() = hash token
+
+
+        type UniqueFileNameGenerator (?format : string -> int -> string) =
+            let format = defaultArg format (sprintf "%s-%d")
+            let counter = new Dictionary<string, int> ()
+
+            member __.GetFileName(fileName : string) =
+                let ok, n = counter.TryGetValue fileName
+                if ok then
+                    counter.[fileName] <- n + 1
+                    format fileName (n+1)
+                else
+                    counter.[fileName] <- 0
+                    fileName

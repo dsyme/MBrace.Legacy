@@ -1,6 +1,7 @@
 ﻿namespace Nessos.MBrace.Utils
 
     open System
+    open System.IO
     open System.Threading.Tasks
     open System.Collections.Generic
     open System.Runtime.Serialization
@@ -198,6 +199,14 @@
             member ab.Bind(t : Task, cont : unit -> Async<'S>) =
                 let t0 = t.ContinueWith ignore
                 ab.Bind(Async.AwaitTask t0, cont)
+
+        type Async with
+            static member AwaitTask (task : System.Threading.Tasks.Task) : Async<unit> =
+                task.ContinueWith ignore |> Async.AwaitTask
+
+        type Stream with
+            static member AsyncCopy (source : Stream, dest : Stream) : Async<unit> =
+                Async.AwaitTask(source.CopyToAsync(dest))
 
 
         [<AbstractClass>]
