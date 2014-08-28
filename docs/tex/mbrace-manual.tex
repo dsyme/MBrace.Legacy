@@ -144,10 +144,10 @@ with the help of primitive combinators that operate on such cloud workflows.
 %
 \begin{lstlisting}
 cloud {
-    let job1() = cloud { return 1 }
-    let job2() = cloud { return 2 }
-    let! [| result1 ; result2 |] = Cloud.Parallel [| job1() ; job2() |]	
-    return result1 + result2
+	let job1() = cloud { return 1 }
+	let job2() = cloud { return 2 }
+	let! [| result1 ; result2 |] = Cloud.Parallel [| job1() ; job2() |]	
+	return result1 + result2
 }
 \end{lstlisting}
 The above \fsharp{} snippet defines two small cloud workflows, \texttt{job1} and
@@ -218,10 +218,10 @@ of \dotnet{} enumerables. In the following example, an infinite odd number gener
 defined:
 \begin{lstlisting}
 seq {
-    let i = ref 0
-    while true do
-        yield 1 + 2 * i
-        incr i
+	let i = ref 0
+	while true do
+		yield 1 + 2 * i
+		incr i
 }
 \end{lstlisting}
 The \texttt{yield} keyword has semantics identical to the \csharp{} keyword of the same 
@@ -291,10 +291,10 @@ that executes the given inputs in parallel, following a fork-join pattern:
 let workflow = async {
     let! results = 
         Async.Parallel 
-            [ 
-                download "http://www.m-brace.net" ;
-                download "http://www.nessos.gr" 
-            ]
+			[ 
+				download "http://www.m-brace.net" ;
+				download "http://www.nessos.gr" 
+			]
  
     return Seq.concat results |> Seq.length
 }
@@ -325,14 +325,14 @@ Building on our previous declaration of the \texttt{download} async workflow, we
 \begin{lstlisting}
 [<Cloud>]
 let lineCount() = 
-    cloud {
-        let jobs : Cloud<string []> [] = 
-            Array.map (download >> Cloud.OfAsync) 
-                [| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
+	cloud {
+    	let jobs : Cloud<string []> [] = 
+        	Array.map (download >> Cloud.OfAsync) 
+				[| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
 
-        let! results = Cloud.Parallel jobs
-        return Array.concat results |> Array.length
-    }
+	    let! results = Cloud.Parallel jobs
+    	return Array.concat results |> Array.length
+	}
 \end{lstlisting}
 This is a direct adaptation of the \texttt{async} snippet presented above.
 The main differences between this and \texttt{async} 
@@ -360,17 +360,17 @@ For example, we could define a distributed variant of the classic filter combina
 [<Cloud>]
 let filter (f : 'T -> bool) (xs : 'T []) =
     cloud {
-        // a nested subexpression that performs
-        // the checking on a single element
-        let pick (x : 'T) =
-            cloud {
-                if f x then return Some x
-                else
-                    return None
-            }
+		// a nested subexpression that performs
+		// the checking on a single element
+		let pick (x : 'T) =
+			cloud {
+				if f x then return Some x
+				else
+					return None
+			}
 
         let! results = Cloud.Parallel <| Array.map pick xs
-        return Array.choose id results
+		return Array.choose id results
     }
 \end{lstlisting}
 %
@@ -457,7 +457,7 @@ A simplistic variant can be declared as follows:
 \begin{lstlisting}
 [<Cloud>]
 let rec mapReduce (map: 'T -> Cloud<'R>) 
-                    (reduce: 'R -> 'R -> Cloud<'R>) 
+				    (reduce: 'R -> 'R -> Cloud<'R>) 
                     (identity: 'R) (input: 'T list) =
     cloud {
         match input with
@@ -467,9 +467,9 @@ let rec mapReduce (map: 'T -> Cloud<'R>)
             let left, right = List.split input
  
             let! r1, r2 =
-                (mapReduce map reduce identity left)
-                    <||>
-                (mapReduce map reduce identity right)
+            	(mapReduce map reduce identity left)
+            		<||>
+	            (mapReduce map reduce identity right)
  
             return! reduce r1 r2
     }
@@ -619,7 +619,7 @@ one could define the extension method
 type Cloud with
     [<Cloud>]
     static member Sleep interval = 
-        Cloud.OfAsync (Async.Sleep interval)
+    	Cloud.OfAsync (Async.Sleep interval)
 \end{lstlisting}
 which can then be used in the expected fashion
 \begin{lstlisting}
@@ -677,7 +677,7 @@ let mapReduce   (mapF : 'T -> Cloud<'R>)
             | _, _, [x] -> return! mapF x
             // exhausted depth in distributed context, switch to local parallelism
             | Distributed, 0, _ ->
-                let depth = computeDepth Environment.ProcessorCount
+            	let depth = computeDepth Environment.ProcessorCount
                 return! local <| traverse LocalParallel depth input
             // exhausted depth in local parallelism context, switch to sequential
             | LocalParallel, 0,_ -> return! traverse Sequential depth input
@@ -707,7 +707,7 @@ let mapReduce   (mapF : 'T -> Cloud<'R>)
         }
 
     cloud {
-        // probe runtime for number of worker nodes
+    	// probe runtime for number of worker nodes
         let! workers = Cloud.GetWorkerCount()
         return! traverse Distributed (computeDepth workers) input
     }
@@ -766,9 +766,9 @@ An interesting aspect of cloud refs is the ability to define large, distributed
 data structures. For example, one could define a distributed binary tree like so:
 \begin{lstlisting}
 type CloudTree<'T> = 
-    | Empty
+	| Empty
     | Leaf of 'T
-    | Branch of TreeRef<'T> * TreeRef<'T>
+	| Branch of TreeRef<'T> * TreeRef<'T>
 
 and TreeRef<'T> = ICloudRef<CloudTree<'T>>
 \end{lstlisting}
@@ -851,9 +851,9 @@ let race () = cloud {
     let! mr = MutableCloudRef.New(0)
  
     let! _ = 
-        MutableCloudRef.Force(mr,1)
-            <||> 
-        MutableCloudRef.Force(mr,2)
+    	MutableCloudRef.Force(mr,1)
+    		<||> 
+    	MutableCloudRef.Force(mr,2)
  
     return! MutableCloudRef.Read(mr)
 }
@@ -965,7 +965,7 @@ that allows for scoped introduction of disposable resources,
 apply to \texttt{ICloudDisposable} entities. For instance,
 \begin{lstlisting}
 cloud {
-    try
+	try
         use! cref = CloudRef.New [|1 .. 10000000|]
 
         let doStuff () = cloud {
@@ -977,14 +977,14 @@ cloud {
 
         return ()
 
-        // scope of cloud ref ends here, 
-        // workflow implicitly disposes it
-    with e ->
-        do! Cloud.Logf "error: %A" e
-        
-    // at this point, the cloud ref will have 
-    // been disposed of regardless of the outcome
-    return ()
+		// scope of cloud ref ends here, 
+		// workflow implicitly disposes it
+	with e ->
+		do! Cloud.Logf "error: %A" e
+		
+	// at this point, the cloud ref will have 
+	// been disposed of regardless of the outcome
+	return ()
 }
 \end{lstlisting}
 Initializing a cloud ref with the \texttt{use} keyword provides the assurance 
@@ -1017,10 +1017,10 @@ runtime cluster. It should be noted that the returned result differs when
 interpreted under \texttt{local} semantics:
 \begin{lstlisting}
 cloud {
-    // gets the number of worker nodes in the cluster
-    let! workers = Cloud.GetWorkerCount ()
-    // gets the number of logical cores in the currently executing machine
-    let! cores = Cloud.ToLocal <| Cloud.GetWorkerCount () in ()
+	// gets the number of worker nodes in the cluster
+	let! workers = Cloud.GetWorkerCount ()
+	// gets the number of logical cores in the currently executing machine
+	let! cores = Cloud.ToLocal <| Cloud.GetWorkerCount () in ()
 }
 \end{lstlisting}
 
@@ -1042,11 +1042,11 @@ The \texttt{Cloud.GetTaskId} primitive returns the \emph{task id} of the current
 execution context and can be thought of as analogous to the CLR thread id.
 \begin{lstlisting}
 cloud {
-    let! parentId = Cloud.GetTaskId ()
-    let! childId, childId' = Cloud.GetTaskId () <||> Cloud.GetTaskId ()
-    
-    // should return distinct task id's
-    return (parentId, childId, childId')
+	let! parentId = Cloud.GetTaskId ()
+	let! childId, childId' = Cloud.GetTaskId () <||> Cloud.GetTaskId ()
+	
+	// should return distinct task id's
+	return (parentId, childId, childId')
 }
 \end{lstlisting}
 
@@ -1284,7 +1284,7 @@ snippet:
 cloud {
     let r = ref 0
     let! _ = local <| 
-        Cloud.Parallel [| for i in 1 .. 1000 -> cloud { incr r } |]
+    	Cloud.Parallel [| for i in 1 .. 1000 -> cloud { incr r } |]
 
     return !r
 }
@@ -1295,8 +1295,8 @@ behaviour of \texttt{Cloud.OfAsync} however, which preserves the original \textt
 semantics:
 \begin{lstlisting}
 cloud {
-    // still a race condition!
-    return! Cloud.OfAsync <| race ()
+	// still a race condition!
+	return! Cloud.OfAsync <| race ()
 }
 \end{lstlisting}
 
@@ -1316,37 +1316,36 @@ following functionalities:
 \ref{sec:workflows}.
 \item An interface for managing and interacting with the \mbrace{} runtime, 
 that can be roughly divided in the following categories:
-    \begin{itemize}
-        \item Runtime administration functionality, that includes cluster management
-        operations such as initialization, halting, health monitoring and
-        real-time elastic node management.
-        \item Cloud process management functionality, that includes submission of
-        computations, process monitoring, debugging and storage access.
-    \end{itemize}
+	\begin{itemize}
+		\item Runtime administration functionality, that includes cluster management
+		operations such as initialization, halting, health monitoring and
+		real-time elastic node management.
+		\item Cloud process management functionality, that includes submission of
+		computations, process monitoring, debugging and storage access.
+	\end{itemize}
 
-%\item The \mbrace{} shell, which enables interactive declaration of cloud computations
-%	and runtime administration.
+\item The \mbrace{} shell, which enables interactive, on-the-fly declaration,
+deployment and debugging of cloud computation through the \fsharp{} REPL.
 \item A collection of command line tools for server-side deployments.
 \item A rich open source library that includes a range of combinators that
 implement common parallelism patterns like MapReduce or Choice and a multitude of 
 sample implementations of real-world algorithms.
 \end{enumerate}
 %
-The client API can be consumed either programmatically from native \dotnet{} code
-or interactively using the \mbox{\mbrace{}} shell. The \mbrace{} interactive shell is
-an adaptation of the interpreter that comes with the open source \fsharp{} compiler
-distribution. It permits direct, on-the-fly declaration and submission of cloud 
+The client API can be either consumed programmatically from \dotnet{} applications
+or used interactively through the \mbrace{} shell.
+\Mbrace{} enables dynamic, on-the-fly declaration and submission of cloud 
 computations to the data center. Capitalizing on the IDE integration capabilities 
 offered by \fsharp{} interactive, \mbrace{} offers a cloud programming experience%
 \footnote{For a demo, see \samehref{http://www.youtube.com/watch?v=fmTagG6MNPQ}.}
 that fully integrates with development environments such as Visual Studio,
-Xamarin Studio or the Tsunami IDE%
+Xamarin Studio or Tsunami IDE%
 \footnote{\mbrace{} with Tsunami, \samehref{http://www.youtube.com/watch?v=fjssBxpNqrU}}.
 
 \begin{figure}[ht]
 \label{shellfig}
 \centering
-\includegraphics[width=\textwidth]{shell.png}
+\includegraphics[width=\textwidth]{shell2.png}
 \caption{The \Mbrace{} Shell integrated with Visual Studio.}
 \end{figure}
 
@@ -1358,11 +1357,13 @@ In this segment we offer some additional information on cloud workflows that rel
 
 \subsubsection*{Quotations \& the Cloud Attribute}
 
-The primary function of the \mbrace{} client stack is traversing cloud workflows for dependencies,
-then gathering the corresponding \dotnet{} library files before everything is uploaded to the cloud
-for execution. This dependency traversal is achieved with the help of \fsharp{} code quotations.
+A primary function of the \mbrace{} client is statically traversing cloud workflows 
+for library dependencies, extracting metadata to be used for debugging purposes,
+as well as detecting and emitting warnings for potentially invalid patterns. 
+This static traversal is in part achieved through the help of \fsharp{} code quotations.
+Code quotations are an excellent resource for metadata and as such, they are utilized by \mbrace{}.
 
-As demonstrated earlier, cloud computations in \mbrace{} need to be initialized like so:
+As demonstrated earlier, cloud computations in \mbrace{} are initialized like so:
 \begin{lstlisting}
 let proc = runtime.CreateProcess <@ cloud { return 1 + 1 } @>
 \end{lstlisting}
@@ -1372,13 +1373,14 @@ A peculiar feature of this syntax is that cloud blocks are delimited by \texttt{
 \footnote{\fsharp{} Code Quotations, \samehref{http://msdn.microsoft.com/en-us/library/dd233212.aspx}}.
 Any \fsharp{} expression enclosed in these symbols will yield a
 typed \emph{syntax tree} of the given expression, also known as its \emph{quotation}.
-The quotation expression \texttt{<@ 1 + 1 @>} has type \texttt{Expr<int>}, meaning that it is a syntax 
-tree which, if evaluated, will yield a result of type \texttt{int}.
+The quotation expression \texttt{<@ 1 + 1 @>} has type \texttt{Expr<int>}, 
+meaning that it is a syntax tree which, if evaluated, 
+will yield a result of type \texttt{int}.
 
 The \texttt{CreateProcess} method in \mbrace{} has type signature
 \centertt{Expr<Cloud<\uq{}T>> -> Process<\uq{}T>}
 which means that all executed cloud blocks need to be quoted.
-This does not mean that all cloud computations have to be enclosed in quotation symbols:
+This does not mean that all dependent workflows have to be enclosed in quotation symbols:
 only the top-level expression need be so:
 \begin{lstlisting}
 [<Cloud>]
@@ -1387,15 +1389,15 @@ let test () = cloud { return 1 }
 runtime.Run <@ test () @>
 \end{lstlisting}
 
-Despite this, all nested calls to cloud workflows need to be affixed with a \texttt{[<Cloud>]}
-attribute. Failing to do so will result in a runtime error being raised.
+Despite this, all nested calls to cloud workflows should be affixed with a \texttt{[<Cloud>]}
+attribute. Failing to do so will result in warning messages being raised.
 The \texttt{CloudAttribute} is just an abbreviation of the \texttt{ReflectedDefinitionAttribute}%
 \footnote{See, \samehref{http://msdn.microsoft.com/en-us/library/ee353643.aspx}}
 provided by \fsharp{}. Adding this to a declaration makes the \fsharp{} compiler generate a 
 reflected quotation to the tagged code.
 
-It should be noted that the \texttt{Cloud} attribute is not mandatory for \fsharp{} declarations that
-are not cloud workflows. For example, the following code is perfectly valid:
+It should be noted that the \texttt{Cloud} attribute is not needed for \fsharp{} declarations 
+that are not cloud workflows. For example, the following code is perfectly valid:
 \begin{lstlisting}
 let f x = x + 1
 
@@ -1403,17 +1405,13 @@ let f x = x + 1
 let g () = cloud { return f 41 }
 \end{lstlisting}
 
-Code quotations are an excellent resource for metadata and as such, they are mandatory
-in cloud workflows. Among others, they are utilized for extracting library dependencies,
-variable names, nesting patterns, etc.
-
 \subsubsection*{The \TitularMbrace{} Shell}
 
-The \mbrace{} shell is an adapted version of the open source \fsharp{} interactive.
-It allows for ad hoc declaration of cloud workflows directly from the REPL, that
-can then be submitted to the cloud for execution. This is made possible through
-a custom mechanism that compiles accumulated REPL interactions into static assemblies,
-which can then be sent to remote machines for execution.
+The \mbrace{} shell is a cloud development facility that is based on \fsharp{} interactive.
+It permits ad hoc declaration, deployment and debugging of cloud workflows directly from the REPL. 
+This is made possible through a Vagrant%
+\footnote{\samehref{http://nessos.github.io/Vagrant}}
+, a general purpose code distribution library for \dotnet{}.
 \begin{verbatim}
    > [<Cloud>] let f x = cloud { return 2 * x } ;;
 
@@ -1473,8 +1471,8 @@ declarations:
 let getSize (data : byte []) = cloud { return data.Length }
 
 let run () = 
-    let data = System.IO.File.ReadAllBytes "/Users/eirik/Desktop/1.dat" in
-    runtime.Run <@ getSize data  @>
+	let data = System.IO.File.ReadAllBytes "/Users/eirik/Desktop/1.dat" in
+	runtime.Run <@ getSize data  @>
 \end{lstlisting}
 
 An important exception to the above behaviour is the \mbrace{} shell. The shell has the 
@@ -1488,12 +1486,12 @@ that involves code erasure of value initializers in the assemblies compiled by t
 \noindent Consider the following snippet:
 \begin{lstlisting}
 cloud {
-    let http = new System.Net.WebClient()
-    let download url = cloud { return http.DownloadString url }
-    return! 
-        Cloud.Parallel <| 
-            Array.map download 
-                [| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
+	let http = new System.Net.WebClient()
+	let download url = cloud { return http.DownloadString url }
+	return! 
+		Cloud.Parallel <| 
+			Array.map download 
+				[| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
 }
 \end{lstlisting}
 This workflow is clearly wrong, since it demands the distribution of an evidently
@@ -1510,26 +1508,26 @@ The answer is to encapsulate locally scoped objects in an execution context
 that enforces local semantics. This can be done using native \fsharp{} code:
 \begin{lstlisting}
 let download (url : string) =
-    use http = new System.Net.WebClient()
-    http.DownloadString url
+	use http = new System.Net.WebClient()
+	http.DownloadString url
 
 cloud {
-    return! Cloud.Parallel <|
-        Array.map (fun u -> cloud { return download u })
-            [| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
+	return! Cloud.Parallel <|
+		Array.map (fun u -> cloud { return download u })
+			[| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
 }
 \end{lstlisting}
 or by embedding \texttt{async} workflows:
 \begin{lstlisting}
 let downloadAsync (url : string) = async {
-    use http = new System.Net.WebClient()
-    return! http.DownloadStringAsync url
+	use http = new System.Net.WebClient()
+	return! http.DownloadStringAsync url
 }
 
 cloud {
-    return! Cloud.Parallel <|
-        Array.map (Cloud.OfAsync << downloadAsync)
-            [| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
+	return! Cloud.Parallel <|
+		Array.map (Cloud.OfAsync << downloadAsync)
+			[| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
 } 
 \end{lstlisting}
 
@@ -1551,6 +1549,30 @@ the execution model of the \mbrace{} runtime is more closely emulated.
 For more information, please refer to the \href{peculiarities}{``Semantic Peculiarities''}
 segment of section \ref{sec:workflows}.
 
+\subsection{Store Providers}
+
+Every \mbrace{} runtime requires a storage backend in order for it to function.
+This enables distributed storage primitives like cloud refs and cloud files and
+is used by internally the runtime for logging purposes.
+The \mbrace{} runtime does not provide its own distributed storage implementation, 
+rather it relies on pluggable storage providers which can be user defined.
+\begin{lstlisting}
+open Nessos.MBrace.Store
+
+let fsStore = FileSystemStore.Create(@"\\FileServer\path\to\mbrace")
+let sqlStore = SqlServerStore.Create(connectionString = "connectionString")
+
+open Nessos.MBrace.Azure
+
+let azureStore = AzureStore.Create(accountName = "name", accountKey = "key")
+\end{lstlisting}
+The default store implementation of a client session can be specified by setting
+\begin{lstlisting}
+MBraceSettings.DefaultStore <- azureStore
+\end{lstlisting}
+User-defined storage providers can be created by implementing the \texttt{ICloudStore} interface. 
+For more information, please consult the \mbrace{} API reference.
+
 \subsection{Managing \TitularMbrace{} Runtimes}
 
 The \mbrace{} runtime is a cluster of connected computers capable of orchestrating the execution
@@ -1566,11 +1588,11 @@ the server-side component of the framework. Every \mbrace{} daemon accepts conne
 \centertt{mbrace://hostname:port/}
 The \mbrace{} client can connect to a remote node by calling
 \begin{lstlisting}
-let node = Node("mbrace://hostname:2675")
+let node = Node.Connect("mbrace://hostname:2675")
 \end{lstlisting}
 or equivalently,
 \begin{lstlisting}
-let node = Node("hostname", 2675)
+let node = Node.Connect("hostname", 2675)
 \end{lstlisting}
 This will initialize an object of type \texttt{MBraceNode}. This object acts as a handle
 to the remote node. It can be used to perform a variety of operations like
@@ -1599,12 +1621,13 @@ node.GetLogs()
 An \mbrace{} runtime can be \emph{booted} once access to a collection of at least two nodes,
 all running within the same subnet, has been established. This can be done like so:
 \begin{lstlisting}
-let nodes = [ Node("host1", 2675) ; Node("host2", 2675) ; Node("host3", 2675) ]
+let nodes : Node list = [ node1 ; node2 ; node3 ]
 
-let runtime = MBraceRuntime.Boot nodes
+let runtime = MBraceRuntime.Boot(nodes, store = azureStore)
 \end{lstlisting}
-This will initialize an \mbrace{} cluster and will return a client handle of type
-\texttt{MbraceRuntime}. 
+This will initialize an \mbrace{} cluster that connects to a Windows Azure store endpoint.
+Once boot is completed, a handle of type \texttt{MbraceRuntime} will be returned.
+If no store is specified explicitly, the \texttt{MBraceSettings.DefaultStore} will be used.
 %
 To connect to an already booted \mbrace{} runtime, one needs simply write
 \begin{lstlisting}
@@ -1729,22 +1752,16 @@ Certain aspects of the \mbrace{} client can be configured by the user.
 This is done through the \texttt{MBraceSettings} fa\c{c}ade that contains an
 assortment of property getters and setters:
 \begin{itemize}
-\item The \texttt{MBraceSettings.ClientId} property returns a Guid that is
-associated with the current client instance. This is used internally by \mbrace{} to
-track client sessions and efficiently manage user assemblies.
-\item The \texttt{MBraceSettings.AssemblyCachePath} gets or sets the local system 
-path in which the client caches user generated assemblies.
-\item The boolean \texttt{MBraceSettings.ClientSideExpressionCheck} enables or 
-disables cloud workflow static checks on the client side. This feature is reserved
-for system debugging purposes.
-\item The \texttt{MBraceSettings.LocalCachePath} gets or sets the local system path
-in which items like cloud refs or cloud files are cached with the client.
+\item The \texttt{MBraceSettings.DefaultStore} gets or sets the default store provider
+used by this client session. Serves as the default store provider used in newly booted
+nodes and runtimes. Please refer to the runtime section of this document.
 \item The \texttt{MBraceSettings.MBracedExecutablePath} gets or sets the path to the
 local \texttt{mbraced} executable. This is used by the client to spawn local instances
 of \mbrace{} nodes.
-\item The \texttt{MBraceSettings.StoreProvider} gets or sets the global store provider
-in which the client connects to. Please refer to the runtime section of this document
-for further information. NB: this particular interface is subject to change.
+\item The \texttt{MBraceSettings.AssemblyCachePath} gets or sets the local system 
+path in which the client caches user generated assemblies.
+\item The \texttt{MBraceSettings.LocalCachePath} gets or sets the local system path
+in which items like cloud refs or cloud files are cached with the client.
 \end{itemize}
 %
 %
@@ -1823,7 +1840,7 @@ also possible.
 
 As mentioned earlier, the \mbrace{} daemon is the server-side application that
 bootstraps a machine-wide instance of the \mbrace{} framework. It is initialized by
-running the \texttt{mbraced.exe} executable, typically found in the binaries
+running the \texttt{mbraced.exe} executable, 4typically found in the binaries
 folder of every \mbrace{} installation. For instance, the command
 \begin{verbatim}
    $ mbraced.exe --hostname 127.0.0.1 --primary-port 2675 --detach
@@ -1854,6 +1871,8 @@ schema:
     <add key="log file" value="mbrace-log.txt"/>
     <!-- specify loglevel: info 0, warning 1, error 2-->
     <add key="log level" value="0"/>
+    <!-- permitted operation modes; None: 0, Slave: 1, Master: 2, All: 3 -->
+    <add key="permissions" value="3" />
     <!-- executable name of mbrace child process -->
     <add key="mbrace processdomain executable" value="mbrace.worker.exe"/>
   </appSettings>
@@ -1919,12 +1938,6 @@ Once the required \texttt{mbraced} instances have been deployed as desired,
 they can be reached from the client API as seen in section \ref{sec:client}
 using the \texttt{mbrace} connection string.
 
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "mbrace"
-%%% End: 
-
 %
 \appendix
 %
@@ -1952,9 +1965,9 @@ for data parallelism. This would allow building cloud workflows using simple
 LINQ-style queries:
 \begin{lstlisting}[language=CSharp]
 var result =  from c in Customers.AsCloudQueryExpr()
-              where c.City == "Athens"
-              orderby c.Name
-              select c.Name, c.City
+			  where c.City == "Athens"
+			  orderby c.Name
+			  select c.Name, c.City
 \end{lstlisting}
 CloudLinq can achieve excellent performance by taking advantage of LinqOptimizer%
 \footnote{\samehref{https://github.com/nessos/LinqOptimizer}}
@@ -1997,55 +2010,55 @@ to diverse developer cultures and data center infrastructures.
 
 \begin{thebibliography}{9}
 
-    \bibitem{map-reduce} J. Dean, S. Ghemawat. 
-        \emph{MapReduce: Simplified Data Processing on Large Clusters}, \\
-        OSDI '04, p. 137--150.
-        \samehref{http://www.usenix.org/events/osdi04/tech/dean.html}
+	\bibitem{map-reduce} J. Dean, S. Ghemawat. 
+		\emph{MapReduce: Simplified Data Processing on Large Clusters}, \\
+		OSDI '04, p. 137--150.
+		\samehref{http://www.usenix.org/events/osdi04/tech/dean.html}
 
-    \bibitem{cloud-haskell} J. Epstein, A.P. Black, S.P. Jones.
-        \emph{Towards Haskell in the Cloud},\\
-        \samehref{http://research.microsoft.com/en-us/um/people/simonpj/papers/parallel/remote.pdf}
-        
-    \bibitem{HdpH} P. Maier and P. Trinder.
-        \emph{Implementing a High-level Distributed-Memory Parallel Haskell in Haskell},\\
-        \samehref{http://www.macs.hw.ac.uk/~trinder/papers/HdpH.pdf}
-        
-    \bibitem{par-monad} S. Marlow, R. Newton, S.P. Jones.
-        \emph{A monad for deterministic parallelism},\\
-        \samehref{http://research.microsoft.com/en-us/um/people/simonpj/papers/parallel/monad-par.pdf}
-        
-    \bibitem{ShmStreaming} L. Lai, J. Zhou, L. Zheng, H. Li, Y. Lu, F. Tang, M. Guo.
-        \emph{ShmStreaming: A Shared Memory Approach for Improving Hadoop Streaming Performance},\\
-        \samehref{http://www.computer.org/csdl/proceedings/aina/2013/4953/00/4953a137-abs.html}
-            
-    \bibitem{HaLoop} Y. Bu, B. Howe, M. Balazinska, M. D. Ernst.
-        \emph{HaLoop: Efficient Iterative Data Processing on Large Clusters},\\
-        \samehref{http://dl.acm.org/citation.cfm?id=1920881}
-        
-    \bibitem{IncMR} C. Yan, X. Yang, Z. Yu, M. Li, X. Li.
-        \emph{IncMR: Incremental Data Processing based on MapReduce},\\
-        \samehref{http://www.bibsonomy.org/bibtex/29cb17af55bcdf7a99bfd4e0e62bccf73/dblp}
-    
-    \bibitem{fsharp-compexpr} T. Petricek, D. Syme.
-        \emph{Syntax Matters: Writing abstract computations in \fsharp},\\
-        Pre-proceedings of TFP, 2012.\\
-        \href{http://www.cl.cam.ac.uk/~tp322/drafts/notations.pdf}
-            {\texttt{http://www.cl.cam.ac.uk/{\textasciitilde}tp322/drafts/notations.pdf}}
+	\bibitem{cloud-haskell} J. Epstein, A.P. Black, S.P. Jones.
+		\emph{Towards Haskell in the Cloud},\\
+		\samehref{http://research.microsoft.com/en-us/um/people/simonpj/papers/parallel/remote.pdf}
+		
+	\bibitem{HdpH} P. Maier and P. Trinder.
+		\emph{Implementing a High-level Distributed-Memory Parallel Haskell in Haskell},\\
+		\samehref{http://www.macs.hw.ac.uk/~trinder/papers/HdpH.pdf}
+		
+	\bibitem{par-monad} S. Marlow, R. Newton, S.P. Jones.
+		\emph{A monad for deterministic parallelism},\\
+		\samehref{http://research.microsoft.com/en-us/um/people/simonpj/papers/parallel/monad-par.pdf}
+		
+	\bibitem{ShmStreaming} L. Lai, J. Zhou, L. Zheng, H. Li, Y. Lu, F. Tang, M. Guo.
+		\emph{ShmStreaming: A Shared Memory Approach for Improving Hadoop Streaming Performance},\\
+		\samehref{http://www.computer.org/csdl/proceedings/aina/2013/4953/00/4953a137-abs.html}
+			
+	\bibitem{HaLoop} Y. Bu, B. Howe, M. Balazinska, M. D. Ernst.
+		\emph{HaLoop: Efficient Iterative Data Processing on Large Clusters},\\
+		\samehref{http://dl.acm.org/citation.cfm?id=1920881}
+		
+	\bibitem{IncMR} C. Yan, X. Yang, Z. Yu, M. Li, X. Li.
+		\emph{IncMR: Incremental Data Processing based on MapReduce},\\
+		\samehref{http://www.bibsonomy.org/bibtex/29cb17af55bcdf7a99bfd4e0e62bccf73/dblp}
+	
+	\bibitem{fsharp-compexpr} T. Petricek, D. Syme.
+		\emph{Syntax Matters: Writing abstract computations in \fsharp},\\
+		Pre-proceedings of TFP, 2012.\\
+		\href{http://www.cl.cam.ac.uk/~tp322/drafts/notations.pdf}
+			{\texttt{http://www.cl.cam.ac.uk/{\textasciitilde}tp322/drafts/notations.pdf}}
 
-    \bibitem{fsharp-async} D. Syme, T. Petricek T, D. Lomov.
-        \emph{The \fsharp{} Asynchronous Programming Model}. \\ 
-        \samehref{http://research.microsoft.com/apps/pubs/default.aspx?id=147194}.
-        
-    \bibitem{data-types-ala-carte} 
-        W. Swierstra. \emph{Data types \`{a} la carte}, Journal of Functional Programming, \\ 	   
-        Cambridge University Press, 2008. \\
-        \href{http://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf}
-            {\texttt{http://www.cs.ru.nl/{\textasciitilde}W.Swierstra/%
-                        Publications/DataTypesALaCarte.pdf}}
-        
-    \bibitem{scala-trampolines}
-        R.O. Bjarnarson. \emph{Stackless Scala With Free Monads}. Scala Days 2012.\\
-        \samehref{http://blog.higher-order.com/assets/trampolines.pdf}
+	\bibitem{fsharp-async} D. Syme, T. Petricek T, D. Lomov.
+		\emph{The \fsharp{} Asynchronous Programming Model}. \\ 
+		\samehref{http://research.microsoft.com/apps/pubs/default.aspx?id=147194}.
+		
+	\bibitem{data-types-ala-carte} 
+		W. Swierstra. \emph{Data types \`{a} la carte}, Journal of Functional Programming, \\ 	   
+		Cambridge University Press, 2008. \\
+		\href{http://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf}
+			{\texttt{http://www.cs.ru.nl/{\textasciitilde}W.Swierstra/%
+						Publications/DataTypesALaCarte.pdf}}
+		
+	\bibitem{scala-trampolines}
+		R.O. Bjarnarson. \emph{Stackless Scala With Free Monads}. Scala Days 2012.\\
+		\samehref{http://blog.higher-order.com/assets/trampolines.pdf}
 
 \end{thebibliography}
 
