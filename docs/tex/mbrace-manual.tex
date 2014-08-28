@@ -144,10 +144,10 @@ with the help of primitive combinators that operate on such cloud workflows.
 %
 \begin{lstlisting}
 cloud {
-	let job1() = cloud { return 1 }
-	let job2() = cloud { return 2 }
-	let! [| result1 ; result2 |] = Cloud.Parallel [| job1() ; job2() |]	
-	return result1 + result2
+    let job1() = cloud { return 1 }
+    let job2() = cloud { return 2 }
+    let! [| result1 ; result2 |] = Cloud.Parallel [| job1() ; job2() |]	
+    return result1 + result2
 }
 \end{lstlisting}
 The above \fsharp{} snippet defines two small cloud workflows, \texttt{job1} and
@@ -218,10 +218,10 @@ of \dotnet{} enumerables. In the following example, an infinite odd number gener
 defined:
 \begin{lstlisting}
 seq {
-	let i = ref 0
-	while true do
-		yield 1 + 2 * i
-		incr i
+    let i = ref 0
+    while true do
+        yield 1 + 2 * i
+        incr i
 }
 \end{lstlisting}
 The \texttt{yield} keyword has semantics identical to the \csharp{} keyword of the same 
@@ -291,10 +291,10 @@ that executes the given inputs in parallel, following a fork-join pattern:
 let workflow = async {
     let! results = 
         Async.Parallel 
-			[ 
-				download "http://www.m-brace.net" ;
-				download "http://www.nessos.gr" 
-			]
+            [ 
+                download "http://www.m-brace.net" ;
+                download "http://www.nessos.gr" 
+            ]
  
     return Seq.concat results |> Seq.length
 }
@@ -325,14 +325,14 @@ Building on our previous declaration of the \texttt{download} async workflow, we
 \begin{lstlisting}
 [<Cloud>]
 let lineCount() = 
-	cloud {
-    	let jobs : Cloud<string []> [] = 
-        	Array.map (download >> Cloud.OfAsync) 
-				[| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
+    cloud {
+        let jobs : Cloud<string []> [] = 
+            Array.map (download >> Cloud.OfAsync) 
+                [| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
 
-	    let! results = Cloud.Parallel jobs
-    	return Array.concat results |> Array.length
-	}
+        let! results = Cloud.Parallel jobs
+        return Array.concat results |> Array.length
+    }
 \end{lstlisting}
 This is a direct adaptation of the \texttt{async} snippet presented above.
 The main differences between this and \texttt{async} 
@@ -360,17 +360,17 @@ For example, we could define a distributed variant of the classic filter combina
 [<Cloud>]
 let filter (f : 'T -> bool) (xs : 'T []) =
     cloud {
-		// a nested subexpression that performs
-		// the checking on a single element
-		let pick (x : 'T) =
-			cloud {
-				if f x then return Some x
-				else
-					return None
-			}
+        // a nested subexpression that performs
+        // the checking on a single element
+        let pick (x : 'T) =
+            cloud {
+                if f x then return Some x
+                else
+                    return None
+            }
 
         let! results = Cloud.Parallel <| Array.map pick xs
-		return Array.choose id results
+        return Array.choose id results
     }
 \end{lstlisting}
 %
@@ -457,7 +457,7 @@ A simplistic variant can be declared as follows:
 \begin{lstlisting}
 [<Cloud>]
 let rec mapReduce (map: 'T -> Cloud<'R>) 
-				    (reduce: 'R -> 'R -> Cloud<'R>) 
+                    (reduce: 'R -> 'R -> Cloud<'R>) 
                     (identity: 'R) (input: 'T list) =
     cloud {
         match input with
@@ -467,9 +467,9 @@ let rec mapReduce (map: 'T -> Cloud<'R>)
             let left, right = List.split input
  
             let! r1, r2 =
-            	(mapReduce map reduce identity left)
-            		<||>
-	            (mapReduce map reduce identity right)
+                (mapReduce map reduce identity left)
+                    <||>
+                (mapReduce map reduce identity right)
  
             return! reduce r1 r2
     }
@@ -619,7 +619,7 @@ one could define the extension method
 type Cloud with
     [<Cloud>]
     static member Sleep interval = 
-    	Cloud.OfAsync (Async.Sleep interval)
+        Cloud.OfAsync (Async.Sleep interval)
 \end{lstlisting}
 which can then be used in the expected fashion
 \begin{lstlisting}
@@ -677,7 +677,7 @@ let mapReduce   (mapF : 'T -> Cloud<'R>)
             | _, _, [x] -> return! mapF x
             // exhausted depth in distributed context, switch to local parallelism
             | Distributed, 0, _ ->
-            	let depth = computeDepth Environment.ProcessorCount
+                let depth = computeDepth Environment.ProcessorCount
                 return! local <| traverse LocalParallel depth input
             // exhausted depth in local parallelism context, switch to sequential
             | LocalParallel, 0,_ -> return! traverse Sequential depth input
@@ -707,7 +707,7 @@ let mapReduce   (mapF : 'T -> Cloud<'R>)
         }
 
     cloud {
-    	// probe runtime for number of worker nodes
+        // probe runtime for number of worker nodes
         let! workers = Cloud.GetWorkerCount()
         return! traverse Distributed (computeDepth workers) input
     }
@@ -766,9 +766,9 @@ An interesting aspect of cloud refs is the ability to define large, distributed
 data structures. For example, one could define a distributed binary tree like so:
 \begin{lstlisting}
 type CloudTree<'T> = 
-	| Empty
+    | Empty
     | Leaf of 'T
-	| Branch of TreeRef<'T> * TreeRef<'T>
+    | Branch of TreeRef<'T> * TreeRef<'T>
 
 and TreeRef<'T> = ICloudRef<CloudTree<'T>>
 \end{lstlisting}
@@ -851,9 +851,9 @@ let race () = cloud {
     let! mr = MutableCloudRef.New(0)
  
     let! _ = 
-    	MutableCloudRef.Force(mr,1)
-    		<||> 
-    	MutableCloudRef.Force(mr,2)
+        MutableCloudRef.Force(mr,1)
+            <||> 
+        MutableCloudRef.Force(mr,2)
  
     return! MutableCloudRef.Read(mr)
 }
@@ -965,7 +965,7 @@ that allows for scoped introduction of disposable resources,
 apply to \texttt{ICloudDisposable} entities. For instance,
 \begin{lstlisting}
 cloud {
-	try
+    try
         use! cref = CloudRef.New [|1 .. 10000000|]
 
         let doStuff () = cloud {
@@ -977,14 +977,14 @@ cloud {
 
         return ()
 
-		// scope of cloud ref ends here, 
-		// workflow implicitly disposes it
-	with e ->
-		do! Cloud.Logf "error: %A" e
-		
-	// at this point, the cloud ref will have 
-	// been disposed of regardless of the outcome
-	return ()
+        // scope of cloud ref ends here, 
+        // workflow implicitly disposes it
+    with e ->
+        do! Cloud.Logf "error: %A" e
+        
+    // at this point, the cloud ref will have 
+    // been disposed of regardless of the outcome
+    return ()
 }
 \end{lstlisting}
 Initializing a cloud ref with the \texttt{use} keyword provides the assurance 
@@ -1017,10 +1017,10 @@ runtime cluster. It should be noted that the returned result differs when
 interpreted under \texttt{local} semantics:
 \begin{lstlisting}
 cloud {
-	// gets the number of worker nodes in the cluster
-	let! workers = Cloud.GetWorkerCount ()
-	// gets the number of logical cores in the currently executing machine
-	let! cores = Cloud.ToLocal <| Cloud.GetWorkerCount () in ()
+    // gets the number of worker nodes in the cluster
+    let! workers = Cloud.GetWorkerCount ()
+    // gets the number of logical cores in the currently executing machine
+    let! cores = Cloud.ToLocal <| Cloud.GetWorkerCount () in ()
 }
 \end{lstlisting}
 
@@ -1042,11 +1042,11 @@ The \texttt{Cloud.GetTaskId} primitive returns the \emph{task id} of the current
 execution context and can be thought of as analogous to the CLR thread id.
 \begin{lstlisting}
 cloud {
-	let! parentId = Cloud.GetTaskId ()
-	let! childId, childId' = Cloud.GetTaskId () <||> Cloud.GetTaskId ()
-	
-	// should return distinct task id's
-	return (parentId, childId, childId')
+    let! parentId = Cloud.GetTaskId ()
+    let! childId, childId' = Cloud.GetTaskId () <||> Cloud.GetTaskId ()
+    
+    // should return distinct task id's
+    return (parentId, childId, childId')
 }
 \end{lstlisting}
 
@@ -1284,7 +1284,7 @@ snippet:
 cloud {
     let r = ref 0
     let! _ = local <| 
-    	Cloud.Parallel [| for i in 1 .. 1000 -> cloud { incr r } |]
+        Cloud.Parallel [| for i in 1 .. 1000 -> cloud { incr r } |]
 
     return !r
 }
@@ -1295,8 +1295,8 @@ behaviour of \texttt{Cloud.OfAsync} however, which preserves the original \textt
 semantics:
 \begin{lstlisting}
 cloud {
-	// still a race condition!
-	return! Cloud.OfAsync <| race ()
+    // still a race condition!
+    return! Cloud.OfAsync <| race ()
 }
 \end{lstlisting}
 
@@ -1316,13 +1316,13 @@ following functionalities:
 \ref{sec:workflows}.
 \item An interface for managing and interacting with the \mbrace{} runtime, 
 that can be roughly divided in the following categories:
-	\begin{itemize}
-		\item Runtime administration functionality, that includes cluster management
-		operations such as initialization, halting, health monitoring and
-		real-time elastic node management.
-		\item Cloud process management functionality, that includes submission of
-		computations, process monitoring, debugging and storage access.
-	\end{itemize}
+    \begin{itemize}
+        \item Runtime administration functionality, that includes cluster management
+        operations such as initialization, halting, health monitoring and
+        real-time elastic node management.
+        \item Cloud process management functionality, that includes submission of
+        computations, process monitoring, debugging and storage access.
+    \end{itemize}
 
 %\item The \mbrace{} shell, which enables interactive declaration of cloud computations
 %	and runtime administration.
@@ -1473,8 +1473,8 @@ declarations:
 let getSize (data : byte []) = cloud { return data.Length }
 
 let run () = 
-	let data = System.IO.File.ReadAllBytes "/Users/eirik/Desktop/1.dat" in
-	runtime.Run <@ getSize data  @>
+    let data = System.IO.File.ReadAllBytes "/Users/eirik/Desktop/1.dat" in
+    runtime.Run <@ getSize data  @>
 \end{lstlisting}
 
 An important exception to the above behaviour is the \mbrace{} shell. The shell has the 
@@ -1488,12 +1488,12 @@ that involves code erasure of value initializers in the assemblies compiled by t
 \noindent Consider the following snippet:
 \begin{lstlisting}
 cloud {
-	let http = new System.Net.WebClient()
-	let download url = cloud { return http.DownloadString url }
-	return! 
-		Cloud.Parallel <| 
-			Array.map download 
-				[| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
+    let http = new System.Net.WebClient()
+    let download url = cloud { return http.DownloadString url }
+    return! 
+        Cloud.Parallel <| 
+            Array.map download 
+                [| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
 }
 \end{lstlisting}
 This workflow is clearly wrong, since it demands the distribution of an evidently
@@ -1510,26 +1510,26 @@ The answer is to encapsulate locally scoped objects in an execution context
 that enforces local semantics. This can be done using native \fsharp{} code:
 \begin{lstlisting}
 let download (url : string) =
-	use http = new System.Net.WebClient()
-	http.DownloadString url
+    use http = new System.Net.WebClient()
+    http.DownloadString url
 
 cloud {
-	return! Cloud.Parallel <|
-		Array.map (fun u -> cloud { return download u })
-			[| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
+    return! Cloud.Parallel <|
+        Array.map (fun u -> cloud { return download u })
+            [| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
 }
 \end{lstlisting}
 or by embedding \texttt{async} workflows:
 \begin{lstlisting}
 let downloadAsync (url : string) = async {
-	use http = new System.Net.WebClient()
-	return! http.DownloadStringAsync url
+    use http = new System.Net.WebClient()
+    return! http.DownloadStringAsync url
 }
 
 cloud {
-	return! Cloud.Parallel <|
-		Array.map (Cloud.OfAsync << downloadAsync)
-			[| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
+    return! Cloud.Parallel <|
+        Array.map (Cloud.OfAsync << downloadAsync)
+            [| "http://www.m-brace.net" ; "http://www.nessos.gr" |]
 } 
 \end{lstlisting}
 
@@ -1952,9 +1952,9 @@ for data parallelism. This would allow building cloud workflows using simple
 LINQ-style queries:
 \begin{lstlisting}[language=CSharp]
 var result =  from c in Customers.AsCloudQueryExpr()
-			  where c.City == "Athens"
-			  orderby c.Name
-			  select c.Name, c.City
+              where c.City == "Athens"
+              orderby c.Name
+              select c.Name, c.City
 \end{lstlisting}
 CloudLinq can achieve excellent performance by taking advantage of LinqOptimizer%
 \footnote{\samehref{https://github.com/nessos/LinqOptimizer}}
@@ -1997,55 +1997,55 @@ to diverse developer cultures and data center infrastructures.
 
 \begin{thebibliography}{9}
 
-	\bibitem{map-reduce} J. Dean, S. Ghemawat. 
-		\emph{MapReduce: Simplified Data Processing on Large Clusters}, \\
-		OSDI '04, p. 137--150.
-		\samehref{http://www.usenix.org/events/osdi04/tech/dean.html}
+    \bibitem{map-reduce} J. Dean, S. Ghemawat. 
+        \emph{MapReduce: Simplified Data Processing on Large Clusters}, \\
+        OSDI '04, p. 137--150.
+        \samehref{http://www.usenix.org/events/osdi04/tech/dean.html}
 
-	\bibitem{cloud-haskell} J. Epstein, A.P. Black, S.P. Jones.
-		\emph{Towards Haskell in the Cloud},\\
-		\samehref{http://research.microsoft.com/en-us/um/people/simonpj/papers/parallel/remote.pdf}
-		
-	\bibitem{HdpH} P. Maier and P. Trinder.
-		\emph{Implementing a High-level Distributed-Memory Parallel Haskell in Haskell},\\
-		\samehref{http://www.macs.hw.ac.uk/~trinder/papers/HdpH.pdf}
-		
-	\bibitem{par-monad} S. Marlow, R. Newton, S.P. Jones.
-		\emph{A monad for deterministic parallelism},\\
-		\samehref{http://research.microsoft.com/en-us/um/people/simonpj/papers/parallel/monad-par.pdf}
-		
-	\bibitem{ShmStreaming} L. Lai, J. Zhou, L. Zheng, H. Li, Y. Lu, F. Tang, M. Guo.
-		\emph{ShmStreaming: A Shared Memory Approach for Improving Hadoop Streaming Performance},\\
-		\samehref{http://www.computer.org/csdl/proceedings/aina/2013/4953/00/4953a137-abs.html}
-			
-	\bibitem{HaLoop} Y. Bu, B. Howe, M. Balazinska, M. D. Ernst.
-		\emph{HaLoop: Efficient Iterative Data Processing on Large Clusters},\\
-		\samehref{http://dl.acm.org/citation.cfm?id=1920881}
-		
-	\bibitem{IncMR} C. Yan, X. Yang, Z. Yu, M. Li, X. Li.
-		\emph{IncMR: Incremental Data Processing based on MapReduce},\\
-		\samehref{http://www.bibsonomy.org/bibtex/29cb17af55bcdf7a99bfd4e0e62bccf73/dblp}
-	
-	\bibitem{fsharp-compexpr} T. Petricek, D. Syme.
-		\emph{Syntax Matters: Writing abstract computations in \fsharp},\\
-		Pre-proceedings of TFP, 2012.\\
-		\href{http://www.cl.cam.ac.uk/~tp322/drafts/notations.pdf}
-			{\texttt{http://www.cl.cam.ac.uk/{\textasciitilde}tp322/drafts/notations.pdf}}
+    \bibitem{cloud-haskell} J. Epstein, A.P. Black, S.P. Jones.
+        \emph{Towards Haskell in the Cloud},\\
+        \samehref{http://research.microsoft.com/en-us/um/people/simonpj/papers/parallel/remote.pdf}
+        
+    \bibitem{HdpH} P. Maier and P. Trinder.
+        \emph{Implementing a High-level Distributed-Memory Parallel Haskell in Haskell},\\
+        \samehref{http://www.macs.hw.ac.uk/~trinder/papers/HdpH.pdf}
+        
+    \bibitem{par-monad} S. Marlow, R. Newton, S.P. Jones.
+        \emph{A monad for deterministic parallelism},\\
+        \samehref{http://research.microsoft.com/en-us/um/people/simonpj/papers/parallel/monad-par.pdf}
+        
+    \bibitem{ShmStreaming} L. Lai, J. Zhou, L. Zheng, H. Li, Y. Lu, F. Tang, M. Guo.
+        \emph{ShmStreaming: A Shared Memory Approach for Improving Hadoop Streaming Performance},\\
+        \samehref{http://www.computer.org/csdl/proceedings/aina/2013/4953/00/4953a137-abs.html}
+            
+    \bibitem{HaLoop} Y. Bu, B. Howe, M. Balazinska, M. D. Ernst.
+        \emph{HaLoop: Efficient Iterative Data Processing on Large Clusters},\\
+        \samehref{http://dl.acm.org/citation.cfm?id=1920881}
+        
+    \bibitem{IncMR} C. Yan, X. Yang, Z. Yu, M. Li, X. Li.
+        \emph{IncMR: Incremental Data Processing based on MapReduce},\\
+        \samehref{http://www.bibsonomy.org/bibtex/29cb17af55bcdf7a99bfd4e0e62bccf73/dblp}
+    
+    \bibitem{fsharp-compexpr} T. Petricek, D. Syme.
+        \emph{Syntax Matters: Writing abstract computations in \fsharp},\\
+        Pre-proceedings of TFP, 2012.\\
+        \href{http://www.cl.cam.ac.uk/~tp322/drafts/notations.pdf}
+            {\texttt{http://www.cl.cam.ac.uk/{\textasciitilde}tp322/drafts/notations.pdf}}
 
-	\bibitem{fsharp-async} D. Syme, T. Petricek T, D. Lomov.
-		\emph{The \fsharp{} Asynchronous Programming Model}. \\ 
-		\samehref{http://research.microsoft.com/apps/pubs/default.aspx?id=147194}.
-		
-	\bibitem{data-types-ala-carte} 
-		W. Swierstra. \emph{Data types \`{a} la carte}, Journal of Functional Programming, \\ 	   
-		Cambridge University Press, 2008. \\
-		\href{http://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf}
-			{\texttt{http://www.cs.ru.nl/{\textasciitilde}W.Swierstra/%
-						Publications/DataTypesALaCarte.pdf}}
-		
-	\bibitem{scala-trampolines}
-		R.O. Bjarnarson. \emph{Stackless Scala With Free Monads}. Scala Days 2012.\\
-		\samehref{http://blog.higher-order.com/assets/trampolines.pdf}
+    \bibitem{fsharp-async} D. Syme, T. Petricek T, D. Lomov.
+        \emph{The \fsharp{} Asynchronous Programming Model}. \\ 
+        \samehref{http://research.microsoft.com/apps/pubs/default.aspx?id=147194}.
+        
+    \bibitem{data-types-ala-carte} 
+        W. Swierstra. \emph{Data types \`{a} la carte}, Journal of Functional Programming, \\ 	   
+        Cambridge University Press, 2008. \\
+        \href{http://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf}
+            {\texttt{http://www.cs.ru.nl/{\textasciitilde}W.Swierstra/%
+                        Publications/DataTypesALaCarte.pdf}}
+        
+    \bibitem{scala-trampolines}
+        R.O. Bjarnarson. \emph{Stackless Scala With Free Monads}. Scala Days 2012.\\
+        \samehref{http://blog.higher-order.com/assets/trampolines.pdf}
 
 \end{thebibliography}
 

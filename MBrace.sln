@@ -121,11 +121,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MBrace.Core.Tests", "tests\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tex", "tex", "{908EB26E-3FC1-4EF2-9C6D-0F710607EB57}"
 	ProjectSection(SolutionItems) = preProject
-		docs\tex\0-introduction.tex = docs\tex\0-introduction.tex
-		docs\tex\1-workflows.tex = docs\tex\1-workflows.tex
-		docs\tex\2-client.tex = docs\tex\2-client.tex
-		docs\tex\3-runtime.tex = docs\tex\3-runtime.tex
-		docs\tex\appendix.tex = docs\tex\appendix.tex
 		docs\tex\Makefile = docs\tex\Makefile
 		docs\tex\mbrace-full.png = docs\tex\mbrace-full.png
 		docs\tex\mbrace-manual.tex = docs\tex\mbrace-manual.tex
@@ -133,7 +128,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tex", "tex", "{908EB26E-3FC
 		docs\tex\preamble.tex = docs\tex\preamble.tex
 		docs\tex\runtime.png = docs\tex\runtime.png
 		docs\tex\shell.png = docs\tex\shell.png
-		docs\tex\thebibliography.tex = docs\tex\thebibliography.tex
 	EndProjectSection
 EndProject
 Global
