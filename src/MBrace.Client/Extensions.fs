@@ -21,6 +21,9 @@
     /// Cloud Process Identifier.
     type ProcessId = Nessos.MBrace.CloudExpr.ProcessId
 
+    /// LogLevel for mbrace system logs
+    type LogLevel = Nessos.MBrace.Runtime.Logging.LogLevel
+
     /// Compiled cloud computation package with metadata.
     type CloudComputation<'T> = Nessos.MBrace.Runtime.Compiler.CloudComputation<'T>
 
