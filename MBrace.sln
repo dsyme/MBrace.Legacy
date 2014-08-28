@@ -128,6 +128,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tex", "tex", "{908EB26E-3FC
 		docs\tex\preamble.tex = docs\tex\preamble.tex
 		docs\tex\runtime.png = docs\tex\runtime.png
 		docs\tex\shell.png = docs\tex\shell.png
+		docs\tex\shell2.png = docs\tex\shell2.png
 	EndProjectSection
 EndProject
 Global
