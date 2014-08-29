@@ -263,7 +263,7 @@ testing purposes.</p>
 <div class="tip" id="fs8">namespace System.IO</div>
 <div class="tip" id="fs9">type Path =<br />&#160;&#160;static val DirectorySeparatorChar : char<br />&#160;&#160;static val AltDirectorySeparatorChar : char<br />&#160;&#160;static val VolumeSeparatorChar : char<br />&#160;&#160;static val InvalidPathChars : char[]<br />&#160;&#160;static val PathSeparator : char<br />&#160;&#160;static member ChangeExtension : path:string * extension:string -&gt; string<br />&#160;&#160;static member Combine : params paths:string[] -&gt; string + 3 overloads<br />&#160;&#160;static member GetDirectoryName : path:string -&gt; string<br />&#160;&#160;static member GetExtension : path:string -&gt; string<br />&#160;&#160;static member GetFileName : path:string -&gt; string<br />&#160;&#160;...<br /><br />Full name: System.IO.Path</div>
 <div class="tip" id="fs10">System.IO.Path.Combine(params paths: string []) : string<br />System.IO.Path.Combine(path1: string, path2: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string, path4: string) : string</div>
-<div class="tip" id="fs11">val nodes : MBraceNode list<br /><br />Full name: Runtime.nodes</div>
+<div class="tip" id="fs11">val nodes : MBraceNode list<br /><br />Full name: Runtime-deployment.nodes</div>
 <div class="tip" id="fs12">type MBraceNode =<br />&#160;&#160;private new : info:NodeDeploymentInfo -&gt; MBraceNode<br />&#160;&#160;private new : nref:ActorRef&lt;MBraceNodeMsg&gt; -&gt; MBraceNode<br />&#160;&#160;private new : nodeRef:ActorRef&lt;MBraceNodeMsg&gt; * uri:Uri -&gt; MBraceNode<br />&#160;&#160;member GetInfo : ?includePerformanceCounters:bool -&gt; string<br />&#160;&#160;member GetInfoAsync : ?includePerformanceCounters:bool -&gt; Async&lt;string&gt;<br />&#160;&#160;member private GetNodeInfoAsync : getPerformanceCounters:bool -&gt; Async&lt;NodeDeploymentInfo&gt;<br />&#160;&#160;member GetPerformanceCounters : unit -&gt; NodePerformanceInfo<br />&#160;&#160;member GetPerformanceCountersAsync : unit -&gt; Async&lt;NodePerformanceInfo&gt;<br />&#160;&#160;member GetStoreManager : unit -&gt; StoreClient<br />&#160;&#160;member GetStoreManagerAsync : unit -&gt; Async&lt;StoreClient&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceNode</div>
 <div class="tip" id="fs13">static member MBraceNode.Connect : uri:string -&gt; MBraceNode<br />static member MBraceNode.Connect : uri:System.Uri -&gt; MBraceNode<br />static member MBraceNode.Connect : hostname:string * port:int -&gt; MBraceNode</div>
 <div class="tip" id="fs14">Multiple items<br />module List<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type List&lt;&#39;T&gt; =<br />&#160;&#160;| ( [] )<br />&#160;&#160;| ( :: ) of Head: &#39;T * Tail: &#39;T list<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IEnumerable&lt;&#39;T&gt;<br />&#160;&#160;member Head : &#39;T<br />&#160;&#160;member IsEmpty : bool<br />&#160;&#160;member Item : index:int -&gt; &#39;T with get<br />&#160;&#160;member Length : int<br />&#160;&#160;member Tail : &#39;T list<br />&#160;&#160;static member Cons : head:&#39;T * tail:&#39;T list -&gt; &#39;T list<br />&#160;&#160;static member Empty : &#39;T list<br /><br />Full name: Microsoft.FSharp.Collections.List&lt;_&gt;</div>
@@ -274,11 +274,11 @@ testing purposes.</p>
 <div class="tip" id="fs19">val n : MBraceNode</div>
 <div class="tip" id="fs20">val printfn : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printfn</div>
 <div class="tip" id="fs21">member MBraceNode.Ping : ?timeout:int -&gt; System.TimeSpan</div>
-<div class="tip" id="fs22">val fileSystemStore : FileSystemStore<br /><br />Full name: Runtime.fileSystemStore</div>
+<div class="tip" id="fs22">val fileSystemStore : FileSystemStore<br /><br />Full name: Runtime-deployment.fileSystemStore</div>
 <div class="tip" id="fs23">type FileSystemStore =<br />&#160;&#160;interface ICloudStore<br />&#160;&#160;private new : path:string -&gt; FileSystemStore<br />&#160;&#160;static member Create : path:string * ?create:bool * ?cleanup:bool -&gt; FileSystemStore<br />&#160;&#160;static member LocalTemp : FileSystemStore<br /><br />Full name: Nessos.MBrace.Store.FileSystemStore</div>
 <div class="tip" id="fs24">static member FileSystemStore.Create : path:string * ?create:bool * ?cleanup:bool -&gt; FileSystemStore</div>
 <div class="tip" id="fs25">property MBraceSettings.DefaultStore: ICloudStore</div>
-<div class="tip" id="fs26">val runtime : MBraceRuntime<br /><br />Full name: Runtime.runtime</div>
+<div class="tip" id="fs26">val runtime : MBraceRuntime<br /><br />Full name: Runtime-deployment.runtime</div>
 <div class="tip" id="fs27">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
 <div class="tip" id="fs28">static member MBraceRuntime.Boot : nodes:MBraceNode list * ?replicationFactor:int * ?failoverFactor:int * ?store:ICloudStore -&gt; MBraceRuntime</div>
 <div class="tip" id="fs29">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; &#39;T</div>
@@ -286,7 +286,7 @@ testing purposes.</p>
 
         </div>
         <div class="span3">
-		      <a target="_blank" href="http://www.m-brace.net/">
+		      <a target="_blank" href="/MBrace/index.html">
             <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />
 		      </a>
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
@@ -299,13 +299,13 @@ testing purposes.</p>
             <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
             
             <li class="nav-header">Getting started</li>
-            <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace: Cloud Computing with monads</a></li>
+            <li><a target="_blank" href="/MBrace/mbrace-plos.pdf">MBrace PLOS'13</a></li>
             <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
 
             <li class="nav-header">Documentation</li>
             <li><a href="/MBrace/programming-model.html">Programming model</a></li>
             <li><a href="/MBrace/client-api.html">Client API</a></li>
-            <li><a href="/MBrace/runtime.html">Deployment Guide</a></li>
+            <li><a href="/MBrace/runtime-deployment.html">Deployment Guide</a></li>
             <li><a href="/MBrace/azure-tutorial.html">Azure Guide</a></li>
             <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace Manual</a></li>
             <li><a href="/MBrace/reference/index.html">API Reference</a></li>
