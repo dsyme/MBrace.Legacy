@@ -29,23 +29,16 @@ manifested through computation expressions in F#.
   <div class="span1"></div>
 </div>
 
-## Demo
-
-For a quick dive into MBrace and applications, try checking out the 
-[`MBrace.Demos`](https://github.com/nessos/MBrace.Demos) solution.
-
-    [lang=bash]
-    git clone https://github.com/nessos/MBrace.Demos
-
-Open and build with Visual Studio 2012/13, 
-then run the available samples from F# interactive.
-
 ## Example
 
-This simple example demonstrates an MBrace computation in which files are read
-from a distributed storage container and the total line count is returned.
+An MBrace session can be initialized from F# interactive as follows:
 
 *)
+
+#load "../packages/MBrace.Runtime/bootstrap.fsx"
+
+open Nessos.MBrace
+open Nessos.MBrace.Client
 
 [<Cloud>]
 let lineCount () = cloud {
@@ -68,6 +61,12 @@ let proc = runtime.CreateProcess <@ lineCount () @> // send computation to the r
 let lines = proc.AwaitResult () // await completion
 
 (**
+
+For a quick dive into MBrace and applications, try checking out the 
+[`MBrace.Demos`](https://github.com/nessos/MBrace.Demos) solution.
+
+    [lang=bash]
+    git clone https://github.com/nessos/MBrace.Demos
 
 ## Documentation & Tutorials
 
