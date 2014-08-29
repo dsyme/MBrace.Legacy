@@ -49,10 +49,10 @@ file creation, listing and reading.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
+          <code onmouseout="hideTip(event, '79', 79)" onmouseover="showTip(event, '79', 79)">
             Enumerate(container)
           </code>
-          <div class="tip" id="36">
+          <div class="tip" id="79">
             <strong>Signature:</strong> container:string -&gt; Cloud&lt;ICloudFile []&gt;<br />
                       </div>
         </td>
@@ -68,10 +68,10 @@ file creation, listing and reading.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '49', 49)" onmouseover="showTip(event, '49', 49)">
+          <code onmouseout="hideTip(event, '80', 80)" onmouseover="showTip(event, '80', 80)">
             Get(container, name)
           </code>
-          <div class="tip" id="49">
+          <div class="tip" id="80">
             <strong>Signature:</strong> (container:string * name:string) -&gt; Cloud&lt;ICloudFile&gt;<br />
                       </div>
         </td>
@@ -87,10 +87,10 @@ file creation, listing and reading.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '50', 50)" onmouseover="showTip(event, '50', 50)">
+          <code onmouseout="hideTip(event, '81', 81)" onmouseover="showTip(event, '81', 81)">
             New(serializer)
           </code>
-          <div class="tip" id="50">
+          <div class="tip" id="81">
             <strong>Signature:</strong> (serializer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; Cloud&lt;ICloudFile&gt;<br />
                       </div>
         </td>
@@ -107,10 +107,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '51', 51)" onmouseover="showTip(event, '51', 51)">
+          <code onmouseout="hideTip(event, '82', 82)" onmouseover="showTip(event, '82', 82)">
             New(container, serializer)
           </code>
-          <div class="tip" id="51">
+          <div class="tip" id="82">
             <strong>Signature:</strong> (container:string * serializer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; Cloud&lt;ICloudFile&gt;<br />
                       </div>
         </td>
@@ -127,10 +127,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '52', 52)" onmouseover="showTip(event, '52', 52)">
+          <code onmouseout="hideTip(event, '83', 83)" onmouseover="showTip(event, '83', 83)">
             New(container, name, serializer)
           </code>
-          <div class="tip" id="52">
+          <div class="tip" id="83">
             <strong>Signature:</strong> (container:string * name:string * serializer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; Cloud&lt;ICloudFile&gt;<br />
                       </div>
         </td>
@@ -147,10 +147,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '53', 53)" onmouseover="showTip(event, '53', 53)">
+          <code onmouseout="hideTip(event, '84', 84)" onmouseover="showTip(event, '84', 84)">
             Read(cloudFile, deserialize)
           </code>
-          <div class="tip" id="53">
+          <div class="tip" id="84">
             <strong>Signature:</strong> (cloudFile:ICloudFile * deserialize:(Stream -&gt; Async&lt;&#39;Result&gt;)) -&gt; Cloud&lt;&#39;Result&gt;<br />
                           <strong>Type parameters:</strong> 'Result          </div>
         </td>
@@ -166,10 +166,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '54', 54)" onmouseover="showTip(event, '54', 54)">
+          <code onmouseout="hideTip(event, '85', 85)" onmouseover="showTip(event, '85', 85)">
             TryGet(container, name)
           </code>
-          <div class="tip" id="54">
+          <div class="tip" id="85">
             <strong>Signature:</strong> (container:string * name:string) -&gt; Cloud&lt;ICloudFile option&gt;<br />
                       </div>
         </td>
@@ -200,12 +200,14 @@ Use the serialize function to write to the underlying stream.</p>
             <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
             
             <li class="nav-header">Getting started</li>
-            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace: Cloud Computing with monads</a></li>
             <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
-            <li><a href="/MBrace/runtime-installation.html">Runtime installation guide</a></li>
-            <li><a href="/MBrace/azure-tutorial.html">MBrace Azure guide</a></li>
 
             <li class="nav-header">Documentation</li>
+            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a href="/MBrace/client-api.html">Client API</a></li>
+            <li><a href="/MBrace/runtime.html">Deployment Guide</a></li>
+            <li><a href="/MBrace/azure-tutorial.html">Azure Guide</a></li>
             <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace Manual</a></li>
             <li><a href="/MBrace/reference/index.html">API Reference</a></li>
           </ul>
