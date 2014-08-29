@@ -16,7 +16,7 @@ open Nessos.FsPickler
 
 (**
 
-# Programming model [Draft]
+# Programming model
 
 The MBrace programming model is based on F# 
 [computation expressions](http://msdn.microsoft.com/en-us/library/dd233182.aspx),
