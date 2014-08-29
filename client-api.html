@@ -598,22 +598,22 @@ namely mbraced.exe.config found in the same location as the executable.
 Configuration for mbraced is written in the <code>AppSettings</code> section 
 of the xml document that follows a key-value schema:</p>
 
-<table class="pre"><tr><td><pre lang="xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
-&lt;configuration&gt;
-    &lt;appSettings&gt;
-        &lt;add key=&quot;hostname&quot; value=&quot;grothendieck.nessos&quot;/&gt;
-        &lt;add key=&quot;primary port&quot; value=&quot;2675&quot;/&gt;
-        &lt;add key=&quot;worker port range&quot; value=&quot;30000, 30042&quot;/&gt;
-        &lt;add key=&quot;working directory&quot; value=&quot;/var/mbraced/&quot;/&gt;
-        &lt;add key=&quot;log file&quot; value=&quot;mbrace-log.txt&quot;/&gt;
-        &lt;!-- specify loglevel: info 0, warning 1, error 2--&gt;
-        &lt;add key=&quot;log level&quot; value=&quot;0&quot;/&gt;
-        &lt;!-- permitted operation modes; None: 0, Slave: 1, Master: 2, All: 3 --&gt;
-        &lt;add key=&quot;permissions&quot; value=&quot;3&quot; /&gt;
-        &lt;!-- executable name of mbrace child process --&gt;
-        &lt;add key=&quot;mbrace processdomain executable&quot; value=&quot;mbrace.worker.exe&quot;/&gt;
-    &lt;/appSettings&gt;
-&lt;/configuration&gt;</pre></td></tr></table>
+<table class="pre"><tr><td><pre lang="xml"><span class="prep">&lt;?</span>xml version=<span class="s">"1.0"</span> encoding=<span class="s">"utf-8"</span><span class="prep">?&gt;</span>
+<span class="k">&lt;</span><span class="i">configuration</span><span class="k">&gt;</span>
+    <span class="k">&lt;</span><span class="i">appSettings</span><span class="k">&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="hostname"</span> <span class="o">value</span><span class="k">="grothendieck.nessos"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="primary port"</span> <span class="o">value</span><span class="k">="2675"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="worker port range"</span> <span class="o">value</span><span class="k">="30000, 30042"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="working directory"</span> <span class="o">value</span><span class="k">="/var/mbraced/"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="log file"</span> <span class="o">value</span><span class="k">="mbrace-log.txt"</span><span class="k">/&gt;</span>
+        <span class="c">&lt;!-- specify loglevel: info 0, warning 1, error 2--&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="log level"</span> <span class="o">value</span><span class="k">="0"</span><span class="k">/&gt;</span>
+        <span class="c">&lt;!-- permitted operation modes; None: 0, Slave: 1, Master: 2, All: 3 --&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="permissions"</span> <span class="o">value</span><span class="k">="3"</span> <span class="k">/&gt;</span>
+        <span class="c">&lt;!-- executable name of mbrace child process --&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="mbrace processdomain executable"</span> <span class="o">value</span><span class="k">="mbrace.worker.exe"</span><span class="k">/&gt;</span>
+    <span class="k">&lt;/</span><span class="i">appSettings</span><span class="k">&gt;</span>
+<span class="k">&lt;/</span><span class="i">configuration</span><span class="k">&gt;</span></pre></td></tr></table>
 
 <p>The full range of command line parameters for mbraced can be viewed by typing</p>
 
