@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Installing the MBrace Runtime
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="An open source framework for large-scale distributed computation and data processing written in F#."/>
+    <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/MBrace/content/style.css" />
+    <script type="text/javascript" src="/MBrace/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/nessos/MBrace">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/MBrace/index.html">MBrace</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+<h1>Installing the MBrace Runtime</h1>
+
+<p>In this tutorial you will learn how to install and setup MBrace.
+As a prerequisite you need Microsoft Visual Studio (or any environment supporting F#).</p>
+
+<p>Typically you need some machines to run the MBrace daemons/nodes and a client
+that manages the runtime (usually the client runs on a F# interactive instance). Any nodes in a MBrace runtime
+as well as any clients, should be part of the same network in order to work properly.</p>
+
+<h2><a name="installservice"></a>Installing the MBrace Runtime Service</h2>
+
+<p>In order to get a MBrace node running on a machine you need to download 
+the <a href="http://nuget.org/packages/MBrace.Runtime">MBrace.Runtime</a> package.
+Any dependencies and executables are located in the <code>tools</code> subdirectory. Alternatively you can 
+use the <a href="http://github.com/nessos/MBrace/raw/master/nuget/installer/Install-MBrace.ps1">Install-MBrace.ps1</a> powershell script that helps you install 
+MBrace by downloading <code>.NET 4.5</code> if it's needed, downloading the
+runtime nuget package, adding firewall exceptions for the MBrace executables and finally 
+installing the MBrace runtime as a Windows Service.</p>
+
+<p>Open a PowerShell prompt as administrator, download and run <code>Install-MBrace.ps1</code> script.
+Before running the installation script you probably need to enable script execution in PowerShell;
+you can do this using the <a href="http://technet.microsoft.com/en-us/library/ee176961.aspx">Set-ExecutionPolicy</a> cmdlet.</p>
+
+<table class="pre"><tr><td><pre lang="batchfile">PS C:\mbrace &gt; help .\Install-MBrace.ps1
+
+NAME
+    C:\mbrace\Install-MBrace.ps1
+
+SYNOPSIS
+    Installation script for the MBrace runtime.
+
+SYNTAX
+    C:\mbrace\Install-MBrace.ps1 [-AddToPath] [-Service] [[-Directory] &lt;String&gt;] [&lt;CommonParameters&gt;]
+
+PARAMETERS
+    -AddToPath [&lt;SwitchParameter&gt;]
+        Add the MBrace.Runtime/tools directory to PATH environment variable. This parameter defaults to false.
+
+    -Service [&lt;SwitchParameter&gt;]
+        Install MBrace Windows service. This parameter defaults to true.
+
+    -Directory &lt;String&gt;
+        Installation directory. This parameter defaults to the Program Files directory.
+
+DESCRIPTION
+    This script implements the following workflow:
+        * Install .NET 4.5 if it&#39;s needed.
+        * Download the NuGet standalone and the latest MBrace.Runtime package.
+        * Add firewall exceptions for the mbraced and mbrace.worker executables.
+        * Install and starts the MBrace Windows service.
+    Note that administrator rights are required.
+
+
+RELATED LINKS
+    http://github.com/Nessos/MBrace
+    http://nessos.github.io/MBrace
+    http://www.m-brace.net/
+
+
+PS C:\mbrace &gt; Set-ExecutionPolicy Unrestricted
+PS C:\mbrace &gt; .\Install-MBrace.ps1
+* Checking for admin permissions...
+* Checking if .NET 4.5 installed...
+* Downloading NuGet...
+* Downloading MBrace.Runtime...
+* Adding firewall rules...
+* Installing MBrace service...
+* Done...</pre></td></tr></table>
+
+<p>At this point you should have the <code>MBrace Runtime</code> service running. You can confirm this by using the <code>Get-Service</code> cmdlet or the Services tool.</p>
+
+<table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; Get-Service MBrace
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  MBrace             MBrace Runtime</pre></td></tr></table>
+
+<h2><a name="configureservice"></a>Configuring MBrace</h2>
+
+<p>Now you need to make any configurations to the MBrace daemon by changing the <code>mbraced.exe.config</code> file.
+Normally you don't need to change this file and you can skip this step.
+Below you can see the options you can configure.</p>
+
+<ul>
+<li><code>hostname</code> This is the hostname used by the daemon and the MBrace API. It can be either the hostname of the host machine or
+an IP address. You can also specify an IP range in CIDR format; in this case the hostname of the daemon will be
+the address of the first interface that belongs to the given range. Leave this setting blank to use the machine's hostname.</li>
+<li><code>primary port</code> The TCP port used by the daemon.</li>
+<li><code>worker ports</code> Available port for use by mbrace workers.</li>
+<li><code>worker port range</code> Available port range for use by mbrace workers.</li>
+<li><code>permissions</code> Permitted operation modes for this node; None: 0, Slave: 1, Master: 2, All: 3.</li>
+<li><code>working directory</code> Specifies the working directory. This is the place where assemblies and the cache will be stored.
+Use "temp" for the system temp folder.</li>
+<li><code>log file</code> Specifies a log file for the daemon. This can either be an absolute path or a relative path to the <code>working directory</code>.</li>
+<li><code>log level</code> Specify logs verbosity. Use 2 to display only Errors, 1 to also display Warnings and 0 for full verbosity.</li>
+<li><code>mbrace processdomain executable</code> Executable name for <code>mbrace.worker.exe</code>.</li>
+</ul>
+
+<p>You can see and example of the appSettings section of a <code>mbraced.exe.config</code> file.</p>
+
+<table class="pre"><tr><td><pre lang="xml"><span class="k">&lt;</span><span class="i">appSettings</span><span class="k">&gt;</span>
+    <span class="c">&lt;!-- hostname that uniquely and globally identifies the host machine of the daemon. This can be an IP address. --&gt;</span>
+    <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="hostname"</span> <span class="o">value</span><span class="k">="10.0.1.0/27"</span> <span class="k">/&gt;</span> 
+    <span class="c">&lt;!-- Primary TCP port --&gt;</span>
+    <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="primary port"</span> <span class="o">value</span><span class="k">="2675"</span> <span class="k">/&gt;</span>
+    <span class="c">&lt;!-- available ports for mbrace workers --&gt;</span>
+    <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="worker port range"</span> <span class="o">value</span><span class="k">="30000, 30020"</span> <span class="k">/&gt;</span>
+    <span class="c">&lt;!-- permitted operation modes; None: 0, Slave: 1, Master: 2, All: 3 --&gt;</span>
+    <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="permissions"</span> <span class="o">value</span><span class="k">="3"</span> <span class="k">/&gt;</span>
+    <span class="c">&lt;!-- the working directory of the node; paths relative to executable; use "temp" for system temp folder --&gt;</span>
+    <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="working directory"</span> <span class="o">value</span><span class="k">="temp"</span> <span class="k">/&gt;</span>
+    <span class="c">&lt;!-- logfile; paths relative to declared working directory --&gt;</span>
+    <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="log file"</span> <span class="o">value</span><span class="k">="mbrace-log.txt"</span> <span class="k">/&gt;</span>
+    <span class="c">&lt;!-- specify loglevel: info 0, warning 1, error 2--&gt;</span>
+    <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="log level"</span> <span class="o">value</span><span class="k">="0"</span> <span class="k">/&gt;</span>
+    <span class="c">&lt;!-- executable name of mbrace child process --&gt;</span>
+    <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="mbrace processdomain executable"</span> <span class="o">value</span><span class="k">="mbrace.worker.exe"</span> <span class="k">/&gt;</span>
+<span class="k">&lt;/</span><span class="i">appSettings</span><span class="k">&gt;</span></pre></td></tr></table>
+
+<p>Finally you need to restart the service in order to load the new configuration.</p>
+
+<table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; Restart-Service MBrace</pre></td></tr></table>
+
+<p>You can repeat this process to install MBrace on multiple machines.</p>
+
+<h2><a name="bootruntime"></a>Booting the MBrace Runtime</h2>
+
+<p>At this point your machines are running and the MBrace nodes are idle.
+At your client machine, you need to install the F# interactive (or optionally Visual Studio or any environment supporting F#)
+as well as the <a href="http://www.nuget.org/packages/MBrace.Runtime">MBrace.Runtime</a> package from nuget.</p>
+
+<p>In your solution open the <code>mbrace-tutorial.fsx</code>. In the <em>initialize a runtime of remote nodes</em> section
+change nodes hostname and ports. Depending on your configuration use either IP addresses</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 15)" onmouseover="showTip(event, 'fs11', 15)" class="i">nodes</span> <span class="o">=</span>
+    [
+        <span onmouseout="hideTip(event, 'fs12', 16)" onmouseover="showTip(event, 'fs12', 16)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 17)" onmouseover="showTip(event, 'fs13', 17)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">4</span><span class="s">&quot;</span>, <span class="n">2675</span>)
+        <span onmouseout="hideTip(event, 'fs12', 18)" onmouseover="showTip(event, 'fs12', 18)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 19)" onmouseover="showTip(event, 'fs13', 19)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">5</span><span class="s">&quot;</span>, <span class="n">2675</span>)
+        <span onmouseout="hideTip(event, 'fs12', 20)" onmouseover="showTip(event, 'fs12', 20)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 21)" onmouseover="showTip(event, 'fs13', 21)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">6</span><span class="s">&quot;</span>, <span class="n">2675</span>)
+    ]</pre>
+</td>
+</tr>
+</table>
+
+<p>or hostnames</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 22)" onmouseover="showTip(event, 'fs11', 22)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs14', 23)" onmouseover="showTip(event, 'fs14', 23)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 24)" onmouseover="showTip(event, 'fs15', 24)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs16', 25)" onmouseover="showTip(event, 'fs16', 25)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs12', 26)" onmouseover="showTip(event, 'fs12', 26)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 27)" onmouseover="showTip(event, 'fs13', 27)" class="i">Connect</span>(<span onmouseout="hideTip(event, 'fs17', 28)" onmouseover="showTip(event, 'fs17', 28)" class="i">sprintf</span> <span class="s">&quot;</span><span class="s">machine</span><span class="s">%</span><span class="s">d</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs16', 29)" onmouseover="showTip(event, 'fs16', 29)" class="i">i</span>, <span class="n">2675</span>))</pre>
+</td>
+</tr>
+</table>
+
+<p>Now ping the nodes to ensure connectivity</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs11', 30)" onmouseover="showTip(event, 'fs11', 30)" class="i">nodes</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs14', 31)" onmouseover="showTip(event, 'fs14', 31)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 32)" onmouseover="showTip(event, 'fs18', 32)" class="i">iter</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 33)" onmouseover="showTip(event, 'fs19', 33)" class="i">n</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs20', 34)" onmouseover="showTip(event, 'fs20', 34)" class="i">printfn</span> <span class="s">&quot;</span><span class="s">Node</span><span class="s"> </span><span class="s">%</span><span class="s">A</span><span class="s"> </span><span class="s">:</span><span class="s"> </span><span class="s">%</span><span class="s">s</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs19', 35)" onmouseover="showTip(event, 'fs19', 35)" class="i">n</span> <span class="o">&lt;|</span> <span class="k">try</span> <span onmouseout="hideTip(event, 'fs19', 36)" onmouseover="showTip(event, 'fs19', 36)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs21', 37)" onmouseover="showTip(event, 'fs21', 37)" class="i">Ping</span>()<span class="o">.</span><span class="i">ToString</span>() <span class="k">with</span> _ <span class="k">-&gt;</span> <span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>At this point, before actually booting a runtime you need to configure which store
+will be used by the runtime. By default each node will use its local filesystem, 
+but in distributed scenarios you need to use storage common to all participating nodes like
+the Azure Blob Storage, SQL Server, or any implementation of the <code>ICloudStore</code> interface.
+In this example we are going to use the FileSystemStore that comes with MBrace
+with a UNC path that is accesible to all nodes. <em>Note</em>: The FileSystemStore should be used only for
+testing purposes.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 38)" onmouseover="showTip(event, 'fs1', 38)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 39)" onmouseover="showTip(event, 'fs2', 39)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 40)" onmouseover="showTip(event, 'fs3', 40)" class="i">Store</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs22', 41)" onmouseover="showTip(event, 'fs22', 41)" class="i">fileSystemStore</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs23', 42)" onmouseover="showTip(event, 'fs23', 42)" class="i">FileSystemStore</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs24', 43)" onmouseover="showTip(event, 'fs24', 43)" class="i">Create</span> <span class="s">@&quot;</span><span class="s">\</span><span class="s">\</span><span class="s">shared</span><span class="s">\</span><span class="s">mbrace</span><span class="s">&quot;</span>
+
+<span onmouseout="hideTip(event, 'fs5', 44)" onmouseover="showTip(event, 'fs5', 44)" class="i">MBraceSettings</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs25', 45)" onmouseover="showTip(event, 'fs25', 45)" class="i">DefaultStore</span> <span class="o">&lt;-</span> <span onmouseout="hideTip(event, 'fs22', 46)" onmouseover="showTip(event, 'fs22', 46)" class="i">fileSystemStore</span></pre>
+</td>
+</tr>
+</table>
+
+<p>Finally boot the runtime and send your first cloud computation.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs26', 47)" onmouseover="showTip(event, 'fs26', 47)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs27', 48)" onmouseover="showTip(event, 'fs27', 48)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs28', 49)" onmouseover="showTip(event, 'fs28', 49)" class="i">Boot</span> <span onmouseout="hideTip(event, 'fs11', 50)" onmouseover="showTip(event, 'fs11', 50)" class="i">nodes</span>
+
+<span onmouseout="hideTip(event, 'fs26', 51)" onmouseover="showTip(event, 'fs26', 51)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs29', 52)" onmouseover="showTip(event, 'fs29', 52)" class="i">Run</span> &lt;@ <span onmouseout="hideTip(event, 'fs30', 53)" onmouseover="showTip(event, 'fs30', 53)" class="i">cloud</span> { <span class="k">return</span> <span class="n">42</span> } @&gt;</pre>
+</td>
+</tr>
+</table>
+
+<div class="tip" id="fs1">namespace Nessos</div>
+<div class="tip" id="fs2">namespace Nessos.MBrace</div>
+<div class="tip" id="fs3">namespace Nessos.MBrace.Store</div>
+<div class="tip" id="fs4">namespace Nessos.MBrace.Client</div>
+<div class="tip" id="fs5">type MBraceSettings =<br />&#160;&#160;private new : unit -&gt; MBraceSettings<br />&#160;&#160;static member private Init : unit -&gt; unit<br />&#160;&#160;static member AssemblyCacheDirectory : string<br />&#160;&#160;static member ClientId : Guid<br />&#160;&#160;static member DefaultContainer : string<br />&#160;&#160;static member DefaultStore : ICloudStore<br />&#160;&#160;static member DefaultTimeout : int<br />&#160;&#160;static member LocalCacheStoreDirectory : string<br />&#160;&#160;static member Logger : ISystemLogger<br />&#160;&#160;static member MBracedExecutablePath : string<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceSettings</div>
+<div class="tip" id="fs6">property MBraceSettings.MBracedExecutablePath: string</div>
+<div class="tip" id="fs7">namespace System</div>
+<div class="tip" id="fs8">namespace System.IO</div>
+<div class="tip" id="fs9">type Path =<br />&#160;&#160;static val DirectorySeparatorChar : char<br />&#160;&#160;static val AltDirectorySeparatorChar : char<br />&#160;&#160;static val VolumeSeparatorChar : char<br />&#160;&#160;static val InvalidPathChars : char[]<br />&#160;&#160;static val PathSeparator : char<br />&#160;&#160;static member ChangeExtension : path:string * extension:string -&gt; string<br />&#160;&#160;static member Combine : params paths:string[] -&gt; string + 3 overloads<br />&#160;&#160;static member GetDirectoryName : path:string -&gt; string<br />&#160;&#160;static member GetExtension : path:string -&gt; string<br />&#160;&#160;static member GetFileName : path:string -&gt; string<br />&#160;&#160;...<br /><br />Full name: System.IO.Path</div>
+<div class="tip" id="fs10">System.IO.Path.Combine(params paths: string []) : string<br />System.IO.Path.Combine(path1: string, path2: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string, path4: string) : string</div>
+<div class="tip" id="fs11">val nodes : MBraceNode list<br /><br />Full name: Runtime-installation.nodes</div>
+<div class="tip" id="fs12">type MBraceNode =<br />&#160;&#160;private new : info:NodeDeploymentInfo -&gt; MBraceNode<br />&#160;&#160;private new : nref:ActorRef&lt;MBraceNodeMsg&gt; -&gt; MBraceNode<br />&#160;&#160;private new : nodeRef:ActorRef&lt;MBraceNodeMsg&gt; * uri:Uri -&gt; MBraceNode<br />&#160;&#160;member GetInfo : ?includePerformanceCounters:bool -&gt; string<br />&#160;&#160;member GetInfoAsync : ?includePerformanceCounters:bool -&gt; Async&lt;string&gt;<br />&#160;&#160;member private GetNodeInfoAsync : getPerformanceCounters:bool -&gt; Async&lt;NodeDeploymentInfo&gt;<br />&#160;&#160;member GetPerformanceCounters : unit -&gt; NodePerformanceInfo<br />&#160;&#160;member GetPerformanceCountersAsync : unit -&gt; Async&lt;NodePerformanceInfo&gt;<br />&#160;&#160;member GetStoreManager : unit -&gt; StoreClient<br />&#160;&#160;member GetStoreManagerAsync : unit -&gt; Async&lt;StoreClient&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceNode</div>
+<div class="tip" id="fs13">static member MBraceNode.Connect : uri:string -&gt; MBraceNode<br />static member MBraceNode.Connect : uri:System.Uri -&gt; MBraceNode<br />static member MBraceNode.Connect : hostname:string * port:int -&gt; MBraceNode</div>
+<div class="tip" id="fs14">Multiple items<br />module List<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type List&lt;&#39;T&gt; =<br />&#160;&#160;| ( [] )<br />&#160;&#160;| ( :: ) of Head: &#39;T * Tail: &#39;T list<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IEnumerable&lt;&#39;T&gt;<br />&#160;&#160;member Head : &#39;T<br />&#160;&#160;member IsEmpty : bool<br />&#160;&#160;member Item : index:int -&gt; &#39;T with get<br />&#160;&#160;member Length : int<br />&#160;&#160;member Tail : &#39;T list<br />&#160;&#160;static member Cons : head:&#39;T * tail:&#39;T list -&gt; &#39;T list<br />&#160;&#160;static member Empty : &#39;T list<br /><br />Full name: Microsoft.FSharp.Collections.List&lt;_&gt;</div>
+<div class="tip" id="fs15">val map : mapping:(&#39;T -&gt; &#39;U) -&gt; list:&#39;T list -&gt; &#39;U list<br /><br />Full name: Microsoft.FSharp.Collections.List.map</div>
+<div class="tip" id="fs16">val i : int</div>
+<div class="tip" id="fs17">val sprintf : format:Printf.StringFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.sprintf</div>
+<div class="tip" id="fs18">val iter : action:(&#39;T -&gt; unit) -&gt; list:&#39;T list -&gt; unit<br /><br />Full name: Microsoft.FSharp.Collections.List.iter</div>
+<div class="tip" id="fs19">val n : MBraceNode</div>
+<div class="tip" id="fs20">val printfn : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printfn</div>
+<div class="tip" id="fs21">member MBraceNode.Ping : ?timeout:int -&gt; System.TimeSpan</div>
+<div class="tip" id="fs22">val fileSystemStore : FileSystemStore<br /><br />Full name: Runtime-installation.fileSystemStore</div>
+<div class="tip" id="fs23">type FileSystemStore =<br />&#160;&#160;interface ICloudStore<br />&#160;&#160;private new : path:string -&gt; FileSystemStore<br />&#160;&#160;static member Create : path:string * ?create:bool * ?cleanup:bool -&gt; FileSystemStore<br />&#160;&#160;static member LocalTemp : FileSystemStore<br /><br />Full name: Nessos.MBrace.Store.FileSystemStore</div>
+<div class="tip" id="fs24">static member FileSystemStore.Create : path:string * ?create:bool * ?cleanup:bool -&gt; FileSystemStore</div>
+<div class="tip" id="fs25">property MBraceSettings.DefaultStore: ICloudStore</div>
+<div class="tip" id="fs26">val runtime : MBraceRuntime<br /><br />Full name: Runtime-installation.runtime</div>
+<div class="tip" id="fs27">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
+<div class="tip" id="fs28">static member MBraceRuntime.Boot : nodes:MBraceNode list * ?replicationFactor:int * ?failoverFactor:int * ?store:ICloudStore -&gt; MBraceRuntime</div>
+<div class="tip" id="fs29">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; &#39;T</div>
+<div class="tip" id="fs30">val cloud : CloudBuilder<br /><br />Full name: Nessos.MBrace.CloudBuilder.cloud</div>
+
+        </div>
+        <div class="span3">
+		      <a target="_blank" href="http://www.m-brace.net/">
+            <img src="/MBrace/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />
+		      </a>
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">MBrace</li>
+            <li><a href="/MBrace/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://www.nuget.org/packages/MBrace.Runtime">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/nessos/MBrace">Source Code on GitHub</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/LICENSE.md">License</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+            
+            <li class="nav-header">Getting started</li>
+            <li><a href="/MBrace/programming-model.html">Programming model</a></li>
+            <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
+            <li><a href="/MBrace/runtime-installation.html">Runtime installation guide</a></li>
+            <li><a href="/MBrace/azure-tutorial.html">MBrace Azure guide</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace Manual</a></li>
+            <li><a href="/MBrace/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/nessos/MBrace"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>

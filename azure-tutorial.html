@@ -68,71 +68,15 @@ You can't join the virtual machine to a virtual network after you have created t
 <p>Note that although there are no minimal requirements for the VM size it's recommented to use at least 
 a Medium (A2) (2 cores, 3.5GB Memory) instance. After the virtual machine is created log on to it.</p>
 
-<h2>Installing the MBrace Runtime</h2>
+<h2>Installing the MBrace and Configuring Runtime</h2>
 
-<p>In order to get a MBrace node running on a machine you need to download 
-the <a href="http://nuget.org/packages/MBrace.Runtime">MBrace.Runtime</a> package.
-Any dependencies and executables are located in the <code>tools</code> subdirectory. Alternatively you can 
-use the <a href="http://github.com/nessos/MBrace/raw/master/nuget/installer/Install-MBrace.ps1">Install-MBrace.ps1</a> powershell script that helps you install 
-MBrace by downloading <code>.NET 4.5</code> if it's needed, downloading the
-runtime nuget package, adding firewall exceptions for the MBrace executables and finally 
-installing the MBrace runtime as a Windows Service.</p>
+<p>At this point you need to install MBrace in this machine using the instructions
+in our <a href="runtime-installation.html">Runtime Installation</a> guide.
+Follow the <a href="runtime-installation.html#installservice">Installing the MBrace Runtime Service</a> section to install MBrace as a Windows Service .</p>
 
-<p>Open a PowerShell prompt as administrator, download and run <code>Install-MBrace.ps1</code> script.
-Before running the installation script you probably need to enable script execution in PowerShell;
-you can do this using the <a href="http://technet.microsoft.com/en-us/library/ee176961.aspx">Set-ExecutionPolicy</a> cmdlet.</p>
+<p>Now you need to make any <a href="runtime-installation.html#configureservice">configurations</a> to the MBrace daemon.</p>
 
-<table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; help .\Install-MBrace.ps1
-
-NAME
-    C:\mbrace\Install-MBrace.ps1
-
-SYNOPSIS
-    Installation script for the MBrace runtime.
-
-SYNTAX
-    C:\mbrace\Install-MBrace.ps1 [-AddToPath] [-Service] [[-Directory] &lt;String&gt;] [&lt;CommonParameters&gt;]
-
-
-DESCRIPTION
-    This script implements the following workflow:
-        * Install .NET 4.5 if it&#39;s needed.
-        * Download the NuGet standalone and the latest MBrace.Runtime package.
-        * Add firewall exceptions for the mbraced and mbrace.worker executables.
-        * Install and starts the MBrace Windows service.
-    Note that administrator rights are required.
-
-
-RELATED LINKS
-    http://github.com/Nessos/MBrace
-    http://nessos.github.io/MBrace
-    http://www.m-brace.net/
-
-
-c:\mbrace &gt; Set-ExecutionPolicy Unrestricted
-c:\mbrace &gt; .\Install-MBrace.ps1
-* Checking for admin permissions...
-* Checking if .NET 4.5 installed...
-* Downloading NuGet...
-* Downloading MBrace.Runtime...
-* Adding firewall rules...
-* Installing MBrace service...
-* Done...</pre></td></tr></table>
-
-<p>At this point you should have the <code>MBrace Runtime</code> service running. You can confirm this by using the <code>Get-Service</code> cmdlet or the Services tool.</p>
-
-<table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; Get-Service MBrace
-
-Status   Name               DisplayName
-------   ----               -----------
-Running  MBrace             MBrace Runtime</pre></td></tr></table>
-
-<h2>Configuring MBrace</h2>
-
-<p>Now you need to make any configurations to the MBrace daemon by changing the <code>mbraced.exe.config</code> file.
-You can configure settings like the working directory, ports used by the runtime, etc.</p>
-
-<p>Normally you don't need to change this file and you can skip this step, unless you are using a remote client and a VPN.
+<p>Normally you don't need to change anything and you can skip this step, unless you are using a remote client and a VPN.
 In this case you need to change the <code>hostname</code> setting from its default value to the internal IP of the virtual machine 
 or the subnet of the previously virtual network in CIDR format.</p>
 
@@ -151,9 +95,7 @@ hostname as a node identifier. In the case of VPN your computer (the client) mig
 resolve this hostname to an IP (unless you use a DNS server). Using the VM's IP or a subnet instead of its hostname
 makes sure that the client will be able to communicate with this node.</p>
 
-<p>Finally you need to restart the service in order to load the new configuration.</p>
-
-<table class="pre"><tr><td><pre lang="batchfile">c:\mbrace &gt; Restart-Service MBrace</pre></td></tr></table>
+<p>After changing the configuration file restart the Windows service.</p>
 
 <h2>Creating your cluster</h2>
 
@@ -168,14 +110,22 @@ You just need to make sure that during the creation you choose the same <em>Clou
 <h2>Booting the MBrace Runtime</h2>
 
 <p>At this point your virtual machines are running and the MBrace nodes are idle.
-At your client machine, if you use VPN make sure that you are connected and you can ping some of the remote machines.</p>
+At your client machine, if you use VPN make sure that you are connected.</p>
 
-<p>In any case you need to install the F# interactive in your client (or optionally Visual Studio or any environment supporting F#)
-as well as the <a href="http://www.nuget.org/packages/MBrace.Runtime">MBrace.Runtime</a> package.</p>
+<p>Finally according to the <a href="runtime-installation.html#bootruntime">Booting the MBrace Runtime</a> section
+connect to the MBrace nodes:</p>
 
-<p>In your solution open the <code>mbrace-tutorial.fsx</code>. In the <em>initialize a runtime of remote nodes</em> section
-change nodes hostname and ports.
-In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 15)" onmouseover="showTip(event, 'fs11', 15)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 16)" onmouseover="showTip(event, 'fs12', 16)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 17)" onmouseover="showTip(event, 'fs13', 17)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs14', 18)" onmouseover="showTip(event, 'fs14', 18)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 19)" onmouseover="showTip(event, 'fs15', 19)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs16', 20)" onmouseover="showTip(event, 'fs16', 20)" class="i">Connect</span>(<span onmouseout="hideTip(event, 'fs17', 21)" onmouseover="showTip(event, 'fs17', 21)" class="i">sprintf</span> <span class="s">&quot;</span><span class="s">clusterVM</span><span class="s">%</span><span class="s">d</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs14', 22)" onmouseover="showTip(event, 'fs14', 22)" class="i">i</span>, <span class="n">2675</span>))</pre>
+</td>
+</tr>
+</table>
+
+<p>In case you are using a remote client (without DNS resolution) use the internal IPs of the virtual machines:</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
@@ -187,24 +137,12 @@ In case you are using a remote client (without DNS resolution) use the internal 
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 15)" onmouseover="showTip(event, 'fs11', 15)" class="i">nodes</span> <span class="o">=</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 23)" onmouseover="showTip(event, 'fs11', 23)" class="i">nodes</span> <span class="o">=</span>
     [
-        <span onmouseout="hideTip(event, 'fs12', 16)" onmouseover="showTip(event, 'fs12', 16)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 17)" onmouseover="showTip(event, 'fs13', 17)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">4</span><span class="s">&quot;</span>, <span class="n">2675</span>)
-        <span onmouseout="hideTip(event, 'fs12', 18)" onmouseover="showTip(event, 'fs12', 18)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 19)" onmouseover="showTip(event, 'fs13', 19)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">5</span><span class="s">&quot;</span>, <span class="n">2675</span>)
-        <span onmouseout="hideTip(event, 'fs12', 20)" onmouseover="showTip(event, 'fs12', 20)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 21)" onmouseover="showTip(event, 'fs13', 21)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">6</span><span class="s">&quot;</span>, <span class="n">2675</span>)
+        <span onmouseout="hideTip(event, 'fs15', 24)" onmouseover="showTip(event, 'fs15', 24)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs16', 25)" onmouseover="showTip(event, 'fs16', 25)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">4</span><span class="s">&quot;</span>, <span class="n">2675</span>)
+        <span onmouseout="hideTip(event, 'fs15', 26)" onmouseover="showTip(event, 'fs15', 26)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs16', 27)" onmouseover="showTip(event, 'fs16', 27)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">5</span><span class="s">&quot;</span>, <span class="n">2675</span>)
+        <span onmouseout="hideTip(event, 'fs15', 28)" onmouseover="showTip(event, 'fs15', 28)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs16', 29)" onmouseover="showTip(event, 'fs16', 29)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">1</span><span class="s">.</span><span class="s">6</span><span class="s">&quot;</span>, <span class="n">2675</span>)
     ]</pre>
-</td>
-</tr>
-</table>
-
-<p>Or use the hostnames</p>
-
-<table class="pre"><tr><td class="lines"><pre class="fssnip">
-<span class="l">1: </span>
-</pre>
-</td>
-<td class="snippet"><pre class="fssnip">
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 22)" onmouseover="showTip(event, 'fs11', 22)" class="i">nodes</span> <span class="o">=</span> [<span class="n">1..</span><span class="n">3</span>] <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs14', 23)" onmouseover="showTip(event, 'fs14', 23)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 24)" onmouseover="showTip(event, 'fs15', 24)" class="i">map</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs16', 25)" onmouseover="showTip(event, 'fs16', 25)" class="i">i</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs12', 26)" onmouseover="showTip(event, 'fs12', 26)" class="i">MBraceNode</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 27)" onmouseover="showTip(event, 'fs13', 27)" class="i">Connect</span>(<span onmouseout="hideTip(event, 'fs17', 28)" onmouseover="showTip(event, 'fs17', 28)" class="i">sprintf</span> <span class="s">&quot;</span><span class="s">clusterVM</span><span class="s">%</span><span class="s">d</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs16', 29)" onmouseover="showTip(event, 'fs16', 29)" class="i">i</span>, <span class="n">2675</span>))</pre>
 </td>
 </tr>
 </table>
@@ -216,17 +154,15 @@ In case you are using a remote client (without DNS resolution) use the internal 
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
-<span onmouseout="hideTip(event, 'fs11', 30)" onmouseover="showTip(event, 'fs11', 30)" class="i">nodes</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs14', 31)" onmouseover="showTip(event, 'fs14', 31)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 32)" onmouseover="showTip(event, 'fs18', 32)" class="i">iter</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 33)" onmouseover="showTip(event, 'fs19', 33)" class="i">n</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs20', 34)" onmouseover="showTip(event, 'fs20', 34)" class="i">printfn</span> <span class="s">&quot;</span><span class="s">Node</span><span class="s"> </span><span class="s">%</span><span class="s">A</span><span class="s"> </span><span class="s">:</span><span class="s"> </span><span class="s">%</span><span class="s">s</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs19', 35)" onmouseover="showTip(event, 'fs19', 35)" class="i">n</span> <span class="o">&lt;|</span> <span class="k">try</span> <span onmouseout="hideTip(event, 'fs19', 36)" onmouseover="showTip(event, 'fs19', 36)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs21', 37)" onmouseover="showTip(event, 'fs21', 37)" class="i">Ping</span>()<span class="o">.</span><span class="i">ToString</span>() <span class="k">with</span> _ <span class="k">-&gt;</span> <span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span>)</pre>
+<span onmouseout="hideTip(event, 'fs11', 30)" onmouseover="showTip(event, 'fs11', 30)" class="i">nodes</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 31)" onmouseover="showTip(event, 'fs12', 31)" class="i">List</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 32)" onmouseover="showTip(event, 'fs18', 32)" class="i">iter</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs19', 33)" onmouseover="showTip(event, 'fs19', 33)" class="i">n</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs20', 34)" onmouseover="showTip(event, 'fs20', 34)" class="i">printfn</span> <span class="s">&quot;</span><span class="s">Node</span><span class="s"> </span><span class="s">%</span><span class="s">A</span><span class="s"> </span><span class="s">:</span><span class="s"> </span><span class="s">%</span><span class="s">s</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs19', 35)" onmouseover="showTip(event, 'fs19', 35)" class="i">n</span> <span class="o">&lt;|</span> <span class="k">try</span> <span onmouseout="hideTip(event, 'fs19', 36)" onmouseover="showTip(event, 'fs19', 36)" class="i">n</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs21', 37)" onmouseover="showTip(event, 'fs21', 37)" class="i">Ping</span>()<span class="o">.</span><span class="i">ToString</span>() <span class="k">with</span> _ <span class="k">-&gt;</span> <span class="s">&quot;</span><span class="s">failed</span><span class="s">&quot;</span>)</pre>
 </td>
 </tr>
 </table>
 
-<p>At this point, before actually booting a runtime you need to configure which store
-will be used by the runtime. By default each node will use its local filesystem, 
-but in our case we are going the use Windows Azure Storage as our backend. You need
+<p>At this point we are going to use Windows Azure Storage as our backend. You need
 to download the <a href="http://www.nuget.org/packages/MBrace.Azure">MBrace.Azure</a> package.</p>
 
-<p>Now create a new <code>StoreDefinition</code> and set it as default for your client. 
+<p>Now create a new <code>AzureStore</code> and set it as default for your client. 
 You can find your storage account name and key using the Azure Management Portal, in the <a href="https://azure.microsoft.com/en-us/documentation/articles/storage-manage-storage-account/#regeneratestoragekeys">Storage</a> page.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
@@ -247,8 +183,8 @@ You can find your storage account name and key using the Azure Management Portal
 
 <span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 38)" onmouseover="showTip(event, 'fs1', 38)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 39)" onmouseover="showTip(event, 'fs2', 39)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs22', 40)" onmouseover="showTip(event, 'fs22', 40)" class="i">Azure</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs23', 41)" onmouseover="showTip(event, 'fs23', 41)" class="i">name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">yourAccountName</span><span class="s">&quot;</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 42)" onmouseover="showTip(event, 'fs24', 42)" class="i">key</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">yourAccountKey</span><span class="s">&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs23', 41)" onmouseover="showTip(event, 'fs23', 41)" class="i">name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">yourStorageAccountName</span><span class="s">&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 42)" onmouseover="showTip(event, 'fs24', 42)" class="i">key</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">yourStorageAccountKey</span><span class="s">&quot;</span>
 
 <span class="k">let</span> <span onmouseout="hideTip(event, 'fs25', 43)" onmouseover="showTip(event, 'fs25', 43)" class="i">azureStore</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs26', 44)" onmouseover="showTip(event, 'fs26', 44)" class="i">AzureStore</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs27', 45)" onmouseover="showTip(event, 'fs27', 45)" class="i">Create</span>(<span class="i">accountName</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs23', 46)" onmouseover="showTip(event, 'fs23', 46)" class="i">name</span>, <span class="i">accountKey</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs24', 47)" onmouseover="showTip(event, 'fs24', 47)" class="i">key</span>)
 
@@ -277,6 +213,7 @@ and send your first cloud computation.</p>
 <h2>Useful references</h2>
 
 <ul>
+<li><a href="runtime-installation.html">Runtime Installation Guide</a></li>
 <li><a href="http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx">Configure a Point-to-Site VPN in the Management Portal</a></li>
 <li><a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-tutorial/">Create a Virtual Machine Running Windows Server</a></li>
 <li><a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/">How to Capture a Windows Virtual Machine to Use as a Template</a></li>
@@ -295,11 +232,11 @@ and send your first cloud computation.</p>
 <div class="tip" id="fs9">type Path =<br />&#160;&#160;static val DirectorySeparatorChar : char<br />&#160;&#160;static val AltDirectorySeparatorChar : char<br />&#160;&#160;static val VolumeSeparatorChar : char<br />&#160;&#160;static val InvalidPathChars : char[]<br />&#160;&#160;static val PathSeparator : char<br />&#160;&#160;static member ChangeExtension : path:string * extension:string -&gt; string<br />&#160;&#160;static member Combine : params paths:string[] -&gt; string + 3 overloads<br />&#160;&#160;static member GetDirectoryName : path:string -&gt; string<br />&#160;&#160;static member GetExtension : path:string -&gt; string<br />&#160;&#160;static member GetFileName : path:string -&gt; string<br />&#160;&#160;...<br /><br />Full name: System.IO.Path</div>
 <div class="tip" id="fs10">System.IO.Path.Combine(params paths: string []) : string<br />System.IO.Path.Combine(path1: string, path2: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string) : string<br />System.IO.Path.Combine(path1: string, path2: string, path3: string, path4: string) : string</div>
 <div class="tip" id="fs11">val nodes : MBraceNode list<br /><br />Full name: Azure-tutorial.nodes</div>
-<div class="tip" id="fs12">type MBraceNode =<br />&#160;&#160;private new : info:NodeDeploymentInfo -&gt; MBraceNode<br />&#160;&#160;private new : nref:ActorRef&lt;MBraceNodeMsg&gt; -&gt; MBraceNode<br />&#160;&#160;private new : nodeRef:ActorRef&lt;MBraceNodeMsg&gt; * uri:Uri -&gt; MBraceNode<br />&#160;&#160;member GetInfo : ?includePerformanceCounters:bool -&gt; string<br />&#160;&#160;member GetInfoAsync : ?includePerformanceCounters:bool -&gt; Async&lt;string&gt;<br />&#160;&#160;member private GetNodeInfoAsync : getPerformanceCounters:bool -&gt; Async&lt;NodeDeploymentInfo&gt;<br />&#160;&#160;member GetPerformanceCounters : unit -&gt; NodePerformanceInfo<br />&#160;&#160;member GetPerformanceCountersAsync : unit -&gt; Async&lt;NodePerformanceInfo&gt;<br />&#160;&#160;member GetStoreManager : unit -&gt; StoreClient<br />&#160;&#160;member GetStoreManagerAsync : unit -&gt; Async&lt;StoreClient&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceNode</div>
-<div class="tip" id="fs13">static member MBraceNode.Connect : uri:string -&gt; MBraceNode<br />static member MBraceNode.Connect : uri:System.Uri -&gt; MBraceNode<br />static member MBraceNode.Connect : hostname:string * port:int -&gt; MBraceNode</div>
-<div class="tip" id="fs14">Multiple items<br />module List<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type List&lt;&#39;T&gt; =<br />&#160;&#160;| ( [] )<br />&#160;&#160;| ( :: ) of Head: &#39;T * Tail: &#39;T list<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IEnumerable&lt;&#39;T&gt;<br />&#160;&#160;member Head : &#39;T<br />&#160;&#160;member IsEmpty : bool<br />&#160;&#160;member Item : index:int -&gt; &#39;T with get<br />&#160;&#160;member Length : int<br />&#160;&#160;member Tail : &#39;T list<br />&#160;&#160;static member Cons : head:&#39;T * tail:&#39;T list -&gt; &#39;T list<br />&#160;&#160;static member Empty : &#39;T list<br /><br />Full name: Microsoft.FSharp.Collections.List&lt;_&gt;</div>
-<div class="tip" id="fs15">val map : mapping:(&#39;T -&gt; &#39;U) -&gt; list:&#39;T list -&gt; &#39;U list<br /><br />Full name: Microsoft.FSharp.Collections.List.map</div>
-<div class="tip" id="fs16">val i : int</div>
+<div class="tip" id="fs12">Multiple items<br />module List<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type List&lt;&#39;T&gt; =<br />&#160;&#160;| ( [] )<br />&#160;&#160;| ( :: ) of Head: &#39;T * Tail: &#39;T list<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IEnumerable&lt;&#39;T&gt;<br />&#160;&#160;member Head : &#39;T<br />&#160;&#160;member IsEmpty : bool<br />&#160;&#160;member Item : index:int -&gt; &#39;T with get<br />&#160;&#160;member Length : int<br />&#160;&#160;member Tail : &#39;T list<br />&#160;&#160;static member Cons : head:&#39;T * tail:&#39;T list -&gt; &#39;T list<br />&#160;&#160;static member Empty : &#39;T list<br /><br />Full name: Microsoft.FSharp.Collections.List&lt;_&gt;</div>
+<div class="tip" id="fs13">val map : mapping:(&#39;T -&gt; &#39;U) -&gt; list:&#39;T list -&gt; &#39;U list<br /><br />Full name: Microsoft.FSharp.Collections.List.map</div>
+<div class="tip" id="fs14">val i : int</div>
+<div class="tip" id="fs15">type MBraceNode =<br />&#160;&#160;private new : info:NodeDeploymentInfo -&gt; MBraceNode<br />&#160;&#160;private new : nref:ActorRef&lt;MBraceNodeMsg&gt; -&gt; MBraceNode<br />&#160;&#160;private new : nodeRef:ActorRef&lt;MBraceNodeMsg&gt; * uri:Uri -&gt; MBraceNode<br />&#160;&#160;member GetInfo : ?includePerformanceCounters:bool -&gt; string<br />&#160;&#160;member GetInfoAsync : ?includePerformanceCounters:bool -&gt; Async&lt;string&gt;<br />&#160;&#160;member private GetNodeInfoAsync : getPerformanceCounters:bool -&gt; Async&lt;NodeDeploymentInfo&gt;<br />&#160;&#160;member GetPerformanceCounters : unit -&gt; NodePerformanceInfo<br />&#160;&#160;member GetPerformanceCountersAsync : unit -&gt; Async&lt;NodePerformanceInfo&gt;<br />&#160;&#160;member GetStoreManager : unit -&gt; StoreClient<br />&#160;&#160;member GetStoreManagerAsync : unit -&gt; Async&lt;StoreClient&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceNode</div>
+<div class="tip" id="fs16">static member MBraceNode.Connect : uri:string -&gt; MBraceNode<br />static member MBraceNode.Connect : uri:System.Uri -&gt; MBraceNode<br />static member MBraceNode.Connect : hostname:string * port:int -&gt; MBraceNode</div>
 <div class="tip" id="fs17">val sprintf : format:Printf.StringFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.sprintf</div>
 <div class="tip" id="fs18">val iter : action:(&#39;T -&gt; unit) -&gt; list:&#39;T list -&gt; unit<br /><br />Full name: Microsoft.FSharp.Collections.List.iter</div>
 <div class="tip" id="fs19">val n : MBraceNode</div>
@@ -335,7 +272,8 @@ and send your first cloud computation.</p>
             <li class="nav-header">Getting started</li>
             <li><a href="/MBrace/programming-model.html">Programming model</a></li>
             <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
-            <li><a href="/MBrace/azure-tutorial.html">Azure tutorial</a></li>
+            <li><a href="/MBrace/runtime-installation.html">Runtime installation guide</a></li>
+            <li><a href="/MBrace/azure-tutorial.html">MBrace Azure guide</a></li>
 
             <li class="nav-header">Documentation</li>
             <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace Manual</a></li>
