@@ -75,6 +75,8 @@ A collection of tutorials, technical overviews and API references of the library
 
   * [Programming Model](programming-model.html) An overview of the MBrace programming model.
 
+  * [Runtime Installation Guide](runtime-installation.html) Installing MBrace Runtime.
+  
   * [Azure Tutorial](azure-tutorial.html) Getting started with MBrace on Windows Azure.
 
   * [API Reference](reference/index.html) contains automatically generated documentation for all types, modules
@@ -92,5 +94,5 @@ For more information see the [License file][license] in the GitHub repository.
 
   [gh]: https://github.com/nessos/MBrace
   [issues]: https://github.com/nessos/MBrace/issues
-  [license]: https://github.com/nessos/MBrace/blob/master/License.md
+  [license]: https://github.com/nessos/MBrace/blob/master/LICENSE.md
 *)
