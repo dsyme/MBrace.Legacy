@@ -34,7 +34,7 @@
           @RenderBody()
         </div>
         <div class="span3">
-		      <a target="_blank" href="http://www.m-brace.net/">
+		      <a target="_blank" href="@Root/index.html">
             <img src="@Root/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />
 		      </a>
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
@@ -45,14 +45,17 @@
             <li><a href="@Properties["project-github"]">Source Code on GitHub</a></li>
             <li><a href="@Properties["project-github"]/blob/master/LICENSE.md">License</a></li>
             <li><a href="@Properties["project-github"]/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
-            
-            <li class="nav-header">Getting started</li>
-            <li><a href="@Root/programming-model.html">Programming model</a></li>
+
+            <li class="nav-header">Getting Started</li>
             <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
-            <li><a href="@Root/runtime-installation.html">Runtime installation guide</a></li>
-            <li><a href="@Root/azure-tutorial.html">MBrace Azure guide</a></li>
+            <li><a target="_blank" href="@Root/mbrace-plos.pdf">PLOS'13 Publication</a></li>
+            <li class="divider"></li>
+            <li><a href="@Root/runtime-deployment.html">Cluster Deployment Guide</a></li>
+            <li><a href="@Root/azure-tutorial.html">Azure Guide</a></li>
 
             <li class="nav-header">Documentation</li>
+            <li><a href="@Root/programming-model.html">Programming model</a></li>
+            <li><a href="@Root/client-api.html">Client API</a></li>
             <li><a target="_blank" href="@Root/mbrace-manual.pdf">MBrace Manual</a></li>
             <li><a href="@Root/reference/index.html">API Reference</a></li>
           </ul>
