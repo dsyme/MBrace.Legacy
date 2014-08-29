@@ -7,15 +7,12 @@ A distributed computation and big data analytics framework for .NET written in F
 A collection of tutorials, technical overviews and API references of the library.
 
   * [Programming Model](http://nessos.github.io/MBrace/programming-model.html) An overview of the MBrace programming model.
-
   * [Client API](http://nessos.github.io/MBrace/client-api.html) An overview of the MBrace client API.
-
   * [Cluster Deployment Guide](http://nessos.github.io/MBrace/runtime-deployment.html) Deploying an MBrace runtime.
-  
   * [Azure Tutorial](http://nessos.github.io/MBrace/azure-tutorial.html) Getting started with MBrace on Windows Azure.
-
-  * [API Reference](http://nessos.github.io/MBrace/reference/index.html) contains automatically generated documentation for all types, modules
-    and functions in the library.
+  * [API Reference](http://nessos.github.io/MBrace/reference/index.html) contains automatically generated documentation for all types, modules and functions in the library.
+ 
+All documentation and related material can be found [here](http://nessos.github.io/MBrace/).
 
 ### Build Status
 
