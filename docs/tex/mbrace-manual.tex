@@ -1608,12 +1608,12 @@ which is a property indicating whether the node is part of an existing \mbrace{}
 Every \mbrace{} daemon writes to a log of its own. \Mbrace{} node logs can accessed remotely
 from the client either in the form of a dump
 \begin{lstlisting}
-node.ShowLogs()
+node.ShowSystemLogs()
 \end{lstlisting}
 or in a structured format that can be used to perform local queries:
 \begin{lstlisting}
-node.GetLogs() 
-|> Seq.filter (fun log -> log.DateTime > DateTime.Now - TimeSpan.FromDays 1.0)
+node.GetSystemLogs() 
+|> Seq.filter (fun entry -> DateTime.Now - entry.Date < TimeSpan.FromDays 1.)
 \end{lstlisting}
 
 \subsubsection*{The MBraceRuntime Type}
@@ -1696,11 +1696,11 @@ proc.Result // Pending, Value, user Exception or system Fault
 proc.ProcessId // the cloud process id
 proc.InitTime // returns a System.DateTime on execution start
 proc.ExecutionTime // returns a System.TimeSpan on execution time
-proc.GetUserLogs() // get user logs for cloud process
+proc.GetLogs() // get user logs for cloud process
 \end{lstlisting}
 If running in the \mbrace{} shell, typing the command
 \begin{verbatim}
-   > proc.ShowProcessInfo() ;;
+   > proc.ShowInfo() ;;
 \end{verbatim}
 will print information like the following
 \begin{verbatim}
@@ -1727,11 +1727,7 @@ A list of all executing cloud processes in a given runtime can be obtained as fo
 \begin{lstlisting}
 let procs : Process list = runtime.GetAllProcesses()
 \end{lstlisting}
-This will return a list of \emph{untyped} cloud process handles. The untyped process handle
-is a supertype of the typed version and can be downcast like so:
-\begin{lstlisting}
-let proc' = proc.Cast<int> ()
-\end{lstlisting}
+This will return a list of \emph{untyped} cloud process handles.
 If running in the \mbrace{} Shell, process information can be printed to the buffer like so:
 \begin{verbatim}
    > runtime.ShowProcessInfo() ;;
@@ -1839,9 +1835,9 @@ also possible.
 \subsection{The \TitularMbrace{} Daemon}
 
 As mentioned earlier, the \mbrace{} daemon is the server-side application that
-bootstraps a machine-wide instance of the \mbrace{} framework. It is initialized by
-running the \texttt{mbraced.exe} executable, 4typically found in the binaries
-folder of every \mbrace{} installation. For instance, the command
+contains a machine-wide instance of the \mbrace{} framework. It is initialized by
+running the \texttt{mbraced.exe} executable, typically found in the \texttt{tools}
+folder of the \texttt{MBrace.Runtime} nuget package. For instance, the command
 \begin{verbatim}
    $ mbraced.exe --hostname 127.0.0.1 --primary-port 2675 --detach
 \end{verbatim}
@@ -1930,7 +1926,7 @@ that can even be booted in a local cluster
     $ mbracectl start --nodes 3 --boot
 \end{verbatim}
 
-The \mbrace{} installer also comes bundled with a windows service.
+The \mbrace{} runtime package also comes bundled with a windows service.
 Initiating \texttt{mbraced} as a service will spawn a background instance
 with settings read from the xml configuration file.
 
