@@ -22,6 +22,14 @@ MBraceSettings.MBracedExecutablePath <- System.IO.Path.Combine(__SOURCE_DIRECTOR
 
 # Installing the MBrace Runtime 
 
+In this tutorial you will learn how to install and setup MBrace.
+As a prerequisite you need Microsoft Visual Studio (or any environment supporting F#).
+
+Typically you need some machines to run the MBrace daemons/nodes and a client
+that manages the runtime (usually the client runs on a F# interactive instance). Any nodes in a MBrace runtime
+as well as any clients, should be part of the same network in order to work properly. 
+
+
 ## <a name="installservice"></a>Installing the MBrace Runtime Service
 
 In order to get a MBrace node running on a machine you need to download 

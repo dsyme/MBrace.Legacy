@@ -55,7 +55,7 @@ a Medium (A2) (2 cores, 3.5GB Memory) instance. After the virtual machine is cre
 
 ## Installing the MBrace and Configuring Runtime
 At this point you need to install MBrace in this machine using the instructions
-in our [Runtime Installation](runtime-installation.html) guide
+in our [Runtime Installation](runtime-installation.html) guide.
 Follow the [Installing the MBrace Runtime Service](runtime-installation.html#installservice) section to install MBrace as a Windows Service .
 
 Now you need to make any [configurations](runtime-installation.html#configureservice) to the MBrace daemon. 
