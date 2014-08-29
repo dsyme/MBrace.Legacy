@@ -438,7 +438,7 @@ namely mbraced.exe.config found in the same location as the executable.
 Configuration for mbraced is written in the `AppSettings` section 
 of the xml document that follows a key-value schema:
 
-    [lang=xaml]
+    [lang=xml]
     <?xml version="1.0" encoding="utf-8"?>
     <configuration>
         <appSettings>
