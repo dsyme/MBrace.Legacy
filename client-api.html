@@ -49,16 +49,35 @@ by installing <a href="http://www.nuget.org/packages/MBrace.Runtime"><code>MBrac
 <span class="l">2: </span>
 <span class="l">3: </span>
 <span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
 <span class="prep">#load</span> <span class="s">&quot;</span><span class="s">.</span><span class="s">.</span><span class="s">/</span><span class="s">packages</span><span class="s">/</span><span class="s">MBrace</span><span class="s">.</span><span class="s">Runtime</span><span class="s">/</span><span class="s">bootstrap</span><span class="s">.</span><span class="s">fsx</span><span class="s">&quot;</span>
 
 <span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 11)" onmouseover="showTip(event, 'fs1', 11)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 12)" onmouseover="showTip(event, 'fs2', 12)" class="i">MBrace</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 13)" onmouseover="showTip(event, 'fs1', 13)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 14)" onmouseover="showTip(event, 'fs2', 14)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs4', 15)" onmouseover="showTip(event, 'fs4', 15)" class="i">Client</span></pre>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 13)" onmouseover="showTip(event, 'fs1', 13)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 14)" onmouseover="showTip(event, 'fs2', 14)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs4', 15)" onmouseover="showTip(event, 'fs4', 15)" class="i">Client</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs6', 16)" onmouseover="showTip(event, 'fs6', 16)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs7', 17)" onmouseover="showTip(event, 'fs7', 17)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs8', 18)" onmouseover="showTip(event, 'fs8', 18)" class="i">InitLocal</span>(<span class="i">totalNodes</span> <span class="o">=</span> <span class="n">3</span>)</pre>
 </td>
 </tr>
 </table>
+
+<p>MBrace is compatible with Visual Studio 2012 and 2013.
+If using F# 3.0/Visual Studio 2012, a binding redirect for <code>FSharp.Core</code>
+needs to be set up</p>
+
+<table class="pre"><tr><td><pre lang="xml"><span class="k">&lt;</span><span class="i">configuration</span><span class="k">&gt;</span>
+  <span class="k">&lt;</span><span class="i">runtime</span><span class="k">&gt;</span>
+    <span class="k">&lt;</span><span class="i">assemblyBinding</span> <span class="o">xmlns</span><span class="k">="urn:schemas-microsoft-com:asm.v1"</span><span class="k">&gt;</span>
+      <span class="k">&lt;</span><span class="i">dependentAssembly</span><span class="k">&gt;</span>
+        <span class="k">&lt;</span><span class="i">assemblyIdentity</span> <span class="o">name</span><span class="k">="FSharp.Core"</span> <span class="o">publicKeyToken</span><span class="k">="b03f5f7f11d50a3a"</span> <span class="o">culture</span><span class="k">="neutral"</span> <span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">bindingRedirect</span> <span class="o">oldVersion</span><span class="k">="0.0.0.0-4.3.1.0"</span> <span class="o">newVersion</span><span class="k">="4.3.0.0"</span> <span class="k">/&gt;</span>
+      <span class="k">&lt;/</span><span class="i">dependentAssembly</span><span class="k">&gt;</span>
+    <span class="k">&lt;/</span><span class="i">assemblyBinding</span><span class="k">&gt;</span>
+  <span class="k">&lt;/</span><span class="i">runtime</span><span class="k">&gt;</span>
+<span class="k">&lt;/</span><span class="i">configuration</span><span class="k">&gt;</span></pre></td></tr></table>
 
 <h2>Overview</h2>
 
@@ -86,6 +105,9 @@ or Choice and a multitude of sample implementations of real-world algorithms.</l
 <div class="tip" id="fs3">namespace Nessos.MBrace.Lib</div>
 <div class="tip" id="fs4">namespace Nessos.MBrace.Client</div>
 <div class="tip" id="fs5">namespace Nessos.FsPickler</div>
+<div class="tip" id="fs6">val runtime : MBraceRuntime<br /><br />Full name: Client-api.runtime</div>
+<div class="tip" id="fs7">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
+<div class="tip" id="fs8">static member MBraceRuntime.InitLocal : totalNodes:int * ?masterPort:int * ?hostname:string * ?replicationFactor:int * ?failoverFactor:int * ?store:Store.ICloudStore * ?debug:bool * ?background:bool -&gt; MBraceRuntime</div>
 
         </div>
         <div class="span3">
@@ -104,8 +126,8 @@ or Choice and a multitude of sample implementations of real-world algorithms.</l
             <li class="nav-header">Getting started</li>
             <li><a href="/MBrace/programming-model.html">Programming model</a></li>
             <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
-            <li><a href="/MBrace/runtime-installation.html">Runtime installation guide</a></li>
-            <li><a href="/MBrace/azure-tutorial.html">MBrace Azure guide</a></li>
+            <li><a href="/MBrace/runtime-installation.html">Azure tutorial</a></li>
+            <li><a href="/MBrace/azure-tutorial.html">Azure tutorial</a></li>
 
             <li class="nav-header">Documentation</li>
             <li><a target="_blank" href="/MBrace/mbrace-manual.pdf">MBrace Manual</a></li>
