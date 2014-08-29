@@ -2,7 +2,7 @@
 
 A distributed computation and big data analytics framework for .NET written in F#.
 
-## Documentation & Tutorials
+### Documentation & Tutorials
 
 A collection of tutorials, technical overviews and API references of the library.
 
