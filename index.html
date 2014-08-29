@@ -51,20 +51,9 @@ manifested through computation expressions in F#.</p>
   <div class="span1"></div>
 </div>
 
-<h2>Demo</h2>
-
-<p>For a quick dive into MBrace and applications, try checking out the 
-<a href="https://github.com/nessos/MBrace.Demos"><code>MBrace.Demos</code></a> solution.</p>
-
-<table class="pre"><tr><td><pre lang="bash">git clone https://github.com/nessos/MBrace.Demos</pre></td></tr></table>
-
-<p>Open and build with Visual Studio 2012/13, 
-then run the available samples from F# interactive.</p>
-
 <h2>Example</h2>
 
-<p>This simple example demonstrates an MBrace computation in which files are read
-from a distributed storage container and the total line count is returned.</p>
+<p>An MBrace session can be initialized from F# interactive as follows:</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l"> 1: </span>
@@ -86,31 +75,46 @@ from a distributed storage container and the total line count is returned.</p>
 <span class="l">17: </span>
 <span class="l">18: </span>
 <span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+<span class="l">22: </span>
+<span class="l">23: </span>
+<span class="l">24: </span>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
-[&lt;<span onmouseout="hideTip(event, 'fs5', 9)" onmouseover="showTip(event, 'fs5', 9)" class="i">Cloud</span>&gt;]
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs6', 10)" onmouseover="showTip(event, 'fs6', 10)" class="i">lineCount</span> () <span class="o">=</span> <span onmouseout="hideTip(event, 'fs7', 11)" onmouseover="showTip(event, 'fs7', 11)" class="i">cloud</span> {
+<span class="prep">#load</span> <span class="s">&quot;</span><span class="s">.</span><span class="s">.</span><span class="s">/</span><span class="s">packages</span><span class="s">/</span><span class="s">MBrace</span><span class="s">.</span><span class="s">Runtime</span><span class="s">/</span><span class="s">bootstrap</span><span class="s">.</span><span class="s">fsx</span><span class="s">&quot;</span>
+
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 9)" onmouseover="showTip(event, 'fs1', 9)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 10)" onmouseover="showTip(event, 'fs2', 10)" class="i">MBrace</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 11)" onmouseover="showTip(event, 'fs1', 11)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 12)" onmouseover="showTip(event, 'fs2', 12)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs4', 13)" onmouseover="showTip(event, 'fs4', 13)" class="i">Client</span>
+
+[&lt;<span onmouseout="hideTip(event, 'fs5', 14)" onmouseover="showTip(event, 'fs5', 14)" class="i">Cloud</span>&gt;]
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs6', 15)" onmouseover="showTip(event, 'fs6', 15)" class="i">lineCount</span> () <span class="o">=</span> <span onmouseout="hideTip(event, 'fs7', 16)" onmouseover="showTip(event, 'fs7', 16)" class="i">cloud</span> {
     <span class="c">// enumerate all files from underlying storage container</span>
-    <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs8', 12)" onmouseover="showTip(event, 'fs8', 12)" class="i">files</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 13)" onmouseover="showTip(event, 'fs9', 13)" class="i">CloudFile</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs10', 14)" onmouseover="showTip(event, 'fs10', 14)" class="i">Enumerate</span> <span class="s">&quot;</span><span class="s">path</span><span class="s">/</span><span class="s">to</span><span class="s">/</span><span class="s">container</span><span class="s">&quot;</span>
+    <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs8', 17)" onmouseover="showTip(event, 'fs8', 17)" class="i">files</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 18)" onmouseover="showTip(event, 'fs9', 18)" class="i">CloudFile</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs10', 19)" onmouseover="showTip(event, 'fs10', 19)" class="i">Enumerate</span> <span class="s">&quot;</span><span class="s">path</span><span class="s">/</span><span class="s">to</span><span class="s">/</span><span class="s">container</span><span class="s">&quot;</span>
 
     <span class="c">// read the contents of a file and return its line count</span>
-    <span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 15)" onmouseover="showTip(event, 'fs11', 15)" class="i">count</span> <span onmouseout="hideTip(event, 'fs12', 16)" onmouseover="showTip(event, 'fs12', 16)" class="i">f</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs7', 17)" onmouseover="showTip(event, 'fs7', 17)" class="i">cloud</span> {
-        <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs13', 18)" onmouseover="showTip(event, 'fs13', 18)" class="i">text</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 19)" onmouseover="showTip(event, 'fs9', 19)" class="i">CloudFile</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs14', 20)" onmouseover="showTip(event, 'fs14', 20)" class="i">ReadAllText</span> <span onmouseout="hideTip(event, 'fs12', 21)" onmouseover="showTip(event, 'fs12', 21)" class="i">f</span>
-        <span class="k">return</span> <span onmouseout="hideTip(event, 'fs13', 22)" onmouseover="showTip(event, 'fs13', 22)" class="i">text</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 23)" onmouseover="showTip(event, 'fs15', 23)" class="i">Split</span>(<span class="s">&#39;\n&#39;</span>)<span class="o">.</span><span class="i">Length</span>
+    <span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 20)" onmouseover="showTip(event, 'fs11', 20)" class="i">count</span> <span onmouseout="hideTip(event, 'fs12', 21)" onmouseover="showTip(event, 'fs12', 21)" class="i">f</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs7', 22)" onmouseover="showTip(event, 'fs7', 22)" class="i">cloud</span> {
+        <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs13', 23)" onmouseover="showTip(event, 'fs13', 23)" class="i">text</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 24)" onmouseover="showTip(event, 'fs9', 24)" class="i">CloudFile</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs14', 25)" onmouseover="showTip(event, 'fs14', 25)" class="i">ReadAllText</span> <span onmouseout="hideTip(event, 'fs12', 26)" onmouseover="showTip(event, 'fs12', 26)" class="i">f</span>
+        <span class="k">return</span> <span onmouseout="hideTip(event, 'fs13', 27)" onmouseover="showTip(event, 'fs13', 27)" class="i">text</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 28)" onmouseover="showTip(event, 'fs15', 28)" class="i">Split</span>(<span class="s">&#39;\n&#39;</span>)<span class="o">.</span><span class="i">Length</span>
     }
     
     <span class="c">// perform line count in parallel</span>
-    <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs16', 24)" onmouseover="showTip(event, 'fs16', 24)" class="i">sizes</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 25)" onmouseover="showTip(event, 'fs8', 25)" class="i">files</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs17', 26)" onmouseover="showTip(event, 'fs17', 26)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 27)" onmouseover="showTip(event, 'fs18', 27)" class="i">map</span> <span onmouseout="hideTip(event, 'fs11', 28)" onmouseover="showTip(event, 'fs11', 28)" class="i">count</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs5', 29)" onmouseover="showTip(event, 'fs5', 29)" class="i">Cloud</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs19', 30)" onmouseover="showTip(event, 'fs19', 30)" class="i">Parallel</span>
-    <span class="k">return</span> <span onmouseout="hideTip(event, 'fs17', 31)" onmouseover="showTip(event, 'fs17', 31)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 32)" onmouseover="showTip(event, 'fs20', 32)" class="i">sum</span> <span onmouseout="hideTip(event, 'fs16', 33)" onmouseover="showTip(event, 'fs16', 33)" class="i">sizes</span>
+    <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs16', 29)" onmouseover="showTip(event, 'fs16', 29)" class="i">sizes</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 30)" onmouseover="showTip(event, 'fs8', 30)" class="i">files</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs17', 31)" onmouseover="showTip(event, 'fs17', 31)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 32)" onmouseover="showTip(event, 'fs18', 32)" class="i">map</span> <span onmouseout="hideTip(event, 'fs11', 33)" onmouseover="showTip(event, 'fs11', 33)" class="i">count</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs5', 34)" onmouseover="showTip(event, 'fs5', 34)" class="i">Cloud</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs19', 35)" onmouseover="showTip(event, 'fs19', 35)" class="i">Parallel</span>
+    <span class="k">return</span> <span onmouseout="hideTip(event, 'fs17', 36)" onmouseover="showTip(event, 'fs17', 36)" class="i">Array</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 37)" onmouseover="showTip(event, 'fs20', 37)" class="i">sum</span> <span onmouseout="hideTip(event, 'fs16', 38)" onmouseover="showTip(event, 'fs16', 38)" class="i">sizes</span>
 }
 
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs21', 34)" onmouseover="showTip(event, 'fs21', 34)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 35)" onmouseover="showTip(event, 'fs22', 35)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs23', 36)" onmouseover="showTip(event, 'fs23', 36)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">192</span><span class="s">.</span><span class="s">168</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">40</span><span class="s">&quot;</span>, <span class="i">port</span> <span class="o">=</span> <span class="n">2675</span>) <span class="c">// connect to an MBrace runtime</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 37)" onmouseover="showTip(event, 'fs24', 37)" class="i">proc</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs21', 38)" onmouseover="showTip(event, 'fs21', 38)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs25', 39)" onmouseover="showTip(event, 'fs25', 39)" class="i">CreateProcess</span> &lt;@ <span onmouseout="hideTip(event, 'fs6', 40)" onmouseover="showTip(event, 'fs6', 40)" class="i">lineCount</span> () @&gt; <span class="c">// send computation to the runtime</span>
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs26', 41)" onmouseover="showTip(event, 'fs26', 41)" class="i">lines</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs24', 42)" onmouseover="showTip(event, 'fs24', 42)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs27', 43)" onmouseover="showTip(event, 'fs27', 43)" class="i">AwaitResult</span> () <span class="c">// await completion</span></pre>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs21', 39)" onmouseover="showTip(event, 'fs21', 39)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 40)" onmouseover="showTip(event, 'fs22', 40)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs23', 41)" onmouseover="showTip(event, 'fs23', 41)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">192</span><span class="s">.</span><span class="s">168</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">40</span><span class="s">&quot;</span>, <span class="i">port</span> <span class="o">=</span> <span class="n">2675</span>) <span class="c">// connect to an MBrace runtime</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 42)" onmouseover="showTip(event, 'fs24', 42)" class="i">proc</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs21', 43)" onmouseover="showTip(event, 'fs21', 43)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs25', 44)" onmouseover="showTip(event, 'fs25', 44)" class="i">CreateProcess</span> &lt;@ <span onmouseout="hideTip(event, 'fs6', 45)" onmouseover="showTip(event, 'fs6', 45)" class="i">lineCount</span> () @&gt; <span class="c">// send computation to the runtime</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs26', 46)" onmouseover="showTip(event, 'fs26', 46)" class="i">lines</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs24', 47)" onmouseover="showTip(event, 'fs24', 47)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs27', 48)" onmouseover="showTip(event, 'fs27', 48)" class="i">AwaitResult</span> () <span class="c">// await completion</span></pre>
 </td>
 </tr>
 </table>
+
+<p>For a quick dive into MBrace and applications, try checking out the 
+<a href="https://github.com/nessos/MBrace.Demos"><code>MBrace.Demos</code></a> solution.</p>
+
+<table class="pre"><tr><td><pre lang="bash">git clone https://github.com/nessos/MBrace.Demos</pre></td></tr></table>
 
 <h2>Documentation &amp; Tutorials</h2>
 
@@ -176,11 +180,11 @@ For more information see the <a href="https://github.com/nessos/MBrace/blob/mast
             <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
 
             <li class="nav-header">Getting Started</li>
-            <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
-            <li><a target="_blank" href="/MBrace/mbrace-plos.pdf">PLOS'13 Publication</a></li>
-            <li class="divider"></li>
             <li><a href="/MBrace/runtime-deployment.html">Cluster Deployment Guide</a></li>
             <li><a href="/MBrace/azure-tutorial.html">Azure Guide</a></li>
+            <li class="divider"></li>
+            <li><a target="_blank" href="https://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
+            <li><a target="_blank" href="/MBrace/mbrace-plos.pdf">PLOS'13 Publication</a></li>
 
             <li class="nav-header">Documentation</li>
             <li><a href="/MBrace/programming-model.html">Programming model</a></li>
