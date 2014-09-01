@@ -62,24 +62,23 @@
             let exiter = new ConsoleProcessExiter(true) :> IExiter
             let results = workerConfig.ParseCommandLine(errorHandler = plugExiter exiter)
 #endif
-
-            let parentProc = results.PostProcessResult(<@ Parent_Pid @>, Process.GetProcessById)
-            let debugMode = results.Contains <@ Debug @>
-            let processDomainId = results.GetResult <@ Process_Domain_Id @>
-            let workingDirectory = results.GetResult <@ Working_Directory @>
-            let hostname = results.GetResult (<@ HostName @>, defaultValue = "localhost")
-            let port = results.GetResult (<@ Port @>, defaultValue = -1)
-            let parentAddress = results.PostProcessResult (<@ Parent_Address @>, Address.Parse)
-            let activator = results.GetResult <@ Store_Activator @>
-
             //
             // Register Things
             //
 
+            let workingDirectory = results.GetResult <@ Working_Directory @>
             SystemConfiguration.InitializeConfiguration(
                     workingDirectory = workingDirectory, 
                     cleanupWorkingDirectory = false, 
                     useVagrantPickler = false)
+
+            let parentProc = results.PostProcessResult(<@ Parent_Pid @>, Process.GetProcessById)
+            let debugMode = results.Contains <@ Debug @>
+            let processDomainId = results.GetResult <@ Process_Domain_Id @>
+            let hostname = results.GetResult (<@ HostName @>, defaultValue = "localhost")
+            let port = results.GetResult (<@ Port @>, defaultValue = -1)
+            let parentAddress = results.PostProcessResult (<@ Parent_Address @>, Address.Parse)
+            let activator = results.PostProcessResult (<@ Store_Activator @>, fun bs -> Serialization.Deserialize<StoreActivationInfo> bs)
 
             // Register Logger
             let logger =

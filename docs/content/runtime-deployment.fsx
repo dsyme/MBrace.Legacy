@@ -20,7 +20,7 @@ MBraceSettings.MBracedExecutablePath <- System.IO.Path.Combine(__SOURCE_DIRECTOR
 
 (**
 
-# Installing the MBrace Runtime 
+# Deploying the MBrace Runtime 
 
 In this tutorial you will learn how to install and setup MBrace.
 

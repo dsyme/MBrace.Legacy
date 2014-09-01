@@ -88,7 +88,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                 yield Process_Domain_Id processDomainId
                 yield Working_Directory SystemConfiguration.WorkingDirectory
                 yield Parent_Address <| primaryAddr.ToString ()
-                yield Store_Activator storeInfo
+                yield Store_Activator <| Serialization.Serialize storeInfo
 
                 yield Debug debugMode
                 match portOpt with
