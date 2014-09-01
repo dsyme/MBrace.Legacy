@@ -20,7 +20,7 @@ MBraceSettings.MBracedExecutablePath <- System.IO.Path.Combine(__SOURCE_DIRECTOR
 
 (**
 
-# Using MBrace on Windows Azure IaaS [Draft]
+# Using MBrace on Windows Azure IaaS
 
 In this tutorial you will learn how to setup MBrace on Windows Azure IaaS. 
 As a prerequisite you need to have a Windows Azure account, basic knowledge of the Azure computing/virtual machine services and

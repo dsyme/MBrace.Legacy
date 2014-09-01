@@ -23,10 +23,9 @@ MBraceSettings.MBracedExecutablePath <- System.IO.Path.Combine(__SOURCE_DIRECTOR
 # Installing the MBrace Runtime 
 
 In this tutorial you will learn how to install and setup MBrace.
-As a prerequisite you need Microsoft Visual Studio (or any environment supporting F#).
 
 Typically you need some machines to run the MBrace daemons/nodes and a client
-that manages the runtime (usually the client runs on a F# interactive instance). Any nodes in a MBrace runtime
+that manages the runtime (usually the client runs on a F# interactive instance). Any nodes in a MBrace runtime,
 as well as any clients, should be part of the same network in order to work properly. 
 
 
@@ -115,7 +114,7 @@ the address of the first interface that belongs to the given range. Leave this s
 * `worker port range` Available port range for use by mbrace workers.
 * `permissions` Permitted operation modes for this node; None: 0, Slave: 1, Master: 2, All: 3.
 * `working directory` Specifies the working directory. This is the place where assemblies and the cache will be stored.
-Use "temp" for the system temp folder.
+Use `temp` for the system temp folder.
 * `log file` Specifies a log file for the daemon. This can either be an absolute path or a relative path to the `working directory`.
 * `log level` Specify logs verbosity. Use 2 to display only Errors, 1 to also display Warnings and 0 for full verbosity.
 * `mbrace processdomain executable` Executable name for `mbrace.worker.exe`.
@@ -157,7 +156,7 @@ At your client machine, you need to install the F# interactive (or optionally Vi
 as well as the [MBrace.Runtime](http://www.nuget.org/packages/MBrace.Runtime) package from nuget.
 
 In your solution open the `mbrace-tutorial.fsx`. In the _initialize a runtime of remote nodes_ section
-change nodes hostname and ports. Depending on your configuration use either IP addresses
+change the hostnames and ports. Depending on your configuration use either IP addresses
 *)
 
 let nodes =
@@ -182,9 +181,9 @@ nodes |> List.iter (fun n -> printfn "Node %A : %s" n <| try n.Ping().ToString()
 At this point, before actually booting a runtime you need to configure which store
 will be used by the runtime. By default each node will use its local filesystem, 
 but in distributed scenarios you need to use storage common to all participating nodes like
-the Azure Blob Storage, SQL Server, or any implementation of the `ICloudStore` interface.
-In this example we are going to use the FileSystemStore that comes with MBrace
-with a UNC path that is accesible to all nodes. _Note_: The FileSystemStore should be used only for
+the _Windows Azure Blob Storage_, _SQL Server_, or any implementation of the `ICloudStore` interface.
+In this example we are going to use the `FileSystemStore` that comes with MBrace
+with a UNC path that is accesible to all nodes. _Note:_ The FileSystemStore should be used only for
 testing purposes.
 
 *)
