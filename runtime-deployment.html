@@ -35,11 +35,10 @@
           
 <h1>Deploying the MBrace Runtime</h1>
 
-<p>In this tutorial you will learn how to install and setup MBrace.
-As a prerequisite you need Microsoft Visual Studio (or any environment supporting F#).</p>
+<p>In this tutorial you will learn how to install and setup MBrace.</p>
 
 <p>Typically you need some machines to run the MBrace daemons/nodes and a client
-that manages the runtime (usually the client runs on a F# interactive instance). Any nodes in a MBrace runtime
+that manages the runtime (usually the client runs on a F# interactive instance). Any nodes in a MBrace runtime,
 as well as any clients, should be part of the same network in order to work properly.</p>
 
 <h2><a name="installservice"></a>Installing the MBrace Runtime Service</h2>
@@ -125,7 +124,7 @@ the address of the first interface that belongs to the given range. Leave this s
 <li><code>worker port range</code> Available port range for use by mbrace workers.</li>
 <li><code>permissions</code> Permitted operation modes for this node; None: 0, Slave: 1, Master: 2, All: 3.</li>
 <li><code>working directory</code> Specifies the working directory. This is the place where assemblies and the cache will be stored.
-Use "temp" for the system temp folder.</li>
+Use <code>temp</code> for the system temp folder.</li>
 <li><code>log file</code> Specifies a log file for the daemon. This can either be an absolute path or a relative path to the <code>working directory</code>.</li>
 <li><code>log level</code> Specify logs verbosity. Use 2 to display only Errors, 1 to also display Warnings and 0 for full verbosity.</li>
 <li><code>mbrace processdomain executable</code> Executable name for <code>mbrace.worker.exe</code>.</li>
@@ -165,7 +164,7 @@ At your client machine, you need to install the F# interactive (or optionally Vi
 as well as the <a href="http://www.nuget.org/packages/MBrace.Runtime">MBrace.Runtime</a> package from nuget.</p>
 
 <p>In your solution open the <code>mbrace-tutorial.fsx</code>. In the <em>initialize a runtime of remote nodes</em> section
-change nodes hostname and ports. Depending on your configuration use either IP addresses</p>
+change the hostnames and ports. Depending on your configuration use either IP addresses</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
@@ -214,9 +213,9 @@ change nodes hostname and ports. Depending on your configuration use either IP a
 <p>At this point, before actually booting a runtime you need to configure which store
 will be used by the runtime. By default each node will use its local filesystem, 
 but in distributed scenarios you need to use storage common to all participating nodes like
-the Azure Blob Storage, SQL Server, or any implementation of the <code>ICloudStore</code> interface.
-In this example we are going to use the FileSystemStore that comes with MBrace
-with a UNC path that is accesible to all nodes. <em>Note</em>: The FileSystemStore should be used only for
+the <em>Windows Azure Blob Storage</em>, <em>SQL Server</em>, or any implementation of the <code>ICloudStore</code> interface.
+In this example we are going to use the <code>FileSystemStore</code> that comes with MBrace
+with a UNC path that is accesible to all nodes. <em>Note:</em> The FileSystemStore should be used only for
 testing purposes.</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
