@@ -18,7 +18,7 @@
             | Working_Directory of string
             | HostName of string
             | Port of int
-            | [<EncodeBase64>] Store_Activator of StoreActivationInfo
+            | Store_Activator of byte [] //StoreActivationInfo
         with
             interface IArgParserTemplate with
                 member s.Usage =
@@ -30,6 +30,6 @@
                     | Working_Directory _ -> "Parent process working directory."
                     | HostName _ -> "Hostname, must be the same as for parent daemon."
                     | Port _ -> "Port argument."
-                    | Store_Activator _ -> "Store activation info."
+                    | Store_Activator _ -> "Store activation byte []."
 
         let workerConfig = UnionArgParser.Create<WorkerConfig>("WARNING: not intended for manual use.")

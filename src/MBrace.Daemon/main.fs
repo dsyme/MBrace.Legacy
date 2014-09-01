@@ -52,9 +52,9 @@
             let workerPorts =
                 // drop *all* app.config settings if either appears as command line argument
                 let source =
-                    if results.Contains(<@ Worker_Port_Range @>, source = CommandLine) ||
-                        results.Contains(<@ Worker_Port @>, source = CommandLine) then
-                        Some CommandLine
+                    if results.Contains(<@ Worker_Port_Range @>, source = ParseSource.CommandLine) ||
+                        results.Contains(<@ Worker_Port @>, source = ParseSource.CommandLine) then
+                        Some ParseSource.CommandLine
                     else None
 
                 (results.PostProcessResults(<@ Worker_Port_Range @>, parseWorkerPortRange, ?source = source))
