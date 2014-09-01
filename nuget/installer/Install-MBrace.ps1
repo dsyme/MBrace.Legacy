@@ -89,7 +89,7 @@ function Install-MBraceService
 	write-host "Deleting any existing MBrace services"
 	sc.exe delete 'MBrace' | out-null
 	write-host "Creating new service"
-	$svc = New-Service  -Name 'MBrace' -DisplayName 'MBrace Runtime' -BinaryPathName $path -StartupType Automatic 
+	$svc = New-Service  -Name 'MBrace' -DisplayName 'MBrace Runtime' -BinaryPathName $path -StartupType Automatic -Description "MBrace Runtime Service. Initializes a MBrace daemon with the given arguments and the mbraced configuration file."
 	write-host "Starting MBrace"
 	Start-Service -Name 'MBrace'
 }
