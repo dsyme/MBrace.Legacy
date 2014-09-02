@@ -12,7 +12,7 @@ A collection of tutorials, technical overviews and API references of the library
   * [Azure Tutorial](http://nessos.github.io/MBrace/azure-tutorial.html) Getting started with MBrace on Windows Azure.
   * [API Reference](http://nessos.github.io/MBrace/reference/index.html) contains automatically generated documentation for all types, modules and functions in the library.
  
-All documentation and related material can be found [here](http://nessos.github.io/MBrace/).
+All documentation and related material can be found [here](http://www.m-brace.net/).
 
 ### Build Status
 
