@@ -367,5 +367,5 @@ Target "Help" (fun _ -> PrintTargets() )
   ==> "Release"
 
 // start build
-//RunTargetOrDefault "Default"
-RunTargetOrDefault "Release"
+RunTargetOrDefault "Default"
+//RunTargetOrDefault "Release"
