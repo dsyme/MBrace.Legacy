@@ -55,10 +55,10 @@ a Medium (A2) (2 cores, 3.5GB Memory) instance. After the virtual machine is cre
 
 ## Installing the MBrace and Configuring Runtime
 At this point you need to install MBrace in this machine using the instructions
-in our [Runtime Installation](runtime-installation.html) guide.
-Follow the [Installing the MBrace Runtime Service](runtime-installation.html#installservice) section to install MBrace as a Windows Service .
+in our [Runtime Installation](runtime-deployment.html) guide.
+Follow the [Installing the MBrace Runtime Service](runtime-deployment.html#installservice) section to install MBrace as a Windows Service .
 
-Now you need to make any [configurations](runtime-installation.html#configureservice) to the MBrace daemon. 
+Now you need to make any [configurations](runtime-deployment.html#configureservice) to the MBrace daemon. 
 
 Normally you don't need to change anything and you can skip this step, unless you are using a remote client and a VPN.
 In this case you need to change the `hostname` setting from its default value to the internal IP of the virtual machine 
@@ -88,7 +88,7 @@ You just need to make sure that during the creation you choose the same _Cloud S
 At this point your virtual machines are running and the MBrace nodes are idle.
 At your client machine, if you use VPN make sure that you are connected.
 
-Finally according to the [Booting the MBrace Runtime](runtime-installation.html#bootruntime) section
+Finally according to the [Booting the MBrace Runtime](runtime-deployment.html#bootruntime) section
 connect to the MBrace nodes:
 *)
 let nodes = [1..3] |> List.map (fun i -> MBraceNode.Connect(sprintf "clusterVM%d" i, 2675))
@@ -140,7 +140,7 @@ runtime.Run <@ cloud { return 42 } @>
 (**
 
 ## Useful references
-* [Runtime Installation Guide](runtime-installation.html)
+* [Runtime Installation Guide](runtime-deployment.html)
 * [Configure a Point-to-Site VPN in the Management Portal](http://msdn.microsoft.com/en-us/library/azure/dn133792.aspx)
 * [Create a Virtual Machine Running Windows Server](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-tutorial/)
 * [How to Capture a Windows Virtual Machine to Use as a Template](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-capture-image-windows-server/)
