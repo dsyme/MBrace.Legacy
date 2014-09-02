@@ -272,6 +272,7 @@
                     proc.EnableRaisingEvents <- true
                     proc.StartInfo.FileName <- mbracedExe
                     proc.StartInfo.Arguments <- flattenedArgs
+                    proc.StartInfo.WorkingDirectory <- Path.GetDirectoryName mbracedExe
 
                     if background then
                         proc.StartInfo.UseShellExecute <- false

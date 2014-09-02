@@ -250,6 +250,7 @@
                 let psi = new ProcessStartInfo(selfExe, mbracedParser.PrintCommandLineFlat args)
                 psi.UseShellExecute <- true
                 psi.CreateNoWindow <- false
+                psi.WorkingDirectory <- Path.GetDirectoryName selfExe
 
                 let _ = Process.Start psi in ()
             with e -> exiter.Exit("error spawning child process.", id = 5)
