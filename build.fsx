@@ -207,7 +207,7 @@ Target "ClientPkg" (fun _ ->
                 [
                     "FsPickler",                                    "0.9.11"
                     "FsPickler.Json",                               "0.9.11"
-                    "Thespian",                                     "0.0.11"
+                    "Thespian",                                     "0.0.10"
                     "UnionArgParser",                               "0.8.0"
                     "Vagrant",                                      "0.2.5"
                     "MBrace.Core",                                  RequireExactly release.NugetVersion
@@ -367,5 +367,5 @@ Target "Help" (fun _ -> PrintTargets() )
   ==> "Release"
 
 // start build
-RunTargetOrDefault "Default"
-//RunTargetOrDefault "Release"
+//RunTargetOrDefault "Default"
+RunTargetOrDefault "Release"
