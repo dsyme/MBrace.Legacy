@@ -6,11 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
-
+    
     <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
     <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <!--<link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">-->
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon/favicon-196x196.png" sizes="196x196"/>
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon/favicon-160x160.png" sizes="160x160"/>
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon/favicon-96x96.png" sizes="96x96"/>
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon/favicon-16x16.png" sizes="16x16"/>
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon/favicon-32x32.png" sizes="32x32"/>
+    <!--<meta name="msapplication-TileColor" content="#2d89ef">
+    <meta name="msapplication-TileImage" content="http://www.m-brace.net/img/favicon/mstile-144x144.png">-->
 
     <link type="text/css" rel="stylesheet" href="http://www.m-brace.net/content/style.css" />
     <script type="text/javascript" src="http://www.m-brace.net/content/tips.js"></script>
@@ -48,10 +64,10 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '122', 122)" onmouseover="showTip(event, '122', 122)">
+          <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
             Catch(computation)
           </code>
-          <div class="tip" id="122">
+          <div class="tip" id="28">
             <strong>Signature:</strong> computation:Cloud&lt;&#39;T&gt; -&gt; Cloud&lt;Choice&lt;&#39;T,exn&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -70,10 +86,10 @@ completes then return Choice2Of2 with the raised exception.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '123', 123)" onmouseover="showTip(event, '123', 123)">
+          <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
             Choice(computations)
           </code>
-          <div class="tip" id="123">
+          <div class="tip" id="29">
             <strong>Signature:</strong> (computations:seq&lt;Cloud&lt;&#39;T option&gt;&gt;) -&gt; Cloud&lt;&#39;T option&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -94,10 +110,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '124', 124)" onmouseover="showTip(event, '124', 124)">
+          <code onmouseout="hideTip(event, '30', 30)" onmouseover="showTip(event, '30', 30)">
             Dispose(resource)
           </code>
-          <div class="tip" id="124">
+          <div class="tip" id="30">
             <strong>Signature:</strong> resource:&#39;T -&gt; Cloud&lt;unit&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -113,10 +129,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '125', 125)" onmouseover="showTip(event, '125', 125)">
+          <code onmouseout="hideTip(event, '31', 31)" onmouseover="showTip(event, '31', 31)">
             GetProcessId()
           </code>
-          <div class="tip" id="125">
+          <div class="tip" id="31">
             <strong>Signature:</strong> unit -&gt; Cloud&lt;ProcessId&gt;<br />
                       </div>
         </td>
@@ -132,10 +148,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '126', 126)" onmouseover="showTip(event, '126', 126)">
+          <code onmouseout="hideTip(event, '32', 32)" onmouseover="showTip(event, '32', 32)">
             GetTaskId()
           </code>
-          <div class="tip" id="126">
+          <div class="tip" id="32">
             <strong>Signature:</strong> unit -&gt; Cloud&lt;string&gt;<br />
                       </div>
         </td>
@@ -151,10 +167,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '127', 127)" onmouseover="showTip(event, '127', 127)">
+          <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
             GetWorkerCount()
           </code>
-          <div class="tip" id="127">
+          <div class="tip" id="33">
             <strong>Signature:</strong> unit -&gt; Cloud&lt;int&gt;<br />
                       </div>
         </td>
@@ -171,10 +187,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '128', 128)" onmouseover="showTip(event, '128', 128)">
+          <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
             Ignore(computation)
           </code>
-          <div class="tip" id="128">
+          <div class="tip" id="34">
             <strong>Signature:</strong> computation:Cloud&lt;&#39;T&gt; -&gt; Cloud&lt;unit&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -190,10 +206,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '129', 129)" onmouseover="showTip(event, '129', 129)">
+          <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
             Log(msg)
           </code>
-          <div class="tip" id="129">
+          <div class="tip" id="35">
             <strong>Signature:</strong> msg:string -&gt; Cloud&lt;unit&gt;<br />
                       </div>
         </td>
@@ -209,10 +225,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '130', 130)" onmouseover="showTip(event, '130', 130)">
+          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
             Logf(fmt)
           </code>
-          <div class="tip" id="130">
+          <div class="tip" id="36">
             <strong>Signature:</strong> fmt:StringFormat&lt;&#39;?79366,Cloud&lt;unit&gt;&gt; -&gt; &#39;?79366<br />
                           <strong>Type parameters:</strong> '?79366          </div>
         </td>
@@ -228,10 +244,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '131', 131)" onmouseover="showTip(event, '131', 131)">
+          <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
             OfAsync(asyncComputation)
           </code>
-          <div class="tip" id="131">
+          <div class="tip" id="37">
             <strong>Signature:</strong> asyncComputation:Async&lt;&#39;T&gt; -&gt; Cloud&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -247,10 +263,10 @@ This operator may create distribution.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '132', 132)" onmouseover="showTip(event, '132', 132)">
+          <code onmouseout="hideTip(event, '38', 38)" onmouseover="showTip(event, '38', 38)">
             Parallel(computations)
           </code>
-          <div class="tip" id="132">
+          <div class="tip" id="38">
             <strong>Signature:</strong> computations:seq&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Cloud&lt;&#39;T []&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -269,10 +285,10 @@ Exceptions raised by children carry cancellation semantics.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '133', 133)" onmouseover="showTip(event, '133', 133)">
+          <code onmouseout="hideTip(event, '39', 39)" onmouseover="showTip(event, '39', 39)">
             Raise(exn)
           </code>
-          <div class="tip" id="133">
+          <div class="tip" id="39">
             <strong>Signature:</strong> exn:exn -&gt; Cloud&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -288,10 +304,10 @@ Exceptions raised by children carry cancellation semantics.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '134', 134)" onmouseover="showTip(event, '134', 134)">
+          <code onmouseout="hideTip(event, '40', 40)" onmouseover="showTip(event, '40', 40)">
             Sleep(millisecondsDueTime)
           </code>
-          <div class="tip" id="134">
+          <div class="tip" id="40">
             <strong>Signature:</strong> millisecondsDueTime:int -&gt; Cloud&lt;unit&gt;<br />
                       </div>
         </td>
@@ -307,10 +323,10 @@ Exceptions raised by children carry cancellation semantics.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '135', 135)" onmouseover="showTip(event, '135', 135)">
+          <code onmouseout="hideTip(event, '41', 41)" onmouseover="showTip(event, '41', 41)">
             ToLocal(cloudComputation)
           </code>
-          <div class="tip" id="135">
+          <div class="tip" id="41">
             <strong>Signature:</strong> cloudComputation:Cloud&lt;&#39;T&gt; -&gt; Cloud&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -327,10 +343,10 @@ be executed locally (on the same node).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '136', 136)" onmouseover="showTip(event, '136', 136)">
+          <code onmouseout="hideTip(event, '42', 42)" onmouseover="showTip(event, '42', 42)">
             Trace(cloudComputation)
           </code>
-          <div class="tip" id="136">
+          <div class="tip" id="42">
             <strong>Signature:</strong> cloudComputation:Cloud&lt;&#39;T&gt; -&gt; Cloud&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
