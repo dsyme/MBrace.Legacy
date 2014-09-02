@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>MBrace Client API
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="An open source framework for large-scale distributed computation and data processing written in F#."/>
+    <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
+    
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon-196x196.png" sizes="196x196"/>
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon-160x160.png" sizes="160x160"/>
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon-96x96.png" sizes="96x96"/>
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon-16x16.png" sizes="16x16"/>
+    <link rel="icon" type="image/png" href="http://www.m-brace.net/img/favicon-32x32.png" sizes="32x32"/>
+
+    <link type="text/css" rel="stylesheet" href="http://www.m-brace.net/content/style.css" />
+    <script type="text/javascript" src="http://www.m-brace.net/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://nessos.github.io">nessos</a></li>
+          <li><a href="http://github.com/nessos/MBrace">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="http://www.m-brace.net/index.html">MBrace</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+<h1>MBrace Client API</h1>
+
+<p>The following article provides an overview of the MBrace client API,
+the collection of types and methods used for interacting with the MBrace runtime.
+These include</p>
+
+<ol>
+<li><p>The cloud workflow <a href="progamming-model.html">programming model</a>.</p></li>
+<li><p>An interface for managing and interacting with the MBrace runtime, that can 
+be roughly divided in the following categories:</p>
+<ul>
+<li><p>Runtime administration functionality, that includes cluster management operations, 
+health monitoring and real-time elastic node management.</p></li>
+<li><p>Cloud process management functionality, that includes submission of computations, 
+process monitoring, debugging and storage access.</p></li>
+</ul></li>
+<li><p>The MBrace shell, which enables interactive, on-the-fly declaration, 
+deployment and debugging of cloud computation through the F# REPL.</p></li>
+<li><p>A collection of command line tools for server-side deployments.</p></li>
+<li><p>A library of combinators implementing common parallelism workflows like MapReduce 
+or nondeterministic algorithms and a multitude of sample implementations.</p></li>
+</ol>
+
+<h2>Installation</h2>
+
+<p>These can be accessed by adding the <a href="http://www.nuget.org/packages/MBrace.Client"><code>MBrace.Client</code></a> 
+nuget package to projects. Alternatively, they can be consumed from F# interactive 
+by installing <a href="http://www.nuget.org/packages/MBrace.Runtime"><code>MBrace.Runtime</code></a> and loading</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="prep">#load</span> <span class="s">&quot;</span><span class="s">.</span><span class="s">.</span><span class="s">/</span><span class="s">packages</span><span class="s">/</span><span class="s">MBrace</span><span class="s">.</span><span class="s">Runtime</span><span class="s">/</span><span class="s">bootstrap</span><span class="s">.</span><span class="s">fsx</span><span class="s">&quot;</span>
+
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs2', 16)" onmouseover="showTip(event, 'fs2', 16)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 17)" onmouseover="showTip(event, 'fs3', 17)" class="i">MBrace</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs2', 18)" onmouseover="showTip(event, 'fs2', 18)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 19)" onmouseover="showTip(event, 'fs3', 19)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs5', 20)" onmouseover="showTip(event, 'fs5', 20)" class="i">Client</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs9', 21)" onmouseover="showTip(event, 'fs9', 21)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs10', 22)" onmouseover="showTip(event, 'fs10', 22)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs11', 23)" onmouseover="showTip(event, 'fs11', 23)" class="i">InitLocal</span>(<span class="i">totalNodes</span> <span class="o">=</span> <span class="n">3</span>)
+
+<span onmouseout="hideTip(event, 'fs9', 24)" onmouseover="showTip(event, 'fs9', 24)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs12', 25)" onmouseover="showTip(event, 'fs12', 25)" class="i">Run</span> &lt;@ <span onmouseout="hideTip(event, 'fs13', 26)" onmouseover="showTip(event, 'fs13', 26)" class="i">cloud</span> { <span class="k">return</span> <span class="n">1</span> <span class="o">+</span> <span class="n">1</span> } @&gt;</pre>
+</td>
+</tr>
+</table>
+
+<p>MBrace is compatible with Visual Studio 2012 and 2013.
+If using F# 3.0/Visual Studio 2012, a binding redirect for <code>FSharp.Core</code>
+needs to be set up</p>
+
+<table class="pre"><tr><td><pre lang="xml"><span class="k">&lt;</span><span class="i">configuration</span><span class="k">&gt;</span>
+  <span class="k">&lt;</span><span class="i">runtime</span><span class="k">&gt;</span>
+    <span class="k">&lt;</span><span class="i">assemblyBinding</span> <span class="o">xmlns</span><span class="k">="urn:schemas-microsoft-com:asm.v1"</span><span class="k">&gt;</span>
+      <span class="k">&lt;</span><span class="i">dependentAssembly</span><span class="k">&gt;</span>
+        <span class="k">&lt;</span><span class="i">assemblyIdentity</span> <span class="o">name</span><span class="k">="FSharp.Core"</span> <span class="o">publicKeyToken</span><span class="k">="b03f5f7f11d50a3a"</span> <span class="o">culture</span><span class="k">="neutral"</span> <span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">bindingRedirect</span> <span class="o">oldVersion</span><span class="k">="0.0.0.0-4.3.1.0"</span> <span class="o">newVersion</span><span class="k">="4.3.0.0"</span> <span class="k">/&gt;</span>
+      <span class="k">&lt;/</span><span class="i">dependentAssembly</span><span class="k">&gt;</span>
+    <span class="k">&lt;/</span><span class="i">assemblyBinding</span><span class="k">&gt;</span>
+  <span class="k">&lt;/</span><span class="i">runtime</span><span class="k">&gt;</span>
+<span class="k">&lt;/</span><span class="i">configuration</span><span class="k">&gt;</span></pre></td></tr></table>
+
+<h2>The Cloud Attribute</h2>
+
+<p>A primary function of the MBrace client is statically traversing cloud workflows for library dependencies, 
+extracting metadata to be used for debugging purposes, 
+as well as detecting and emitting warnings for potentially invalid patterns. 
+This static traversal is in part achieved through the help of F# code quotations. 
+Quotations are an excellent resource for metadata and as such, they are utilized by MBrace.</p>
+
+<p>Cloud computations in MBrace are initialized like so:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 114)" onmouseover="showTip(event, 'fs14', 114)" class="i">proc</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 115)" onmouseover="showTip(event, 'fs9', 115)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 116)" onmouseover="showTip(event, 'fs15', 116)" class="i">CreateProcess</span> &lt;@ <span onmouseout="hideTip(event, 'fs13', 117)" onmouseover="showTip(event, 'fs13', 117)" class="i">cloud</span> { <span class="k">return</span> <span class="n">1</span> <span class="o">+</span> <span class="n">1</span> } @&gt;</pre>
+</td>
+</tr>
+</table>
+
+<p>where runtime denotes a client object to a running MBrace cluster. 
+A peculiar feature of this syntax is that cloud blocks are delimited by <code>&lt;@</code> and <code>@&gt;</code> symbols. 
+These are part of the F# language feature known as <a href="http://msdn.microsoft.com/en-us/library/dd233212.aspx">code quotations</a>. 
+Any F# expression enclosed in these symbols will yield a typed syntax tree 
+of the given expression, also known as its quotation. Evaluating</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 31)" onmouseover="showTip(event, 'fs16', 31)" class="i">expr</span> <span class="o">=</span> &lt;@ <span class="n">1</span> <span class="o">+</span> <span class="n">1</span> @&gt;</pre>
+</td>
+</tr>
+</table>
+
+<p>gives a syntax tree which, if evaluated, will yield a result of type <code>int</code>.</p>
+
+<p>Even though workflows need to be quoted for execution, it does not mean 
+that all referenced workfows have to be expression trees;
+only the top-level expression need be so.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+[&lt;<span onmouseout="hideTip(event, 'fs17', 32)" onmouseover="showTip(event, 'fs17', 32)" class="i">Cloud</span>&gt;]
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs18', 33)" onmouseover="showTip(event, 'fs18', 33)" class="i">test</span> () <span class="o">=</span> <span onmouseout="hideTip(event, 'fs13', 34)" onmouseover="showTip(event, 'fs13', 34)" class="i">cloud</span> { <span class="k">return</span> <span class="n">1</span> <span class="o">+</span> <span class="n">1</span> }
+
+<span onmouseout="hideTip(event, 'fs9', 35)" onmouseover="showTip(event, 'fs9', 35)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs12', 36)" onmouseover="showTip(event, 'fs12', 36)" class="i">Run</span> &lt;@ <span onmouseout="hideTip(event, 'fs18', 37)" onmouseover="showTip(event, 'fs18', 37)" class="i">test</span> () @&gt;</pre>
+</td>
+</tr>
+</table>
+
+<p>Despite this, all nested calls to cloud workflows should be affixed with a <code>[&lt;Cloud&gt;]</code> attribute. 
+Failing to do so will result in warning messages being raised. 
+The Cloud attribute is just an abbreviation of the 
+<a href="http://msdn.microsoft.com/en-us/library/ee353643.aspx"><code>ReflectedDefinitionAttribute</code></a> 
+provided by F#. Adding this to a declaration makes the F# compiler generate a reflected quotation to the tagged code.</p>
+
+<p>It should be noted that the Cloud attribute is not needed for F# declarations that are not cloud workflows. 
+For example, the following code is perfectly valid:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs19', 38)" onmouseover="showTip(event, 'fs19', 38)" class="i">f</span> <span onmouseout="hideTip(event, 'fs20', 39)" onmouseover="showTip(event, 'fs20', 39)" class="i">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs20', 40)" onmouseover="showTip(event, 'fs20', 40)" class="i">x</span> <span class="o">+</span> <span class="n">1</span>
+
+<span onmouseout="hideTip(event, 'fs9', 41)" onmouseover="showTip(event, 'fs9', 41)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs12', 42)" onmouseover="showTip(event, 'fs12', 42)" class="i">Run</span> &lt;@ <span onmouseout="hideTip(event, 'fs13', 43)" onmouseover="showTip(event, 'fs13', 43)" class="i">cloud</span> { <span class="k">return</span> <span onmouseout="hideTip(event, 'fs19', 44)" onmouseover="showTip(event, 'fs19', 44)" class="i">f</span> <span class="n">41</span> } @&gt;</pre>
+</td>
+</tr>
+</table>
+
+<h2>Store Providers</h2>
+
+<p>Every MBrace runtime requires a storage backend in order for it to function. 
+This enables distributed storage primitives like cloud refs and cloud files 
+and is used by internally the runtime for logging purposes. 
+The MBrace runtime does not provide its own distributed storage implementation, 
+rather it relies on pluggable storage providers which can be user defined.</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs2', 45)" onmouseover="showTip(event, 'fs2', 45)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 46)" onmouseover="showTip(event, 'fs3', 46)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs21', 47)" onmouseover="showTip(event, 'fs21', 47)" class="i">Store</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs22', 48)" onmouseover="showTip(event, 'fs22', 48)" class="i">fsStore</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs23', 49)" onmouseover="showTip(event, 'fs23', 49)" class="i">FileSystemStore</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs24', 50)" onmouseover="showTip(event, 'fs24', 50)" class="i">Create</span>(<span class="s">@&quot;</span><span class="s">\</span><span class="s">\</span><span class="s">FileServer</span><span class="s">\</span><span class="s">path</span><span class="s">\</span><span class="s">to</span><span class="s">\</span><span class="s">mbrace</span><span class="s">&quot;</span>)
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs25', 51)" onmouseover="showTip(event, 'fs25', 51)" class="i">sqlStore</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs26', 52)" onmouseover="showTip(event, 'fs26', 52)" class="i">SqlServerStore</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs27', 53)" onmouseover="showTip(event, 'fs27', 53)" class="i">Create</span>(<span class="i">connectionString</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">connectionString</span><span class="s">&quot;</span>)
+
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs2', 54)" onmouseover="showTip(event, 'fs2', 54)" class="i">Nessos</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 55)" onmouseover="showTip(event, 'fs3', 55)" class="i">MBrace</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs28', 56)" onmouseover="showTip(event, 'fs28', 56)" class="i">Azure</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs29', 57)" onmouseover="showTip(event, 'fs29', 57)" class="i">azureStore</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs30', 58)" onmouseover="showTip(event, 'fs30', 58)" class="i">AzureStore</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs31', 59)" onmouseover="showTip(event, 'fs31', 59)" class="i">Create</span>(<span class="i">accountName</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">name</span><span class="s">&quot;</span>, <span class="i">accountKey</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">key</span><span class="s">&quot;</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>The default store implementation of a client session can be specified by setting</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs32', 60)" onmouseover="showTip(event, 'fs32', 60)" class="i">MBraceSettings</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs33', 61)" onmouseover="showTip(event, 'fs33', 61)" class="i">DefaultStore</span> <span class="o">&lt;-</span> <span onmouseout="hideTip(event, 'fs29', 62)" onmouseover="showTip(event, 'fs29', 62)" class="i">azureStore</span></pre>
+</td>
+</tr>
+</table>
+
+<p>User-defined storage providers can be created by implementing the 
+<a href="reference/nessos-mbrace-store-icloudstore.html"><code>ICloudStore</code></a> interface.</p>
+
+<h2>Managing the MBrace Runtime</h2>
+
+<p>The MBrace runtime is a cluster of connected computers capable of 
+orchestrating the execution of cloud workflows. 
+Every computer participating in an MBrace runtime is called an MBrace node. 
+In this section we offer an overview of how the MBrace client stack can be used to initialize, 
+manage and monitor remote MBrace runtimes.</p>
+
+<h3>MBraceNode</h3>
+
+<p>An <a href="reference/nessos-mbrace-client-mbracenode.html"><code>MBraceNode</code></a> represents any 
+physical machine that runs the MBrace daemon, the server-side component of the framework. 
+Every MBrace daemon accepts connections from a predetermined tcp port on the host. 
+MBrace nodes are identifiable by the uri format</p>
+
+<table class="pre"><tr><td><pre lang="ascii">mbrace://hostname:port/</pre></td></tr></table>
+
+<p>The MBrace client can connect to a remote node by calling</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs34', 63)" onmouseover="showTip(event, 'fs34', 63)" class="i">node</span>  <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 64)" onmouseover="showTip(event, 'fs35', 64)" class="i">Node</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs36', 65)" onmouseover="showTip(event, 'fs36', 65)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">mbrace</span><span class="s">:</span><span class="s">/</span><span class="s">/</span><span class="s">hostname</span><span class="s">:</span><span class="s">2675</span><span class="s">&quot;</span>)
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs37', 66)" onmouseover="showTip(event, 'fs37', 66)" class="i">node&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 67)" onmouseover="showTip(event, 'fs35', 67)" class="i">Node</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs36', 68)" onmouseover="showTip(event, 'fs36', 68)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">hostname</span><span class="s">&quot;</span>, <span class="n">2675</span>) <span class="c">// equivalent to the above</span></pre>
+</td>
+</tr>
+</table>
+
+<p>A node in the local machine can be initialized by calling</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs38', 69)" onmouseover="showTip(event, 'fs38', 69)" class="i">node&#39;&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 70)" onmouseover="showTip(event, 'fs35', 70)" class="i">Node</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs39', 71)" onmouseover="showTip(event, 'fs39', 71)" class="i">Spawn</span>(<span class="i">hostname</span> <span class="o">=</span> <span class="s">&quot;</span><span class="s">10</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">0</span><span class="s">.</span><span class="s">12</span><span class="s">&quot;</span>, <span class="i">primaryPort</span> <span class="o">=</span> <span class="n">2675</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>This will initialize an object of type MBraceNode. 
+This object acts as a handle to the remote node. 
+It can be used to perform a variety of operations like</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs34', 72)" onmouseover="showTip(event, 'fs34', 72)" class="i">node</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs40', 73)" onmouseover="showTip(event, 'fs40', 73)" class="i">Ping</span>() <span class="c">// ping the node, returning the number of milliseconds taken</span></pre>
+</td>
+</tr>
+</table>
+
+<p>or</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs34', 74)" onmouseover="showTip(event, 'fs34', 74)" class="i">node</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs41', 75)" onmouseover="showTip(event, 'fs41', 75)" class="i">IsLocal</span></pre>
+</td>
+</tr>
+</table>
+
+<p>which is a property indicating whether the node is part of an existing MBrace cluster.</p>
+
+<p>Every MBrace daemon writes to a log of its own. 
+MBrace node logs can accessed remotely from the client either in the form of a dump</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs34', 76)" onmouseover="showTip(event, 'fs34', 76)" class="i">node</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs42', 77)" onmouseover="showTip(event, 'fs42', 77)" class="i">ShowSystemLogs</span>()</pre>
+</td>
+</tr>
+</table>
+
+<p>or in a structured format that can be used to perform local queries:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs34', 78)" onmouseover="showTip(event, 'fs34', 78)" class="i">node</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs43', 79)" onmouseover="showTip(event, 'fs43', 79)" class="i">GetSystemLogs</span>()
+<span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs44', 80)" onmouseover="showTip(event, 'fs44', 80)" class="i">Seq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs45', 81)" onmouseover="showTip(event, 'fs45', 81)" class="i">filter</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs46', 82)" onmouseover="showTip(event, 'fs46', 82)" class="i">entry</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs47', 83)" onmouseover="showTip(event, 'fs47', 83)" class="i">DateTime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs48', 84)" onmouseover="showTip(event, 'fs48', 84)" class="i">Now</span> <span class="o">-</span> <span onmouseout="hideTip(event, 'fs46', 85)" onmouseover="showTip(event, 'fs46', 85)" class="i">entry</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs49', 86)" onmouseover="showTip(event, 'fs49', 86)" class="i">Date</span> <span class="o">&lt;</span> <span onmouseout="hideTip(event, 'fs50', 87)" onmouseover="showTip(event, 'fs50', 87)" class="i">TimeSpan</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs51', 88)" onmouseover="showTip(event, 'fs51', 88)" class="i">FromDays</span> <span class="n">1.</span>)</pre>
+</td>
+</tr>
+</table>
+
+<h3>MBraceRuntime</h3>
+
+<p>An MBrace runtime can be booted once access to a collection of at least 3 nodes, 
+all running within the same subnet, has been established. This can be done like so:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs52', 89)" onmouseover="showTip(event, 'fs52', 89)" class="i">nodes</span> <span class="o">=</span> [ <span onmouseout="hideTip(event, 'fs34', 90)" onmouseover="showTip(event, 'fs34', 90)" class="i">node</span> ; <span onmouseout="hideTip(event, 'fs37', 91)" onmouseover="showTip(event, 'fs37', 91)" class="i">node&#39;</span> ; <span onmouseout="hideTip(event, 'fs38', 92)" onmouseover="showTip(event, 'fs38', 92)" class="i">node&#39;&#39;</span> ]
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs9', 93)" onmouseover="showTip(event, 'fs9', 93)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs53', 94)" onmouseover="showTip(event, 'fs53', 94)" class="i">MBraceRuntime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs54', 95)" onmouseover="showTip(event, 'fs54', 95)" class="i">Boot</span>(<span onmouseout="hideTip(event, 'fs52', 96)" onmouseover="showTip(event, 'fs52', 96)" class="i">nodes</span>, <span class="i">store</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs29', 97)" onmouseover="showTip(event, 'fs29', 97)" class="i">azureStore</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>This will initialize an MBrace cluster that connects to a Windows Azure store endpoint. 
+Once boot is completed, a handle of type <a href="reference/nessos-mbrace-client-mbracenode.html"><code>MBraceRuntime</code></a> 
+will be returned. If no store is specified explicitly, the MBraceSettings.DefaultStore will be used. 
+To connect to an already booted MBrace runtime, one needs simply write</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs9', 98)" onmouseover="showTip(event, 'fs9', 98)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs53', 99)" onmouseover="showTip(event, 'fs53', 99)" class="i">MBraceRuntime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs55', 100)" onmouseover="showTip(event, 'fs55', 100)" class="i">Connect</span>(<span class="s">&quot;</span><span class="s">mbrace</span><span class="s">:</span><span class="s">/</span><span class="s">/</span><span class="s">host</span><span class="s">:</span><span class="s">port</span><span class="s">/</span><span class="s">&quot;</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>wherein the supplied uri can point to any of the constituent worker nodes.</p>
+
+<p>The client stack provides a facility for instantaneously spawning local runtimes:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs9', 101)" onmouseover="showTip(event, 'fs9', 101)" class="i">runtime</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs53', 102)" onmouseover="showTip(event, 'fs53', 102)" class="i">MBraceRuntime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs56', 103)" onmouseover="showTip(event, 'fs56', 103)" class="i">InitLocal</span>(<span class="i">totalNodes</span> <span class="o">=</span> <span class="n">4</span>, <span class="i">background</span> <span class="o">=</span> <span class="k">true</span>)</pre>
+</td>
+</tr>
+</table>
+
+<p>This will initiate a runtime of four local nodes that execute in the background. 
+The feature is particularly useful for quick deployments of distributed code under development.
+The MBraceRuntime object serves as the entry point for any kind of client interactions with the cluster. 
+For instance, the property</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs9', 104)" onmouseover="showTip(event, 'fs9', 104)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs57', 105)" onmouseover="showTip(event, 'fs57', 105)" class="i">Nodes</span></pre>
+</td>
+</tr>
+</table>
+
+<p>returns the list of all nodes that constitute the cluster. In the MBrace shell, calling</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs9', 106)" onmouseover="showTip(event, 'fs9', 106)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs58', 107)" onmouseover="showTip(event, 'fs58', 107)" class="i">ShowInfo</span>()</pre>
+</td>
+</tr>
+</table>
+
+<p>prints a detailed description of the cluster to the terminal.</p>
+
+<table class="pre"><tr><td><pre lang="ascii">{m}brace runtime information (active)
+
+Host           Port  Role
+----           ----  ----
+grothendieck  38857  Master
+grothendieck  38873  Alt Master  Local (Pid 3616)  mbrace://grothendieck:38873/
+grothendieck  38865  Alt Master  Local (Pid 4952)  mbrace://grothendieck:38865/</pre></td></tr></table>
+
+<p>The state of the runtime can be reset or stopped at any point by calling the following methods:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs9', 108)" onmouseover="showTip(event, 'fs9', 108)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs59', 109)" onmouseover="showTip(event, 'fs59', 109)" class="i">Shutdown</span>() <span class="c">// stops the runtime</span>
+<span onmouseout="hideTip(event, 'fs9', 110)" onmouseover="showTip(event, 'fs9', 110)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs60', 111)" onmouseover="showTip(event, 'fs60', 111)" class="i">Reboot</span>() <span class="c">// resets the state of the runtime</span>
+<span onmouseout="hideTip(event, 'fs9', 112)" onmouseover="showTip(event, 'fs9', 112)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs61', 113)" onmouseover="showTip(event, 'fs61', 113)" class="i">Kill</span>() <span class="c">// violently kills all node processes in the runtime</span></pre>
+</td>
+</tr>
+</table>
+
+<h2>Managing Cloud Processes</h2>
+
+<p>A cloud process is a currently executing or completed cloud computation 
+in the context of a specific MBrace runtime. 
+In any given runtime, cloud processes can be initialized, monitored for progress, or cancelled; 
+completed cloud processes can be queried for their results and 
+symbolic stack traces can be fetched for failed executions.</p>
+
+<p>Cloud processes form a fundamental organizational unit for the MBrace runtime: 
+conceptually, if one is to think of MBrace as an operating system for the cloud, 
+then cloud processes form its units of distributed execution; 
+every cloud process spawns its own set of scheduler and workers; 
+the MBrace runtime enforces a regime of process isolation, 
+which means that each cloud process will run in a distinct 
+instance of the CLR in the context of each worker node.</p>
+
+<p>Given a runtime object, a cloud process can be initialized like so:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 114)" onmouseover="showTip(event, 'fs14', 114)" class="i">proc</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 115)" onmouseover="showTip(event, 'fs9', 115)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 116)" onmouseover="showTip(event, 'fs15', 116)" class="i">CreateProcess</span> &lt;@ <span onmouseout="hideTip(event, 'fs13', 117)" onmouseover="showTip(event, 'fs13', 117)" class="i">cloud</span> { <span class="k">return</span> <span class="n">1</span> <span class="o">+</span> <span class="n">1</span> } @&gt;</pre>
+</td>
+</tr>
+</table>
+
+<p>This will submit the workflow to the runtime for execution and 
+return with a process handle of type 
+<a href="http://nessos.github.io/MBrace/reference/nessos-mbrace-client-process-1.html"><code>Process&lt;int&gt;</code></a>. 
+Various useful properties can be used to query the status 
+of the cloud computation at any time. For instance,</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs14', 118)" onmouseover="showTip(event, 'fs14', 118)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs62', 119)" onmouseover="showTip(event, 'fs62', 119)" class="i">Result</span> <span class="c">// Pending, Value, user Exception or system Fault</span>
+<span onmouseout="hideTip(event, 'fs14', 120)" onmouseover="showTip(event, 'fs14', 120)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs63', 121)" onmouseover="showTip(event, 'fs63', 121)" class="i">ProcessId</span> <span class="c">// the cloud process id</span>
+<span onmouseout="hideTip(event, 'fs14', 122)" onmouseover="showTip(event, 'fs14', 122)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs64', 123)" onmouseover="showTip(event, 'fs64', 123)" class="i">InitTime</span> <span class="c">// returns a System.DateTime on execution start</span>
+<span onmouseout="hideTip(event, 'fs14', 124)" onmouseover="showTip(event, 'fs14', 124)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs65', 125)" onmouseover="showTip(event, 'fs65', 125)" class="i">ExecutionTime</span> <span class="c">// returns a System.TimeSpan on execution time</span>
+<span onmouseout="hideTip(event, 'fs14', 126)" onmouseover="showTip(event, 'fs14', 126)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs66', 127)" onmouseover="showTip(event, 'fs66', 127)" class="i">GetLogs</span>() <span class="c">// get user logs for cloud process</span></pre>
+</td>
+</tr>
+</table>
+
+<p>If running in the MBrace shell, typing the command</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs14', 128)" onmouseover="showTip(event, 'fs14', 128)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs67', 129)" onmouseover="showTip(event, 'fs67', 129)" class="i">ShowInfo</span>()</pre>
+</td>
+</tr>
+</table>
+
+<p>will print information like the following</p>
+
+<table class="pre"><tr><td><pre lang="ascii">Name       Process Id  Status   #Workers  #Tasks  Start Time         Result Type
+----       ----------  ------   --------  ------  ----------         -----------
+mapReduce        6674  Running         2       2  30/7/2013 4:08:21  (string * int) []</pre></td></tr></table>
+
+<p>Similar to <code>CreateProcess</code> is the <code>Run</code> method:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs68', 130)" onmouseover="showTip(event, 'fs68', 130)" class="i">result</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 131)" onmouseover="showTip(event, 'fs9', 131)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs12', 132)" onmouseover="showTip(event, 'fs12', 132)" class="i">Run</span> &lt;@ <span onmouseout="hideTip(event, 'fs13', 133)" onmouseover="showTip(event, 'fs13', 133)" class="i">cloud</span> { <span class="k">return</span> <span class="n">1</span> <span class="o">+</span> <span class="n">1</span> } @&gt;</pre>
+</td>
+</tr>
+</table>
+
+<p>This is a blocking version of <code>CreateProcess</code> that is equivalent to the statement below:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 134)" onmouseover="showTip(event, 'fs14', 134)" class="i">proc</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 135)" onmouseover="showTip(event, 'fs9', 135)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs15', 136)" onmouseover="showTip(event, 'fs15', 136)" class="i">CreateProcess</span> &lt;@ <span onmouseout="hideTip(event, 'fs13', 137)" onmouseover="showTip(event, 'fs13', 137)" class="i">cloud</span> { <span class="k">return</span> <span class="n">1</span> <span class="o">+</span> <span class="n">1</span> } @&gt; <span class="k">in</span>
+<span onmouseout="hideTip(event, 'fs14', 138)" onmouseover="showTip(event, 'fs14', 138)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs69', 139)" onmouseover="showTip(event, 'fs69', 139)" class="i">AwaitResult</span>()</pre>
+</td>
+</tr>
+</table>
+
+<p>A list of all executing cloud processes in a given runtime can be obtained as follows:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs70', 140)" onmouseover="showTip(event, 'fs70', 140)" class="i">procs</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 141)" onmouseover="showTip(event, 'fs9', 141)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs71', 142)" onmouseover="showTip(event, 'fs71', 142)" class="i">GetAllProcesses</span>()</pre>
+</td>
+</tr>
+</table>
+
+<p>If running in the MBrace Shell, process information can be printed to the buffer like so:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs9', 143)" onmouseover="showTip(event, 'fs9', 143)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs72', 144)" onmouseover="showTip(event, 'fs72', 144)" class="i">ShowProcessInfo</span>()</pre>
+</td>
+</tr>
+</table>
+
+<p>Given a cloud process id, one can receive the corresponding handle object like so:</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+<span class="l">2: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 145)" onmouseover="showTip(event, 'fs14', 145)" class="i">proc</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 146)" onmouseover="showTip(event, 'fs9', 146)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs73', 147)" onmouseover="showTip(event, 'fs73', 147)" class="i">GetProcess</span> <span class="n">1131</span> <span class="o">:?&gt;</span> <span onmouseout="hideTip(event, 'fs74', 148)" onmouseover="showTip(event, 'fs74', 148)" class="i">Process</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs75', 149)" onmouseover="showTip(event, 'fs75', 149)" class="i">int</span><span class="o">&gt;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs76', 150)" onmouseover="showTip(event, 'fs76', 150)" class="i">proc&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs9', 151)" onmouseover="showTip(event, 'fs9', 151)" class="i">runtime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs73', 152)" onmouseover="showTip(event, 'fs73', 152)" class="i">GetProcess</span><span class="o">&lt;</span>(<span onmouseout="hideTip(event, 'fs77', 153)" onmouseover="showTip(event, 'fs77', 153)" class="i">string</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs75', 154)" onmouseover="showTip(event, 'fs75', 154)" class="i">int</span>) []<span class="o">&gt;</span> <span class="n">119</span></pre>
+</td>
+</tr>
+</table>
+
+<p>Finally, an executing cloud process can be cancelled with the following method</p>
+
+<table class="pre"><tr><td class="lines"><pre class="fssnip">
+<span class="l">1: </span>
+</pre>
+</td>
+<td class="snippet"><pre class="fssnip">
+<span onmouseout="hideTip(event, 'fs14', 155)" onmouseover="showTip(event, 'fs14', 155)" class="i">proc</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs78', 156)" onmouseover="showTip(event, 'fs78', 156)" class="i">Kill</span>()</pre>
+</td>
+</tr>
+</table>
+
+<h2>The MBrace Daemon</h2>
+
+<p>As mentioned earlier, the MBrace daemon is the server-side application 
+that contains a machine-wide instance of the MBrace framework. 
+It is initialized by running the <code>mbraced.exe</code> executable, 
+which can be found in the <code>tools</code> folder of the <code>MBrace.Runtime</code> nuget package. 
+For instance, the command</p>
+
+<table class="pre"><tr><td><pre lang="bash">$ mbraced.exe --hostname 127.0.0.1 --primary-port 2675 --detach</pre></td></tr></table>
+
+<p>will instantiate a background mbraced process that listens on the loopback interface at port 2675.</p>
+
+<h3>Configuring the MBrace Daemon</h3>
+
+<p>The MBrace daemon comes with a range of configuration options. 
+These parameters can either be read from the mbraced configuration file, 
+or passed as command line arguments, in that evaluation order. 
+Command line parameters override those provided by the configuration file.</p>
+
+<p>As is common in .NET applications, mbraced comes with an xml configuration file, 
+namely mbraced.exe.config found in the same location as the executable. 
+Configuration for mbraced is written in the <code>AppSettings</code> section 
+of the xml document that follows a key-value schema:</p>
+
+<table class="pre"><tr><td><pre lang="xml"><span class="prep">&lt;?</span>xml version=<span class="s">"1.0"</span> encoding=<span class="s">"utf-8"</span><span class="prep">?&gt;</span>
+<span class="k">&lt;</span><span class="i">configuration</span><span class="k">&gt;</span>
+    <span class="k">&lt;</span><span class="i">appSettings</span><span class="k">&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="hostname"</span> <span class="o">value</span><span class="k">="grothendieck.nessos"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="primary port"</span> <span class="o">value</span><span class="k">="2675"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="worker port range"</span> <span class="o">value</span><span class="k">="30000, 30042"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="working directory"</span> <span class="o">value</span><span class="k">="/var/mbraced/"</span><span class="k">/&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="log file"</span> <span class="o">value</span><span class="k">="mbrace-log.txt"</span><span class="k">/&gt;</span>
+        <span class="c">&lt;!-- specify loglevel: info 0, warning 1, error 2--&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="log level"</span> <span class="o">value</span><span class="k">="0"</span><span class="k">/&gt;</span>
+        <span class="c">&lt;!-- permitted operation modes; None: 0, Slave: 1, Master: 2, All: 3 --&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="permissions"</span> <span class="o">value</span><span class="k">="3"</span> <span class="k">/&gt;</span>
+        <span class="c">&lt;!-- executable name of mbrace child process --&gt;</span>
+        <span class="k">&lt;</span><span class="i">add</span> <span class="o">key</span><span class="k">="mbrace processdomain executable"</span> <span class="o">value</span><span class="k">="mbrace.worker.exe"</span><span class="k">/&gt;</span>
+    <span class="k">&lt;/</span><span class="i">appSettings</span><span class="k">&gt;</span>
+<span class="k">&lt;/</span><span class="i">configuration</span><span class="k">&gt;</span></pre></td></tr></table>
+
+<p>The full range of command line parameters for mbraced can be viewed by typing</p>
+
+<table class="pre"><tr><td><pre lang="bash">$ mbraced.exe --help</pre></td></tr></table>
+
+<p>We now give a brief description of the configuration parameters offered by the daemon:</p>
+
+<ul>
+<li><p>Hostname: the ip address or host name that the daemon listens to. The hostname must be resolvable in the context of
+the entire MBrace cluster. Each instance of mbraced can only have one hostname specified.</p></li>
+<li><p>Primary Port: the tcp port that the local cluster supervisor listens to.</p></li>
+<li><p>Worker Port Range: a range or collection of tcp ports that can be assigned to 
+worker processes spawned by the local cluster supervisor.</p></li>
+<li><p>Working Directory: the local directory in which all local caching is performed. 
+Write permissions are required for the daemon process.</p></li>
+<li><p>Log File: specifies the path to the log file. If relative, 
+it is resolved with respect to the working directory.</p></li>
+<li><p>Log Level: specifies the log level: 0 for info, 1 for warnings, 2 for errors.</p></li>
+<li><p>ProcessDomain Executable: the location of the worker process executable. 
+Relative paths evaluated with respect to the main <code>mbraced.exe</code> path.</p></li>
+</ul>
+
+<h3>Deploying the MBrace Daemon</h3>
+
+<p>Once the configuration file for <code>mbraced</code> has been set up as desired, 
+deploying an instance from the command line is as simple as typing</p>
+
+<table class="pre"><tr><td><pre lang="bash">$ mbraced --detach</pre></td></tr></table>
+
+<p>The MBrace framework also comes with the <code>mbracectl</code> command line tool 
+that can be used to track deployment state. Initiating a session can be done like so:</p>
+
+<table class="pre"><tr><td><pre lang="bash">$ mbracectl start</pre></td></tr></table>
+
+<p>This will initialize a background instance with settings read from the mbraced configuration file. 
+Session state can be queried by entering</p>
+
+<table class="pre"><tr><td><pre lang="bash">$ mbracectl status</pre></td></tr></table>
+
+<p>Finally, a session can be ended by typing</p>
+
+<table class="pre"><tr><td><pre lang="bash">$ mbracectl stop</pre></td></tr></table>
+
+<p><code>mbracectl</code> can also be used to initiate multiple instances on the local machine</p>
+
+<table class="pre"><tr><td><pre lang="bash">$ mbracectl start --nodes 16 --spawn-window</pre></td></tr></table>
+
+<p>that can even be booted in a local cluster</p>
+
+<table class="pre"><tr><td><pre lang="bash">$ mbracectl start --nodes 3 --boot</pre></td></tr></table>
+
+<p>The MBrace installer also comes bundled with a windows service. 
+Initiating <code>mbraced</code> as a service will spawn a background instance 
+with settings read from the xml configuration file.</p>
+
+<div class="tip" id="fs1">namespace System</div>
+<div class="tip" id="fs2">namespace Nessos</div>
+<div class="tip" id="fs3">namespace Nessos.MBrace</div>
+<div class="tip" id="fs4">namespace Nessos.MBrace.Lib</div>
+<div class="tip" id="fs5">namespace Nessos.MBrace.Client</div>
+<div class="tip" id="fs6">namespace Nessos.MBrace.Runtime</div>
+<div class="tip" id="fs7">namespace Nessos.MBrace.Runtime.Logging</div>
+<div class="tip" id="fs8">namespace Nessos.FsPickler</div>
+<div class="tip" id="fs9">val runtime : MBraceRuntime<br /><br />Full name: Client-api.runtime</div>
+<div class="tip" id="fs10">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
+<div class="tip" id="fs11">static member MBraceRuntime.InitLocal : totalNodes:int * ?masterPort:int * ?hostname:string * ?replicationFactor:int * ?failoverFactor:int * ?store:Store.ICloudStore * ?debug:bool * ?background:bool -&gt; MBraceRuntime</div>
+<div class="tip" id="fs12">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; &#39;T</div>
+<div class="tip" id="fs13">val cloud : CloudBuilder<br /><br />Full name: Nessos.MBrace.CloudBuilder.cloud</div>
+<div class="tip" id="fs14">val proc : Process&lt;int&gt;<br /><br />Full name: Client-api.proc</div>
+<div class="tip" id="fs15">member MBraceRuntime.CreateProcess : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : block:Cloud&lt;&#39;T&gt; * ?name:&#39;a1 -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:&#39;a1 -&gt; Process&lt;&#39;T&gt;</div>
+<div class="tip" id="fs16">val expr : Quotations.Expr&lt;int&gt;<br /><br />Full name: Client-api.expr</div>
+<div class="tip" id="fs17">Multiple items<br />module Cloud<br /><br />from Nessos.MBrace.Lib<br /><br />--------------------<br />type Cloud =<br />&#160;&#160;static member Catch : computation:Cloud&lt;&#39;T&gt; -&gt; Cloud&lt;Choice&lt;&#39;T,exn&gt;&gt;<br />&#160;&#160;static member Choice : computations:seq&lt;Cloud&lt;&#39;T option&gt;&gt; -&gt; Cloud&lt;&#39;T option&gt;<br />&#160;&#160;static member Dispose : resource:#ICloudDisposable -&gt; Cloud&lt;unit&gt;<br />&#160;&#160;static member GetProcessId : unit -&gt; Cloud&lt;ProcessId&gt;<br />&#160;&#160;static member GetTaskId : unit -&gt; Cloud&lt;string&gt;<br />&#160;&#160;static member GetWorkerCount : unit -&gt; Cloud&lt;int&gt;<br />&#160;&#160;static member Ignore : computation:Cloud&lt;&#39;T&gt; -&gt; Cloud&lt;unit&gt;<br />&#160;&#160;static member Log : msg:string -&gt; Cloud&lt;unit&gt;<br />&#160;&#160;static member Logf : fmt:StringFormat&lt;&#39;a0,Cloud&lt;unit&gt;&gt; -&gt; &#39;a0<br />&#160;&#160;static member OfAsync : asyncComputation:Async&lt;&#39;T&gt; -&gt; Cloud&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Cloud<br /><br />--------------------<br />type Cloud&lt;&#39;T&gt; =<br />&#160;&#160;private new : cloudExpr:CloudExpr -&gt; Cloud&lt;&#39;T&gt;<br />&#160;&#160;member private CloudExpr : CloudExpr<br />&#160;&#160;member Type : Type<br /><br />Full name: Nessos.MBrace.Cloud&lt;_&gt;<br /><br />--------------------<br />type CloudAttribute = ReflectedDefinitionAttribute<br /><br />Full name: Nessos.MBrace.CloudAttribute</div>
+<div class="tip" id="fs18">val test : unit -&gt; Cloud&lt;int&gt;<br /><br />Full name: Client-api.test</div>
+<div class="tip" id="fs19">val f : x:int -&gt; int<br /><br />Full name: Client-api.f</div>
+<div class="tip" id="fs20">val x : int</div>
+<div class="tip" id="fs21">namespace Nessos.MBrace.Store</div>
+<div class="tip" id="fs22">val fsStore : FileSystemStore<br /><br />Full name: Client-api.fsStore</div>
+<div class="tip" id="fs23">type FileSystemStore =<br />&#160;&#160;interface ICloudStore<br />&#160;&#160;private new : path:string -&gt; FileSystemStore<br />&#160;&#160;static member Create : path:string * ?create:bool * ?cleanup:bool -&gt; FileSystemStore<br />&#160;&#160;static member LocalTemp : FileSystemStore<br /><br />Full name: Nessos.MBrace.Store.FileSystemStore</div>
+<div class="tip" id="fs24">static member FileSystemStore.Create : path:string * ?create:bool * ?cleanup:bool -&gt; FileSystemStore</div>
+<div class="tip" id="fs25">val sqlStore : SqlServerStore<br /><br />Full name: Client-api.sqlStore</div>
+<div class="tip" id="fs26">type SqlServerStore =<br />&#160;&#160;interface ICloudStore<br />&#160;&#160;private new : connectionString:string * sqlHelper:SqlHelper -&gt; SqlServerStore<br />&#160;&#160;static member Create : connectionString:string -&gt; SqlServerStore<br /><br />Full name: Nessos.MBrace.Store.SqlServerStore</div>
+<div class="tip" id="fs27">static member SqlServerStore.Create : connectionString:string -&gt; SqlServerStore</div>
+<div class="tip" id="fs28">namespace Nessos.MBrace.Azure</div>
+<div class="tip" id="fs29">val azureStore : AzureStore<br /><br />Full name: Client-api.azureStore</div>
+<div class="tip" id="fs30">type AzureStore =<br />&#160;&#160;interface ICloudStore<br />&#160;&#160;private new : connectionString:string -&gt; AzureStore<br />&#160;&#160;static member Create : connectionString:string -&gt; AzureStore<br />&#160;&#160;static member Create : accountName:string * accountKey:string * ?endpointsProtocol:string -&gt; AzureStore<br /><br />Full name: Nessos.MBrace.Azure.AzureStore</div>
+<div class="tip" id="fs31">static member AzureStore.Create : connectionString:string -&gt; AzureStore<br />static member AzureStore.Create : accountName:string * accountKey:string * ?endpointsProtocol:string -&gt; AzureStore</div>
+<div class="tip" id="fs32">type MBraceSettings =<br />&#160;&#160;private new : unit -&gt; MBraceSettings<br />&#160;&#160;static member private Init : unit -&gt; unit<br />&#160;&#160;static member AssemblyCacheDirectory : string<br />&#160;&#160;static member ClientId : Guid<br />&#160;&#160;static member DefaultContainer : string<br />&#160;&#160;static member DefaultStore : ICloudStore<br />&#160;&#160;static member DefaultTimeout : int<br />&#160;&#160;static member LocalCacheStoreDirectory : string<br />&#160;&#160;static member Logger : ISystemLogger<br />&#160;&#160;static member MBracedExecutablePath : string<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceSettings</div>
+<div class="tip" id="fs33">property MBraceSettings.DefaultStore: ICloudStore</div>
+<div class="tip" id="fs34">val node : MBraceNode<br /><br />Full name: Client-api.node</div>
+<div class="tip" id="fs35">type Node = MBraceNode<br /><br />Full name: Nessos.MBrace.Client.Node</div>
+<div class="tip" id="fs36">static member MBraceNode.Connect : uri:string -&gt; MBraceNode<br />static member MBraceNode.Connect : uri:Uri -&gt; MBraceNode<br />static member MBraceNode.Connect : hostname:string * port:int -&gt; MBraceNode</div>
+<div class="tip" id="fs37">val node&#39; : MBraceNode<br /><br />Full name: Client-api.node&#39;</div>
+<div class="tip" id="fs38">val node&#39;&#39; : MBraceNode<br /><br />Full name: Client-api.node&#39;&#39;</div>
+<div class="tip" id="fs39">static member MBraceNode.Spawn : arguments:string [] * ?background:bool -&gt; MBraceNode<br />static member MBraceNode.Spawn : ?hostname:string * ?primaryPort:int * ?workerPorts:int list * ?logFiles:string list * ?logLevel:LogLevel * ?permissions:Permissions * ?debug:bool * ?workingDirectory:string * ?useTemporaryWorkDir:bool * ?background:bool * ?store:ICloudStore -&gt; MBraceNode</div>
+<div class="tip" id="fs40">member MBraceNode.Ping : ?timeout:int -&gt; TimeSpan</div>
+<div class="tip" id="fs41">property MBraceNode.IsLocal: bool</div>
+<div class="tip" id="fs42">member MBraceNode.ShowSystemLogs : unit -&gt; unit</div>
+<div class="tip" id="fs43">member MBraceNode.GetSystemLogs : unit -&gt; SystemLogEntry []</div>
+<div class="tip" id="fs44">module Seq<br /><br />from Microsoft.FSharp.Collections</div>
+<div class="tip" id="fs45">val filter : predicate:(&#39;T -&gt; bool) -&gt; source:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.Seq.filter</div>
+<div class="tip" id="fs46">val entry : SystemLogEntry</div>
+<div class="tip" id="fs47">Multiple items<br />type DateTime =<br />&#160;&#160;struct<br />&#160;&#160;&#160;&#160;new : ticks:int64 -&gt; DateTime + 10 overloads<br />&#160;&#160;&#160;&#160;member Add : value:TimeSpan -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddDays : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddHours : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMilliseconds : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMinutes : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMonths : months:int -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddSeconds : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddTicks : value:int64 -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddYears : value:int -&gt; DateTime<br />&#160;&#160;&#160;&#160;...<br />&#160;&#160;end<br /><br />Full name: System.DateTime<br /><br />--------------------<br />DateTime()<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(ticks: int64) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(ticks: int64, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, calendar: Globalization.Calendar) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, calendar: Globalization.Calendar) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
+<div class="tip" id="fs48">property DateTime.Now: DateTime</div>
+<div class="tip" id="fs49">SystemLogEntry.Date: DateTime</div>
+<div class="tip" id="fs50">Multiple items<br />type TimeSpan =<br />&#160;&#160;struct<br />&#160;&#160;&#160;&#160;new : ticks:int64 -&gt; TimeSpan + 3 overloads<br />&#160;&#160;&#160;&#160;member Add : ts:TimeSpan -&gt; TimeSpan<br />&#160;&#160;&#160;&#160;member CompareTo : value:obj -&gt; int + 1 overload<br />&#160;&#160;&#160;&#160;member Days : int<br />&#160;&#160;&#160;&#160;member Duration : unit -&gt; TimeSpan<br />&#160;&#160;&#160;&#160;member Equals : value:obj -&gt; bool + 1 overload<br />&#160;&#160;&#160;&#160;member GetHashCode : unit -&gt; int<br />&#160;&#160;&#160;&#160;member Hours : int<br />&#160;&#160;&#160;&#160;member Milliseconds : int<br />&#160;&#160;&#160;&#160;member Minutes : int<br />&#160;&#160;&#160;&#160;...<br />&#160;&#160;end<br /><br />Full name: System.TimeSpan<br /><br />--------------------<br />TimeSpan()<br />TimeSpan(ticks: int64) : unit<br />TimeSpan(hours: int, minutes: int, seconds: int) : unit<br />TimeSpan(days: int, hours: int, minutes: int, seconds: int) : unit<br />TimeSpan(days: int, hours: int, minutes: int, seconds: int, milliseconds: int) : unit</div>
+<div class="tip" id="fs51">TimeSpan.FromDays(value: float) : TimeSpan</div>
+<div class="tip" id="fs52">val nodes : MBraceNode list<br /><br />Full name: Client-api.nodes</div>
+<div class="tip" id="fs53">type MBraceRuntime =<br />&#160;&#160;interface IDisposable<br />&#160;&#160;private new : runtime:ActorRef&lt;MBraceNodeMsg&gt; * disposables:IDisposable list -&gt; MBraceRuntime<br />&#160;&#160;member Attach : node:MBraceNode -&gt; unit<br />&#160;&#160;member Attach : nodes:seq&lt;MBraceNode&gt; -&gt; unit<br />&#160;&#160;member AttachAsync : node:MBraceNode -&gt; Async&lt;unit&gt;<br />&#160;&#160;member AttachAsync : nodes:seq&lt;MBraceNode&gt; -&gt; Async&lt;unit&gt;<br />&#160;&#160;member AttachLocal : totalNodes:int * ?permissions:Permissions * ?debug:bool * ?background:bool -&gt; unit<br />&#160;&#160;member AttachLocalAsync : totalNodes:int * ?permissions:Permissions * ?debug:bool * ?background:bool -&gt; Async&lt;unit&gt;<br />&#160;&#160;member Boot : ?replicationFactor:int * ?failoverFactor:int * ?store:#ICloudStore -&gt; unit<br />&#160;&#160;member BootAsync : ?replicationFactor:int * ?failoverFactor:int * ?store:#ICloudStore -&gt; Async&lt;unit&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.MBraceRuntime</div>
+<div class="tip" id="fs54">static member MBraceRuntime.Boot : nodes:MBraceNode list * ?replicationFactor:int * ?failoverFactor:int * ?store:ICloudStore -&gt; MBraceRuntime</div>
+<div class="tip" id="fs55">static member MBraceRuntime.Connect : uri:string -&gt; MBraceRuntime<br />static member MBraceRuntime.Connect : uri:Uri -&gt; MBraceRuntime<br />static member MBraceRuntime.Connect : host:string * port:int -&gt; MBraceRuntime</div>
+<div class="tip" id="fs56">static member MBraceRuntime.InitLocal : totalNodes:int * ?masterPort:int * ?hostname:string * ?replicationFactor:int * ?failoverFactor:int * ?store:ICloudStore * ?debug:bool * ?background:bool -&gt; MBraceRuntime</div>
+<div class="tip" id="fs57">property MBraceRuntime.Nodes: MBraceNode list</div>
+<div class="tip" id="fs58">member MBraceRuntime.ShowInfo : ?showPerformanceCounters:bool -&gt; unit</div>
+<div class="tip" id="fs59">member MBraceRuntime.Shutdown : unit -&gt; unit</div>
+<div class="tip" id="fs60">member MBraceRuntime.Reboot : ?replicationFactor:int * ?failoverFactor:int * ?store:#ICloudStore -&gt; unit</div>
+<div class="tip" id="fs61">member MBraceRuntime.Kill : unit -&gt; unit</div>
+<div class="tip" id="fs62">property Process.Result: ProcessResult&lt;int&gt;</div>
+<div class="tip" id="fs63">property Process.ProcessId: ProcessId</div>
+<div class="tip" id="fs64">property Process.InitTime: DateTime</div>
+<div class="tip" id="fs65">property Process.ExecutionTime: TimeSpan</div>
+<div class="tip" id="fs66">member Process.GetLogs : unit -&gt; CloudLogEntry []</div>
+<div class="tip" id="fs67">member Process.ShowInfo : unit -&gt; unit</div>
+<div class="tip" id="fs68">val result : int<br /><br />Full name: Client-api.result</div>
+<div class="tip" id="fs69">member Process.AwaitResult : ?pollingInterval:int -&gt; &#39;T</div>
+<div class="tip" id="fs70">val procs : Process []<br /><br />Full name: Client-api.procs</div>
+<div class="tip" id="fs71">member MBraceRuntime.GetAllProcesses : unit -&gt; Process []</div>
+<div class="tip" id="fs72">member MBraceRuntime.ShowProcessInfo : unit -&gt; unit</div>
+<div class="tip" id="fs73">member MBraceRuntime.GetProcess : pid:ProcessId -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.GetProcess : pid:ProcessId -&gt; Process</div>
+<div class="tip" id="fs74">Multiple items<br />type Process =<br />&#160;&#160;private new : processId:ProcessId * returnType:Type * processManager:ProcessManager -&gt; Process<br />&#160;&#160;abstract member AwaitBoxedResult : ?pollingInterval:int -&gt; obj<br />&#160;&#160;abstract member AwaitBoxedResultAsync : ?pollingInterval:int -&gt; Async&lt;obj&gt;<br />&#160;&#160;abstract member TryGetBoxedResult : unit -&gt; obj option<br />&#160;&#160;member DeleteContainer : unit -&gt; unit<br />&#160;&#160;member DeleteContainerAsync : unit -&gt; Async&lt;unit&gt;<br />&#160;&#160;member DeleteLogs : unit -&gt; unit<br />&#160;&#160;member DeleteLogsAsync : unit -&gt; Async&lt;unit&gt;<br />&#160;&#160;member GetInfo : unit -&gt; string<br />&#160;&#160;member GetLogs : unit -&gt; CloudLogEntry []<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.Process<br /><br />--------------------<br />type Process&lt;&#39;T&gt; =<br />&#160;&#160;inherit Process<br />&#160;&#160;private new : id:ProcessId * processManager:ProcessManager -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;override AwaitBoxedResult : ?pollingInterval:int -&gt; obj<br />&#160;&#160;override AwaitBoxedResultAsync : ?pollingInterval:int -&gt; Async&lt;obj&gt;<br />&#160;&#160;member AwaitResult : ?pollingInterval:int -&gt; &#39;T<br />&#160;&#160;member AwaitResultAsync : ?pollingInterval:int -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;override TryGetBoxedResult : unit -&gt; obj option<br />&#160;&#160;member TryGetResult : unit -&gt; &#39;T option<br />&#160;&#160;member Result : ProcessResult&lt;&#39;T&gt;<br /><br />Full name: Nessos.MBrace.Client.Process&lt;_&gt;</div>
+<div class="tip" id="fs75">Multiple items<br />val int : value:&#39;T -&gt; int (requires member op_Explicit)<br /><br />Full name: Microsoft.FSharp.Core.Operators.int<br /><br />--------------------<br />type int = int32<br /><br />Full name: Microsoft.FSharp.Core.int<br /><br />--------------------<br />type int&lt;&#39;Measure&gt; = int<br /><br />Full name: Microsoft.FSharp.Core.int&lt;_&gt;</div>
+<div class="tip" id="fs76">val proc&#39; : Process&lt;(string * int) []&gt;<br /><br />Full name: Client-api.proc&#39;</div>
+<div class="tip" id="fs77">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />Full name: Microsoft.FSharp.Core.Operators.string<br /><br />--------------------<br />type string = String<br /><br />Full name: Microsoft.FSharp.Core.string</div>
+<div class="tip" id="fs78">member Process.Kill : unit -&gt; unit</div>
+
+        </div>
+        <div class="span3">
+          <a target="_blank" href="http://www.m-brace.net/index.html">
+            <img src="http://www.m-brace.net/img/mbrace.png" alt="F# Project" style="width:150px;margin:10px" />
+          </a>
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">MBrace</li>
+            <li><a href="http://www.m-brace.net/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://www.nuget.org/packages/MBrace.Runtime">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/nessos/MBrace">Source Code on GitHub</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/LICENSE.md">License</a></li>
+            <li><a href="http://github.com/nessos/MBrace/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+
+            <li class="nav-header">Getting Started</li>
+            <li><a href="http://www.m-brace.net/runtime-deployment.html">Cluster Deployment Guide</a></li>
+            <li><a href="http://www.m-brace.net/azure-tutorial.html">Azure Guide</a></li>
+            <li class="divider"></li>
+            <li><a target="_blank" href="http://skillsmatter.com/skillscasts/5157-mbrace-large-scale-distributed-computation-with-f">Video presentation</a></li>
+            <li><a target="_blank" href="http://www.m-brace.net/mbrace-plos.pdf">PLOS'13 Publication</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a href="http://www.m-brace.net/programming-model.html">Programming model</a></li>
+            <li><a href="http://www.m-brace.net/client-api.html">Client API</a></li>
+            <li><a target="_blank" href="http://www.m-brace.net/mbrace-manual.pdf">MBrace Manual</a></li>
+            <li><a href="http://www.m-brace.net/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/nessos/MBrace"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>
