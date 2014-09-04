@@ -3,6 +3,23 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
+let rec f i : Async<unit> =
+  async {
+    let! nodes = Node.SpawnMultipleAsync 3
+    printfn "spawned"
+    //let! rt = MBrace.BootAsync nodes
+    //printfn "i = %d, rt = %A " i rt.Id
+    //rt.Kill()
+    nodes |> List.iter (fun n -> n.Kill())
+    printfn "kill"
+    return! f (i+1)
+  }
+
+Async.RunSynchronously(f 1)
+
+nodes |> List.map (fun n -> n.State)
+
+let rt = MBrace.Boot nodes
 
 #r "../../bin/MBrace.Azure.dll"
 open Nessos.MBrace.Azure
@@ -21,7 +38,6 @@ MBraceSettings.DefaultStore <- azureStore
 
 
 
-let rt = MBrace.InitLocal 3
 
 MBraceSettings.DefaultTimeout <- 60 * 2 * 1000
 
