@@ -499,7 +499,7 @@ namespace Nessos.MBrace.Client
 
 
         /// <summary>
-        ///     Synchronously Cceates a new cloud computation in runtime.
+        ///     Synchronously Creates a new cloud computation in runtime.
         /// </summary>
         /// <param name="computation">Computation to be executed.</param>
         member r.CreateProcess (computation : CloudComputation<'T>) : Process<'T> = 
@@ -513,12 +513,54 @@ namespace Nessos.MBrace.Client
             processManager.CreateProcess computation 
 
         /// <summary>
+        ///     Synchronously creates a new cloud computation in runtime.
+        /// </summary>
+        /// <param name="expr">Quoted cloud workflow to be executed.</param>
+        /// <param name="name">Assigned name to cloud computation.</param>
+        member __.CreateProcess (expr : Expr<Cloud<'T>>, ?name : string) : Process<'T> =
+            __.CreateProcessAsync(expr, ?name = name) |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously creates a new cloud computation in runtime.
+        /// </summary>
+        /// <param name="expr">Quoted cloud workflow to be executed.</param>
+        /// <param name="name">Assigned name to cloud computation.</param>
+        member __.CreateProcessAsync (expr : Expr<Cloud<'T>>, ?name : string) : Async<Process<'T>> =
+            let computation = CloudComputation.Compile(expr, ?name = name)
+            __.CreateProcessAsync computation
+
+
+        /// <summary>
+        ///     Synchronously creates a new cloud computation in runtime.
+        /// </summary>
+        /// <param name="expr">Cloud workflow to be executed.</param>
+        /// <param name="name">Assigned name to cloud computation.</param>
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
+        member __.CreateProcess (block : Cloud<'T>, ?name : string) : Process<'T> =
+            __.CreateProcessAsync(block, ?name = name) |> Async.RunSynchronously
+
+        /// <summary>
+        ///     Asynchronously creates a new cloud computation in runtime.
+        /// </summary>
+        /// <param name="expr">Cloud workflow to be executed.</param>
+        /// <param name="name">Assigned name to cloud computation.</param>
+        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
+        member __.CreateProcessAsync (block : Cloud<'T>, ?name : string) : Async<Process<'T>> =
+            let computation = CloudComputation.Compile(block, ?name = name)
+            __.CreateProcessAsync computation
+
+
+        /// <summary>
         ///     Asynchronously creates a new cloud computation in runtime and awaits its result.
         /// </summary>
         /// <param name="computation">Computation to be executed.</param>
-        member __.RunAsync (computation : CloudComputation<'T>) : Async<'T> =
+        /// <param name="showLogs">Display user logs.</param>
+        member __.RunAsync (computation : CloudComputation<'T>, ?showLogs : bool) : Async<'T> =
             async {
+                let showLogs = defaultArg showLogs false
                 let! proc = processManager.CreateProcess computation
+                if showLogs then 
+                    do! proc.StreamLogsAsync() // StreamLogs terminates when process is complete.
                 return! proc.AwaitResultAsync ()
             }
 
@@ -526,81 +568,52 @@ namespace Nessos.MBrace.Client
         ///     Synchronously creates a new cloud computation in runtime and awaits its result.
         /// </summary>
         /// <param name="computation">Computation to be executed.</param>
-        member __.Run (computation : CloudComputation<'T>) : 'T = __.RunAsync computation |> Async.RunSynchronously
-
-        /// <summary>
-        ///     Synchronously creates a new cloud computation in runtime.
-        /// </summary>
-        /// <param name="expr">Quoted cloud workflow to be executed.</param>
-        /// <param name="name">Assigned name to cloud computation.</param>
-        member __.CreateProcess (expr : Expr<Cloud<'T>>, ?name) : Process<'T> =
-            __.CreateProcessAsync expr |> Async.RunSynchronously
-
-        /// <summary>
-        ///     Asynchronously creates a new cloud computation in runtime.
-        /// </summary>
-        /// <param name="expr">Quoted cloud workflow to be executed.</param>
-        /// <param name="name">Assigned name to cloud computation.</param>
-        member __.CreateProcessAsync (expr : Expr<Cloud<'T>>, ?name) : Async<Process<'T>> =
-            let computation = CloudComputation.Compile(expr, ?name = name)
-            __.CreateProcessAsync computation
+        /// <param name="showLogs">Display user logs.</param>
+        member __.Run (computation : CloudComputation<'T>, ?showLogs : bool) : 'T = 
+            __.RunAsync(computation, ?showLogs = showLogs) |> Async.RunSynchronously
 
         /// <summary>
         ///     Asynchronously creates a new cloud computation in runtime and awaits its result.
         /// </summary>
         /// <param name="expr">Quoted cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
-        member __.RunAsync (expr : Expr<Cloud<'T>>, ?name) : Async<'T> =
+        /// <param name="showLogs">Display user logs.</param>
+        member __.RunAsync (expr : Expr<Cloud<'T>>, ?name : string, ?showLogs : bool) : Async<'T> =
             let computation = CloudComputation.Compile(expr, ?name = name)
-            __.RunAsync computation
+            __.RunAsync(computation, ?showLogs = showLogs)
 
         /// <summary>
         ///     Asynchronously create a new cloud computation in runtime and await its result.
         /// </summary>
         /// <param name="expr">Quoted cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
-        member __.Run (expr : Expr<Cloud<'T>>, ?name) : 'T =
+        /// <param name="showLogs">Display user logs.</param>
+        member __.Run (expr : Expr<Cloud<'T>>, ?name : string, ?showLogs : bool) : 'T =
             let computation = CloudComputation.Compile(expr, ?name = name)
-            __.Run computation 
-
-        /// <summary>
-        ///     Synchronously creates a new cloud computation in runtime.
-        /// </summary>
-        /// <param name="expr">Cloud workflow to be executed.</param>
-        /// <param name="name">Assigned name to cloud computation.</param>
-        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
-        member __.CreateProcess (block : Cloud<'T>, ?name) : Process<'T> =
-            __.CreateProcessAsync block |> Async.RunSynchronously
-
-        /// <summary>
-        ///     Asynchronously creates a new cloud computation in runtime.
-        /// </summary>
-        /// <param name="expr">Cloud workflow to be executed.</param>
-        /// <param name="name">Assigned name to cloud computation.</param>
-        [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
-        member __.CreateProcessAsync (block : Cloud<'T>, ?name) : Async<Process<'T>> =
-            let computation = CloudComputation.Compile(block, ?name = name)
-            __.CreateProcessAsync computation
+            __.Run(computation, ?showLogs = showLogs) 
 
         /// <summary>
         ///     Asynchronously creates a new cloud computation in runtime and awaits its result.
         /// </summary>
         /// <param name="expr">Cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
+        /// <param name="showLogs">Display user logs.</param>
         [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
-        member __.RunAsync (block : Cloud<'T>, ?name) : Async<'T> =
+        member __.RunAsync (block : Cloud<'T>, ?name : string, ?showLogs : bool) : Async<'T> =
             let computation = CloudComputation.Compile(block, ?name = name)
-            __.RunAsync computation
+            __.RunAsync(computation, ?showLogs = showLogs)
 
         /// <summary>
         ///     Synchronously creates a new cloud computation in runtime and awaits its result.
         /// </summary>
         /// <param name="expr">Cloud workflow to be executed.</param>
         /// <param name="name">Assigned name to cloud computation.</param>
+        /// <param name="showLogs">Display user logs.</param>
         [<CompilerMessage("Cloud blocks should be wrapped in quotation literals for better debug support.", 444)>]
-        member __.Run (block : Cloud<'T>, ?name) : 'T =
+        member __.Run (block : Cloud<'T>, ?name : string, ?showLogs : bool) : 'T =
             let computation = CloudComputation.Compile(block, ?name = name)
-            __.Run computation 
+            __.Run(computation, ?showLogs = showLogs)
+
 
         /// <summary>
         ///     Asynchronously kills the cloud process with given id.
