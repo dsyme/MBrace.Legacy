@@ -156,32 +156,36 @@
 
         let updatedEvent = new Event<_>()
 
+        let getLogs () =
+            async {
+                let! containerExists = store.ContainerExists container
+
+                if containerExists then 
+                    let! files = store.EnumerateFiles container
+                    let files = files |> Seq.filter (fun file -> isLogFile file && not <| logsRead.Contains file)
+
+                    if not <| Seq.isEmpty files then
+                        let readEntries file : Async<'LogEntry []> = async { 
+                            use! stream = store.ReadImmutable(container, file)
+                                          |> onDereferenceError(sprintf "%s %s" container file)
+                            return! deserializeLogs stream
+                        }
+
+                        let! entries =
+                            files |> Seq.sort
+                                  |> Seq.map readEntries
+                                  |> Async.Parallel
+
+                        files |> Seq.iter (logsRead.Add >> ignore)
+
+                        let entries = Seq.concat entries
+
+                        if not <| Seq.isEmpty entries then
+                            updatedEvent.Trigger(this, entries)
+            }
+
         let rec loop _ = async {
-            let! containerExists = store.ContainerExists container
-
-            if containerExists then 
-                let! files = store.EnumerateFiles container
-                let files = files |> Seq.filter (fun file -> isLogFile file && not <| logsRead.Contains file)
-
-                if not <| Seq.isEmpty files then
-                    let readEntries file : Async<'LogEntry []> = async { 
-                        use! stream = store.ReadImmutable(container, file)
-                                      |> onDereferenceError(sprintf "%s %s" container file)
-                        return! deserializeLogs stream
-                    }
-
-                    let! entries =
-                        files |> Seq.sort
-                              |> Seq.map readEntries
-                              |> Async.Parallel
-
-                    files |> Seq.iter (logsRead.Add >> ignore)
-
-                    let entries = Seq.concat entries
-
-                    if not <| Seq.isEmpty entries then
-                        updatedEvent.Trigger(this, entries)
-
+            do! getLogs ()
             do! Async.Sleep pollingInterval
             return! loop ()
         }
@@ -190,3 +194,6 @@
         member this.Updated = updatedEvent.Publish
 
         member this.StartAsync () = async.Return <| Async.Start(loop (), cancellationToken = ct)
+
+        member this.GetLogsAsync () = getLogs()
+

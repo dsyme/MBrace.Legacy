@@ -1,3 +1,4 @@
+/// Contains types and algorithm implementations base on the Map-Reduce model.
 module Nessos.MBrace.Lib.MapReduce
 
     open Nessos.MBrace
@@ -63,6 +64,7 @@ module Nessos.MBrace.Lib.MapReduce
         }
 
 
+    /// Map-Reduce implementation on seq<'T> inputs.
     [<RequireQualifiedAccess>]
     module Seq =
         
@@ -90,6 +92,7 @@ module Nessos.MBrace.Lib.MapReduce
             mapReduce decompose mapF reduceF identity (Seq.toArray input)
 
 
+    /// Provides basic operations on CloudTrees.
     [<RequireQualifiedAccess>]
     module CloudTree =
 

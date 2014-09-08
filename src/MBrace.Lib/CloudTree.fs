@@ -14,7 +14,7 @@
     /// Cloud Tree reference
     and CloudTreeRef<'T> = ICloudRef<CloudTree<'T>>
 
-
+    /// Provides basic operations on CloudTrees.
     [<RequireQualifiedAccess>]
     module CloudTree =
         
