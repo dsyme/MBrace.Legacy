@@ -61,9 +61,15 @@ rt.AttachLocal(3)
 
 
 
+let nodes = Node.SpawnMultiple(3, logLevel = LogLevel.Warning)
+let rt = MBrace.Boot nodes
 
 
 
+let rt = MBrace.InitLocal(3,
+
+let ps = rt.CreateProcess <@ Cloud.Log "Hello" @>
+ps.StreamLogs()
 
 
 
