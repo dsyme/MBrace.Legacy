@@ -98,7 +98,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                 | None -> ()
             ]
 
-        let command = SystemConfiguration.MBraceWorkerExecutablePath
+        let mbraced = SystemConfiguration.MBraceWorkerExecutablePath
         let args = workerConfig.PrintCommandLineFlat args
 
         use nodeManagerReceiver = Receiver.create()
@@ -112,15 +112,16 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
 
 #if APPDOMAIN_ISOLATION
         let appDomain = AppDomain.CreateDomain(processDomainId.ToString())
-        async { appDomain.ExecuteAssembly(command, args) |> ignore } |> Async.Start
+        async { appDomain.ExecuteAssembly(mbraced, args) |> ignore } |> Async.Start
         let killF () = AppDomain.Unload appDomain
 #else
-        let startInfo = new ProcessStartInfo(command, args)
+        let startInfo = new ProcessStartInfo(mbraced, args)
 
         startInfo.UseShellExecute <- false
         startInfo.CreateNoWindow <- true
         startInfo.RedirectStandardOutput <- true
         startInfo.RedirectStandardError <- true
+        startInfo.WorkingDirectory <- System.IO.Path.GetDirectoryName mbraced
 
         let osProcess = Process.Start(startInfo)
 

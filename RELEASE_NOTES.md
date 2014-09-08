@@ -1,3 +1,9 @@
+#### 0.5.6-alpha
+* Fix packaging issue.
+
+#### 0.5.5-alpha
+* Bug fixes.
+
 #### 0.5.4-alpha
 * Fix compatibility issue.
 

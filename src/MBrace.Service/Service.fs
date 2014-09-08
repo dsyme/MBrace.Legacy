@@ -15,6 +15,8 @@
 
         let eventLog = new EventLog()
         let serviceState = ref None : (Guid * Diagnostics.Process * MBraceNode) option ref
+        let logf fmt = Printf.ksprintf eventLog.WriteEntry fmt
+
 
         let tryGetCurrentDaemon () =
             try
@@ -36,36 +38,42 @@
             base.OnStart(args)
 
             match tryGetCurrentDaemon () with
-            | Some n -> invalidOp "Service is already running."
+            | Some n -> 
+                logf "Request to Start but service is already running. Exiting."
+                invalidOp "Service is already running."  
             | None -> ()
 
-            let msg = sprintf' "Starting mbraced\nPath: %s\nArguments: %s" MBraceSettings.MBracedExecutablePath (String.concat " " args)
-            eventLog.WriteEntry(msg)
+            logf "Spawning MBraceNode\nPath: %s\nArguments: %s" MBraceSettings.MBracedExecutablePath (String.concat " " args)
 
-            let node = MBraceNode.Spawn(args, background = true)
+            try
+                let node = MBraceNode.Spawn(args, background = true)
 
-            serviceState := Some(node.DeploymentId, node.Process.Value, node)
-            let pid = node.Process.Value.Id
+                if node.Process.IsNone then failwith "Failed to spawn node process."
 
-            let msg = sprintf' "Started mbraced\nProcess Id: %d\nDeployment Id: %O\nUri: %O" pid node.DeploymentId node.Uri
-            eventLog.WriteEntry(msg)
+                let pid = node.Process.Value.Id
+                logf "Spawned Node %A\nProcess Id: %d\nDeployment Id: %O\nUri: %O" node pid node.DeploymentId node.Uri
 
-            node.Process.Value.Exited.Add(fun _ -> 
-                    eventLog.WriteEntry(sprintf' "mbraced process %d has exited." pid)
-                    svc.Stop() )
+                serviceState := Some(node.DeploymentId, node.Process.Value, node)
+
+                node.Process.Value.Exited.Add(fun _ -> 
+                        logf "mbraced process %d has exited." pid
+                        svc.Stop())
+            with e ->
+                logf "Spawn failed with : %A\nExiting." e
+                reraise ()
 
         override svc.OnStop () =
             base.OnStop()
             
-            eventLog.WriteEntry("Stopping service")
+            logf "Stopping service"
 
             match tryGetCurrentDaemon () with
             | Some n ->
-                eventLog.WriteEntry("Stopping mbraced")
+                logf "Stopping mbraced"
                 n.Kill ()
-                eventLog.WriteEntry("Stopped mbraced")
+                logf "Stopped mbraced"
             | _ -> ()
 
             serviceState := None
 
-            eventLog.WriteEntry("Stopped service")
+            logf "Stopped service"

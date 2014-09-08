@@ -107,6 +107,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{4C2F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{298103B8-C3A7-4EA6-A108-7F8B41F4FD1A}"
 	ProjectSection(SolutionItems) = preProject
+		docs\files\CNAME = docs\files\CNAME
+		docs\files\img\favicon-160x160.png = docs\files\img\favicon-160x160.png
+		docs\files\img\favicon-16x16.png = docs\files\img\favicon-16x16.png
+		docs\files\img\favicon-196x196.png = docs\files\img\favicon-196x196.png
+		docs\files\img\favicon-32x32.png = docs\files\img\favicon-32x32.png
+		docs\files\img\favicon-96x96.png = docs\files\img\favicon-96x96.png
+		docs\files\img\favicon.ico = docs\files\img\favicon.ico
 		docs\files\img\fsharp.png = docs\files\img\fsharp.png
 		docs\files\mbrace-manual.pdf = docs\files\mbrace-manual.pdf
 		docs\files\mbrace-plos.pdf = docs\files\mbrace-plos.pdf

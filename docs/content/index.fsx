@@ -22,7 +22,7 @@ manifested through computation expressions in F#.
   <div class="span1"></div>
   <div class="span6">
     <div class="well well-small" id="nuget">
-      The MBrace framework can be <a href="https://nuget.org/packages/MBrace.Runtime">installed from NuGet</a>:
+      A prerelease of MBrace can be <a href="https://nuget.org/packages/MBrace.Runtime">installed from NuGet</a>:
       <pre>PM> Install-Package MBrace.Runtime -Pre</pre>
     </div>
   </div>
@@ -62,7 +62,7 @@ let lines = proc.AwaitResult () // await completion
 
 (**
 
-For a quick dive into MBrace and applications, try checking out the 
+For a quick dive into MBrace and applications, check out the 
 [`MBrace.Demos`](https://github.com/nessos/MBrace.Demos) solution.
 
     [lang=bash]

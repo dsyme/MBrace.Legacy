@@ -136,6 +136,7 @@
         member __.SetStoreAsync (store : ICloudStore) = async {
             let info = StoreRegistry.Register(store, makeDefault = false)
             let! storeManager = nodeRef.PostWithReply(GetStoreManager, MBraceSettings.DefaultTimeout)
+                                |> Retry.retryAsync (Retry.RetryPolicy.Filter<UnknownRecipientException>(0.2<Retry.sec>))
             return! StoreManager.uploadStore info storeManager
         }
 
@@ -272,6 +273,7 @@
                     proc.EnableRaisingEvents <- true
                     proc.StartInfo.FileName <- mbracedExe
                     proc.StartInfo.Arguments <- flattenedArgs
+                    proc.StartInfo.WorkingDirectory <- Path.GetDirectoryName mbracedExe
 
                     if background then
                         proc.StartInfo.UseShellExecute <- false

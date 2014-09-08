@@ -3,7 +3,6 @@
 open Nessos.MBrace
 open Nessos.MBrace.Client
 
-
 #r "../../bin/MBrace.Azure.dll"
 open Nessos.MBrace.Azure
 
@@ -20,18 +19,15 @@ MBraceSettings.DefaultStore <- azureStore
 //nodes |> List.iter (fun n -> n.ShowSystemLogs())
 
 
+let f = 
+    <@ cloud { 
+        for i in [| 1..20 |] do
+            do! Cloud.Logf "i = %d" i
+            do! Cloud.Sleep 1000
+    } @>
 
 let rt = MBrace.InitLocal 3
-
-MBraceSettings.DefaultTimeout <- 60 * 2 * 1000
-
-rt.Run <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
-
-
-rt.GetProcessInfo()
-
-
-
+rt.Run(f , showLogs = true)
 
 
 
