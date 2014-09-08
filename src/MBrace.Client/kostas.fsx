@@ -18,16 +18,20 @@ MBraceSettings.DefaultStore <- azureStore
 //nodes |> List.map (fun n -> n.Ping())
 //nodes |> List.iter (fun n -> n.ShowSystemLogs())
 
+type F () =
+    member __.X = printfn "hi"; 42
 
 let f = 
     <@ cloud { 
-        for i in [| 1..20 |] do
-            do! Cloud.Logf "i = %d" i
-            do! Cloud.Sleep 1000
-    } @>
+           for i in [| 1..20 |] do
+               do! Cloud.Logf "i = %d" i
+               do! Cloud.Sleep 1000
+       } @>
 
 let rt = MBrace.InitLocal 3
-rt.Run(f , showLogs = true)
+let ps = rt.CreateProcess f
+ps.Logs |> Observable.add (fun log -> printfn "1 : %s" <| log.Message )
+ps.Logs |> Observable.add (fun log -> printfn "2 : %s" <| log.Message )
 
 
 
@@ -148,3 +152,40 @@ MBrace.RunLocal <@ Channel.read c2 @>
 
 
 rt.Reboot()
+
+
+
+
+
+
+
+
+
+        let cloudLogSource =
+          lazy (
+            let reader = StoreCloudLogger.GetStreamingReader(processManager.RuntimeStore, processId)
+            
+            let observers = ResizeArray<IObserver<CloudLogEntry>>()
+            
+            let interval = 100
+            let rec pollingLoop () = async {
+                if processInfo.Value.ResultRaw = ProcessResultImage.Pending then
+                    do! Async.Sleep interval
+                    return! pollingLoop ()
+                else 
+                    observers |> Seq.iter (fun o -> o.OnCompleted())
+            } 
+
+            reader.Updated.Add(fun(_, logs) -> 
+                logs |> Seq.iter (fun log -> observers |> Seq.iter (fun o -> o.OnNext(log))))
+
+            reader.StartAsync() |> Async.RunSynchronously
+            pollingLoop () |> Async.Start
+
+            { new IObservable<CloudLogEntry> with
+                    member x.Subscribe(observer : IObserver<CloudLogEntry>) : IDisposable = 
+                            observers.Add(observer)
+                            { new IDisposable with
+                            member __.Dispose() = observers.Remove(observer) |> ignore }
+
+            } )
