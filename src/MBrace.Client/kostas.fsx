@@ -63,18 +63,20 @@ retry ()
 rt.AttachLocal(3)
 
 
+let rt = MBrace.InitLocal 3
 
+for i in 1..20 do
+    rt.Run(<@ Cloud.Log "Hello" @>, showLogs = true)
+    printfn "done"
 
-let nodes = Node.SpawnMultiple(3, logLevel = LogLevel.Warning)
-let rt = MBrace.Boot nodes
-
-
-
-let rt = MBrace.InitLocal(3,
-
-let ps = rt.CreateProcess <@ Cloud.Log "Hello" @>
-ps.StreamLogs()
-
+[<Cloud>]
+let f = 
+    cloud { 
+        let! n = Cloud.GetWorkerCount()
+        do! Cloud.Sleep 10000
+        let! n' = Cloud.GetWorkerCount()
+        return n, n'
+    }
 
 
 
