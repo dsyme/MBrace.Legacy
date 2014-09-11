@@ -84,7 +84,7 @@
                     segmentStream.Seek(startPosition, SeekOrigin.Begin) |> ignore
 
                     for i = 1 to !itemCounter do
-                        buffer.Add(Serialization.DefaultPickler.Deserialize<'T>(segmentStream))
+                        buffer.Add(Serialization.DefaultPickler.Deserialize<'T>(segmentStream, leaveOpen = true))
 
                     currentPageStart <- index
             }
@@ -110,8 +110,6 @@
         let provider  = lazy CloudArrayProvider.GetById storeId  
         let pageCache = lazy provider.Value.GetPageCache(this)
 
-        member internal this.Folder     = folder
-        member internal this.Descriptor = descriptorName
         member internal this.Provider   = provider
         member internal this.StoreId    = storeId
 
@@ -132,6 +130,8 @@
                 info.AddValue("storeId" ,   storeId, typeof<StoreId>)
 
         member this.Length with get () = count
+        member this.Container = folder
+        member this.Name = descriptorName
 
         member this.Item 
             with get (index : int64) : 'T =
@@ -199,7 +199,7 @@
                 else
                     async {
                         let fetch s l = this.Provider.Value.GetRangeAsync(s,l, this)
-                        let! items = Cache.FetchAsync<'T>(this, fetch, start, length)
+                        let! items = CloudArrayCache.FetchAsync<'T>(this, fetch, start, length)
                         return items
                     } |> Async.RunSynchronously
 
@@ -222,9 +222,9 @@
 
         let mkCloudArrayId () = Guid.NewGuid().ToString("N") 
     
-        let mkDescriptorName = sprintf "ca.%s"
-        let mkSegmentName    = sprintf "ca.%s.segment.%d"
-        let mkIndexFileName  = sprintf "ca.%s.segment.%d.index"
+        let mkDescriptorName = sprintf "%s.ca"
+        let mkSegmentName    = sprintf "%s.ca.segment.%d"
+        let mkIndexFileName  = sprintf "%s.ca.segment.%d.index"
     
         let getRangeAsync start length folder descriptorName =
             async {
@@ -253,7 +253,7 @@
                         currentSegment := segmentsDescription |> Seq.find (fun s -> s.StartIndex <= index && index <= s.EndIndex )
                         let! nextSegmentStream = store.ReadImmutable(folder, currentSegment.Value.Name)
                         currentSegmentStream := nextSegmentStream
-                    let item = Serialization.DefaultPickler.Deserialize<'T>(currentSegmentStream.Value)
+                    let item = Serialization.DefaultPickler.Deserialize<'T>(currentSegmentStream.Value, leaveOpen = true)
                     result.[i] <- item
     
                 currentSegmentStream.Value.Dispose()
@@ -286,7 +286,7 @@
                             while segmentEndCheck() do
                                 let item = e.Current
                                 bw.Write(stream.Position)
-                                Serialization.DefaultPickler.Serialize<'T>(stream, item)
+                                Serialization.DefaultPickler.Serialize<'T>(stream, item, leaveOpen = true)
                                 incr segmentItems
                             if not !moveNext then
                                 sourceEnd := true
@@ -349,7 +349,7 @@
 
             // Read
             let readDescriptor(cloudArray : CloudArray<'T>) = async {
-                use! descriptorStream = store.ReadImmutable(cloudArray.Folder , cloudArray.Descriptor)
+                use! descriptorStream = store.ReadImmutable(cloudArray.Container , cloudArray.Name)
                 return Serialization.DefaultPickler.Deserialize<CloudArrayDescription>(descriptorStream)
             }
 
@@ -379,9 +379,9 @@
                     stream.Dispose()
                 }
 
-            do! store.CreateImmutable(left.Folder, descriptorName , serialize, true)
+            do! store.CreateImmutable(left.Container, descriptorName , serialize, true)
 
-            return new CloudArray<'T>(left.Folder, descriptorName, finalDescr.Count, storeId)
+            return new CloudArray<'T>(left.Container, descriptorName, finalDescr.Count, storeId)
         }
 
         static member internal Create (storeId : StoreId, store : ICloudStore) =
@@ -397,10 +397,10 @@
         //member internal __.Store : ICloudStore = store
 
         member internal __.GetPageCache<'T>(ca : CloudArray<'T>) : PageCache<'T> =
-            new PageCache<'T>(ca.Folder, ca.Descriptor, ca.Length, store)
+            new PageCache<'T>(ca.Container, ca.Name, ca.Length, store)
 
         member __.GetRangeAsync<'T>(start : int64, length : int, ca : CloudArray<'T>) : Async<'T []> =
-            getRangeAsync start length ca.Folder ca.Descriptor
+            getRangeAsync start length ca.Container ca.Name
 
         member __.CreateAsync<'T>(container : string, values : seq<'T>) : Async<CloudArray<'T>> =
             createAsync container values
@@ -408,7 +408,7 @@
         member __.AppendAsync<'T>(left : CloudArray<'T>, right : CloudArray<'T>) : Async<CloudArray<'T>> =
             appendAsync left right
 
-    and [<AbstractClass; Sealed>] internal Cache () =
+    and [<AbstractClass; Sealed>] CloudArrayCache () =
 
         static let createKey name start ``end`` = 
             sprintf "%s %d %d" name start ``end``
