@@ -129,20 +129,33 @@
                 info.AddValue("count" ,     count)
                 info.AddValue("storeId" ,   storeId, typeof<StoreId>)
 
-        member this.Length with get () = count
-        member this.Container = folder
-        member this.Name = descriptorName
+        interface ICloudArray<'T> with 
 
-        member this.Item 
-            with get (index : int64) : 'T =
-                if index < 0L || index >= count then
-                    raise <| IndexOutOfRangeException(sprintf "Index = %d" index)
-                else
-                    pageCache.Value.GetItem<'T>(index)
+            member this.Length with get () = count
+            member this.Container = folder
+            member this.Name = descriptorName
 
+            member this.Item 
+                with get (index : int64) : 'T =
+                    if index < 0L || index >= count then
+                        raise <| IndexOutOfRangeException(sprintf "Index = %d" index)
+                    else
+                        pageCache.Value.GetItem<'T>(index)
+
+            member __.Range(start : int64, length : int) : 'T [] =
+                __.RangeAsync<'T>(start, length) 
+                |> Async.RunSynchronously
+
+            member this.Append(cloudArray : ICloudArray<'T>) : ICloudArray<'T> =
+                this.AppendAsync(cloudArray :?> CloudArray<'T>) // TODO: CHANGE
+                |> Async.RunSynchronously :> _
+
+            member this.Cache() : ICachedCloudArray<'T> =
+                new CachedCloudArray<'T>(folder, descriptorName, count, storeId) :> _
+                     
         interface IEnumerable<'T> with
             member this.GetEnumerator() : IEnumerator<'T> =
-                let ca = this 
+                let ca = this :> ICloudArray<'T>
                 let length = count
                 let index = ref 0L
                 let current = ref Unchecked.defaultof<'T>
@@ -160,6 +173,7 @@
                     member this.Reset () = ()
                 }
 
+        interface IEnumerable with
             member this.GetEnumerator() : IEnumerator =
                 (this :> IEnumerable<'T>).GetEnumerator() :> IEnumerator
 
@@ -173,24 +187,15 @@
                     return! provider.Value.GetRangeAsync(start, length, this)
             }
 
-        member __.Range<'T>(start : int64, length : int) : 'T [] =
-            __.RangeAsync<'T>(start, length) 
-            |> Async.RunSynchronously
-
         member this.AppendAsync(cloudArray : CloudArray<'T>) : Async<CloudArray<'T>> =
             provider.Value.AppendAsync(this, cloudArray)
 
-        member this.Append(cloudArray : CloudArray<'T>) : CloudArray<'T> =
-            this.AppendAsync(cloudArray)
-            |> Async.RunSynchronously
-
-        member this.Cache() : CachedCloudArray<'T> =
-            new CachedCloudArray<'T>(folder, descriptorName, count, storeId) 
 
     and [<Serializable>] CachedCloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) =
 
         inherit CloudArray<'T>(folder, descriptorName, count, storeId) 
 
+        interface ICloudArray<'T> with
             member this.Range(start : int64, length : int) =
                 if start < 0L || length < 0 || start + int64 length > count then
                     raise <| IndexOutOfRangeException(sprintf "Start = %d, Length = %d" start length)
@@ -202,6 +207,9 @@
                         let! items = CloudArrayCache.FetchAsync<'T>(this, fetch, start, length)
                         return items
                     } |> Async.RunSynchronously
+
+
+        interface ICachedCloudArray<'T>
 
         internal new(info : SerializationInfo, context : StreamingContext) =
             let folder     = info.GetValue("folder", typeof<string>) :?> string
@@ -261,13 +269,24 @@
                 return result
             }
 
-        let createAsync folder (source : seq<'T>) : Async<CloudArray<'T>> = async {
+        
+        let defineUntyped(ty : Type, container : string, descriptor : string, count : int64) =
+            let existential = Existential.Create ty
+            let ctor =
+                {
+                    new IFunc<ICloudArray> with
+                        member __.Invoke<'T> () = new CloudArray<'T>(container, descriptor, count, storeId) :> ICloudArray
+                }
+
+            existential.Apply ctor
+
+        let createAsync folder (source : IEnumerable) (ty : Type) : Async<ICloudArray> = async {
             let guid                = mkCloudArrayId()
             let descriptorName      = mkDescriptorName guid
             let sourceEnd           = ref false
             let segmentItems        = ref 0
 
-            let serialize (e : IEnumerator<'T>) (segmentIndexFile : string) (stream : Stream) : Async<unit> =
+            let serialize (e : IEnumerator) (segmentIndexFile : string) (stream : Stream) : Async<unit> =
                 async {
                     let serialize' (segmentStream : Stream) =
                         async {
@@ -286,7 +305,7 @@
                             while segmentEndCheck() do
                                 let item = e.Current
                                 bw.Write(stream.Position)
-                                Serialization.DefaultPickler.Serialize<'T>(stream, item, leaveOpen = true)
+                                Serialization.DefaultPickler.Serialize(ty, stream, item, leaveOpen = true)
                                 incr segmentItems
                             if not !moveNext then
                                 sourceEnd := true
@@ -340,7 +359,8 @@
 
             do! store.CreateImmutable(folder, descriptorName, writeSegmentsDescription, true)
 
-            return new CloudArray<_>(folder, descriptorName, !segmentStart, storeId)
+            return defineUntyped(ty, folder, descriptorName, !segmentStart)
+            //new CloudArray<_>(folder, descriptorName, !segmentStart, storeId)
         }
 
         let appendAsync (left : CloudArray<'T>) (right : CloudArray<'T>) : Async<CloudArray<'T>> = async {
@@ -349,7 +369,7 @@
 
             // Read
             let readDescriptor(cloudArray : CloudArray<'T>) = async {
-                use! descriptorStream = store.ReadImmutable(cloudArray.Container , cloudArray.Name)
+                use! descriptorStream = store.ReadImmutable((cloudArray :> ICloudArray).Container , (cloudArray :> ICloudArray).Name)
                 return Serialization.DefaultPickler.Deserialize<CloudArrayDescription>(descriptorStream)
             }
 
@@ -379,9 +399,9 @@
                     stream.Dispose()
                 }
 
-            do! store.CreateImmutable(left.Container, descriptorName , serialize, true)
+            do! store.CreateImmutable((left :> ICloudArray).Container, descriptorName , serialize, true)
 
-            return new CloudArray<'T>(left.Container, descriptorName, finalDescr.Count, storeId)
+            return new CloudArray<'T>((left :> ICloudArray).Container, descriptorName, finalDescr.Count, storeId)
         }
 
         static member internal Create (storeId : StoreId, store : ICloudStore) =
@@ -397,13 +417,15 @@
         //member internal __.Store : ICloudStore = store
 
         member internal __.GetPageCache<'T>(ca : CloudArray<'T>) : PageCache<'T> =
+            let ca = ca :> ICloudArray
             new PageCache<'T>(ca.Container, ca.Name, ca.Length, store)
 
         member __.GetRangeAsync<'T>(start : int64, length : int, ca : CloudArray<'T>) : Async<'T []> =
+            let ca = ca :> ICloudArray
             getRangeAsync start length ca.Container ca.Name
 
-        member __.CreateAsync<'T>(container : string, values : seq<'T>) : Async<CloudArray<'T>> =
-            createAsync container values
+        member __.Create(container : string, values : IEnumerable, ty : Type) : Async<ICloudArray> =
+            createAsync container values ty
 
         member __.AppendAsync<'T>(left : CloudArray<'T>, right : CloudArray<'T>) : Async<CloudArray<'T>> =
             appendAsync left right

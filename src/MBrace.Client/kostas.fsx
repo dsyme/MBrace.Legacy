@@ -20,11 +20,18 @@ MBraceSettings.ClientId |> ignore
 
 #time "on"
 
-let cap = StoreRegistry.DefaultStoreInfo.CloudArrayProvider
 let s = 10000
-let ca1 = cap.CreateAsync("foo", Array.init s id) |> Async.RunSynchronously
-let ca2 = cap.CreateAsync("foo", Array.init s ((+) (s+1))) |> Async.RunSynchronously
+// A
+let cap = StoreRegistry.DefaultStoreInfo.CloudArrayProvider
+let ca1 = cap.Create("foo", Array.init s id, typeof<int>) |> Async.RunSynchronously :?> ICloudArray<int>
+let ca2 = cap.Create("foo", Array.init s ((+) (s+1)), typeof<int>) |> Async.RunSynchronously :?> ICloudArray<int>
 let ca3 = ca1.Append(ca2)
+
+// B
+let ca1 = CloudArray.New("foo", Array.init s id) |> MBrace.RunLocal
+let ca2 = CloudArray.New("foo", Array.init s ((+) (s+1))) |> MBrace.RunLocal
+let ca3 = ca1.Append(ca2)
+
 
 ca1.[0L], ca2.[0L], ca3.[0L]
 
@@ -43,8 +50,12 @@ ca1'.Range(100L,1000)
 
 CloudArrayCache.State
 
-ca1.Range(0L, s)
-ca1'.Range(0L, s)
+let ca2' = ca2.Cache()
+ca2'.Range(0L,2)
+ca2'.Range(10L,2)
+ca2'.Range(0L,20)
+
+CloudArrayCache.State |> Seq.iter (printfn "%A")
 
 
 //----------------------------------------------

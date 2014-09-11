@@ -105,3 +105,27 @@
         abstract Size : int64
         /// Asynchronously returns a read-only stream with access to CloudFile data.
         abstract Read : unit -> Async<Stream>
+
+    type ICloudArray =
+        inherit IEnumerable
+
+        abstract Name : string
+        abstract Container : string
+        abstract Length : int64
+
+        //abstract Cache : unit -> ICachedCloudArray<'T>
+        //abstract Append : ICloudArray<'T> -> ICloudArray<'T>
+        //abstract Item : int64 -> 'T with get
+
+    type ICloudArray<'T> =
+        inherit ICloudArray
+        inherit IEnumerable<'T>
+
+        abstract Cache : unit -> ICachedCloudArray<'T>
+        abstract Append : ICloudArray<'T> -> ICloudArray<'T>
+        abstract Item : int64 -> 'T with get
+        abstract Range : int64 * int -> 'T []
+
+    and ICachedCloudArray<'T> =
+        inherit ICloudArray<'T>
+
