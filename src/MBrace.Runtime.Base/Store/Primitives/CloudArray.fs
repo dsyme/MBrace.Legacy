@@ -41,22 +41,23 @@
         let newCloudArrayDescription(count, segments) =
             { Count = count; Segments = segments}
     
-    /// Forward only caching. WHen asked for item i caches the next MaxPageSize items.
-    type internal PageCache<'T>(folder : string, descriptor : string, length : int64, store : ICloudStore) as this =
+    /// Forward only caching. When asked for item i caches the next MaxPageSize items.
+    type internal PageCache<'T>(folder : string, descriptor : string, length : int64, store : ICloudStore) =
 
         let mutable currentPageStart = -1L
+
+        let buffer = new List<'T>()
 
         let isCached index =
             currentPageStart <> -1L 
             && currentPageStart <= index 
-            && index < currentPageStart + int64 this.Buffer.Count
+            && index < currentPageStart + int64 buffer.Count
 
-        let buffer = new List<'T>()
-        member internal this.Buffer : List<'T> = buffer
+        //member internal this.Buffer : List<'T> = buffer
 
         member internal this.FetchPageAsync(index : int64, ?pageItems : int) =
             async {
-                    this.Buffer.Clear()
+                    buffer.Clear()
                     currentPageStart <- -1L
                     let pageItems = defaultArg pageItems Int32.MaxValue
 
@@ -83,14 +84,14 @@
                     segmentStream.Seek(startPosition, SeekOrigin.Begin) |> ignore
 
                     for i = 1 to !itemCounter do
-                        this.Buffer.Add(Serialization.DefaultPickler.Deserialize<'T>(segmentStream))
+                        buffer.Add(Serialization.DefaultPickler.Deserialize<'T>(segmentStream))
 
                     currentPageStart <- index
             }
 
         member this.GetItem<'T>(index : int64) : 'T = 
             if isCached index then
-                this.Buffer.[int(index-currentPageStart)]
+                buffer.[int(index-currentPageStart)]
             else
                 this.FetchPageAsync(index)
                 |> Async.RunSynchronously
@@ -98,7 +99,7 @@
 
         member this.GetItem<'T>(index : int64, pageItems : int) : 'T = 
             if isCached index then
-                this.Buffer.[int(index-currentPageStart)]
+                buffer.[int(index-currentPageStart)]
             else
                 this.FetchPageAsync(index)
                 |> Async.RunSynchronously
@@ -490,7 +491,9 @@
         static member State =
             itemsSet :> seq<_>
 
+    /// StartIndex * Length.
     type internal CloudArrayRange = int64 * int
+    /// CloudArray identifier.
     type internal CloudArrayId    = string
 
     [<Sealed;AbstractClass>]
@@ -498,7 +501,7 @@
         static let guid     = System.Guid.NewGuid()
         static let registry = Concurrent.ConcurrentDictionary<CloudArrayId, List<CloudArrayRange>>()
         
-        static member GetNodeId () = guid
+        static member GetRegistryId () = guid
         
         static member Add(id : CloudArrayId, range : CloudArrayRange) =
             registry.AddOrUpdate(

@@ -80,7 +80,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Serialization.fs" />
-    <Compile Include="Store\Primitives\CloudArray.fs" />
     <Compile Include="Vagrant.fs" />
     <Compile Include="Store\StoreUtils.fs" />
     <Compile Include="Store\StoreId.fs" />
@@ -90,6 +89,7 @@
     <Compile Include="Store\Primitives\MutableCloudRef.fs" />
     <Compile Include="Store\Primitives\CloudSeq.fs" />
     <Compile Include="Store\Primitives\CloudFile.fs" />
+    <Compile Include="Store\Primitives\CloudArray.fs" />
     <Compile Include="Store\StoreRegistry.fs" />
     <Compile Include="Compiler\Metadata.fs" />
     <Compile Include="Compiler\CloudComputation.fs" />
