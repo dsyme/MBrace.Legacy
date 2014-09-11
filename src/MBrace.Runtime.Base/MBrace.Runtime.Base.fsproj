@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Serialization.fs" />
+    <Compile Include="Store\Primitives\CloudArray.fs" />
     <Compile Include="Vagrant.fs" />
     <Compile Include="Store\StoreUtils.fs" />
     <Compile Include="Store\StoreId.fs" />
