@@ -384,7 +384,7 @@
             return new CloudArray<'T>(left.Folder, descriptorName, finalDescr.Count, storeId)
         }
 
-        static member internal Create (storeId : StoreId, store : ICloudStore, cacheStore : CacheStore) =
+        static member internal Create (storeId : StoreId, store : ICloudStore) =
             providers.GetOrAdd(storeId, fun id -> new CloudArrayProvider(id, store))
 
         static member internal GetById (storeId : StoreId) : CloudArrayProvider =
