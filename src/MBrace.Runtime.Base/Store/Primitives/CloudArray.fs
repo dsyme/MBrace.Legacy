@@ -28,8 +28,13 @@
             {   Count    : int64
                 Segments : List<SegmentDescription> } 
 
-        let MaxSegmentSize = 1024L
-        let PageCacheSize  = 128L
+        /// Max segment size in bytes.     // TODO : tune
+        let MaxSegmentSize = 1024L * 1024L // TODO : tune
+        /// Max PageCache size in bytes.   // TODO : tune
+        let MaxPageCacheSize  = 1024L     // TODO : tune
+        /// Max PageCache items.           // TODO : tune
+        let MaxPageCacheItems = 1024       // TODO : tune
+
         let newSegment(id, name, folder, descriptor, start, ``end``) =
             { Id         = id
               Name       = name
@@ -59,7 +64,7 @@
             async {
                     buffer.Clear()
                     currentPageStart <- -1L
-                    let pageItems = defaultArg pageItems Int32.MaxValue
+                    let pageItems = defaultArg pageItems MaxPageCacheItems
 
                     // Read descriptor file, find the segment, read from segment
                     use! descriptorStream = store.ReadImmutable(folder, descriptor)
@@ -75,7 +80,7 @@
     
                     let endPosition = ref startPosition
                     let itemCounter = ref 1
-                    while !itemCounter < pageItems && !endPosition - startPosition <= PageCacheSize && br.BaseStream.Position < br.BaseStream.Length do
+                    while !itemCounter < pageItems && !endPosition - startPosition <= MaxPageCacheSize && br.BaseStream.Position < br.BaseStream.Length do
                         endPosition := !endPosition + br.ReadInt64()
                         incr itemCounter
 
@@ -129,12 +134,33 @@
                 info.AddValue("count" ,     count)
                 info.AddValue("storeId" ,   storeId, typeof<StoreId>)
 
-        interface ICloudArray<'T> with 
-
+        interface ICloudArray with
+  
             member this.Length with get () = count
-            member this.Container = folder
-            member this.Name = descriptorName
+            member this.Container with get () = folder
+            member this.Name with get () = descriptorName
+            member this.Type with get () = typeof<'T>
 
+            member this.Append(cloudArray: ICloudArray): ICloudArray = 
+                let ltype, rtype = (this :> ICloudArray).Type, cloudArray.Type 
+                if ltype <> rtype then
+                    raise <| StoreException(sprintf "Cannot Append CloudArrays of different types '%A' and '%A'" ltype rtype)
+                else
+                    (this :> ICloudArray<'T>).Append(cloudArray :?> ICloudArray<'T>) :> _
+
+            member this.Cache(): ICachedCloudArray = 
+                (this :> ICloudArray<'T>).Cache() :> _
+
+            member this.Item
+                with get (index: int64): obj = 
+                    (this :> ICloudArray<'T>).Item index :> _
+
+            member this.Range(start: int64, count: int): obj [] = 
+                (this :> ICloudArray<'T>).Range(start, count) // TODO : inefficient
+                |> Seq.cast<obj>
+                |> Seq.toArray
+
+        interface ICloudArray<'T> with 
             member this.Item 
                 with get (index : int64) : 'T =
                     if index < 0L || index >= count then
@@ -207,7 +233,6 @@
                         let! items = CloudArrayCache.FetchAsync<'T>(this, fetch, start, length)
                         return items
                     } |> Async.RunSynchronously
-
 
         interface ICachedCloudArray<'T>
 
@@ -360,7 +385,6 @@
             do! store.CreateImmutable(folder, descriptorName, writeSegmentsDescription, true)
 
             return defineUntyped(ty, folder, descriptorName, !segmentStart)
-            //new CloudArray<_>(folder, descriptorName, !segmentStart, storeId)
         }
 
         let appendAsync (left : CloudArray<'T>) (right : CloudArray<'T>) : Async<CloudArray<'T>> = async {
@@ -413,8 +437,6 @@
             else
                 let msg = sprintf "No configuration for store '%s' has been activated." storeId.AssemblyQualifiedName
                 raise <| new StoreException(msg)
-
-        //member internal __.Store : ICloudStore = store
 
         member internal __.GetPageCache<'T>(ca : CloudArray<'T>) : PageCache<'T> =
             let ca = ca :> ICloudArray

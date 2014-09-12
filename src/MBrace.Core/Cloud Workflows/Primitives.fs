@@ -118,10 +118,28 @@
         abstract Container : string
         /// The number of elements contained.
         abstract Length : int64 
+        /// The type of the contained elements.
+        abstract Type : Type
+        /// Returns a cacheable version of the CloudArray.
+        abstract Cache : unit -> ICachedCloudArray
+        /// Combines two CloudArray's into one.
+        abstract Append : ICloudArray -> ICloudArray
+        /// <summary>
+        /// Returns the item in the specified index.
+        /// </summary>
+        /// <param name="index">The item's index.</param>
+        abstract Item : index : int64 -> obj with get
+        /// <summary>
+        /// Returns an array of the elements in the specified range.
+        /// </summary>
+        /// <param name="start">The starting index.</param>
+        /// <param name="count">The number of elements to return.</param>
+        abstract Range : start : int64 * count : int -> obj []
 
-        //abstract Cache : unit -> ICachedCloudArray<'T>
-        //abstract Append : ICloudArray<'T> -> ICloudArray<'T>
-        //abstract Item : int64 -> 'T with get
+    /// A cacheable version of CloudArray. This enables in-memory 
+    /// caching of CloudArray's ranges.
+    and ICachedCloudArray =
+        inherit ICloudArray
 
     /// Represents a finite and immutable sequence of
     /// elements that is stored in the underlying CloudStore
@@ -149,5 +167,6 @@
     /// A cacheable version of CloudArray. This enables in-memory 
     /// caching of CloudArray's ranges.
     and ICachedCloudArray<'T> =
+        inherit ICachedCloudArray
         inherit ICloudArray<'T>
 
