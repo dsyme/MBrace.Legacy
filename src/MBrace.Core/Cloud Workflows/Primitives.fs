@@ -106,26 +106,48 @@
         /// Asynchronously returns a read-only stream with access to CloudFile data.
         abstract Read : unit -> Async<Stream>
 
+    /// Represents a finite and immutable sequence of
+    /// elements that is stored in the underlying CloudStore
+    /// and provides fast random access.
     type ICloudArray =
         inherit IEnumerable
 
+        /// CloudArray identifier.
         abstract Name : string
+        /// CloudArray containing folder in underlying store.
         abstract Container : string
-        abstract Length : int64
+        /// The number of elements contained.
+        abstract Length : int64 
 
         //abstract Cache : unit -> ICachedCloudArray<'T>
         //abstract Append : ICloudArray<'T> -> ICloudArray<'T>
         //abstract Item : int64 -> 'T with get
 
+    /// Represents a finite and immutable sequence of
+    /// elements that is stored in the underlying CloudStore
+    /// and provides fast random access.
     type ICloudArray<'T> =
         inherit ICloudArray
         inherit IEnumerable<'T>
-
+        
+        /// Returns a cacheable version of the CloudArray.
         abstract Cache : unit -> ICachedCloudArray<'T>
+        /// Combines two CloudArray's into one.
         abstract Append : ICloudArray<'T> -> ICloudArray<'T>
-        abstract Item : int64 -> 'T with get
-        abstract Range : int64 * int -> 'T []
+        /// <summary>
+        /// Returns the item in the specified index.
+        /// </summary>
+        /// <param name="index">The item's index.</param>
+        abstract Item : index : int64 -> 'T with get
+        /// <summary>
+        /// Returns an array of the elements in the specified range.
+        /// </summary>
+        /// <param name="start">The starting index.</param>
+        /// <param name="count">The number of elements to return.</param>
+        abstract Range : start : int64 * count : int -> 'T []
 
+    /// A cacheable version of CloudArray. This enables in-memory 
+    /// caching of CloudArray's ranges.
     and ICachedCloudArray<'T> =
         inherit ICloudArray<'T>
 
