@@ -196,6 +196,14 @@ namespace Nessos.MBrace.Runtime.Interpreter
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
+                    | NewCloudArray(container, items, t) :: rest ->
+                        let! exec = Async.Catch <| storeConfig.CloudArrayProvider.Create(container, items, t)
+                        match exec with
+                        | Choice1Of2 ca ->
+                            return! eval traceEnabled <| (ValueExpr (Obj (ObjValue ca, typeof<ICloudArray>))) :: rest
+                        | Choice2Of2 ex ->
+                            return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+
                     | LogExpr msg :: rest ->
                         try taskConfig.Logger.LogUserInfo(msg, taskConfig.TaskId) with _ -> ()
                         return! eval traceEnabled <| ValueExpr (Obj (ObjValue (), typeof<unit>)) :: rest

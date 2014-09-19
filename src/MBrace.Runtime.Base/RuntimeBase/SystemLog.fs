@@ -14,10 +14,11 @@
     open Nessos.MBrace.Store
 
 
-    /// abstract system logger
+    /// Abstract system logger
     type ISystemLogger =
         abstract LogEntry : SystemLogEntry -> unit
 
+    /// Represents a Runtime log.
     and SystemLogEntry = 
         {
             Message : string
@@ -32,6 +33,7 @@
             else 
                 sprintf "%O : %s" e.Level e.Message
 
+    /// Log level (Info = 0| Warning = 1| Error = 2) for the MBrace daemons.
     and LogLevel = 
         | Info
         | Warning

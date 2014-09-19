@@ -65,6 +65,7 @@
     <Compile Include="Cloud Workflows\CloudBuilder.fs" />
     <Compile Include="Cloud Workflows\Combinators.fs" />
     <Compile Include="Cloud Workflows\Exceptions.fs" />
+    <Compile Include="Store API\CloudArray.fs" />
     <Compile Include="Store API\CloudRef.fs" />
     <Compile Include="Store API\CloudSeq.fs" />
     <Compile Include="Store API\MutableCloudRef.fs" />

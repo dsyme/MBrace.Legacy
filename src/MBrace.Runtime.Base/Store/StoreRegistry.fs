@@ -1,15 +1,10 @@
 ﻿namespace Nessos.MBrace.Runtime
     
-    open System
-    open System.IO
-    open System.Collections.Concurrent
-    open System.Runtime
-    open System.Reflection
-
-    open Nessos.Vagrant
-
-    open Nessos.MBrace.Utils
     open Nessos.MBrace.Store
+    open Nessos.MBrace.Utils
+    open Nessos.Vagrant
+    open System.Collections.Concurrent
+    open System.Reflection
 
     [<AutoSerializable(true) ; NoEquality ; NoComparison>]
     type StoreActivationInfo =
@@ -30,6 +25,7 @@
             CloudRefProvider : CloudRefProvider
             CloudFileProvider : CloudFileProvider
             CloudSeqProvider : CloudSeqProvider
+            CloudArrayProvider : CloudArrayProvider
             MutableCloudRefProvider : MutableCloudRefProvider
 
             // TODO : investigate whether inmem cache should be
@@ -70,10 +66,11 @@
                 let cacheStore = getLocalCache()
                 let localCache = new CacheStore(sprintf "fscache-%d" <| hash id, cacheStore, store)
 
-                let cRefProvider = CloudRefProvider.Create(id, store, inmem, localCache)
-                let cFileProvider = CloudFileProvider.Create(id, store, localCache)
-                let mRefProvider = MutableCloudRefProvider.Create(id, store)
-                let cSeqprovider = CloudSeqProvider.Create(id, store, localCache)
+                let cRefProvider   = CloudRefProvider.Create(id, store, inmem, localCache)
+                let cFileProvider  = CloudFileProvider.Create(id, store, localCache)
+                let mRefProvider   = MutableCloudRefProvider.Create(id, store)
+                let cSeqprovider   = CloudSeqProvider.Create(id, store, localCache)
+                let cArrayProvider = CloudArrayProvider.Create(id, store)
 
                 {
                     Store = store
@@ -81,10 +78,11 @@
                     Dependencies = dependencies
                     ActivationInfo = info
 
-                    CloudRefProvider = cRefProvider
-                    CloudFileProvider = cFileProvider
+                    CloudRefProvider        = cRefProvider
+                    CloudFileProvider       = cFileProvider
+                    CloudSeqProvider        = cSeqprovider
+                    CloudArrayProvider      = cArrayProvider
                     MutableCloudRefProvider = mRefProvider
-                    CloudSeqProvider = cSeqprovider
 
                     InMemoryCache = inmem
                     CacheStore = localCache
