@@ -39,7 +39,7 @@
       <div class="row">
         <div class="span9" id="main">
           
-<h1>MBrace Client API</h1>
+<h1><a name="MBrace-Client-API" class="anchor" href="#MBrace-Client-API">MBrace Client API</a></h1>
 
 <p>The following article provides an overview of the MBrace client API,
 the collection of types and methods used for interacting with the MBrace runtime.
@@ -62,7 +62,7 @@ deployment and debugging of cloud computation through the F# REPL.</p></li>
 or nondeterministic algorithms and a multitude of sample implementations.</p></li>
 </ol>
 
-<h2>Installation</h2>
+<h2><a name="Installation" class="anchor" href="#Installation">Installation</a></h2>
 
 <p>These can be accessed by adding the <a href="http://www.nuget.org/packages/MBrace.Client"><code>MBrace.Client</code></a> 
 nuget package to projects. Alternatively, they can be consumed from F# interactive 
@@ -107,7 +107,7 @@ needs to be set up</p>
   <span class="k">&lt;/</span><span class="i">runtime</span><span class="k">&gt;</span>
 <span class="k">&lt;/</span><span class="i">configuration</span><span class="k">&gt;</span></pre></td></tr></table>
 
-<h2>The Cloud Attribute</h2>
+<h2><a name="The-Cloud-Attribute" class="anchor" href="#The-Cloud-Attribute">The Cloud Attribute</a></h2>
 
 <p>A primary function of the MBrace client is statically traversing cloud workflows for library dependencies, 
 extracting metadata to be used for debugging purposes, 
@@ -188,7 +188,7 @@ For example, the following code is perfectly valid:</p>
 </tr>
 </table>
 
-<h2>Store Providers</h2>
+<h2><a name="Store-Providers" class="anchor" href="#Store-Providers">Store Providers</a></h2>
 
 <p>Every MBrace runtime requires a storage backend in order for it to function. 
 This enables distributed storage primitives like cloud refs and cloud files 
@@ -235,7 +235,7 @@ rather it relies on pluggable storage providers which can be user defined.</p>
 <p>User-defined storage providers can be created by implementing the 
 <a href="reference/nessos-mbrace-store-icloudstore.html"><code>ICloudStore</code></a> interface.</p>
 
-<h2>Managing the MBrace Runtime</h2>
+<h2><a name="Managing-the-MBrace-Runtime" class="anchor" href="#Managing-the-MBrace-Runtime">Managing the MBrace Runtime</a></h2>
 
 <p>The MBrace runtime is a cluster of connected computers capable of 
 orchestrating the execution of cloud workflows. 
@@ -243,7 +243,7 @@ Every computer participating in an MBrace runtime is called an MBrace node.
 In this section we offer an overview of how the MBrace client stack can be used to initialize, 
 manage and monitor remote MBrace runtimes.</p>
 
-<h3>MBraceNode</h3>
+<h3><a name="MBraceNode" class="anchor" href="#MBraceNode">MBraceNode</a></h3>
 
 <p>An <a href="reference/nessos-mbrace-client-mbracenode.html"><code>MBraceNode</code></a> represents any 
 physical machine that runs the MBrace daemon, the server-side component of the framework. 
@@ -333,7 +333,7 @@ MBrace node logs can accessed remotely from the client either in the form of a d
 </tr>
 </table>
 
-<h3>MBraceRuntime</h3>
+<h3><a name="MBraceRuntime" class="anchor" href="#MBraceRuntime">MBraceRuntime</a></h3>
 
 <p>An MBrace runtime can be booted once access to a collection of at least 3 nodes, 
 all running within the same subnet, has been established. This can be done like so:</p>
@@ -434,7 +434,7 @@ grothendieck  38865  Alt Master  Local (Pid 4952)  mbrace://grothendieck:38865/<
 </tr>
 </table>
 
-<h2>Managing Cloud Processes</h2>
+<h2><a name="Managing-Cloud-Processes" class="anchor" href="#Managing-Cloud-Processes">Managing Cloud Processes</a></h2>
 
 <p>A cloud process is a currently executing or completed cloud computation 
 in the context of a specific MBrace runtime. 
@@ -580,7 +580,7 @@ mapReduce        6674  Running         2       2  30/7/2013 4:08:21  (string * i
 </tr>
 </table>
 
-<h2>The MBrace Daemon</h2>
+<h2><a name="The-MBrace-Daemon" class="anchor" href="#The-MBrace-Daemon">The MBrace Daemon</a></h2>
 
 <p>As mentioned earlier, the MBrace daemon is the server-side application 
 that contains a machine-wide instance of the MBrace framework. 
@@ -592,7 +592,7 @@ For instance, the command</p>
 
 <p>will instantiate a background mbraced process that listens on the loopback interface at port 2675.</p>
 
-<h3>Configuring the MBrace Daemon</h3>
+<h3><a name="Configuring-the-MBrace-Daemon" class="anchor" href="#Configuring-the-MBrace-Daemon">Configuring the MBrace Daemon</a></h3>
 
 <p>The MBrace daemon comes with a range of configuration options. 
 These parameters can either be read from the mbraced configuration file, 
@@ -642,7 +642,7 @@ it is resolved with respect to the working directory.</p></li>
 Relative paths evaluated with respect to the main <code>mbraced.exe</code> path.</p></li>
 </ul>
 
-<h3>Deploying the MBrace Daemon</h3>
+<h3><a name="Deploying-the-MBrace-Daemon" class="anchor" href="#Deploying-the-MBrace-Daemon">Deploying the MBrace Daemon</a></h3>
 
 <p>Once the configuration file for <code>mbraced</code> has been set up as desired, 
 deploying an instance from the command line is as simple as typing</p>
@@ -686,10 +686,10 @@ with settings read from the xml configuration file.</p>
 <div class="tip" id="fs9">val runtime : MBraceRuntime<br /><br />Full name: Client-api.runtime</div>
 <div class="tip" id="fs10">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
 <div class="tip" id="fs11">static member MBraceRuntime.InitLocal : totalNodes:int * ?masterPort:int * ?hostname:string * ?replicationFactor:int * ?failoverFactor:int * ?store:Store.ICloudStore * ?debug:bool * ?background:bool -&gt; MBraceRuntime</div>
-<div class="tip" id="fs12">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; &#39;T</div>
+<div class="tip" id="fs12">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string * ?showLogs:bool -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string * ?showLogs:bool -&gt; &#39;T</div>
 <div class="tip" id="fs13">val cloud : CloudBuilder<br /><br />Full name: Nessos.MBrace.CloudBuilder.cloud</div>
 <div class="tip" id="fs14">val proc : Process&lt;int&gt;<br /><br />Full name: Client-api.proc</div>
-<div class="tip" id="fs15">member MBraceRuntime.CreateProcess : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : block:Cloud&lt;&#39;T&gt; * ?name:&#39;a1 -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:&#39;a1 -&gt; Process&lt;&#39;T&gt;</div>
+<div class="tip" id="fs15">member MBraceRuntime.CreateProcess : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; Process&lt;&#39;T&gt;</div>
 <div class="tip" id="fs16">val expr : Quotations.Expr&lt;int&gt;<br /><br />Full name: Client-api.expr</div>
 <div class="tip" id="fs17">Multiple items<br />module Cloud<br /><br />from Nessos.MBrace.Lib<br /><br />--------------------<br />type Cloud =<br />&#160;&#160;static member Catch : computation:Cloud&lt;&#39;T&gt; -&gt; Cloud&lt;Choice&lt;&#39;T,exn&gt;&gt;<br />&#160;&#160;static member Choice : computations:seq&lt;Cloud&lt;&#39;T option&gt;&gt; -&gt; Cloud&lt;&#39;T option&gt;<br />&#160;&#160;static member Dispose : resource:#ICloudDisposable -&gt; Cloud&lt;unit&gt;<br />&#160;&#160;static member GetProcessId : unit -&gt; Cloud&lt;ProcessId&gt;<br />&#160;&#160;static member GetTaskId : unit -&gt; Cloud&lt;string&gt;<br />&#160;&#160;static member GetWorkerCount : unit -&gt; Cloud&lt;int&gt;<br />&#160;&#160;static member Ignore : computation:Cloud&lt;&#39;T&gt; -&gt; Cloud&lt;unit&gt;<br />&#160;&#160;static member Log : msg:string -&gt; Cloud&lt;unit&gt;<br />&#160;&#160;static member Logf : fmt:StringFormat&lt;&#39;a0,Cloud&lt;unit&gt;&gt; -&gt; &#39;a0<br />&#160;&#160;static member OfAsync : asyncComputation:Async&lt;&#39;T&gt; -&gt; Cloud&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Cloud<br /><br />--------------------<br />type Cloud&lt;&#39;T&gt; =<br />&#160;&#160;private new : cloudExpr:CloudExpr -&gt; Cloud&lt;&#39;T&gt;<br />&#160;&#160;member private CloudExpr : CloudExpr<br />&#160;&#160;member Type : Type<br /><br />Full name: Nessos.MBrace.Cloud&lt;_&gt;<br /><br />--------------------<br />type CloudAttribute = ReflectedDefinitionAttribute<br /><br />Full name: Nessos.MBrace.CloudAttribute</div>
 <div class="tip" id="fs18">val test : unit -&gt; Cloud&lt;int&gt;<br /><br />Full name: Client-api.test</div>

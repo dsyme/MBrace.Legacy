@@ -39,7 +39,7 @@
       <div class="row">
         <div class="span9" id="main">
           
-<h1>MBrace framework</h1>
+<h1><a name="MBrace-framework" class="anchor" href="#MBrace-framework">MBrace framework</a></h1>
 
 <p>The MBrace framework is an open-source distributed runtime that enables
 scalable, fault-tolerant computation and data processing for the .NET/mono frameworks.
@@ -57,7 +57,7 @@ manifested through computation expressions in F#.</p>
   <div class="span1"></div>
 </div>
 
-<h2>Example</h2>
+<h2><a name="Example" class="anchor" href="#Example">Example</a></h2>
 
 <p>An MBrace session can be initialized from F# interactive as follows:</p>
 
@@ -122,7 +122,7 @@ manifested through computation expressions in F#.</p>
 
 <table class="pre"><tr><td><pre lang="bash">git clone https://github.com/nessos/MBrace.Demos</pre></td></tr></table>
 
-<h2>Documentation &amp; Tutorials</h2>
+<h2><a name="Documentation-amp-Tutorials" class="anchor" href="#Documentation-amp-Tutorials">Documentation &amp; Tutorials</a></h2>
 
 <p>A collection of tutorials, technical overviews and API references of the library.</p>
 
@@ -135,7 +135,7 @@ manifested through computation expressions in F#.</p>
 and functions in the library.</p></li>
 </ul>
 
-<h2>Contributing and copyright</h2>
+<h2><a name="Contributing-and-copyright" class="anchor" href="#Contributing-and-copyright">Contributing and copyright</a></h2>
 
 <p>The project is hosted on <a href="https://github.com/nessos/MBrace">GitHub</a> where you can <a href="https://github.com/nessos/MBrace/issues">report issues</a>, fork 
 the project and submit pull requests.</p>
@@ -167,7 +167,7 @@ For more information see the <a href="https://github.com/nessos/MBrace/blob/mast
 <div class="tip" id="fs22">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
 <div class="tip" id="fs23">static member MBraceRuntime.Connect : uri:string -&gt; MBraceRuntime<br />static member MBraceRuntime.Connect : uri:System.Uri -&gt; MBraceRuntime<br />static member MBraceRuntime.Connect : host:string * port:int -&gt; MBraceRuntime</div>
 <div class="tip" id="fs24">val proc : Process&lt;int&gt;<br /><br />Full name: Index.proc</div>
-<div class="tip" id="fs25">member MBraceRuntime.CreateProcess : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : block:Cloud&lt;&#39;T&gt; * ?name:&#39;a1 -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:&#39;a1 -&gt; Process&lt;&#39;T&gt;</div>
+<div class="tip" id="fs25">member MBraceRuntime.CreateProcess : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; Process&lt;&#39;T&gt;<br />member MBraceRuntime.CreateProcess : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; Process&lt;&#39;T&gt;</div>
 <div class="tip" id="fs26">val lines : int<br /><br />Full name: Index.lines</div>
 <div class="tip" id="fs27">member Process.AwaitResult : ?pollingInterval:int -&gt; &#39;T</div>
 

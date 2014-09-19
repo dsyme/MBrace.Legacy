@@ -39,7 +39,7 @@
       <div class="row">
         <div class="span9" id="main">
           
-<h1>Deploying the MBrace Runtime</h1>
+<h1><a name="Deploying-the-MBrace-Runtime" class="anchor" href="#Deploying-the-MBrace-Runtime">Deploying the MBrace Runtime</a></h1>
 
 <p>In this tutorial you will learn how to install and setup MBrace.</p>
 
@@ -47,7 +47,7 @@
 that manages the runtime (usually the client runs on a F# interactive instance). Any nodes in a MBrace runtime,
 as well as any clients, should be part of the same network in order to work properly.</p>
 
-<h2><a name="installservice"></a>Installing the MBrace Runtime Service</h2>
+<h2><a name="a-name-installservice-a-Installing-the-MBrace-Runtime-Service" class="anchor" href="#a-name-installservice-a-Installing-the-MBrace-Runtime-Service"><a name="installservice"></a>Installing the MBrace Runtime Service</a></h2>
 
 <p>In order to get a MBrace node running on a machine you need to download 
 the <a href="http://nuget.org/packages/MBrace.Runtime">MBrace.Runtime</a> package.
@@ -115,7 +115,7 @@ Status   Name               DisplayName
 ------   ----               -----------
 Running  MBrace             MBrace Runtime</pre></td></tr></table>
 
-<h2><a name="configureservice"></a>Configuring MBrace</h2>
+<h2><a name="a-name-configureservice-a-Configuring-MBrace" class="anchor" href="#a-name-configureservice-a-Configuring-MBrace"><a name="configureservice"></a>Configuring MBrace</a></h2>
 
 <p>Now you need to make any configurations to the MBrace daemon by changing the <code>mbraced.exe.config</code> file.
 Normally you don't need to change this file and you can skip this step.
@@ -163,7 +163,7 @@ Use <code>temp</code> for the system temp folder.</li>
 
 <p>You can repeat this process to install MBrace on multiple machines.</p>
 
-<h2><a name="bootruntime"></a>Booting the MBrace Runtime</h2>
+<h2><a name="a-name-bootruntime-a-Booting-the-MBrace-Runtime" class="anchor" href="#a-name-bootruntime-a-Booting-the-MBrace-Runtime"><a name="bootruntime"></a>Booting the MBrace Runtime</a></h2>
 
 <p>At this point your machines are running and the MBrace nodes are idle.
 At your client machine, you need to install the F# interactive (or optionally Visual Studio or any environment supporting F#)
@@ -286,7 +286,7 @@ testing purposes.</p>
 <div class="tip" id="fs26">val runtime : MBraceRuntime<br /><br />Full name: Runtime-deployment.runtime</div>
 <div class="tip" id="fs27">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
 <div class="tip" id="fs28">static member MBraceRuntime.Boot : nodes:MBraceNode list * ?replicationFactor:int * ?failoverFactor:int * ?store:ICloudStore -&gt; MBraceRuntime</div>
-<div class="tip" id="fs29">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; &#39;T</div>
+<div class="tip" id="fs29">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string * ?showLogs:bool -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string * ?showLogs:bool -&gt; &#39;T</div>
 <div class="tip" id="fs30">val cloud : CloudBuilder<br /><br />Full name: Nessos.MBrace.CloudBuilder.cloud</div>
 
         </div>

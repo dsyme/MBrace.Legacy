@@ -39,7 +39,7 @@
       <div class="row">
         <div class="span9" id="main">
           
-<h1>Using MBrace on Windows Azure IaaS</h1>
+<h1><a name="Using-MBrace-on-Windows-Azure-IaaS" class="anchor" href="#Using-MBrace-on-Windows-Azure-IaaS">Using MBrace on Windows Azure IaaS</a></h1>
 
 <p>In this tutorial you will learn how to setup MBrace on Windows Azure IaaS. 
 As a prerequisite you need to have a Windows Azure account, basic knowledge of the Azure computing/virtual machine services and
@@ -52,7 +52,7 @@ as well as any clients, should be part of the same network in order to work prop
 <p>Because of this restriction in this tutorial you have two choices: you can either use one of the virtual machines as a client or you can use
 the Windows Azure VPN service to join the virtual network created in Azure and access the runtime from a remote client (your on-premises computer).</p>
 
-<h2>Creating a virtual network</h2>
+<h2><a name="Creating-a-virtual-network" class="anchor" href="#Creating-a-virtual-network">Creating a virtual network</a></h2>
 
 <p>At this point you should decide if you are going to use a remote client or one of
 the virtual machines as a client. If you choose the first 
@@ -62,7 +62,7 @@ The process is described in <a href="http://msdn.microsoft.com/en-us/library/azu
 <p>You can skip this step if you want to use a client in one of your virtual machines, as a virtual network will be automatically created
 for you during the virtual machine creation.</p>
 
-<h2>Creating a virtual machine</h2>
+<h2><a name="Creating-a-virtual-machine" class="anchor" href="#Creating-a-virtual-machine">Creating a virtual machine</a></h2>
 
 <p>Now you need to create your virtual machines. You can follow 
 <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-tutorial/">this</a> tutorial
@@ -74,7 +74,7 @@ You can't join the virtual machine to a virtual network after you have created t
 <p>Note that although there are no minimal requirements for the VM size it's recommented to use at least 
 a Medium (A2) (2 cores, 3.5GB Memory) instance. After the virtual machine is created log on to it.</p>
 
-<h2>Installing the MBrace and Configuring Runtime</h2>
+<h2><a name="Installing-the-MBrace-and-Configuring-Runtime" class="anchor" href="#Installing-the-MBrace-and-Configuring-Runtime">Installing the MBrace and Configuring Runtime</a></h2>
 
 <p>At this point you need to install MBrace in this machine using the instructions
 in our <a href="runtime-deployment.html">Runtime Installation</a> guide.
@@ -103,7 +103,7 @@ makes sure that the client will be able to communicate with this node.</p>
 
 <p>After changing the configuration file restart the Windows service.</p>
 
-<h2>Creating your cluster</h2>
+<h2><a name="Creating-your-cluster" class="anchor" href="#Creating-your-cluster">Creating your cluster</a></h2>
 
 <p>After setting up the first virtual machine you need to replicate it in order to create a cluster of nodes.
 You can either create the new virtual machines just like the first one and then install the runtime in each of them,
@@ -113,7 +113,7 @@ virtual machine. This process is described <a href="https://azure.microsoft.com/
 for the sysprep part and <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-create-custom/">here</a> for the custom virtual machine creation.
 You just need to make sure that during the creation you choose the same <em>Cloud Service</em> and <em>Virtual Network</em> for all of your machines.</p>
 
-<h2>Booting the MBrace Runtime</h2>
+<h2><a name="Booting-the-MBrace-Runtime" class="anchor" href="#Booting-the-MBrace-Runtime">Booting the MBrace Runtime</a></h2>
 
 <p>At this point your virtual machines are running and the MBrace nodes are idle.
 At your client machine, if you use VPN make sure that you are connected.</p>
@@ -216,7 +216,7 @@ and send your first cloud computation.</p>
 </tr>
 </table>
 
-<h2>Useful references</h2>
+<h2><a name="Useful-references" class="anchor" href="#Useful-references">Useful references</a></h2>
 
 <ul>
 <li><a href="runtime-deployment.html">Runtime Installation Guide</a></li>
@@ -258,7 +258,7 @@ and send your first cloud computation.</p>
 <div class="tip" id="fs29">val runtime : MBraceRuntime<br /><br />Full name: Azure-tutorial.runtime</div>
 <div class="tip" id="fs30">type MBrace =<br />&#160;&#160;static member Compile : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member Compile : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; CloudComputation&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcess : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Process&lt;&#39;T&gt;<br />&#160;&#160;static member CreateProcessAsync : runtime:MBraceRuntime -&gt; expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; -&gt; Async&lt;Process&lt;&#39;T&gt;&gt;<br />&#160;&#160;static member RunLocal : computation:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocal : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />&#160;&#160;static member RunLocalAsync : expr:Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:Cloud&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;static member RunLocalAsync : computation:CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; Async&lt;&#39;T&gt;<br />&#160;&#160;...<br /><br />Full name: Nessos.MBrace.Client.ClientExtensions.MBrace</div>
 <div class="tip" id="fs31">static member MBraceRuntime.Boot : nodes:MBraceNode list * ?replicationFactor:int * ?failoverFactor:int * ?store:ICloudStore -&gt; MBraceRuntime</div>
-<div class="tip" id="fs32">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string -&gt; &#39;T</div>
+<div class="tip" id="fs32">member MBraceRuntime.Run : computation:Runtime.Compiler.CloudComputation&lt;&#39;T&gt; * ?showLogs:bool -&gt; &#39;T<br />member MBraceRuntime.Run : block:Cloud&lt;&#39;T&gt; * ?name:string * ?showLogs:bool -&gt; &#39;T<br />member MBraceRuntime.Run : expr:Quotations.Expr&lt;Cloud&lt;&#39;T&gt;&gt; * ?name:string * ?showLogs:bool -&gt; &#39;T</div>
 <div class="tip" id="fs33">val cloud : CloudBuilder<br /><br />Full name: Nessos.MBrace.CloudBuilder.cloud</div>
 
         </div>
