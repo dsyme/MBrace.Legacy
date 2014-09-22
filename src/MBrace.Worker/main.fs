@@ -54,7 +54,6 @@
             //  parse configuration
             //
 
-//            let results = 
 #if APPDOMAIN_ISOLATION
             let exiter = new ExceptionExiter(fun msg -> failwith (defaultArg msg "processdomain error")) :> IExiter
             let results = workerConfig.ParseCommandLine(inputs = args)
@@ -65,6 +64,9 @@
             //
             // Register Things
             //
+
+            // increase min threads in thread pool to eliminate scheduling delays
+            System.Threading.ThreadPool.SetMinThreads(100,100) |> ignore
 
             let workingDirectory = results.GetResult <@ Working_Directory @>
             SystemConfiguration.InitializeConfiguration(

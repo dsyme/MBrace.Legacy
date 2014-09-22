@@ -93,6 +93,9 @@
             //  Initialization and registrations
             //
 
+            // increase min threads in thread pool to eliminate scheduling delays
+            System.Threading.ThreadPool.SetMinThreads(100,100) |> ignore
+
             IoC.RegisterValue<Permissions>(defaultPermissions)
 
             // TODO : remove?
