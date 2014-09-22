@@ -341,10 +341,11 @@
         /// <param name="workingDirectory">The path to be used as a working directory.</param>
         /// <param name="useTemporaryWorkDir">Use a temporary folder as a working directory.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
+        /// <param name="minThreads">Sets the minimum threads used in the underlying thread pool.</param>
         /// <param name="store">Store instance to be used with the Node.</param>
         static member SpawnAsync(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?store : ICloudStore) : Async<MBraceNode> = 
+                                    ?background : bool, ?minThreads : int, ?store : ICloudStore) : Async<MBraceNode> = 
             async {
                 let debug = defaultArg debug false
                 let useTemporaryWorkDir = defaultArg useTemporaryWorkDir false
@@ -367,6 +368,7 @@
                         match permissions with Some p -> yield MBracedConfig.Permissions(int p) | _ -> ()
                         match workingDirectory with Some w -> yield Working_Directory w | _ -> ()
                         match logLevel with Some l -> yield Log_Level l.Value | _ -> ()
+                        match minThreads with Some m -> yield Min_Threads m | _ -> ()
                     ]
         
                 let! node = MBraceNode.SpawnAsync(args, ?background = background)
@@ -390,14 +392,15 @@
         /// <param name="workingDirectory">The path to be used as a working directory.</param>
         /// <param name="useTemporaryWorkDir">Use a temporary folder as a working directory.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
+        /// <param name="minThreads">Sets the minimum threads used in the underlying thread pool.</param>
         /// <param name="store">Store instance to be used with the Node.</param>
         static member Spawn(?hostname : string, ?primaryPort : int, ?workerPorts: int list, ?logFiles : string list, ?logLevel : LogLevel,
                                     ?permissions : Permissions, ?debug : bool, ?workingDirectory : string, ?useTemporaryWorkDir : bool, 
-                                    ?background : bool, ?store : ICloudStore) : MBraceNode =
+                                    ?background : bool, ?minThreads : int, ?store : ICloudStore) : MBraceNode =
 
             MBraceNode.SpawnAsync(?hostname = hostname, ?primaryPort = primaryPort, ?workerPorts = workerPorts, ?logFiles = logFiles,
                                         ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?workingDirectory = workingDirectory,
-                                        ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?store = store)
+                                        ?useTemporaryWorkDir = useTemporaryWorkDir, ?background = background, ?minThreads = minThreads, ?store = store)
             |> Async.RunSynchronously
 
         /// <summary>
@@ -413,14 +416,15 @@
         /// <param name="permissions">Permissions for all nodes.</param>
         /// <param name="debug">Run in debug mode.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
+        /// <param name="minThreads">Sets the minimum threads used in the underlying thread pool.</param>
         /// <param name="store">Store instance to be used with the Node.</param>
         static member SpawnMultipleAsync(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?store : ICloudStore) : Async<MBraceNode list> =
+                                         ?permissions : Permissions, ?debug : bool, ?background : bool, ?minThreads : int, ?store : ICloudStore) : Async<MBraceNode list> =
         
             let spawnSingle primary pool =
                     MBraceNode.SpawnAsync(?hostname = hostname, primaryPort = primary, workerPorts = pool, ?logFiles = logFiles,
                                             ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, ?background = background,
-                                                    ?store = store, useTemporaryWorkDir = true)
+                                                    ?store = store, ?minThreads = minThreads, useTemporaryWorkDir = true)
             async {
                 let workerPortsPerNode = defaultArg workerPortsPerNode 7
 
@@ -458,12 +462,13 @@
         /// <param name="permissions">Permissions for all nodes.</param>
         /// <param name="debug">Run in debug mode.</param>
         /// <param name="background">Spawn in the background (without a console window).</param>
+        /// <param name="minThreads">Sets the minimum threads used in the underlying thread pool.</param>
         /// <param name="store">Store instance to be used with the Node.</param>
         static member SpawnMultiple(nodeCount : int, ?masterPort : int, ?workerPortsPerNode : int,  ?hostname : string, ?logFiles : string list, ?logLevel : LogLevel,
-                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?store : ICloudStore) : MBraceNode list =
+                                        ?permissions : Permissions, ?debug : bool, ?background : bool, ?minThreads, ?store : ICloudStore) : MBraceNode list =
             MBraceNode.SpawnMultipleAsync(nodeCount, ?masterPort = masterPort, ?workerPortsPerNode = workerPortsPerNode, ?hostname = hostname,
                                             ?logFiles = logFiles, ?logLevel = logLevel, ?permissions = permissions, ?debug = debug, 
-                                            ?background = background, ?store = store)
+                                            ?background = background, ?minThreads = minThreads, ?store = store)
             |> Async.RunSynchronously
 
         /// <summary>

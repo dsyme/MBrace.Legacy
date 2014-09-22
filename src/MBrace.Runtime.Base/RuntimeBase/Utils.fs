@@ -13,6 +13,7 @@
 
         let ClientEndPoint = IPEndPoint(IPAddress.Any, 0)
         let RuntimeDefaultPort = 2675 //2675 is the integer value of the string: "M-Brace Runtime default port."
+        let MinThreads = 100 /// default minimum threads used in the thread pool.
         let DefaultPermissions = Nessos.MBrace.Runtime.Permissions.All
 
         let MBracedIpcServerName = "ipcNodeInfo"

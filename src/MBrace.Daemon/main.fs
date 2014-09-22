@@ -5,6 +5,7 @@
         open System
         open System.IO
         open System.Diagnostics
+        open System.Threading
 
         open Nessos.UnionArgParser
 
@@ -45,6 +46,7 @@
             let defaultPermissions = results.PostProcessResult(<@ Permissions @>, (fun p -> enum<Permissions> p))
             let debugMode = results.Contains <@ Debug @>
             let detach = results.Contains <@ Detach @>
+            let minThreads = results.GetResult(<@ Min_Threads @>, defaultValue = Defaults.MinThreads)
             let spawnWindow = results.Contains <@ Spawn_Window @>
             let useTempWD = results.Contains <@ Use_Temp_WorkDir @>
             let mbraceWorkerExe = results.TryPostProcessResult(<@ MBrace_ProcessDomain_Executable @>, parseWorkerExe)
@@ -94,7 +96,8 @@
             //
 
             // increase min threads in thread pool to eliminate scheduling delays
-            System.Threading.ThreadPool.SetMinThreads(100,100) |> ignore
+            let threadPoolSuccess = results.Catch(fun () -> ThreadPool.SetMinThreads(minThreads, minThreads))
+            IoC.RegisterValue<int>(minThreads, "minThreadsInThreadPool")
 
             IoC.RegisterValue<Permissions>(defaultPermissions)
 

@@ -4,6 +4,7 @@
         
         open System
         open System.Diagnostics
+        open System.Threading
 
         open Nessos.FsPickler
         open Nessos.UnionArgParser
@@ -65,9 +66,6 @@
             // Register Things
             //
 
-            // increase min threads in thread pool to eliminate scheduling delays
-            System.Threading.ThreadPool.SetMinThreads(100,100) |> ignore
-
             let workingDirectory = results.GetResult <@ Working_Directory @>
             SystemConfiguration.InitializeConfiguration(
                     workingDirectory = workingDirectory, 
@@ -78,9 +76,12 @@
             let debugMode = results.Contains <@ Debug @>
             let processDomainId = results.GetResult <@ Process_Domain_Id @>
             let hostname = results.GetResult (<@ HostName @>, defaultValue = "localhost")
+            let minThreads = results.GetResult <@ Min_Threads @>
             let port = results.GetResult (<@ Port @>, defaultValue = -1)
             let parentAddress = results.PostProcessResult (<@ Parent_Address @>, Address.Parse)
             let activator = results.PostProcessResult (<@ Store_Activator @>, fun bs -> Serialization.Deserialize<StoreActivationInfo> bs)
+
+            let threadPoolSuccess = results.Catch(fun () -> ThreadPool.SetMinThreads(minThreads, minThreads))
 
             // Register Logger
             let logger =
