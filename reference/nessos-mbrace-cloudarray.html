@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>ICloudFile - MBrace</title>
+    <title>CloudArray - MBrace</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Jan Dzik, Nick Palladinos, Kostas Rontogiannis, Eirik Tsarpalis"/>
@@ -41,93 +41,32 @@
 
 
 
-<h1>ICloudFile</h1>
+<h1>CloudArray</h1>
 <div class="xmldoc">
-<p>Represents a binary object stored in the underlying CloudStore.</p>
+<p>Provides methods to create and CloudArrays.</p>
 </div>
-  <h3>Instance members</h3>
+  <h3>Static members</h3>
   <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Instance member</td><td>Description</td></tr>
+      <tr><td>Static member</td><td>Description</td></tr>
     </thead>
     <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '97', 97)" onmouseover="showTip(event, '97', 97)">
-            Container
+          <code onmouseout="hideTip(event, '73', 73)" onmouseover="showTip(event, '73', 73)">
+            New(container, values)
           </code>
-          <div class="tip" id="97">
-            <strong>Signature:</strong> string<br />
-              <strong>Modifiers:</strong> abstract<br />
-                      </div>
+          <div class="tip" id="73">
+            <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; Cloud&lt;ICloudArray&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Cloud Workflows/Primitives.fs#L103-103" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Store API/CloudArray.fs#L15-15" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>CloudFile containing folder in underlying store.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '98', 98)" onmouseover="showTip(event, '98', 98)">
-            Name
-          </code>
-          <div class="tip" id="98">
-            <strong>Signature:</strong> string<br />
-              <strong>Modifiers:</strong> abstract<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Cloud Workflows/Primitives.fs#L101-101" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>CloudFile Identifier.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '99', 99)" onmouseover="showTip(event, '99', 99)">
-            Read()
-          </code>
-          <div class="tip" id="99">
-            <strong>Signature:</strong> unit -&gt; Async&lt;Stream&gt;<br />
-              <strong>Modifiers:</strong> abstract<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Cloud Workflows/Primitives.fs#L107-107" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Asynchronously returns a read-only stream with access to CloudFile data.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '100', 100)" onmouseover="showTip(event, '100', 100)">
-            Size
-          </code>
-          <div class="tip" id="100">
-            <strong>Signature:</strong> int64<br />
-              <strong>Modifiers:</strong> abstract<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Core/Cloud Workflows/Primitives.fs#L105-105" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>CloudFile size in bytes.</p>
+          <p>Creates a new CloudArray in the specified container.</p>
 
         </td>
       </tr>

@@ -101,6 +101,11 @@ hostname as a node identifier. In the case of VPN your computer (the client) mig
 resolve this hostname to an IP (unless you use a DNS server). Using the VM's IP or a subnet instead of its hostname
 makes sure that the client will be able to communicate with this node.</p>
 
+<p>You also might want to consider setting the <code>working directory</code> to the temporary disk path (usually <code>D:</code>)
+as the increased speed of this drive will reduce the IO time used by the runtime. Note that this drive is
+not persistent and, while hardware failure is rare, the data on this disk may be lost. For this reason you
+might also want to change the <code>log file</code> setting to a path that is persistent insted of saving the logs to the temporary drive.</p>
+
 <p>After changing the configuration file restart the Windows service.</p>
 
 <h2><a name="Creating-your-cluster" class="anchor" href="#Creating-your-cluster">Creating your cluster</a></h2>
