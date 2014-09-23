@@ -4,6 +4,7 @@
         
         open System
         open System.Diagnostics
+        open System.Threading
 
         open Nessos.FsPickler
         open Nessos.UnionArgParser
@@ -54,7 +55,6 @@
             //  parse configuration
             //
 
-//            let results = 
 #if APPDOMAIN_ISOLATION
             let exiter = new ExceptionExiter(fun msg -> failwith (defaultArg msg "processdomain error")) :> IExiter
             let results = workerConfig.ParseCommandLine(inputs = args)
@@ -76,9 +76,12 @@
             let debugMode = results.Contains <@ Debug @>
             let processDomainId = results.GetResult <@ Process_Domain_Id @>
             let hostname = results.GetResult (<@ HostName @>, defaultValue = "localhost")
+            let minThreads = results.GetResult <@ Min_Threads @>
             let port = results.GetResult (<@ Port @>, defaultValue = -1)
             let parentAddress = results.PostProcessResult (<@ Parent_Address @>, Address.Parse)
             let activator = results.PostProcessResult (<@ Store_Activator @>, fun bs -> Serialization.Deserialize<StoreActivationInfo> bs)
+
+            let threadPoolSuccess = results.Catch(fun () -> ThreadPool.SetMinThreads(minThreads, minThreads))
 
             // Register Logger
             let logger =

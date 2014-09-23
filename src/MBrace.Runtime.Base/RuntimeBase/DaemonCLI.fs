@@ -18,6 +18,7 @@
             | Working_Directory of string
             | [<NoAppSettings>] Use_Temp_WorkDir
             | [<Mandatory>] Log_Level of int
+            | Min_Threads of int
             | Log_File of string
             | [<Hidden>][<NoAppSettings>] Parent_Receiver_Id of int * string // pid * name
             | Debug
@@ -36,6 +37,7 @@
                     | Worker_Port _ -> "available port for use by mbrace workers."
                     | Worker_Port_Range _ -> "available port range for use by mbrace workers."
                     | Working_Directory _ -> "specifies the working directory."
+                    | Min_Threads _ -> "sets the minimum threads in the underlying thread pool."
                     | Use_Temp_WorkDir -> "executes in a temp working directory. Useful for local multi-process setups."
                     | Log_Level _ -> "specifies the log level (Info = 0| Warning = 1| Error = 2)."
                     | Log_File _ -> "specifies a log file for the daemon."

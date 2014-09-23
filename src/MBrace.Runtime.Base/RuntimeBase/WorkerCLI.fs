@@ -16,6 +16,7 @@
             | Parent_Address of string
             | Process_Domain_Id of Guid
             | Working_Directory of string
+            | Min_Threads of int
             | HostName of string
             | Port of int
             | Store_Activator of byte [] //StoreActivationInfo
@@ -27,6 +28,7 @@
                     | Parent_Pid _ -> "Pid of the parent OS process."
                     | Parent_Address _ -> "Parent process port."
                     | Process_Domain_Id _ -> "Process domain id."
+                    | Min_Threads _ -> "Min threads set in the underlying thread pool."
                     | Working_Directory _ -> "Parent process working directory."
                     | HostName _ -> "Hostname, must be the same as for parent daemon."
                     | Port _ -> "Port argument."

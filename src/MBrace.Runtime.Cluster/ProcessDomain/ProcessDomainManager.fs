@@ -81,6 +81,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
 
         // protocol specific! should be changed
         let primaryAddr = IoC.Resolve<Address> "primaryAddress"
+        let minThreads = IoC.Resolve<int> "minThreadsInThreadPool"
              
         let args =
             [
@@ -89,6 +90,7 @@ let private createProcessDomain (ctx: BehaviorContext<_>) clusterManager process
                 yield Working_Directory SystemConfiguration.WorkingDirectory
                 yield Parent_Address <| primaryAddr.ToString ()
                 yield Store_Activator <| Serialization.Serialize storeInfo
+                yield Min_Threads minThreads
 
                 yield Debug debugMode
                 match portOpt with
