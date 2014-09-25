@@ -32,6 +32,11 @@ let ca1 = CloudArray.New("foo", Array.init s id) |> MBrace.RunLocal
 let ca2 = CloudArray.New("foo", Array.init s ((+) (s+1))) |> MBrace.RunLocal
 let ca3 = ca1.Append(ca2)
 
+// C
+let ca1 = StoreClient.Default.CreateCloudArray("foo", Array.init s id) 
+let ca2 = StoreClient.Default.CreateCloudArray("foo", Array.init s ((+) (s+1)))
+let ca3 = ca1.Append(ca2)
+
 
 ca1.[0L], ca2.[0L], ca3.[0L]
 

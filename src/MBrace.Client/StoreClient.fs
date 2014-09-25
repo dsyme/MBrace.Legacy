@@ -441,6 +441,22 @@
 
 
         //---------------------------------------------------------------------------------
+        // CloudArray
+        // TODO : Revise/populate
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="values"></param>
+        member this.CreateCloudArrayAsync(container : string, values : seq<'T>) : Async<ICloudArray<'T>> =
+            async { let! ca = info.CloudArrayProvider.Create(container, values, typeof<'T>) in return ca :?> ICloudArray<'T> }
+
+        member this.CreateCloudArray(container : string, values : seq<'T>) : ICloudArray<'T> =
+            Async.RunSynchronously <| this.CreateCloudArrayAsync(container, values)
+
+
+        //---------------------------------------------------------------------------------
         // Misc
 
         /// <summary>Deletes the specified container from store.</summary>
