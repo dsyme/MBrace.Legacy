@@ -312,12 +312,12 @@ namespace Nessos.MBrace.Runtime.Tests
         [<Test;RuntimeAdministrationCategory>]
         member __.``Z2. Cluster Admin: Attach Node`` () =
             let n = __.Runtime.Nodes |> List.length
-            __.Runtime.AttachLocal 1 
-
-            wait 500
+            __.Runtime.AttachLocal 1
 
             let n' = __.Runtime.Nodes |> List.length 
             n' - n |> should equal 1
+
+            __.Runtime.Run <@ cloud { return 1 + 1 } @> |> should equal 2
 
         [<Test;RuntimeAdministrationCategory>]
         member __.``Z2. Cluster Admin: Detach Node`` () =
@@ -326,10 +326,10 @@ namespace Nessos.MBrace.Runtime.Tests
             let node2 = nodes.[1] 
             __.Runtime.Detach node2 
 
-            wait 500
-
             let n' =__.Runtime.Nodes |> List.length
             n - n' |> should equal 1
+
+            __.Runtime.Run <@ cloud { return 1 + 1 } @> |> should equal 2
 
         [<Test;RuntimeAdministrationCategory>]
         member __.``Z2. Cluster Admin: Node Permissions`` () =

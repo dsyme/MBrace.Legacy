@@ -412,7 +412,10 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
                     //FaultPoint
                     //-
                     try
+                        // TODO : should be blocking
                         do! Cluster.ClusterManager <-!- AddNode nodeManager
+                        // Interim solution ; sleep
+                        do! Async.Sleep 1000
                         reply nothing
                     with e ->
                         reply <| Exception e
@@ -428,10 +431,14 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
 
             | Detach(RR ctx reply) when nodeType <> NodeType.Idle ->
                 try
-                    Cluster.NodeManager <-- DetachFromCluster
+                    do! Cluster.NodeManager <-!- DetachFromCluster
                     //FaultPoint
                     //-
-                    Cluster.ClusterManager <-- ClusterManager.RemoveNode Cluster.NodeManager
+
+                    // TODO : should be blocking
+                    do! Cluster.ClusterManager <-!- ClusterManager.RemoveNode Cluster.NodeManager
+                    // Interim solution ; sleep
+                    do! Async.Sleep 1000
                 
                     reply nothing
 
