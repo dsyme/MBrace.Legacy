@@ -14,29 +14,18 @@ MBraceSettings.DefaultStore <- azureStore
 //----------------------------------------------
 //------------------CLOUDARRAY------------------ 
 //----------------------------------------------
-open Nessos.MBrace.Runtime
 
 MBraceSettings.ClientId |> ignore
 
 #time "on"
 
 let s = 10000
-// A
-let cap = StoreRegistry.DefaultStoreInfo.CloudArrayProvider
-let ca1 = cap.Create("foo", Array.init s id, typeof<int>) |> Async.RunSynchronously :?> ICloudArray<int>
-let ca2 = cap.Create("foo", Array.init s ((+) (s+1)), typeof<int>) |> Async.RunSynchronously :?> ICloudArray<int>
-let ca3 = ca1.Append(ca2)
 
-// B
-let ca1 = CloudArray.New("foo", Array.init s id) |> MBrace.RunLocal
-let ca2 = CloudArray.New("foo", Array.init s ((+) (s+1))) |> MBrace.RunLocal
-let ca3 = ca1.Append(ca2)
-
-// C
 let ca1 = StoreClient.Default.CreateCloudArray("foo", Array.init s id) 
 let ca2 = StoreClient.Default.CreateCloudArray("foo", Array.init s ((+) (s+1)))
 let ca3 = ca1.Append(ca2)
 
+ca3
 
 ca1.[0L], ca2.[0L], ca3.[0L]
 
@@ -53,6 +42,7 @@ let ca1' = ca1.Cache()
 ca1.Range(100L, 1000)
 ca1'.Range(100L,1000)
 
+open Nessos.MBrace.Runtime
 CloudArrayCache.State
 
 let ca2' = ca2.Cache()
