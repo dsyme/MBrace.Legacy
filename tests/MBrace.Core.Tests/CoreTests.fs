@@ -850,3 +850,23 @@
             cr.ForceUpdate(42) |> Async.RunSynchronously
             cr'.Value |> should equal 42
             sc.DeleteContainer()
+
+        [<Test; PrimitivesCategory>]
+        member test.``4. Primitives : StoreClient CloudArray`` () =
+            let sc = StoreClient.Default
+            let container = "cloudarray"
+            let a = [|1..100|]
+            let b = [|100..200|]
+            let c = Array.append a b
+
+            let ca = sc.CreateCloudArray(container, a)
+            let cb = sc.CreateCloudArray(container, b)
+            let cc = ca.Append(cb)
+
+            ca |> Seq.toArray |> should equal a
+            cb |> Seq.toArray |> should equal b
+            cc |> Seq.toArray |> should equal c
+
+            cc.Range(90L,50) |> should equal c.[90..90+50-1]
+            
+            sc.DeleteContainer(container)
