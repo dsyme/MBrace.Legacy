@@ -412,11 +412,9 @@ and mbraceNodeManagerBehavior (ctx: BehaviorContext<_>) (state: State) (msg: MBr
                     //FaultPoint
                     //-
                     try
-                        // TODO : should be blocking
-                        do! Cluster.ClusterManager <-!- AddNode nodeManager
-                        // Interim solution ; sleep
-                        do! Async.Sleep 1000
+                        do! Cluster.ClusterManager <!- fun ch -> AddNodeSync(ch, nodeManager)
                         reply nothing
+
                     with e ->
                         reply <| Exception e
 
