@@ -11,22 +11,21 @@
     open Nessos.MBrace.Utils
     open System.Runtime.Caching
 
+    [<Diagnostics.DebuggerDisplay("{Id}:{Folder}/{Name}:{IndexFile}   ({StartIndex},{EndIndex})")>]
+    type internal SegmentDescription = 
+        {   Id          : int
+            Name        : string
+            Folder      : string
+            IndexFile   : string
+            StartIndex  : int64
+            EndIndex    : int64 }
+    
+    type internal CloudArrayDescription =
+        {   Count    : int64
+            Segments : List<SegmentDescription> } 
     
     [<AutoOpen>]
     module private Helpers =
-
-        [<Diagnostics.DebuggerDisplay("{Id}:{Folder}/{Name}:{IndexFile}   ({StartIndex},{EndIndex})")>]
-        type SegmentDescription = 
-            {   Id          : int
-                Name        : string
-                Folder      : string
-                IndexFile   : string
-                StartIndex  : int64
-                EndIndex    : int64 }
-    
-        type CloudArrayDescription =
-            {   Count    : int64
-                Segments : List<SegmentDescription> } 
 
         /// Max segment size in bytes.     // TODO : tune
         let MaxSegmentSize = 1024L * 1024L // TODO : tune
@@ -110,7 +109,7 @@
                 |> Async.RunSynchronously
                 this.GetItem<'T>(index, pageItems)
 
-    type [<Serializable>] CloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) as this =
+    type [<Serializable; StructuredFormatDisplay("{StructuredFormatDisplay}")>] CloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) as this =
 
         let provider  = lazy CloudArrayProvider.GetById storeId  
         let pageCache = lazy provider.Value.GetPageCache(this)
@@ -119,6 +118,8 @@
         member internal this.StoreId    = storeId
 
         override this.ToString() = sprintf "cloudarray:%s/%s" folder descriptorName
+
+        member private this.StructuredFormatDisplay = this.ToString()
 
         internal new(info : SerializationInfo, context : StreamingContext) =
             let folder     = info.GetValue("folder", typeof<string>) :?> string
@@ -217,7 +218,7 @@
             provider.Value.AppendAsync(this, cloudArray)
 
 
-    and [<Serializable>] CachedCloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) =
+    and [<Serializable; StructuredFormatDisplay("{StructuredFormatDisplay}")>] CachedCloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) =
 
         inherit CloudArray<'T>(folder, descriptorName, count, storeId) 
 
