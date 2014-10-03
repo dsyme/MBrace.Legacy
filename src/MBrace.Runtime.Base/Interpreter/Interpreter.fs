@@ -339,6 +339,8 @@ namespace Nessos.MBrace.Runtime.Interpreter
                     // Primitives Expr 
                     | GetWorkerCountExpr :: rest -> return stack
                     | LocalExpr _ :: rest -> return stack 
+                    | ParallelExpr ([||], t) :: rest -> 
+                        return! eval traceEnabled <| ValueExpr (Obj (ObjValue [||], t)) :: rest
                     | ParallelExpr (_, _) :: rest -> return stack
                     | ChoiceExpr _ :: rest -> return stack
                     | _ -> return throwInvalidState stack
