@@ -149,9 +149,6 @@
                 else
                     (this :> ICloudArray<'T>).Append(cloudArray :?> ICloudArray<'T>) :> _
 
-            member this.Cache(): ICachedCloudArray = 
-                (this :> ICloudArray<'T>).Cache() :> _
-
             member this.Item
                 with get (index: int64): obj = 
                     (this :> ICloudArray<'T>).Item index :> _
@@ -177,8 +174,6 @@
                 this.AppendAsync(cloudArray :?> CloudArray<'T>) // TODO: CHANGE
                 |> Async.RunSynchronously :> _
 
-            member this.Cache() : ICachedCloudArray<'T> =
-                new CachedCloudArray<'T>(folder, descriptorName, count, storeId) :> _
                      
         interface IEnumerable<'T> with
             member this.GetEnumerator() : IEnumerator<'T> =
@@ -216,40 +211,6 @@
 
         member this.AppendAsync(cloudArray : CloudArray<'T>) : Async<CloudArray<'T>> =
             provider.Value.AppendAsync(this, cloudArray)
-
-
-    and [<Serializable; StructuredFormatDisplay("{StructuredFormatDisplay}")>] CachedCloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) =
-
-        inherit CloudArray<'T>(folder, descriptorName, count, storeId) 
-
-        interface ICloudArray<'T> with
-            member this.Range(start : int64, length : int) =
-                if start < 0L || length < 0 || start + int64 length > count then
-                    raise <| IndexOutOfRangeException(sprintf "Start = %d, Length = %d" start length)
-                elif count = 0L then
-                    Array.empty
-                else
-                    async {
-                        let fetch s l = this.Provider.Value.GetRangeAsync(s,l, this)
-                        let! items = CloudArrayCache.FetchAsync<'T>(this, fetch, start, length)
-                        return items
-                    } |> Async.RunSynchronously
-
-        interface ICachedCloudArray<'T>
-
-        internal new(info : SerializationInfo, context : StreamingContext) =
-            let folder     = info.GetValue("folder", typeof<string>) :?> string
-            let descriptor = info.GetValue("descriptor", typeof<string>) :?> string
-            let count      = info.GetValue("count", typeof<int64>) :?> int64
-            let storeId    = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
-            new CachedCloudArray<'T>(folder, descriptor, count, storeId)
-
-        interface ISerializable with
-            member this.GetObjectData(info : SerializationInfo, context : StreamingContext) =
-                info.AddValue("folder",     folder)            
-                info.AddValue("descriptor", descriptorName)
-                info.AddValue("count" ,     count)
-                info.AddValue("storeId" ,     storeId, typeof<StoreId>)
 
     and CloudArrayProvider private (storeId : StoreId, store : ICloudStore) =
         static let providers = new System.Collections.Concurrent.ConcurrentDictionary<StoreId, CloudArrayProvider>()
@@ -452,118 +413,4 @@
 
         member __.AppendAsync<'T>(left : CloudArray<'T>, right : CloudArray<'T>) : Async<CloudArray<'T>> =
             appendAsync left right
-
-    and [<AbstractClass; Sealed>] CloudArrayCache () =
-
-        static let createKey name start ``end`` = 
-            sprintf "%s %d %d" name start ``end``
-
-        static let parseKey(key : string) =
-            let key = key.Split()
-            key.[0], int64 key.[1], int64 key.[2]
-
-        static let config = new System.Collections.Specialized.NameValueCollection()
-        static do  config.Add("PhysicalMemoryLimitPercentage", "70")
-
-        static let mc = new MemoryCache("CloudArrayMemoryCache", config)
-
-        static let sync      = new obj()
-        static let itemsSet  = new HashSet<string * int64 * int64>()
-        static let policy    = new CacheItemPolicy()
-        static do  policy.RemovedCallback <-
-                    new CacheEntryRemovedCallback(
-                        fun args ->
-                            lock sync (fun () -> itemsSet.Remove(parseKey args.CacheItem.Key) |> ignore)
-                    )
-
-        static let registerAsync(ca : CachedCloudArray<'T>) (startIndex : int64) (endIndex : int64) (items : 'T []) : Async<unit> = 
-            async {
-                    let key = createKey (ca.ToString()) startIndex endIndex
-                    mc.Add(key, items, policy) |> ignore
-                    lock sync (fun () -> itemsSet.Add((ca.ToString()),startIndex,endIndex) |> ignore)
-                    return ()
-            }
-
-        static member FetchAsync<'T>(ca : CachedCloudArray<'T>, fetch : int64 -> int -> Async<'T []> , startIndex : int64, length : int) : Async<'T []> =
-            async {
-                let endIndex = startIndex + int64 length - 1L
-                let key = createKey (ca.ToString()) startIndex endIndex
-                if mc.Contains(key) then
-                    return mc.Get(key) :?> _
-                else
-                    let entries = 
-                        mc 
-                        |> Seq.map    (fun kvp -> kvp.Key, parseKey kvp.Key)
-                        |> Seq.filter (fun (kvp, (cas, s, e)) -> cas = ca.ToString())
-                        |> Seq.map    (fun (kvp, (cas, s, e)) -> kvp, s, e)
-                        |> Seq.filter (fun (cas, s, e) -> not (e < startIndex || s > endIndex) )
-                        |> Seq.sortBy (fun (_, s, e) -> s, e)
-                        |> Seq.toList
-                
-                    if Seq.isEmpty entries then
-                        let! fetched = fetch startIndex length
-                        do! registerAsync ca startIndex endIndex fetched
-                        return fetched
-                    else
-                        let result = Array.zeroCreate<'T> length
-
-                        let rec concatLoop currentStartIndex entries = 
-                            async {
-                                match entries with
-                                | [] when currentStartIndex > endIndex -> 
-                                    return ()
-                                | [] -> 
-                                    let! fetched = fetch currentStartIndex (int (endIndex-currentStartIndex))
-                                    do! registerAsync ca currentStartIndex (currentStartIndex + fetched.LongLength) fetched
-                                    Array.Copy(fetched, 0L, result, currentStartIndex - startIndex, fetched.LongLength)
-                                | (key, s, e) :: t when currentStartIndex >= s ->
-                                    let cached = mc.Get(key) :?> 'T []
-                                    let len = 1L + if endIndex > e then e - currentStartIndex else endIndex - currentStartIndex
-                                    Array.Copy(cached, currentStartIndex - s , result, currentStartIndex - startIndex, len)
-                                    return! concatLoop (currentStartIndex + len) t
-                                | (key, s, e) :: t  ->
-                                    let len = s - currentStartIndex
-                                    let! fetched = fetch currentStartIndex (int len)
-                                    do! registerAsync ca currentStartIndex (currentStartIndex + len) fetched
-                                    Array.Copy(fetched, 0L, result, currentStartIndex - startIndex, len)
-                                    return! concatLoop (currentStartIndex + len) entries
-                            }
-                        do! concatLoop startIndex entries
-                        return result
-
-            }
-
-        static member State =
-            itemsSet :> seq<_>
-
-    /// StartIndex * Length.
-    type internal CloudArrayRange = int64 * int
-    /// CloudArray identifier.
-    type internal CloudArrayId    = string
-
-    [<Sealed;AbstractClass>]
-    type internal CloudArrayRegistry () =
-        static let guid     = System.Guid.NewGuid()
-        static let registry = Concurrent.ConcurrentDictionary<CloudArrayId, List<CloudArrayRange>>()
-        
-        static member GetRegistryId () = guid
-        
-        static member Add(id : CloudArrayId, range : CloudArrayRange) =
-            registry.AddOrUpdate(
-                id, 
-                new List<CloudArrayRange>([range]), 
-                fun _ (existing : List<CloudArrayRange>) -> existing.Add(range); existing)
-            |> ignore
-        
-        static member Get(id : CloudArrayId) =
-            match registry.TryGetValue(id) with
-            | true, ranges -> ranges
-            | _ -> failwith "Non-existent CloudArray"
-
-        static member GetNumberOfRanges(id : CloudArrayId) =
-            CloudArrayRegistry.Get(id).Count
-
-        static member Contains(id : CloudArrayId) =
-            registry.ContainsKey(id)
-
 

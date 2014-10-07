@@ -120,8 +120,6 @@
         abstract Length : int64 
         /// The type of the contained elements.
         abstract Type : Type
-        /// Returns a cacheable version of the CloudArray.
-        abstract Cache : unit -> ICachedCloudArray
         /// Combines two CloudArray's into one.
         abstract Append : ICloudArray -> ICloudArray
         /// <summary>
@@ -148,8 +146,6 @@
         inherit ICloudArray
         inherit IEnumerable<'T>
         
-        /// Returns a cacheable version of the CloudArray.
-        abstract Cache : unit -> ICachedCloudArray<'T>
         /// Combines two CloudArray's into one.
         abstract Append : ICloudArray<'T> -> ICloudArray<'T>
         /// <summary>
@@ -164,9 +160,4 @@
         /// <param name="count">The number of elements to return.</param>
         abstract Range : start : int64 * count : int -> 'T []
 
-    /// A cacheable version of CloudArray. This enables in-memory 
-    /// caching of CloudArray's ranges.
-    and ICachedCloudArray<'T> =
-        inherit ICachedCloudArray
-        inherit ICloudArray<'T>
 
