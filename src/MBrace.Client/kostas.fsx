@@ -15,6 +15,12 @@ MBraceSettings.DefaultStore <- azureStore
 //------------------CLOUDARRAY------------------ 
 //----------------------------------------------
 
+let rt = MBrace.InitLocal 3
+let tasks : Cloud<int> [] = [| cloud { return 42 } |]
+rt.Run <@ Cloud.Parallel Seq.empty<Cloud<int>> @> 
+rt.Run <@ Cloud.Choice Seq.empty<Cloud<int option>> @> 
+
+
 MBraceSettings.ClientId |> ignore
 
 #time "on"
