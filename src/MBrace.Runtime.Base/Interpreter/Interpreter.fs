@@ -340,9 +340,12 @@ namespace Nessos.MBrace.Runtime.Interpreter
                     | GetWorkerCountExpr :: rest -> return stack
                     | LocalExpr _ :: rest -> return stack 
                     | ParallelExpr ([||], t) :: rest -> 
-                        return! eval traceEnabled <| ValueExpr (Obj (ObjValue [||], t)) :: rest
-                    | ParallelExpr (_, _) :: rest -> return stack
-                    | ChoiceExpr _ :: rest -> return stack
+                        return! eval traceEnabled <| ValueExpr (Obj (ObjValue(Array.CreateInstance(t,0)) , t)) :: rest
+                    | ParallelExpr(_, _) :: rest -> return stack
+                    | ChoiceExpr([||],t) :: rest -> 
+                        //let retType = typeof<Microsoft.FSharp.Core.Option<_>>.GetGenericTypeDefinition().MakeGenericType [| t |] // 't option
+                        return! eval traceEnabled <| ValueExpr (Obj (ObjValue(None) , t)) :: rest
+                    | ChoiceExpr(_,_) :: rest -> return stack
                     | _ -> return throwInvalidState stack
                 }
             eval traceEnabled stack
