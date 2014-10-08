@@ -69,6 +69,8 @@ Target "Clean" (fun _ ->
 
 
 let configuration = environVarOrDefault "Configuration" "Release"
+let target = environVarOrDefault "Target" "Default"
+let ignoreClusterTests = environVarOrDefault "IgnoreClusterTests" "false" |> Boolean.Parse
 
 Target "Build" (fun _ ->
     // Build the rest of the project
@@ -85,8 +87,10 @@ Target "Build" (fun _ ->
 
 let testAssemblies = 
     [
-        "bin/MBrace.Store.Tests.dll"
-        "bin/MBrace.Core.Tests.dll"
+        yield "bin/MBrace.Store.Tests.dll"
+        yield "bin/MBrace.Core.Tests.dll"
+        if not ignoreClusterTests then
+            yield "bin/MBrace.Cluster.Tests.dll"
     ]
 
 Target "RunTests" (fun _ ->
@@ -367,6 +371,5 @@ Target "Help" (fun _ -> PrintTargets() )
   ==> "ReleaseDocs"
   ==> "Release"
 
-// start build
-RunTargetOrDefault "Default"
-//RunTargetOrDefault "Release"
+//// start build
+RunTargetOrDefault target
