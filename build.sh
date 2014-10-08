@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mono .nuget/NuGet.exe install FAKE -OutputDirectory packages -ExcludeVersion
-mono .nuget/NuGet.exe install FSharp.Formatting -OutputDirectory packages -ExcludeVersion
-mono .nuget/NuGet.exe install SourceLink.Fake -OutputDirectory packages -ExcludeVersion
+if [ ! -f packages/FAKE/tools/FAKE.exe ]; then
+  mono .nuget/NuGet.exe install FAKE -OutputDirectory packages -ExcludeVersion
+fi
 
 mono packages/FAKE/tools/FAKE.exe build.fsx -d:MONO $@

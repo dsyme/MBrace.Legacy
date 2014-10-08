@@ -90,7 +90,7 @@ let testAssemblies =
         yield "bin/MBrace.Store.Tests.dll"
         yield "bin/MBrace.Core.Tests.dll"
         if not ignoreClusterTests then
-            yield "bin/MBrace.Cluster.Tests.dll"
+            yield "bin/MBrace.Runtime.Tests.dll"
     ]
 
 Target "RunTests" (fun _ ->
@@ -105,6 +105,7 @@ Target "RunTests" (fun _ ->
             ToolPath = nunitPath
             DisableShadowCopy = true
             TimeOut = TimeSpan.FromMinutes 60.
+            ExcludeCategory = "ChaosMonkeyTests"
             OutputFile = "TestResults.xml" })
 )
 
