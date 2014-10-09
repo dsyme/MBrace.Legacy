@@ -132,7 +132,7 @@ let addAssembly (target : string) assembly =
         yield! includeFile false <| assembly + ".config"
     }
 
-Target "CorePkg" (fun _ ->
+Target "Nuget - Core" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -157,7 +157,7 @@ Target "CorePkg" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "StorePkg" (fun _ ->
+Target "NuGet - Store" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -186,7 +186,7 @@ Target "StorePkg" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "ClientPkg" (fun _ ->
+Target "NuGet - Client" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -222,7 +222,7 @@ Target "ClientPkg" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "AzurePkg" (fun _ ->
+Target "NuGet - Azure" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -342,7 +342,7 @@ Target "ReleaseDocs" (fun _ ->
 Target "Default" DoNothing
 Target "Release" DoNothing
 Target "PrepareRelease" DoNothing
-Target "Nuget" DoNothing
+Target "NuGet" DoNothing
 Target "Help" (fun _ -> PrintTargets() )
 
 "Clean"
@@ -356,16 +356,11 @@ Target "Help" (fun _ -> PrintTargets() )
   ==> "PrepareRelease"
   ==> "Build"
   ==> "MBraceIntroScript"
-  ==> "CorePkg"
+  ==> "NuGet - Core"
   ==> "StorePkg"
   ==> "ClientPkg"
   ==> "RuntimePkg"
   ==> "AzurePkg"
-  ==> "Nuget"
-
-"Clean"
-  ==> "PrepareRelease"
-  ==> "Build"
   ==> "Nuget"
   ==> "GenerateDocs"
   ==> "ReleaseDocs"
