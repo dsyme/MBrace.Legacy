@@ -353,9 +353,8 @@ Target "Help" (fun _ -> PrintTargets() )
   ==> "RunTests"
   ==> "Default"
 
-"Clean"
+"Build"
   ==> "PrepareRelease"
-  ==> "Build"
   ==> "NuGet.Core"
   ==> "NuGet.Store"
   ==> "NuGet.Client"
