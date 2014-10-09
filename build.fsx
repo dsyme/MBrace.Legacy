@@ -69,7 +69,6 @@ Target "Clean" (fun _ ->
 
 
 let configuration = environVarOrDefault "Configuration" "Release"
-let target = environVarOrDefault "Target" "Default"
 let ignoreClusterTests = environVarOrDefault "IgnoreClusterTests" "false" |> Boolean.Parse
 
 Target "Build" (fun _ ->
@@ -367,10 +366,10 @@ Target "Help" (fun _ -> PrintTargets() )
 "Clean"
   ==> "PrepareRelease"
   ==> "Build"
-  ==> "Nuget"
   ==> "GenerateDocs"
   ==> "ReleaseDocs"
+  ==> "Nuget"
   ==> "Release"
 
 //// start build
-RunTargetOrDefault target
+RunTargetOrDefault "Default"
