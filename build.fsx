@@ -132,7 +132,7 @@ let addAssembly (target : string) assembly =
         yield! includeFile false <| assembly + ".config"
     }
 
-Target "Nuget - Core" (fun _ ->
+Target "Nuget.Core" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -157,7 +157,7 @@ Target "Nuget - Core" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "NuGet - Store" (fun _ ->
+Target "NuGet.Store" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -186,7 +186,7 @@ Target "NuGet - Store" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "NuGet - Client" (fun _ ->
+Target "NuGet.Client" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -222,7 +222,7 @@ Target "NuGet - Client" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "NuGet - Azure" (fun _ ->
+Target "NuGet.Azure" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -256,7 +256,7 @@ Target "NuGet - Azure" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "MBraceIntroScript" (fun _ ->
+let writeMBraceIntroScript () =
     let newFile = 
         File.ReadLines("./nuget/mbrace-tutorial.fsx")
         |> Seq.map (fun line -> 
@@ -264,11 +264,12 @@ Target "MBraceIntroScript" (fun _ ->
                 sprintf """#load "../packages/MBrace.Runtime.%s/bootstrap.fsx" """ release.NugetVersion
             else line)
         |> Seq.toArray
-    File.WriteAllLines("./nuget/mbrace-tutorial.fsx", newFile)
-)
 
-Target "RuntimePkg" (fun _ ->
+    File.WriteAllLines("./nuget/mbrace-tutorial.fsx", newFile)
+
+Target "Nuget.Runtime" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
+    do writeMBraceIntroScript ()
     NuGet (fun p -> 
         { p with   
             Authors = authors
@@ -355,12 +356,11 @@ Target "Help" (fun _ -> PrintTargets() )
 "Clean"
   ==> "PrepareRelease"
   ==> "Build"
-  ==> "MBraceIntroScript"
-  ==> "NuGet - Core"
-  ==> "StorePkg"
-  ==> "ClientPkg"
-  ==> "RuntimePkg"
-  ==> "AzurePkg"
+  ==> "NuGet.Core"
+  ==> "NuGet.Store"
+  ==> "NuGet.Client"
+  ==> "NuGet.Runtime"
+  ==> "NuGet.Azure"
   ==> "Nuget"
   ==> "GenerateDocs"
   ==> "ReleaseDocs"
