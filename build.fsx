@@ -366,9 +366,9 @@ Target "Help" (fun _ -> PrintTargets() )
 "Clean"
   ==> "PrepareRelease"
   ==> "Build"
+  ==> "Nuget"
   ==> "GenerateDocs"
   ==> "ReleaseDocs"
-  ==> "Nuget"
   ==> "Release"
 
 //// start build
