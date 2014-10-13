@@ -17,9 +17,7 @@ All documentation and related material can be found [here](http://www.m-brace.ne
 ### Community
 
   * Twitter Feed [@mbracethecloud](https://twitter.com/mbracethecloud).
-
   * User mailing list [https://groups.google.com/group/mbrace-user](https://groups.google.com/group/mbrace-user).
-
   * Developer/Contributor mailing list [https://groups.google.com/group/mbrace-dev](https://groups.google.com/group/mbrace-dev).
 
 ### Build Status
