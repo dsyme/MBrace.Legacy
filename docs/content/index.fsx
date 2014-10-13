@@ -85,9 +85,11 @@ A collection of tutorials, technical overviews and API references of the library
 
 ## Community
 
-  * Twitter Feed [https://twitter.com/mbracethecloud](https://twitter.com/mbracethecloud) @mbracethecloud.
-  * Developer mailing list [https://groups.google.com/forum/#!forum/mbrace-dev](https://groups.google.com/forum/#!forum/mbrace-dev).
-  * User mailing list [https://groups.google.com/forum/#!forum/mbrace-user](https://groups.google.com/forum/#!forum/mbrace-user).
+  * Twitter Feed [@mbracethecloud](https://twitter.com/mbracethecloud).
+
+  * User mailing list [https://groups.google.com/group/mbrace-user](https://groups.google.com/group/mbrace-user).
+
+  * Developer/Contributor mailing list [https://groups.google.com/group/mbrace-dev](https://groups.google.com/group/mbrace-dev).
 
 ## Contributing and copyright
 
