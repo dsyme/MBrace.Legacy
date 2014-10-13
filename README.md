@@ -14,6 +14,12 @@ A collection of tutorials, technical overviews and API references of the library
  
 All documentation and related material can be found [here](http://www.m-brace.net/).
 
+### Community
+
+  * Twitter Feed [https://twitter.com/mbracethecloud](https://twitter.com/mbracethecloud) @mbracethecloud.
+  * Developer mailing list [https://groups.google.com/forum/#!forum/mbrace-dev](https://groups.google.com/forum/#!forum/mbrace-dev).
+  * User mailing list [https://groups.google.com/forum/#!forum/mbrace-user](https://groups.google.com/forum/#!forum/mbrace-user).
+
 ### Build Status
 
 Head (branch `master`), Build & Unit tests
