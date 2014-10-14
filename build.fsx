@@ -69,6 +69,7 @@ Target "Clean" (fun _ ->
 
 
 let configuration = environVarOrDefault "Configuration" "Release"
+let ignoreClusterTests = environVarOrDefault "IgnoreClusterTests" "false" |> Boolean.Parse
 
 Target "Build" (fun _ ->
     // Build the rest of the project
@@ -85,8 +86,10 @@ Target "Build" (fun _ ->
 
 let testAssemblies = 
     [
-        "bin/MBrace.Store.Tests.dll"
-        "bin/MBrace.Core.Tests.dll"
+        yield "bin/MBrace.Store.Tests.dll"
+        yield "bin/MBrace.Core.Tests.dll"
+        if not ignoreClusterTests then
+            yield "bin/MBrace.Runtime.Tests.dll"
     ]
 
 Target "RunTests" (fun _ ->
@@ -101,6 +104,7 @@ Target "RunTests" (fun _ ->
             ToolPath = nunitPath
             DisableShadowCopy = true
             TimeOut = TimeSpan.FromMinutes 60.
+            ExcludeCategory = "ChaosMonkeyTests"
             OutputFile = "TestResults.xml" })
 )
 
@@ -128,7 +132,7 @@ let addAssembly (target : string) assembly =
         yield! includeFile false <| assembly + ".config"
     }
 
-Target "CorePkg" (fun _ ->
+Target "Nuget.Core" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -153,7 +157,7 @@ Target "CorePkg" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "StorePkg" (fun _ ->
+Target "NuGet.Store" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -182,7 +186,7 @@ Target "StorePkg" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "ClientPkg" (fun _ ->
+Target "NuGet.Client" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -218,7 +222,7 @@ Target "ClientPkg" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "AzurePkg" (fun _ ->
+Target "NuGet.Azure" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
     NuGet (fun p -> 
         { p with   
@@ -252,7 +256,7 @@ Target "AzurePkg" (fun _ ->
         ("nuget/MBrace.nuspec")
 )
 
-Target "MBraceIntroScript" (fun _ ->
+let writeMBraceIntroScript () =
     let newFile = 
         File.ReadLines("./nuget/mbrace-tutorial.fsx")
         |> Seq.map (fun line -> 
@@ -260,11 +264,12 @@ Target "MBraceIntroScript" (fun _ ->
                 sprintf """#load "../packages/MBrace.Runtime.%s/bootstrap.fsx" """ release.NugetVersion
             else line)
         |> Seq.toArray
-    File.WriteAllLines("./nuget/mbrace-tutorial.fsx", newFile)
-)
 
-Target "RuntimePkg" (fun _ ->
+    File.WriteAllLines("./nuget/mbrace-tutorial.fsx", newFile)
+
+Target "Nuget.Runtime" (fun _ ->
     let nugetPath = ".nuget/NuGet.exe"
+    do writeMBraceIntroScript ()
     NuGet (fun p -> 
         { p with   
             Authors = authors
@@ -338,7 +343,7 @@ Target "ReleaseDocs" (fun _ ->
 Target "Default" DoNothing
 Target "Release" DoNothing
 Target "PrepareRelease" DoNothing
-Target "Nuget" DoNothing
+Target "NuGet" DoNothing
 Target "Help" (fun _ -> PrintTargets() )
 
 "Clean"
@@ -348,25 +353,17 @@ Target "Help" (fun _ -> PrintTargets() )
   ==> "RunTests"
   ==> "Default"
 
-"Clean"
+"Build"
   ==> "PrepareRelease"
-  ==> "Build"
-  ==> "MBraceIntroScript"
-  ==> "CorePkg"
-  ==> "StorePkg"
-  ==> "ClientPkg"
-  ==> "RuntimePkg"
-  ==> "AzurePkg"
-  ==> "Nuget"
-
-"Clean"
-  ==> "PrepareRelease"
-  ==> "Build"
+  ==> "NuGet.Core"
+  ==> "NuGet.Store"
+  ==> "NuGet.Client"
+  ==> "NuGet.Runtime"
+  ==> "NuGet.Azure"
   ==> "Nuget"
   ==> "GenerateDocs"
   ==> "ReleaseDocs"
   ==> "Release"
 
-// start build
+//// start build
 RunTargetOrDefault "Default"
-//RunTargetOrDefault "Release"

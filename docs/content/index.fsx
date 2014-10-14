@@ -83,6 +83,14 @@ A collection of tutorials, technical overviews and API references of the library
   * [API Reference](reference/index.html) contains automatically generated documentation for all types, modules
     and functions in the library.
 
+## Community
+
+  * Twitter Feed [@mbracethecloud](https://twitter.com/mbracethecloud).
+
+  * User mailing list [https://groups.google.com/group/mbrace-user](https://groups.google.com/group/mbrace-user).
+
+  * Developer/Contributor mailing list [https://groups.google.com/group/mbrace-dev](https://groups.google.com/group/mbrace-dev).
+
 ## Contributing and copyright
 
 The project is hosted on [GitHub][gh] where you can [report issues][issues], fork 

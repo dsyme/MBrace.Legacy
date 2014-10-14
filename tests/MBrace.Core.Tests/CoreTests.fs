@@ -204,6 +204,9 @@
             let result : int[] = <@ cloud { return! Cloud.Parallel [|cloud { return 1 }; cloud { return 2 }|] } @> |> test.ExecuteExpression
             result.Length |> should equal 2
 
+
+        [<Test; CloudParallelCategory>] 
+        member test.``2. Parallel : Cloud.Parallel with empty input`` () =
             let result : int[] = <@ cloud { return! Cloud.Parallel [||] } @> |> test.ExecuteExpression
             result.Length |> should equal 0
 
@@ -275,6 +278,8 @@
             let result : int option = <@ cloud { let! r = Cloud.Choice [|cloud { return None }; cloud { return Some 1 }|] in return r } @> |> test.ExecuteExpression
             result |> should equal (Some 1)
 
+        [<Test; CloudParallelCategory>] 
+        member test.``2. Parallel : Cloud.Choice with empty input`` () =
             let result : int option = <@ cloud { return! Cloud.Choice [||] } @> |> test.ExecuteExpression
             result |> should equal None
 
