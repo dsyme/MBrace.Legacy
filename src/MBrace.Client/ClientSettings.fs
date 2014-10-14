@@ -50,7 +50,7 @@ namespace Nessos.MBrace.Client
             // set the default store provider; use the local temp folder
             let tmp = FileSystemStore.LocalTemp
             let storeInfo = StoreRegistry.Register(tmp, makeDefault = true)
-
+            storeInfo.CacheStore.Behavior <- CacheBehavior.OnRead
             ()
 
 
@@ -91,6 +91,11 @@ namespace Nessos.MBrace.Client
         static member AssemblyCacheDirectory = init () ; SystemConfiguration.AssemblyCacheDirectory
         /// Gets the local cache directory used for Store primitives.
         static member LocalCacheStoreDirectory = init () ; SystemConfiguration.LocalCacheStoreDirectory
+
+        /// Gets or sets client's cache behavior.
+        static member CacheBehavior 
+            with get () = init (); StoreRegistry.DefaultStoreInfo.CacheStore.Behavior
+            and set behavior = init (); StoreRegistry.DefaultStoreInfo.CacheStore.Behavior <- behavior
 
         /// Gets or sets the default timeout (in milliseconds) used for communicating with the runtime
         static member DefaultTimeout

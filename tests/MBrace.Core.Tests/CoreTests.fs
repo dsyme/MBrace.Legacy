@@ -876,3 +876,28 @@
             cc.Range(90L,50) |> should equal c.[90..90+50-1]
             
             sc.DeleteContainer(container)
+
+        [<Test; PrimitivesCategory>]
+        member test.``4. Primitives : Client CacheBehavior`` () =
+            // let's assume nobody cleans cache or runs concurrently...
+            let getCacheItems () = 
+                try
+                    Path.Combine(MBraceSettings.LocalCacheStoreDirectory,StoreRegistry.DefaultStoreInfo.CacheStore.Container)
+                    |> Directory.GetFiles 
+                with :? DirectoryNotFoundException -> Array.empty // in case cache dir is not created yet
+            
+            let it1 = getCacheItems()
+            MBraceSettings.CacheBehavior <- Store.CacheBehavior.None
+            let s = StoreClient.Default.CreateCloudSeq([1..10])
+            s |> Seq.toArray |> ignore
+            it1 |> should equal (getCacheItems()) 
+
+            MBraceSettings.CacheBehavior <- Store.CacheBehavior.OnRead
+            let it2 = getCacheItems()
+            let s = StoreClient.Default.CreateCloudSeq([1..10])
+            it2 |> should equal (getCacheItems()) 
+            s |> Seq.toArray |> ignore
+            it2.Length |> should equal (getCacheItems().Length - 1) 
+
+            MBraceSettings.CacheBehavior <- Store.CacheBehavior.OnRead
+            

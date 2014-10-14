@@ -15,6 +15,27 @@ MBraceSettings.DefaultStore <- azureStore
 //------------------CLOUDARRAY------------------ 
 //----------------------------------------------
 
+open System.IO
+// let's assume nobody cleans cache or runs concurrently...
+let getCacheItems () = 
+    Directory.GetFiles MBraceSettings.LocalCacheStoreDirectory
+
+let it1 = getCacheItems()
+MBraceSettings.CacheBehavior <- Store.CacheBehavior.None
+let s = StoreClient.Default.CreateCloudSeq([1..10])
+s |> Seq.toArray |> ignore
+it1 |> should equal (getCacheItems()) 
+
+MBraceSettings.CacheBehavior <- Store.CacheBehavior.OnRead
+let it2 = getCacheItems()
+let s = StoreClient.Default.CreateCloudSeq([1..10])
+it2 |> should equal (getCacheItems()) 
+s |> Seq.toArray |> ignore
+it2.Length |> should equal (getCacheItems().Length - 1) 
+
+MBraceSettings.CacheBehavior <- Store.CacheBehavior.OnRead
+
+
 let rt = MBrace.InitLocal 3
 
 rt.Run <@ Cloud.Parallel Seq.empty<Cloud<int>> @> 
