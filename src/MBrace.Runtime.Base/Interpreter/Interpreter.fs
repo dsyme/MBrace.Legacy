@@ -203,6 +203,24 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| (ValueExpr (Obj (ObjValue ca, typeof<ICloudArray>))) :: rest
                         | Choice2Of2 ex ->
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
+                    | GetCloudArray(container, id, t) :: rest ->
+                        let! ca = Async.Catch <| storeConfig.CloudArrayProvider.GetExisting(container, id)
+                        match ca with
+                        | Choice1Of2 ca ->
+                            if ca.Type <> t then
+                                return! eval traceEnabled <| ValueExpr (Exc (new Exception(sprintf "CloudArray type mismatch. Internal type %s, got : %s" ca.Type.AssemblyQualifiedName t.AssemblyQualifiedName), None)) :: rest
+                            else
+                                return! eval traceEnabled <| ValueExpr (Obj (ObjValue ca, ca.Type)) :: rest
+                        | Choice2Of2 exn ->
+                            return! eval traceEnabled <| ValueExpr (Exc (new NonExistentObjectStoreException(container, id), None)) :: rest
+
+                    | GetCloudArrays(container) :: rest ->
+                        let! exec = Async.Catch <| storeConfig.CloudArrayProvider.GetContained container
+                        match exec with
+                        | Choice1Of2 refs ->
+                            return! eval traceEnabled <| ValueExpr (Obj (ObjValue refs, typeof<ICloudArray []>)) :: rest
+                        | Choice2Of2 ex ->
+                            return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | LogExpr msg :: rest ->
                         try taskConfig.Logger.LogUserInfo(msg, taskConfig.TaskId) with _ -> ()

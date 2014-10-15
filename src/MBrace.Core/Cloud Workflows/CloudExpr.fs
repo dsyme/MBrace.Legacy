@@ -56,7 +56,9 @@ namespace Nessos.MBrace.CloudExpr
         | ReadCloudFile         of ICloudFile * (Stream -> Async<obj>) * Type
 
         (* CLOUDARRAY *)
-        | NewCloudArray of Container * IEnumerable * Type
+        | NewCloudArray         of Container * IEnumerable * Type
+        | GetCloudArray         of Container  * Id * Type
+        | GetCloudArrays        of Container
 
         // Commands
         | DoEndDelayExpr of ObjFunc
