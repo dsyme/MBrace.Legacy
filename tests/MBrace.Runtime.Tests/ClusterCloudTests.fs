@@ -320,6 +320,15 @@ namespace Nessos.MBrace.Runtime.Tests
             __.Runtime.Run <@ cloud { return 1 + 1 } @> |> should equal 2
 
         [<Test;RuntimeAdministrationCategory>]
+        member __.``Z2. Cluster Admin: Attach existing Node`` () =
+            let n = __.Runtime.Nodes |> List.length
+            try
+                __.Runtime.Attach(__.Runtime.Nodes |> Seq.last)
+            with ex ->
+                ex :? MBraceException |> should equal true //not sure about that, but currently throws timeoutexception
+                __.Runtime.Nodes.Length |> should equal n
+
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Z2. Cluster Admin: Detach Node`` () =
             let nodes = __.Runtime.Nodes 
             let n = nodes.Length
@@ -332,11 +341,21 @@ namespace Nessos.MBrace.Runtime.Tests
             __.Runtime.Run <@ cloud { return 1 + 1 } @> |> should equal 2
 
         [<Test;RuntimeAdministrationCategory>]
+        member __.``Z2. Cluster Admin: Detach Node not contained in cluster`` () =
+            let n = __.Runtime.Nodes |> List.length
+            let node = Node.Spawn()
+            try
+                __.Runtime.Detach(node)
+            with ex ->
+                ex :? MBraceException |> should equal true 
+                __.Runtime.Nodes.Length |> should equal n
+
+        [<Test;RuntimeAdministrationCategory>]
         member __.``Z2. Cluster Admin: Node Permissions`` () =
             let nodes = __.Runtime.Nodes 
             let n = nodes.Head
 
-            // Node client caches information for a few millisecods
+            // Node client caches information for a few milliseconds
             // sleep to force that values are up to date
 
             let p = n.Permissions
