@@ -111,6 +111,7 @@
     /// and provides fast random access.
     type ICloudArray =
         inherit IEnumerable
+        inherit ICloudDisposable
 
         /// CloudArray identifier.
         abstract Name : string
@@ -133,11 +134,6 @@
         /// <param name="start">The starting index.</param>
         /// <param name="count">The number of elements to return.</param>
         abstract Range : start : int64 * count : int -> obj []
-
-    /// A cacheable version of CloudArray. This enables in-memory 
-    /// caching of CloudArray's ranges.
-    and ICachedCloudArray =
-        inherit ICloudArray
 
     /// Represents a finite and immutable sequence of
     /// elements that is stored in the underlying CloudStore

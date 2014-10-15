@@ -9,7 +9,7 @@
     open Microsoft.FSharp.Compiler.Interactive.Shell
     open Microsoft.FSharp.Compiler.SimpleSourceCodeServices
 
-    [<TestFixture>]
+    [<TestFixture; FSharpInteractiveCategory>]
     module FsiTests =
 
         // by default, NUnit copies test assemblies to a temp directory

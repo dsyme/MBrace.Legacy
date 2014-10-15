@@ -45,8 +45,8 @@
         /// <summary>
         ///     Returns a CloudSeq that already exists in the specified container with given name.
         /// </summary>
-        /// <param name="container"></param>
-        /// <param name="id"></param>
+        /// <param name="container">Containing folder of the CloudSeq in the underlying store.</param>
+        /// <param name="id">CloudSeq id.</param>
         static member Get<'T>(container : string, id : string) : Cloud<ICloudSeq<'T>> =
             CloudExpr.wrap <| GetCloudSeqByNameExpr (container, id, typeof<'T>)
 
@@ -54,7 +54,7 @@
         /// <summary>
         ///     Try returning a CloudSeq that already exists in the specified container with given name.
         /// </summary>
-        /// <param name="container"></param>
-        /// <param name="id"></param>
+        /// <param name="container">Containing folder of the CloudSeq in the underlying store.</param>
+        /// <param name="id">CloudSeq id.</param>
         static member TryGet<'T>(container : string, id : string) : Cloud<ICloudSeq<'T> option> =
             mkTry<StoreException, _> <| CloudSeq.Get<'T>(container, id)

@@ -8,4 +8,8 @@
 
     /// Runtime administration tests (attach, reboot, etc).
     type RuntimeAdministrationCategoryAttribute() = 
-        inherit CategoryAttribute("Runtime Administration")
+        inherit CategoryAttribute("RuntimeAdministration")
+
+    /// Runtime administration tests (attach, reboot, etc).
+    type FSharpInteractiveCategoryAttribute() = 
+        inherit CategoryAttribute("FSharpInteractive")

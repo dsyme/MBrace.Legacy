@@ -9,7 +9,7 @@
     open Nessos.MBrace
     open Nessos.MBrace.Store
     open Nessos.MBrace.Utils
-    open System.Runtime.Caching
+    open Nessos.MBrace.Runtime.StoreUtils
 
     [<Diagnostics.DebuggerDisplay("{Id}:{Folder}/{Name}:{IndexFile}   ({StartIndex},{EndIndex})")>]
     type internal SegmentDescription = 
@@ -22,6 +22,7 @@
     
     type internal CloudArrayDescription =
         {   Count    : int64
+            Type     : Type
             Segments : List<SegmentDescription> } 
     
     [<AutoOpen>]
@@ -42,8 +43,8 @@
               StartIndex = start
               EndIndex   = ``end`` }
     
-        let newCloudArrayDescription(count, segments) =
-            { Count = count; Segments = segments}
+        let newCloudArrayDescription(ty, count, segments) =
+            { Count = count; Type = ty; Segments = segments}
     
     /// Forward only caching. When asked for item i caches the next MaxPageSize items.
     type internal PageCache<'T>(folder : string, descriptor : string, length : int64, store : ICloudStore) =
@@ -91,7 +92,7 @@
                         buffer.Add(Serialization.DefaultPickler.Deserialize<'T>(segmentStream, leaveOpen = true))
 
                     currentPageStart <- index
-            }
+            } |> onDereferenceError descriptor
 
         member this.GetItem<'T>(index : int64) : 'T = 
             if isCached index then
@@ -108,8 +109,9 @@
                 this.FetchPageAsync(index)
                 |> Async.RunSynchronously
                 this.GetItem<'T>(index, pageItems)
-
-    type [<Serializable; StructuredFormatDisplay("{StructuredFormatDisplay}")>] CloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) as this =
+    
+    [<Serializable; StructuredFormatDisplay("{StructuredFormatDisplay}")>]
+    type CloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) as this =
 
         let provider  = lazy CloudArrayProvider.GetById storeId  
         let pageCache = lazy provider.Value.GetPageCache(this)
@@ -199,6 +201,10 @@
             member this.GetEnumerator() : IEnumerator =
                 (this :> IEnumerable<'T>).GetEnumerator() :> IEnumerator
 
+        interface ICloudDisposable with
+            member this.Dispose() : Async<unit> =
+                provider.Value.DisposeAsync(this)
+
         member __.RangeAsync<'T>(start : int64, length : int) : Async<'T []> =
             async {
                 if start < 0L || length < 0 || start + int64 length > count then
@@ -216,11 +222,20 @@
         static let providers = new System.Collections.Concurrent.ConcurrentDictionary<StoreId, CloudArrayProvider>()
 
         let mkCloudArrayId () = Guid.NewGuid().ToString("N") 
+        
+        let extension = "ca"
+        let mkDescriptorName (name : string) = sprintf "%s.%s" name extension
+        let mkSegmentName    (name : string) (id : int) = sprintf "%s.%s.segment.%d" name extension id
+        let mkIndexFileName  (name : string) (id : int) = sprintf "%s.%s.segment.%d.index" name extension id
     
-        let mkDescriptorName = sprintf "%s.ca"
-        let mkSegmentName    = sprintf "%s.ca.segment.%d"
-        let mkIndexFileName  = sprintf "%s.ca.segment.%d.index"
-    
+        let readDescriptor container name = async {
+            use! descriptorStream = store.ReadImmutable(container, name)
+            return Serialization.DefaultPickler.Deserialize<CloudArrayDescription>(descriptorStream)
+        }
+
+        let readArrayDescriptor (ca : CloudArray<'T>) =
+            readDescriptor (ca :> ICloudArray).Container (ca :> ICloudArray).Name
+
         let getRangeAsync start length folder descriptorName =
             async {
                 let result = Array.zeroCreate length
@@ -255,7 +270,6 @@
     
                 return result
             }
-
         
         let defineUntyped(ty : Type, container : string, descriptor : string, count : int64) =
             let existential = Existential.Create ty
@@ -336,7 +350,7 @@
                                             | None   -> new List<_>()
                                             | Some s -> new List<_>(snd s)
 
-            let arrayDescription = newCloudArrayDescription(!segmentStart, segmentsDescription)
+            let arrayDescription = newCloudArrayDescription(ty, !segmentStart, segmentsDescription)
 
             let writeSegmentsDescription (stream : Stream) =
                 async {
@@ -353,14 +367,9 @@
             if left.StoreId <> right.StoreId then
                 failwithf "StoreId mismatch %A, %A" left.StoreId right.StoreId
 
-            // Read
-            let readDescriptor(cloudArray : CloudArray<'T>) = async {
-                use! descriptorStream = store.ReadImmutable((cloudArray :> ICloudArray).Container , (cloudArray :> ICloudArray).Name)
-                return Serialization.DefaultPickler.Deserialize<CloudArrayDescription>(descriptorStream)
-            }
 
-            let! leftDescr  = readDescriptor left
-            let! rightDescr = readDescriptor right
+            let! leftDescr  = readArrayDescriptor left
+            let! rightDescr = readArrayDescriptor right
 
             // Merge
             let leftSegmentCount = leftDescr.Segments.Count
@@ -373,7 +382,7 @@
                                                         segment.StartIndex + leftDescr.Count,
                                                         segment.EndIndex   + leftDescr.Count))
             let finalSegmentsDescription = List<_>(Seq.append leftDescr.Segments rightDescr')
-            let finalDescr = newCloudArrayDescription(leftDescr.Count + rightDescr.Count, finalSegmentsDescription)
+            let finalDescr = newCloudArrayDescription(typeof<'T>, leftDescr.Count + rightDescr.Count, finalSegmentsDescription)
                                               
             // Write
             let guid           = mkCloudArrayId()
@@ -389,6 +398,27 @@
 
             return new CloudArray<'T>((left :> ICloudArray).Container, descriptorName, finalDescr.Count, storeId)
         }
+
+        let disposeAsync (ca : CloudArray<'T>) : Async<unit> =
+            async {
+                let! descriptor = readArrayDescriptor ca
+                do! descriptor.Segments
+                    |> Seq.toArray
+                    |> Array.map (fun segment -> 
+                        async {
+                            do! store.Delete(segment.Folder, segment.IndexFile)   
+                            do! store.Delete(segment.Folder, segment.Name)
+                        } )
+                    |> Async.Parallel 
+                    |> Async.Ignore
+                do! store.Delete((ca :> ICloudArray).Container, (ca :> ICloudArray).Name)
+            }
+
+        let getExistingAsync(container : string) (name : string) : Async<ICloudArray> =
+            async {
+                let! descriptor = readDescriptor container name
+                return defineUntyped(descriptor.Type, container, name, descriptor.Count)
+            }
 
         static member internal Create (storeId : StoreId, store : ICloudStore) =
             providers.GetOrAdd(storeId, fun id -> new CloudArrayProvider(id, store))
@@ -407,10 +437,34 @@
         member __.GetRangeAsync<'T>(start : int64, length : int, ca : CloudArray<'T>) : Async<'T []> =
             let ca = ca :> ICloudArray
             getRangeAsync start length ca.Container ca.Name
+            |> onDereferenceError ca
 
         member __.Create(container : string, values : IEnumerable, ty : Type) : Async<ICloudArray> =
             createAsync container values ty
+            |> onCreateError container "cloudarray"
 
         member __.AppendAsync<'T>(left : CloudArray<'T>, right : CloudArray<'T>) : Async<CloudArray<'T>> =
             appendAsync left right
+
+        member __.DisposeAsync<'T>(ca : CloudArray<'T>) : Async<unit> =
+            disposeAsync ca
+            |> onDeleteError ca
+
+        member __.GetExisting(container, id) = 
+            getExistingAsync container id
+            |> onGetError container id
+
+        member __.GetContained(container : string) : Async<ICloudArray []> =
+            async {
+                let! files = store.EnumerateFiles(container)
+
+                let caIds =
+                    files
+                    |> Array.filter(fun f -> f.EndsWith <| sprintf' ".%s" extension)
+
+                return!
+                    caIds 
+                    |> Array.map (fun id -> __.GetExisting(container, id))
+                    |> Async.Parallel
+            } |> onListError container
 

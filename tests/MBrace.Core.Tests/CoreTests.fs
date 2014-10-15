@@ -801,6 +801,75 @@
                } @> |> test.ExecuteExpression |> should equal None
             
 
+        [<Test; PrimitivesCategory>] 
+        member test.``4. Primitives : CloudArray`` () = 
+            <@  cloud {
+                    return! CloudArray.New([1..100])
+                } @> |> test.ExecuteExpression |> Seq.toList |> should equal [1..100]
+        
+        [<Test; PrimitivesCategory>] 
+        member test.``4. Primitives : CloudArray Length`` () = 
+            <@  cloud {
+                    let! ca = CloudArray.New([1..100])
+                    return ca.Length
+                } @> |> test.ExecuteExpression |> should equal 100L
+
+
+        [<Test; PrimitivesCategory>] 
+        member test.``4. Primitives : CloudArray Get by name`` () = 
+            <@  cloud {
+                    let container = Guid.NewGuid().ToString()
+                    let! ca1 = CloudArray.New(container, [1..100])
+                    let! ca2 = CloudArray.Get<int>(container, ca1.Name)
+                    return (ca1 |> Seq.toArray) = (ca2 |> Seq.toArray)
+                } @> |> test.ExecuteExpression |> should equal true
+
+        [<Test; PrimitivesCategory>]
+        member test.``4. Primitives : CloudArray Get by name - type mismatch`` () = 
+            fun () ->
+                test.ExecuteExpression
+                    <@ 
+                        cloud { 
+                            let container = Guid.NewGuid().ToString()
+                            let! ca = CloudArray.New(container, [42])
+                            let! ca' = CloudArray.Get<obj>(container, ca.Name) 
+                            () 
+                        } 
+                    @> 
+                |> ignore
+
+            |> shouldFailwith<CloudException>
+
+        [<Test; PrimitivesCategory>]
+        member test.``4. Primitives : CloudArray TryGet by name - failure`` () = 
+            <@  cloud {
+                    let container, id = Guid.NewGuid().ToString(), Guid.NewGuid().ToString()
+                    return! CloudArray.TryGet<int>(container, id)
+                } @> |> test.ExecuteExpression |> should equal None
+         
+        [<Test; PrimitivesCategory>]
+        member test.``4. Primitives : CloudArray Get all in container`` () = 
+            <@ cloud { 
+                let container = Guid.NewGuid().ToString()
+                let! x = CloudArray.New(container, [40])
+                let! y = CloudArray.New(container, [1])
+                let! z = CloudArray.New(container, [1])
+                let! s = CloudArray.Enumerate container
+                let cas = s |> Seq.cast<ICloudArray<int>>
+                return cas
+                       |> Seq.concat
+                       |> Seq.sum
+               } @> |> test.ExecuteExpression |> should equal 42       
+
+        [<Test; PrimitivesCategory>]
+        member test.``4. Primitives : CloudArray Dispose`` () = 
+            <@ cloud { 
+                let! ca = CloudArray.New([1..100])
+                do! Cloud.OfAsync <| ca.Dispose()
+                return! CloudArray.TryGet<int>(ca.Container, ca.Name)
+            } @> |> test.ExecuteExpression |> should equal None
+
+
         [<Test; PrimitivesCategory>]
         member test.``4. Primitives : Concurrent cache writes`` () =
             let array = Array.init (10 * 1024 * 1024) id

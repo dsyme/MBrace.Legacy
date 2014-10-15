@@ -1,4 +1,4 @@
-version: 0.5.0.{build}
+version: 0.5.7.{build}
 
 configuration: Release
 
@@ -6,3 +6,10 @@ test:
   assemblies:
     - MBrace.Store.Tests.dll
     - MBrace.Core.Tests.dll
+    - MBrace.Runtime.Tests.dll
+  categories:
+    - FileSystemStore
+    - CompilerTests
+    - LocalTests
+    - RuntimeAdministration
+    - FSharpInteractive
