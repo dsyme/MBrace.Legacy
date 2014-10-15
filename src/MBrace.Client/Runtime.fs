@@ -293,7 +293,7 @@ namespace Nessos.MBrace.Client
                 with
                 | MBraceExn e -> return reraise' e
                 | CommunicationException _ -> return mfailwithf "Failed to connect to node %A." node.Uri
-                | MessageHandlingExceptionRec e -> return mfailwithInner e "Node %A replied with exception." node.Uri
+                | MessageHandlingExceptionRec e -> return mfailwithfInner e "Node %A replied with exception." node.Uri
             }
 
 
