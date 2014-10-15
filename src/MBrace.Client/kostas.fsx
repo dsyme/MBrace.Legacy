@@ -11,22 +11,6 @@ let azureStore = AzureStore.Create azureConn
 MBraceSettings.DefaultStore <- azureStore
 
 
-
-
-let rt = MBrace.InitLocal 3
-
-let container = System.Guid.NewGuid().ToString()
-let x = CloudArray.New(container, [40]) |> MBrace.RunLocal
-let y = CloudArray.New(container, [1])  |> MBrace.RunLocal
-let z = CloudArray.New(container, [1])  |> MBrace.RunLocal
-let s = CloudArray.Enumerate container  |> MBrace.RunLocal
-let cas = s |> Seq.cast<ICloudArray<int>>
-cas
-|> Seq.concat
-|> Seq.sum
-
-
-
 //----------------------------------------------
 //-----------'PUSH'-BASED CLOUDLOGS------------- 
 //----------------------------------------------

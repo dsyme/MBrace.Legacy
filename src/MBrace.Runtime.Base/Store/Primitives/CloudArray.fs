@@ -92,7 +92,7 @@
                         buffer.Add(Serialization.DefaultPickler.Deserialize<'T>(segmentStream, leaveOpen = true))
 
                     currentPageStart <- index
-            }
+            } |> onDereferenceError descriptor
 
         member this.GetItem<'T>(index : int64) : 'T = 
             if isCached index then
