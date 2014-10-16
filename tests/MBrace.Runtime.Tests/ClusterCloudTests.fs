@@ -39,6 +39,7 @@ namespace Nessos.MBrace.Runtime.Tests
                 | None -> ()
             
                 MBraceSettings.MBracedExecutablePath <- Path.Combine(Directory.GetCurrentDirectory(), "mbraced.exe")
+                MBraceSettings.DefaultTimeout <- 60 * 1000
                 let runtime = MBraceRuntime.InitLocal(3, debug = true)
                 currentRuntime := Some runtime)
 
