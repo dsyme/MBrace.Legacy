@@ -11,5 +11,4 @@ test:
     - FileSystemStore
     - CompilerTests
     - LocalTests
-    - RuntimeAdministration
     - FSharpInteractive

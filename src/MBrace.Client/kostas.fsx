@@ -11,6 +11,14 @@ let azureStore = AzureStore.Create azureConn
 MBraceSettings.DefaultStore <- azureStore
 
 
+MBraceSettings.DefaultTimeout
+
+let rt = MBrace.InitLocal 4
+let array = Array.init (10 * 1024 * 1024) id
+let cs = rt.Run <@ cloud { return array } @>
+
+
+
 //----------------------------------------------
 //-----------'PUSH'-BASED CLOUDLOGS------------- 
 //----------------------------------------------
