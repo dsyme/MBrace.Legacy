@@ -60,7 +60,7 @@
         let private fsharpPrefix = Regex("^FSharp")
         let getTypeName (t : Type) =
             let name =
-                if t.Namespace.StartsWith("Microsoft.FSharp") then
+                if t.Namespace <> null && t.Namespace.StartsWith("Microsoft.FSharp") then // Namespace in C# anonymous types is null
                     fsharpPrefix.Replace(t.Name, "")
                 else t.Name
                 
