@@ -1,3 +1,6 @@
+#### 0.5.9-alpha
+* Bug fixes.
+
 #### 0.5.8-alpha
 * Bug fixes and API improvements.
 

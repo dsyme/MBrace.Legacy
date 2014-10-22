@@ -209,8 +209,8 @@ Target "NuGet.Client" (fun _ ->
                 ]
             Dependencies = 
                 [
-                    "FsPickler",                                    "0.9.11"
-                    "FsPickler.Json",                               "0.9.11"
+                    "FsPickler",                                    "1.0.1"
+                    "FsPickler.Json",                               "1.0.1"
                     "Thespian",                                     "0.0.10"
                     "UnionArgParser",                               "0.8.0"
                     "Vagrant",                                      "0.2.6"
