@@ -1,3 +1,6 @@
+#### 0.5.10-alpha
+* CloudArray API changes.
+
 #### 0.5.9-alpha
 * Bug fixes.
 
