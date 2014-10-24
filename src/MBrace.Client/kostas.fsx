@@ -14,8 +14,14 @@ MBraceSettings.DefaultStore <- azureStore
 
 let rt = MBrace.InitLocal 4 
 
+let ss = "0"
+let s = String.init (1024 * 1024) (fun _ -> ss)
+let a = Array.create 124 s
+let ca = StoreClient.Default.CreateCloudArray("testcontainer", a)
 
+let p = ca.GetPartition(0)
 
+a = p
 
 //----------------------------------------------
 //-----------'PUSH'-BASED CLOUDLOGS------------- 

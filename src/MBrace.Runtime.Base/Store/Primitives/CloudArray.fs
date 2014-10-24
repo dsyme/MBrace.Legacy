@@ -28,12 +28,14 @@
     [<AutoOpen>]
     module private Helpers =
 
-        /// Max segment size in bytes.     // TODO : tune
-        let MaxSegmentSize = 1024L * 1024L // TODO : tune
-        /// Max PageCache size in bytes.   // TODO : tune
-        let MaxPageCacheSize  = 1024L     // TODO : tune
-        /// Max PageCache items.           // TODO : tune
-        let MaxPageCacheItems = 1024       // TODO : tune
+        // TODO : Tune
+
+        /// Max segment size in bytes.     
+        let MaxSegmentSize = 1024L * 1024L * 1024L 
+        /// Max PageCache size in bytes.  
+        let MaxPageCacheSize  = 1024L     
+        /// Max PageCache items.          
+        let MaxPageCacheItems = 1024      
 
         let newSegment(id, name, folder, descriptor, start, ``end``) =
             { Id         = id
@@ -111,7 +113,7 @@
                 this.GetItem<'T>(index, pageItems)
     
     [<Serializable; StructuredFormatDisplay("{StructuredFormatDisplay}")>]
-    type CloudArray<'T> internal (folder : string, descriptorName : string, count : int64, storeId : StoreId) as this =
+    type CloudArray<'T> internal (folder : string, descriptorName : string, count : int64, partitionCount : int, storeId : StoreId) as this =
 
         let provider  = lazy CloudArrayProvider.GetById storeId  
         let pageCache = lazy provider.Value.GetPageCache(this)
@@ -124,18 +126,21 @@
         member private this.StructuredFormatDisplay = this.ToString()
 
         internal new(info : SerializationInfo, context : StreamingContext) =
-            let folder     = info.GetValue("folder", typeof<string>) :?> string
+            let folder = info.GetValue("folder", typeof<string>) :?> string
             let descriptor = info.GetValue("descriptor", typeof<string>) :?> string
-            let count      = info.GetValue("count", typeof<int64>) :?> int64
-            let storeId    = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
-            new CloudArray<'T>(folder, descriptor, count, storeId)
+            let count = info.GetValue("count", typeof<int64>) :?> int64
+            let partitionCount = info.GetValue("partitionCount", typeof<int>) :?> int
+            let storeId = info.GetValue("storeId", typeof<StoreId>) :?> StoreId
+            
+            new CloudArray<'T>(folder, descriptor, count, partitionCount, storeId)
 
         interface ISerializable with
             member this.GetObjectData(info : SerializationInfo, context : StreamingContext) =
-                info.AddValue("folder",     folder)            
+                info.AddValue("folder", folder)
                 info.AddValue("descriptor", descriptorName)
-                info.AddValue("count" ,     count)
-                info.AddValue("storeId" ,   storeId, typeof<StoreId>)
+                info.AddValue("count", count)
+                info.AddValue("partitionCount", count)
+                info.AddValue("storeId", storeId, typeof<StoreId>)
 
         interface ICloudArray with
   
@@ -155,10 +160,13 @@
                 with get (index: int64): obj = 
                     (this :> ICloudArray<'T>).Item index :> _
 
-            member this.Range(start: int64, count: int): obj [] = 
-                (this :> ICloudArray<'T>).Range(start, count) // TODO : inefficient
-                |> Seq.cast<obj>
+            member this.Partitions with get () = partitionCount
+
+            member this.GetPartition(index : int) : obj [] =
+                (this :> ICloudArray<'T>).GetPartition(index) 
+                |> Seq.cast<obj> // Inefficient
                 |> Seq.toArray
+                    
 
         interface ICloudArray<'T> with 
             member this.Item 
@@ -168,12 +176,14 @@
                     else
                         pageCache.Value.GetItem<'T>(index)
 
-            member __.Range(start : int64, length : int) : 'T [] =
-                __.RangeAsync<'T>(start, length) 
-                |> Async.RunSynchronously
+            member this.GetPartition(index : int) : 'T [] =
+                if index < 0 || index >= partitionCount then
+                    raise <| IndexOutOfRangeException(sprintf "Index = %d, but Partitions = %d" index partitionCount)
+                provider.Value.GetPartition(this, index)
+                |> Async.RunSynchronously 
 
             member this.Append(cloudArray : ICloudArray<'T>) : ICloudArray<'T> =
-                this.AppendAsync(cloudArray :?> CloudArray<'T>) // TODO: CHANGE
+                provider.Value.AppendAsync(this, cloudArray :?> CloudArray<'T>)
                 |> Async.RunSynchronously :> _
 
                      
@@ -215,8 +225,6 @@
                     return! provider.Value.GetRangeAsync(start, length, this)
             }
 
-        member this.AppendAsync(cloudArray : CloudArray<'T>) : Async<CloudArray<'T>> =
-            provider.Value.AppendAsync(this, cloudArray)
 
     and CloudArrayProvider private (storeId : StoreId, store : ICloudStore) =
         static let providers = new System.Collections.Concurrent.ConcurrentDictionary<StoreId, CloudArrayProvider>()
@@ -271,12 +279,27 @@
                 return result
             }
         
-        let defineUntyped(ty : Type, container : string, descriptor : string, count : int64) =
+        let getPartitionAsync (ca : ICloudArray<'T>) (index : int) =
+            async {
+                let! descr = readDescriptor ca.Container ca.Name
+                let segment = descr.Segments.[index]
+                let count = int(segment.EndIndex - segment.StartIndex + 1L)
+                let result = Array.zeroCreate count
+
+                use! segmentStream = store.ReadImmutable(ca.Container, segment.Name)
+                for i = 0 to count - 1 do
+                    let item = Serialization.DefaultPickler.Deserialize<'T>(segmentStream, leaveOpen = true)
+                    result.[i] <- item
+                return result
+            }
+
+
+        let defineUntyped(ty : Type, container : string, descriptor : string, count : int64, partitionCount : int) =
             let existential = Existential.Create ty
             let ctor =
                 {
                     new IFunc<ICloudArray> with
-                        member __.Invoke<'T> () = new CloudArray<'T>(container, descriptor, count, storeId) :> ICloudArray
+                        member __.Invoke<'T> () = new CloudArray<'T>(container, descriptor, count, partitionCount, storeId) :> ICloudArray
                 }
 
             existential.Apply ctor
@@ -360,7 +383,7 @@
 
             do! store.CreateImmutable(folder, descriptorName, writeSegmentsDescription, true)
 
-            return defineUntyped(ty, folder, descriptorName, !segmentStart)
+            return defineUntyped(ty, folder, descriptorName, !segmentStart, arrayDescription.Segments.Count)
         }
 
         let appendAsync (left : CloudArray<'T>) (right : CloudArray<'T>) : Async<CloudArray<'T>> = async {
@@ -396,7 +419,7 @@
 
             do! store.CreateImmutable((left :> ICloudArray).Container, descriptorName , serialize, true)
 
-            return new CloudArray<'T>((left :> ICloudArray).Container, descriptorName, finalDescr.Count, storeId)
+            return new CloudArray<'T>((left :> ICloudArray).Container, descriptorName, finalDescr.Count, finalDescr.Segments.Count, storeId)
         }
 
         let disposeAsync (ca : CloudArray<'T>) : Async<unit> =
@@ -417,7 +440,7 @@
         let getExistingAsync(container : string) (name : string) : Async<ICloudArray> =
             async {
                 let! descriptor = readDescriptor container name
-                return defineUntyped(descriptor.Type, container, name, descriptor.Count)
+                return defineUntyped(descriptor.Type, container, name, descriptor.Count, descriptor.Segments.Count)
             }
 
         static member internal Create (storeId : StoreId, store : ICloudStore) =
@@ -433,6 +456,10 @@
         member internal __.GetPageCache<'T>(ca : CloudArray<'T>) : PageCache<'T> =
             let ca = ca :> ICloudArray
             new PageCache<'T>(ca.Container, ca.Name, ca.Length, store)
+
+        member internal __.GetDescription(ca : CloudArray<'T>) : Async<CloudArrayDescription> =
+            readArrayDescriptor ca
+            |> onDereferenceError ca
 
         member __.GetRangeAsync<'T>(start : int64, length : int, ca : CloudArray<'T>) : Async<'T []> =
             let ca = ca :> ICloudArray
@@ -453,6 +480,11 @@
         member __.GetExisting(container, id) = 
             getExistingAsync container id
             |> onGetError container id
+
+
+        member __.GetPartition<'T>(ca : CloudArray<'T>, index : int) : Async<'T []> =
+            getPartitionAsync ca index
+            |> onDereferenceError ca
 
         member __.GetContained(container : string) : Async<ICloudArray []> =
             async {

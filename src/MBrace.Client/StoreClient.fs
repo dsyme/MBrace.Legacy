@@ -445,15 +445,33 @@
         // TODO : Revise/populate
         
         /// <summary>
-        /// 
+        /// Creates a new CloudArray in given container.
         /// </summary>
-        /// <param name="container"></param>
-        /// <param name="values"></param>
+        /// <param name="container">The container (folder) of the MutableCloudRef in the underlying store.</param>
+        /// <param name="values">The source sequence.</param>
         member this.CreateCloudArrayAsync(container : string, values : seq<'T>) : Async<ICloudArray<'T>> =
             async { let! ca = info.CloudArrayProvider.Create(container, values, typeof<'T>) in return ca :?> ICloudArray<'T> }
 
+        /// <summary>
+        /// Creates a new CloudArray in given container.
+        /// </summary>
+        /// <param name="container">The container (folder) of the MutableCloudRef in the underlying store.</param>
+        /// <param name="values">The source sequence.</param>
         member this.CreateCloudArray(container : string, values : seq<'T>) : ICloudArray<'T> =
             Async.RunSynchronously <| this.CreateCloudArrayAsync(container, values)
+
+        /// <summary>Returns the CloudArray with the specified container and id combination.</summary>
+        /// <param name="container">The container (folder) of the CloudArray in the underlying store.</param>
+        /// <param name="id">The identifier of the CloudArray in the underlying store.</param>
+        member this.GetCloudArrayAsync(container : string, id : string) : Async<ICloudArray<'T>> =
+            async { let! ca = info.CloudArrayProvider.GetExisting(container, id) in return ca :?> ICloudArray<'T> }
+
+        /// <summary>Returns the CloudArray with the specified container and id combination.</summary>
+        /// <param name="container">The container (folder) of the CloudArray in the underlying store.</param>
+        /// <param name="id">The identifier of the CloudArray in the underlying store.</param>
+        member this.GetCloudArray(container : string, id : string) : ICloudArray<'T> =
+            Async.RunSynchronously <| this.GetCloudArrayAsync(container, id)
+
 
 
         //---------------------------------------------------------------------------------

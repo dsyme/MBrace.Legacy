@@ -128,12 +128,12 @@
         /// </summary>
         /// <param name="index">The item's index.</param>
         abstract Item : index : int64 -> obj with get
-        /// <summary>
-        /// Returns an array of the elements in the specified range.
-        /// </summary>
-        /// <param name="start">The starting index.</param>
-        /// <param name="count">The number of elements to return.</param>
-        abstract Range : start : int64 * count : int -> obj []
+        /// The number of partitions contained.
+        abstract Partitions : int
+        /// <summary> Gets the elements contained in the given partition. </summary>
+        /// <param name="index">The partitions's index.</param>
+        abstract GetPartition : index : int -> obj []
+
 
     /// Represents a finite and immutable sequence of
     /// elements that is stored in the underlying CloudStore
@@ -149,11 +149,8 @@
         /// </summary>
         /// <param name="index">The item's index.</param>
         abstract Item : index : int64 -> 'T with get
-        /// <summary>
-        /// Returns an array of the elements in the specified range.
-        /// </summary>
-        /// <param name="start">The starting index.</param>
-        /// <param name="count">The number of elements to return.</param>
-        abstract Range : start : int64 * count : int -> 'T []
+        /// <summary> Gets the elements contained in the given partition. </summary>
+        /// <param name="index">The partitions's index.</param>
+        abstract GetPartition : index : int -> 'T []
 
 

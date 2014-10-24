@@ -925,7 +925,7 @@
             //let c = Guid.NewGuid().ToString("N")
             let cr = sc.CreateMutableCloudRef("mutablecloudref", -1)
             cr.Value |> should equal -1
-            let cr' = sc.GetMutableCloudRef( cr.Name) :?> IMutableCloudRef<int>
+            let cr' = sc.GetMutableCloudRef(cr.Name) :?> IMutableCloudRef<int>
             cr'.Value |> should equal -1
             cr.ForceUpdate(42) |> Async.RunSynchronously
             cr'.Value |> should equal 42
@@ -947,8 +947,17 @@
             cb |> Seq.toArray |> should equal b
             cc |> Seq.toArray |> should equal c
 
-            cc.Range(90L,50) |> should equal c.[90..90+50-1]
-            
+            ca.Partitions |> should greaterThan 0
+            cb.Partitions |> should greaterThan 0
+            cc.Partitions |> should equal (ca.Partitions + cb.Partitions)
+
+            let ofPartitions (c : ICloudArray<'T>) =
+                [| for p in 0..c.Partitions-1 do yield! c.GetPartition(p) |]
+
+            ofPartitions ca |> should equal a
+            ofPartitions cb |> should equal b
+            ofPartitions cc |> should equal c
+
             sc.DeleteContainer(container)
 
         [<Test; PrimitivesCategory>]
