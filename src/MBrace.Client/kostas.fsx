@@ -11,17 +11,91 @@ let azureStore = AzureStore.Create azureConn
 MBraceSettings.DefaultStore <- azureStore
 
 
-
 let rt = MBrace.InitLocal 4 
 
-let ss = "0"
-let s = String.init (1024 * 1024) (fun _ -> ss)
-let a = Array.create 124 s
-let ca = StoreClient.Default.CreateCloudArray("testcontainer", a)
 
-let p = ca.GetPartition(0)
+open System.IO
+open System.Collections
+open System.Collections.Generic
 
-a = p
+type InnerEnumerator<'T>(predicate : unit -> bool, e : IEnumerator<'T>) = 
+    let mutable sourceMoveNext = ref true
+    member __.SourceMoveNext = sourceMoveNext.Value
+    
+    interface IEnumerator<'T> with
+        member x.Current : 'T = e.Current
+        member x.Current : obj = e.Current :> _
+        
+        member x.MoveNext() : bool = 
+            if predicate() then 
+                sourceMoveNext := e.MoveNext()
+                sourceMoveNext.Value
+            else false
+        
+        member x.Dispose() : unit = ()
+        member x.Reset() : unit = invalidOp "Reset"
+    
+    member this.ToSeq() = 
+        { new IEnumerable<'T> with
+              member __.GetEnumerator() : IEnumerator = this :> _
+              member __.GetEnumerator() : IEnumerator<'T> = this :> _ }
+
+let partitionSeq (predicate : unit -> bool) (source : seq<'T>) : seq<seq<'T>> =
+    let sourceEnumerator = source.GetEnumerator()
+    let e = new InnerEnumerator<'T>(predicate, sourceEnumerator)
+    let rec aux _ = seq { 
+        if e.SourceMoveNext then
+            yield e.ToSeq()
+            yield! aux ()
+    }
+    aux ()
+
+#r "../../bin/FsPickler.dll"
+
+let fsp = Nessos.FsPickler.FsPickler.CreateBinary()
+let path = @"c:\users\krontogiannis\desktop\temp\"
+
+let mutable i = 0
+let stream = ref <| File.OpenWrite(sprintf "%sfile%02d" path i)
+let pred () = stream.Value.Length < 100L
+
+let source = seq { 1..1000 }
+
+for xs in partitionSeq pred source do
+    printfn "count = %d" <| fsp.SerializeSequence<int>(stream.Value, xs, leaveOpen = true)
+    printfn "length = %d" stream.Value.Length
+    i <- i + 1
+    stream.Value.Dispose()
+    stream := File.OpenWrite(sprintf "%sfile%02d" path i)
+stream.Value.Dispose()
+
+for f in Directory.GetFiles path do
+    use s = File.OpenRead(f)
+    fsp.DeserializeSequence<int>(s)
+    |> Seq.toArray
+    |> printfn "seq = %A" 
+
+#time "on"
+let s = String.init 1024 (fun _ -> "0")
+let xs = Array.create (512 * 1024) s
+
+
+let cs = StoreClient.Default.CreateCloudArray("foobar", xs)
+
+let mutable i = 0
+let stream = ref <| File.OpenWrite(sprintf "%sfile%02d" path i)
+let pred () = stream.Value.Length < (1024L * 1024L * 1024L)
+for xs in partitionSeq pred xs do
+    printfn "count = %d" <| fsp.SerializeSequence<string>(stream.Value, xs, leaveOpen = true)
+    printfn "length = %d" stream.Value.Length
+    i <- i + 1
+    stream.Value.Dispose()
+    stream := File.OpenWrite(sprintf "%sfile%02d" path i)
+stream.Value.Dispose()
+
+
+// Real: 00:02:26.167, CPU: 00:00:19.468, GC gen0: 241, gen1: 13, gen2: 1
+// Real: 00:00:35.184, CPU: 00:00:08.346, GC gen0: 0, gen1: 0, gen2: 0
 
 //----------------------------------------------
 //-----------'PUSH'-BASED CLOUDLOGS------------- 
