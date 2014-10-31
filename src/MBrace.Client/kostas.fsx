@@ -20,59 +20,88 @@ let ca = StoreClient.Default.CreateCloudArray("tmp", [1..10])
 open System
 open System.Collections.Generic
 
-type ICloudBag<'T> =
-    inherit ICloudDisposable
-    inherit IEnumerable<'T>
-    abstract Name : string
-    abstract Container : string
-    abstract Length : int64 
-    abstract Type : Type
-    abstract Append : ICloudBag<'T> -> ICloudBag<'T>
-    abstract Partitions : int
-    abstract Item : index : int64 -> 'T with get
-    abstract GetPartition : index : int -> 'T []
+//type ICloudCollection<'T> = 
+//    inherit ICloudDisposable
+//    inherit IEnumerable<'T>
+//    abstract Name : string
+//    abstract Container : string
+//    abstract Length : int64
+//    abstract Type : Type
+//    abstract Append : ICloudCollection<'T> -> ICloudCollection<'T>
+//    abstract Partitions : int
+//    abstract Item : index:int64 -> 'T with get
+//    abstract GetPartition : index:int -> 'T []
 
-type Partition<'T> =
-    {   
-        StartIndex : int64
-        EndIndex : int64
-        Payload : ICloudSeq<'T>
-    }
+type Partition<'T> = 
+    { StartIndex : int64
+      EndIndex : int64
+      Payload : ICloudSeq<'T> }
 
-type CloudBagDescriptor<'T> = ICloudRef<int64 * (Partition<'T> [])>
+type CollectionDescription<'T> = 
+    { Length : int64
+      Partitions : Partition<'T> [] }
 
-type CloudBag<'T>(descriptor : CloudBagDescriptor<'T>) =
-    interface ICloudBag<'T> with
-        member this.Name = descriptor.Name
-        member this.Container = descriptor.Container
-        member this.Length = fst descriptor.Value
-        member this.Type = typeof<'T>
-        member this.Partitions = (snd descriptor.Value).Length
-        member this.GetPartition(index : int) = 
-            Seq.toArray (snd descriptor.Value).[index].Payload
-        member this.Item 
-            with get (index : int64) =
-                let partitions = snd descriptor.Value
-                let partition = Array.find (fun p -> p.StartIndex <= index && index <= p.EndIndex) partitions
-                let relativeIndex = int (index - partition.StartIndex)
-                Seq.nth relativeIndex partition.Payload
-        member this.Append(that : ICloudBag<'T>) =
-            
+[<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
+type CloudCollection<'T> private (descriptor : ICloudRef<CollectionDescription<'T>>) =
+    
+    member private this.Descriptor = descriptor
+    member private this.StructuredFormatDisplay = this.ToString()
+    override this.ToString() = sprintf "cloudcollection:%s/%s" descriptor.Container descriptor.Name
+
+    interface IEnumerable<'T> with
+        member this.GetEnumerator(): Collections.IEnumerator = 
+            (this :> IEnumerable<'T>).GetEnumerator() :> _
+    
+        member this.GetEnumerator(): IEnumerator<'T> = 
+            (Seq.collect (fun p -> p.Payload) descriptor.Value.Partitions).GetEnumerator()
+    
+    interface ICloudDisposable with
+        member x.Dispose(): Async<unit> = 
+            async {
+                for p in descriptor.Value.Partitions do
+                    do! p.Payload.Dispose()
+                do! descriptor.Dispose()
+            }
+        
+        member x.GetObjectData(info: Runtime.Serialization.SerializationInfo, context: Runtime.Serialization.StreamingContext): unit = 
+            info.AddValue("descriptor", descriptor, typeof<ICloudRef<CollectionDescription<'T>>>)
+
+    member this.Name = descriptor.Name
+    member this.Container = descriptor.Container
+    member this.Length = descriptor.Value.Length
+    member this.Type = typeof<'T>
+    member this.Partitions = descriptor.Value.Partitions.Length
+    member this.GetPartition(index : int) = 
+        Seq.toArray descriptor.Value.Partitions.[index].Payload
+    member this.Item 
+        with get (index : int64) =
+            let partitions = descriptor.Value.Partitions
+            let partition = Array.find (fun p -> p.StartIndex <= index && index <= p.EndIndex) partitions
+            let relativeIndex = int (index - partition.StartIndex)
+            Seq.nth relativeIndex partition.Payload
+    member left.Append(right : CloudCollection<'T>) =
+        let lpart = left.Descriptor.Value.Partitions
+        let rpart = right.Descriptor.Value.Partitions
+        let part = Array.append lpart rpart
+        let descriptor = { Length = left.Length + right.Length; Partitions = part }
+
+        cloud { let! cr = CloudRef.New(descriptor) in return new CloudCollection<'T>(cr) }
+
+    static member Create(source : seq<'T>) =
+        cloud {
+            let len = int64(Seq.length source)
+            let! cseq = CloudSeq.New(source)
+            let description = { Length = len; Partitions = [| { StartIndex = 0L; EndIndex = len-1L; Payload = cseq } |] }
+            let! cr = CloudRef.New(description)
+            return new CloudCollection<'T>(cr)
+        }
+
+let cc = MBrace.RunLocal(CloudCollection.Create([1..10]))
 
 
-                        
+cc |> Seq.toArray
 
-
-
-
-
-
-
-
-
-
-
-
+cc
 
 
 
