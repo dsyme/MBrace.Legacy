@@ -102,6 +102,7 @@
             fsi.EvalInteraction "open Nessos.MBrace"
             fsi.EvalInteraction "open Nessos.MBrace.Client"
             fsi.EvalInteraction <| """MBraceSettings.MBracedExecutablePath <- "mbraced.exe" """
+            fsi.EvalInteraction <| "MBraceSettings.DefaultTimeout <- 120 * 1000"
             fsi.EvalInteraction <| "let runtime = MBrace.InitLocal(3)" 
 
         [<TestFixtureTearDown>]
