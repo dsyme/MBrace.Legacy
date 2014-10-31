@@ -11,6 +11,16 @@ let azureStore = AzureStore.Create azureConn
 MBraceSettings.DefaultStore <- azureStore
 
 
+MBraceSettings.DefaultStore <- Nessos.MBrace.Azure.AzureStore.Create("mbracedatasets", "zVgpnYq2QmyRhKgFXetbqeBjJnQ61pAWBlij7wMp0m6znAxVzlvSFPwYGs/OY2fKjn069EECt03Ft5FO4gddeQ==")
+
+let ca = StoreClient.Default.CreateCloudArray("tmp", [1..10])
+
+
+
+
+
+
+
 let rt = MBrace.InitLocal 4 
 
 

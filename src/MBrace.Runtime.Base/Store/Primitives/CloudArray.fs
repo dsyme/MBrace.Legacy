@@ -320,7 +320,7 @@
                             let moveNext = ref true
 
                             let segmentEndCheck () =
-                                if stream.Length < MaxSegmentSize then 
+                                if stream.Position < MaxSegmentSize then 
                                     moveNext := e.MoveNext()
                                     !moveNext
                                 else
