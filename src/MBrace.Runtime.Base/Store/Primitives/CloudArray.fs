@@ -318,9 +318,10 @@
 
                             let bw = new BinaryWriter(segmentStream)
                             let moveNext = ref true
+                            let streamPosition = ref 0L
 
                             let segmentEndCheck () =
-                                if stream.Position < MaxSegmentSize then 
+                                if streamPosition.Value < MaxSegmentSize then 
                                     moveNext := e.MoveNext()
                                     !moveNext
                                 else
@@ -328,15 +329,20 @@
 
                             while segmentEndCheck() do
                                 let item = e.Current
-                                bw.Write(stream.Position)
-                                Serialization.DefaultPickler.Serialize(ty, stream, item, leaveOpen = true)
+                                bw.Write(streamPosition.Value)
+                                use ms = new MemoryStream()
+                                Serialization.DefaultPickler.Serialize(ty, ms, item, leaveOpen = true)
+                                streamPosition := streamPosition.Value + ms.Length
+                                ms.Position <- 0L
+                                do! Async.AwaitTask(ms.CopyToAsync(stream))
+                                //Serialization.DefaultPickler.Serialize(ty, stream, item, leaveOpen = true)
                                 incr segmentItems
                             if not !moveNext then
                                 sourceEnd := true
                             bw.Flush()
                             segmentStream.Dispose()
                         }
-                    do! store.CreateImmutable(folder, segmentIndexFile, serialize' , true)
+                    do! store.CreateImmutable(folder, segmentIndexFile, serialize' , asFile = true)
                     stream.Dispose()
                 }
         

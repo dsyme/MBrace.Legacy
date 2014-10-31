@@ -17,6 +17,63 @@ let ca = StoreClient.Default.CreateCloudArray("tmp", [1..10])
 
 
 
+open System
+open System.Collections.Generic
+
+type ICloudBag<'T> =
+    inherit ICloudDisposable
+    inherit IEnumerable<'T>
+    abstract Name : string
+    abstract Container : string
+    abstract Length : int64 
+    abstract Type : Type
+    abstract Append : ICloudBag<'T> -> ICloudBag<'T>
+    abstract Partitions : int
+    abstract Item : index : int64 -> 'T with get
+    abstract GetPartition : index : int -> 'T []
+
+type Partition<'T> =
+    {   
+        StartIndex : int64
+        EndIndex : int64
+        Payload : ICloudSeq<'T>
+    }
+
+type CloudBagDescriptor<'T> = ICloudRef<int64 * (Partition<'T> [])>
+
+type CloudBag<'T>(descriptor : CloudBagDescriptor<'T>) =
+    interface ICloudBag<'T> with
+        member this.Name = descriptor.Name
+        member this.Container = descriptor.Container
+        member this.Length = fst descriptor.Value
+        member this.Type = typeof<'T>
+        member this.Partitions = (snd descriptor.Value).Length
+        member this.GetPartition(index : int) = 
+            Seq.toArray (snd descriptor.Value).[index].Payload
+        member this.Item 
+            with get (index : int64) =
+                let partitions = snd descriptor.Value
+                let partition = Array.find (fun p -> p.StartIndex <= index && index <= p.EndIndex) partitions
+                let relativeIndex = int (index - partition.StartIndex)
+                Seq.nth relativeIndex partition.Payload
+        member this.Append(that : ICloudBag<'T>) =
+            
+
+
+                        
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
