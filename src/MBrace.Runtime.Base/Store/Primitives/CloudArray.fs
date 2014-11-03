@@ -139,7 +139,7 @@
                 info.AddValue("folder", folder)
                 info.AddValue("descriptor", descriptorName)
                 info.AddValue("count", count)
-                info.AddValue("partitionCount", count)
+                info.AddValue("partitionCount", partitionCount)
                 info.AddValue("storeId", storeId, typeof<StoreId>)
 
         interface ICloudArray with
