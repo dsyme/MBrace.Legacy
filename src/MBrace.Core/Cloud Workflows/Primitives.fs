@@ -121,18 +121,8 @@
         abstract Length : int64 
         /// The type of the contained elements.
         abstract Type : Type
-        /// Combines two CloudArray's into one.
-        abstract Append : ICloudArray -> ICloudArray
-        /// <summary>
-        /// Returns the item in the specified index.
-        /// </summary>
-        /// <param name="index">The item's index.</param>
-        abstract Item : index : int64 -> obj with get
         /// The number of partitions contained.
         abstract Partitions : int
-        /// <summary> Gets the elements contained in the given partition. </summary>
-        /// <param name="index">The partitions's index.</param>
-        abstract GetPartition : index : int -> obj []
 
 
     /// Represents a finite and immutable sequence of

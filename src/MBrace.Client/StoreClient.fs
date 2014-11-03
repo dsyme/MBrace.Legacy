@@ -450,7 +450,7 @@
         /// <param name="container">The container (folder) of the MutableCloudRef in the underlying store.</param>
         /// <param name="values">The source sequence.</param>
         member this.CreateCloudArrayAsync(container : string, values : seq<'T>) : Async<ICloudArray<'T>> =
-            async { let! ca = info.CloudArrayProvider.Create(container, values, typeof<'T>) in return ca :?> ICloudArray<'T> }
+            async { let! ca = info.CloudArrayProvider.Create(container, newId(), values, typeof<'T>) in return ca :?> ICloudArray<'T> }
 
         /// <summary>
         /// Creates a new CloudArray in given container.

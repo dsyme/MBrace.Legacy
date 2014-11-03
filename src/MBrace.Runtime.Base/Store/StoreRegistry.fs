@@ -70,7 +70,7 @@
                 let cFileProvider  = CloudFileProvider.Create(id, store, localCache)
                 let mRefProvider   = MutableCloudRefProvider.Create(id, store)
                 let cSeqprovider   = CloudSeqProvider.Create(id, store, localCache)
-                let cArrayProvider = CloudArrayProvider.Create(id, store)
+                let cArrayProvider = CloudArrayProvider.Create(id, store, localCache)
 
                 {
                     Store = store

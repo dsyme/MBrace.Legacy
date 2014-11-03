@@ -21,11 +21,7 @@ namespace Nessos.MBrace.Runtime
     open Nessos.MBrace.Utils.Retry
     open Nessos.MBrace.Store
 
-    // TODO : CloudSeq & ClouFile only delete from target store and not cache
-    // this might lead to confusing exception messages if attempting to read from
-    // explicitly disposed items (cf: checkCoherence parameter in Read)
-    // probably need a __.Delete implementation here too.
-    // Better still, implement a full ICloudStore interface wrap
+    // TODO : Better implement a full ICloudStore interface wrap.
 
     type CacheStore(cacheContainer : string, localCacheStore : ICloudStore, targetStore : ICloudStore, ?behavior : CacheBehavior) = 
 
@@ -50,6 +46,8 @@ namespace Nessos.MBrace.Runtime
 
         member this.Read(folder, file) = 
             targetStore.ReadImmutable(folder, file)
+
+        member this.Delect(folder, file) = async.Zero()
 #else 
         member this.Create(folder, file, serializeTo : Stream -> Async<unit>, asFile) = async {
                 if behavior.HasFlag CacheBehavior.OnWrite then
@@ -59,6 +57,11 @@ namespace Nessos.MBrace.Runtime
                 else
                     return! targetStore.CreateImmutable(folder, file, serializeTo, asFile)
             }
+
+        member this.Delete(folder, file) = async {
+            let cachedFileName = getCachedFileName folder file
+            do! localCacheStore.Delete(cacheContainer, cachedFileName)
+        }
 
         member this.Read(folder, file) = 
             if behavior.HasFlag CacheBehavior.OnRead then

@@ -197,7 +197,8 @@ namespace Nessos.MBrace.Runtime.Interpreter
                             return! eval traceEnabled <| ValueExpr (Exc (ex, None)) :: rest
 
                     | NewCloudArray(container, items, t) :: rest ->
-                        let! exec = Async.Catch <| storeConfig.CloudArrayProvider.Create(container, items, t)
+                        let id = Guid.NewGuid().ToString()
+                        let! exec = Async.Catch <| storeConfig.CloudArrayProvider.Create(container, id, items, t)
                         match exec with
                         | Choice1Of2 ca ->
                             return! eval traceEnabled <| (ValueExpr (Obj (ObjValue ca, typeof<ICloudArray>))) :: rest

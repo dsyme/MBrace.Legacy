@@ -10,9 +10,6 @@ let azureConn = System.IO.File.ReadAllText("/mbrace/azure.txt")
 let azureStore = AzureStore.Create azureConn
 MBraceSettings.DefaultStore <- azureStore
 
-
-MBraceSettings.DefaultStore <- Nessos.MBrace.Azure.AzureStore.Create("mbracedatasets", "zVgpnYq2QmyRhKgFXetbqeBjJnQ61pAWBlij7wMp0m6znAxVzlvSFPwYGs/OY2fKjn069EECt03Ft5FO4gddeQ==")
-
 let ca = StoreClient.Default.CreateCloudArray("tmp", [1..10])
 
 
@@ -32,17 +29,17 @@ open System.Collections.Generic
 //    abstract Item : index:int64 -> 'T with get
 //    abstract GetPartition : index:int -> 'T []
 
-type Partition<'T> = 
+type Partition = 
     { StartIndex : int64
       EndIndex : int64
-      Payload : ICloudSeq<'T> }
+      Payload : ICloudFile }
 
-type CollectionDescription<'T> = 
+type CollectionDescription = 
     { Length : int64
-      Partitions : Partition<'T> [] }
+      Partitions : Partition [] }
 
 [<StructuredFormatDisplay("{StructuredFormatDisplay}")>] 
-type CloudCollection<'T> private (descriptor : ICloudRef<CollectionDescription<'T>>) =
+type CloudCollection<'T> private (descriptor : ICloudRef<CollectionDescription>) =
     
     member private this.Descriptor = descriptor
     member private this.StructuredFormatDisplay = this.ToString()
