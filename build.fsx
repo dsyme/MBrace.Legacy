@@ -209,12 +209,12 @@ Target "NuGet.Client" (fun _ ->
                 ]
             Dependencies = 
                 [
-                    "FsPickler",                                    "1.0.2"
-                    "FsPickler.Json",                               "1.0.2"
-                    "Thespian",                                     "0.0.10"
                     "UnionArgParser",                               "0.8.0"
-                    "Vagrant",                                      "0.2.6"
                     "Unquote",                                      "2.2.2"
+                    "FsPickler",                                    RequireExactly "1.0.2"
+                    "FsPickler.Json",                               RequireExactly "1.0.2"
+                    "Thespian",                                     RequireExactly "0.0.10"
+                    "Vagrant",                                      RequireExactly "0.2.6"
                     "MBrace.Core",                                  RequireExactly release.NugetVersion
                     "MBrace.Store",                                 RequireExactly release.NugetVersion
                 ]

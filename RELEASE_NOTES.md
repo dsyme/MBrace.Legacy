@@ -1,3 +1,6 @@
+### 0.5.11-alpha
+* Improved CloudArray implementation and new StoreClient methods.
+
 #### 0.5.10-alpha
 * CloudArray API changes.
 
