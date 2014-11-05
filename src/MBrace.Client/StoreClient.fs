@@ -474,6 +474,35 @@
 
 
 
+        /// <summary>
+        /// Creates a new CloudArray in given container.
+        /// </summary>
+        /// <param name="container">The container (folder) of the MutableCloudRef in the underlying store.</param>
+        /// <param name="values">The source sequence.</param>
+        member this.CreateCloudArrayAsync(values : seq<'T>) : Async<ICloudArray<'T>> =
+            async { let! ca = info.CloudArrayProvider.Create(defaultContainer, newId(), values, typeof<'T>) in return ca :?> ICloudArray<'T> }
+
+        /// <summary>
+        /// Creates a new CloudArray in given container.
+        /// </summary>
+        /// <param name="container">The container (folder) of the MutableCloudRef in the underlying store.</param>
+        /// <param name="values">The source sequence.</param>
+        member this.CreateCloudArray(values : seq<'T>) : ICloudArray<'T> =
+            Async.RunSynchronously <| this.CreateCloudArrayAsync(values)
+
+        /// <summary>Returns the CloudArray with the specified container and id combination.</summary>
+        /// <param name="container">The container (folder) of the CloudArray in the underlying store.</param>
+        /// <param name="id">The identifier of the CloudArray in the underlying store.</param>
+        member this.GetCloudArrayAsync(id : string) : Async<ICloudArray<'T>> =
+            async { let! ca = info.CloudArrayProvider.GetExisting(defaultContainer, id) in return ca :?> ICloudArray<'T> }
+
+        /// <summary>Returns the CloudArray with the specified container and id combination.</summary>
+        /// <param name="container">The container (folder) of the CloudArray in the underlying store.</param>
+        /// <param name="id">The identifier of the CloudArray in the underlying store.</param>
+        member this.GetCloudArray(id : string) : ICloudArray<'T> =
+            Async.RunSynchronously <| this.GetCloudArrayAsync(id)
+
+
         //---------------------------------------------------------------------------------
         // Misc
 

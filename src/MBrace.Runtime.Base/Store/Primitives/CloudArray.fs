@@ -24,40 +24,44 @@
           Type : Type
           Partitions : Partition [] }
 
-    /// Helper type to partition a seq<'T> to seq<seq<'T>> using a predicate
+
+    // Helper types to partition a seq<'T> to seq<seq<'T>> using a predicate
     type InnerEnumerator(predicate : unit -> bool, e : IEnumerator) = 
         let mutable sourceMoveNext = ref true
-        member __.SourceMoveNext = sourceMoveNext.Value
-    
+        
+        member __.SourceMoveNext 
+            with get () = sourceMoveNext.Value
+            and set v = sourceMoveNext := v
+        
         interface IEnumerator with
             member x.Current : obj = e.Current 
-        
+
             member x.MoveNext() : bool = 
                 if predicate() then 
                     sourceMoveNext := e.MoveNext()
                     sourceMoveNext.Value
                 else false
-
+                
             member x.Reset() : unit = invalidOp "Reset"
-
-        member this.ToSeq() = { new IEnumerable with member __.GetEnumerator() : IEnumerator = this :> _ }
-
+    
     type InnerEnumerator<'T>(predicate : unit -> bool, e : IEnumerator<'T>) = 
-        inherit InnerEnumerator(predicate, e) 
-
+        inherit InnerEnumerator(predicate, e)
         interface IEnumerator<'T> with
             member x.Current : 'T = e.Current
-            member x.Dispose() : unit = ()
+            member x.Dispose() : unit = () 
+
+        new(predicate, e : 'T []) = new InnerEnumerator<'T>(predicate, (e :> IEnumerable<'T>).GetEnumerator())
     
-        member this.ToSeq() = 
-            { new IEnumerable<'T> with
-                  member __.GetEnumerator() : IEnumerator = this :> _
-                  member __.GetEnumerator() : IEnumerator<'T> = this :> _ }
+    type InnerEnumerable<'T>(e : InnerEnumerator<'T>) = 
+        interface IEnumerable<'T> with
+            member __.GetEnumerator() : IEnumerator = e :> _
+            member __.GetEnumerator() : IEnumerator<'T> = e :> _ 
+
 
     [<Serializable; StructuredFormatDisplay("{StructuredFormatDisplay}")>]
     type CloudArray<'T> internal (id : string, container : string, storeId : StoreId) as self = 
         let provider = lazy CloudArrayProvider.GetById storeId
-        let descriptor = lazy(provider.Value.GetDescriptor(self) |> Async.RunSynchronously)
+        let descriptor = lazy (provider.Value.GetDescriptor(self) |> Async.RunSynchronously)
 
         member private this.Descriptor = descriptor
         member private this.StructuredFormatDisplay = this.ToString()
@@ -74,9 +78,16 @@
             member this.Type = typeof<'T>
             member this.Partitions = descriptor.Value.Partitions.Length
             member this.GetPartition(index : int) = 
-                provider.Value.GetPartition(this, index) |> Async.RunSynchronously
+                if index < 0 || index >= (this :> ICloudArray<'T>).Partitions then
+                    raise <| IndexOutOfRangeException(sprintf "Index was out of range. Must be non-negative and less than the number of partitions.")
+                else
+                    provider.Value.GetPartition(this, index) |> Async.RunSynchronously
             member this.Item 
-                with get (index : int64) = provider.Value.GetElement(this, index) |> Async.RunSynchronously
+                with get (index : int64) = 
+                    if index < 0L || index >= (this :> ICloudArray<'T>).Length then
+                        raise <| IndexOutOfRangeException(sprintf "Index was out of range. Must be non-negative and less than the length of the cloudarray.")
+                    else
+                        provider.Value.GetElement(this, index) |> Async.RunSynchronously
             member left.Append(right : ICloudArray<'T>) : ICloudArray<'T> = 
                 provider.Value.Append(left, right :?> CloudArray<'T>) 
                 |> Async.RunSynchronously :> _
@@ -149,11 +160,17 @@
                 }
 
                 let partitioned : IEnumerable<IEnumerable> =
-                    let sourceEnumerator = source.GetEnumerator()
-                    let e = new InnerEnumerator(predicate, sourceEnumerator)
+                    let innerEnumeratorT = typeof<InnerEnumerator<_>>.GetGenericTypeDefinition().MakeGenericType [| ty |]
+                    let e = 
+                        if source.GetType().IsArray then
+                            Activator.CreateInstance(innerEnumeratorT, [|predicate :> obj; source :> obj|])  :?> InnerEnumerator
+                        else
+                            let sourceEnumerator = source.GetEnumerator()
+                            Activator.CreateInstance(innerEnumeratorT, [|predicate :> obj; sourceEnumerator :> obj|]) :?> InnerEnumerator
+                    let innerEnumerableT = typeof<InnerEnumerable<_>>.GetGenericTypeDefinition().MakeGenericType [| ty |]
                     let rec aux _ = seq { 
                         if e.SourceMoveNext then
-                            yield e.ToSeq()
+                            yield Activator.CreateInstance(innerEnumerableT, [| e :> obj |]) :?> IEnumerable
                             yield! aux ()
                     }
                     aux ()
@@ -162,17 +179,20 @@
                 for xs in partitioned do
                     let name = mkPartitionName id !pid
                     incr pid
-                    do! fsCache.Create(container, name, serializePartition name xs, true)
+                    // Writing to cache and the upload the file is in general
+                    // case faster. But no need to keep cached copies in CloudArray.
+                    do! fsCache.Create(container, name, serializePartition name xs, true) 
+                    do! fsCache.Delete(container, name)                                   
 
                 let d = { Length = !totalCount; Type = ty; Partitions = partitions.ToArray() }
                 do! createDescriptor(container, id, d)
-                return defineUntyped(ty, container, id)
+                return defineUntyped(ty, id, container)
             } |> onCreateError container id
 
 
         member __.GetDescriptor(container, id) : Async<Descriptor> =
             async {
-                let! stream = store.ReadImmutable(container, mkDescriptorName id)
+                let! stream = store.ReadImmutable(container, id)
                 return Serialization.DefaultPickler.Deserialize<Descriptor>(stream)
             }
             |> onGetError container id
@@ -181,7 +201,7 @@
             async {
                 let ca = ca :> ICloudArray<'T>
                 return! __.GetDescriptor(ca.Container, mkDescriptorName ca.Name)
-            } |> onDereferenceError ca
+            }
 
         member __.Append<'T>(left : CloudArray<'T>, right : CloudArray<'T>) : Async<CloudArray<'T>> =
             async {
