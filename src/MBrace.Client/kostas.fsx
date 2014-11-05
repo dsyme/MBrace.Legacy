@@ -11,10 +11,13 @@ let azureStore = AzureStore.Create azureConn
 MBraceSettings.DefaultStore <- azureStore
 
 
-let size = 1100
+let size = 10
 let str = String.init (1024 * 1024) (fun _ -> "0")
 let s = Array.create size str
 let ca = StoreClient.Default.CreateCloudArray("tmp", s)
+
+let ca' = StoreClient.Default.GetCloudArray<string>(ca.Container, ca.Name)
+
 ca.Length
 ca.Partitions
 ca |> Seq.length

@@ -60,7 +60,9 @@ namespace Nessos.MBrace.Runtime
 
         member this.Delete(folder, file) = async {
             let cachedFileName = getCachedFileName folder file
-            do! localCacheStore.Delete(cacheContainer, cachedFileName)
+            let! e = localCacheStore.Exists(cacheContainer, cachedFileName) 
+            if e then // TODO : race
+                do! localCacheStore.Delete(cacheContainer, cachedFileName)
         }
 
         member this.Read(folder, file) = 

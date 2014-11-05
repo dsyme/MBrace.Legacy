@@ -192,7 +192,7 @@
 
         member __.GetDescriptor(container, id) : Async<Descriptor> =
             async {
-                let! stream = store.ReadImmutable(container, id)
+                let! stream = store.ReadImmutable(container, mkDescriptorName id)
                 return Serialization.DefaultPickler.Deserialize<Descriptor>(stream)
             }
             |> onGetError container id
@@ -200,7 +200,7 @@
         member __.GetDescriptor<'T>(ca : CloudArray<'T>) : Async<Descriptor> =
             async {
                 let ca = ca :> ICloudArray<'T>
-                return! __.GetDescriptor(ca.Container, mkDescriptorName ca.Name)
+                return! __.GetDescriptor(ca.Container, ca.Name)
             }
 
         member __.Append<'T>(left : CloudArray<'T>, right : CloudArray<'T>) : Async<CloudArray<'T>> =
