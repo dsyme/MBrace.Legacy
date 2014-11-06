@@ -5,7 +5,7 @@
 //    http://nessos.github.io/MBrace
 //
 
-#load "../packages/MBrace.Runtime.0.5.11-alpha/bootstrap.fsx" 
+#load "../packages/MBrace.Runtime.0.5.12-alpha/bootstrap.fsx" 
 
 open Nessos.MBrace
 open Nessos.MBrace.Store
