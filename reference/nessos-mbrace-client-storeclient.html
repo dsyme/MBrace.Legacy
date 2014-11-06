@@ -54,57 +54,19 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '412', 412)" onmouseover="showTip(event, '412', 412)">
+          <code onmouseout="hideTip(event, '414', 414)" onmouseover="showTip(event, '414', 414)">
             ContainerExists(container)
           </code>
-          <div class="tip" id="412">
+          <div class="tip" id="414">
             <strong>Signature:</strong> container:string -&gt; bool<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L536-536" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L558-558" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
           <p>Checks if container exists in the given path.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '413', 413)" onmouseover="showTip(event, '413', 413)">
-            ContainerExistsAsync(container)
-          </code>
-          <div class="tip" id="413">
-            <strong>Signature:</strong> container:string -&gt; Async&lt;bool&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L531-531" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Checks if container exists in the given path.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '414', 414)" onmouseover="showTip(event, '414', 414)">
-            CreateCloudArray(values)
-          </code>
-          <div class="tip" id="414">
-            <strong>Signature:</strong> values:seq&lt;&#39;T&gt; -&gt; ICloudArray&lt;&#39;T&gt;<br />
-                          <strong>Type parameters:</strong> 'T          </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L490-490" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Creates a new CloudArray in given container.</p>
 
         </td>
       </tr>
@@ -112,18 +74,18 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '415', 415)" onmouseover="showTip(event, '415', 415)">
-            CreateCloudArray(container, values)
+            ContainerExistsAsync(container)
           </code>
           <div class="tip" id="415">
-            <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; ICloudArray&lt;&#39;T&gt;<br />
-                          <strong>Type parameters:</strong> 'T          </div>
+            <strong>Signature:</strong> container:string -&gt; Async&lt;bool&gt;<br />
+                      </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L460-460" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L553-553" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Creates a new CloudArray in given container.</p>
+          <p>Checks if container exists in the given path.</p>
 
         </td>
       </tr>
@@ -131,18 +93,18 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '416', 416)" onmouseover="showTip(event, '416', 416)">
-            CreateCloudArrayAsync(values)
+            CreateCloudArray(values)
           </code>
           <div class="tip" id="416">
-            <strong>Signature:</strong> values:seq&lt;&#39;T&gt; -&gt; Async&lt;ICloudArray&lt;&#39;T&gt;&gt;<br />
+            <strong>Signature:</strong> values:seq&lt;&#39;T&gt; -&gt; ICloudArray&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L482-482" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L502-502" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Creates a new CloudArray in given container.</p>
+          <p>Creates a new CloudArray in default container.</p>
 
         </td>
       </tr>
@@ -150,14 +112,14 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '417', 417)" onmouseover="showTip(event, '417', 417)">
-            CreateCloudArrayAsync(container, values)
+            CreateCloudArray(container, values)
           </code>
           <div class="tip" id="417">
-            <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; Async&lt;ICloudArray&lt;&#39;T&gt;&gt;<br />
+            <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; ICloudArray&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L452-452" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L459-459" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -169,9 +131,47 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '418', 418)" onmouseover="showTip(event, '418', 418)">
-            CreateCloudFile(name, writer)
+            CreateCloudArrayAsync(values)
           </code>
           <div class="tip" id="418">
+            <strong>Signature:</strong> values:seq&lt;&#39;T&gt; -&gt; Async&lt;ICloudArray&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L495-495" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new CloudArray in default container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '419', 419)" onmouseover="showTip(event, '419', 419)">
+            CreateCloudArrayAsync(container, values)
+          </code>
+          <div class="tip" id="419">
+            <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; Async&lt;ICloudArray&lt;&#39;T&gt;&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L451-451" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new CloudArray in given container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '420', 420)" onmouseover="showTip(event, '420', 420)">
+            CreateCloudFile(name, writer)
+          </code>
+          <div class="tip" id="420">
             <strong>Signature:</strong> (name:string * writer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; ICloudFile<br />
                       </div>
         </td>
@@ -188,10 +188,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '419', 419)" onmouseover="showTip(event, '419', 419)">
+          <code onmouseout="hideTip(event, '421', 421)" onmouseover="showTip(event, '421', 421)">
             CreateCloudFile(container, name, writer)
           </code>
-          <div class="tip" id="419">
+          <div class="tip" id="421">
             <strong>Signature:</strong> (container:string * name:string * writer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; ICloudFile<br />
                       </div>
         </td>
@@ -208,10 +208,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '420', 420)" onmouseover="showTip(event, '420', 420)">
+          <code onmouseout="hideTip(event, '422', 422)" onmouseover="showTip(event, '422', 422)">
             CreateCloudFileAsync(name, writer)
           </code>
-          <div class="tip" id="420">
+          <div class="tip" id="422">
             <strong>Signature:</strong> (name:string * writer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; Async&lt;ICloudFile&gt;<br />
                       </div>
         </td>
@@ -228,10 +228,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '421', 421)" onmouseover="showTip(event, '421', 421)">
+          <code onmouseout="hideTip(event, '423', 423)" onmouseover="showTip(event, '423', 423)">
             CreateCloudFileAsync(...)
           </code>
-          <div class="tip" id="421">
+          <div class="tip" id="423">
             <strong>Signature:</strong> (container:string * name:string * writer:(Stream -&gt; Async&lt;unit&gt;)) -&gt; Async&lt;ICloudFile&gt;<br />
                       </div>
         </td>
@@ -248,10 +248,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '422', 422)" onmouseover="showTip(event, '422', 422)">
+          <code onmouseout="hideTip(event, '424', 424)" onmouseover="showTip(event, '424', 424)">
             CreateCloudRef(value)
           </code>
-          <div class="tip" id="422">
+          <div class="tip" id="424">
             <strong>Signature:</strong> value:&#39;T -&gt; ICloudRef&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -267,10 +267,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '423', 423)" onmouseover="showTip(event, '423', 423)">
+          <code onmouseout="hideTip(event, '425', 425)" onmouseover="showTip(event, '425', 425)">
             CreateCloudRef(container, value)
           </code>
-          <div class="tip" id="423">
+          <div class="tip" id="425">
             <strong>Signature:</strong> (container:string * value:&#39;T) -&gt; ICloudRef&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -286,10 +286,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '424', 424)" onmouseover="showTip(event, '424', 424)">
+          <code onmouseout="hideTip(event, '426', 426)" onmouseover="showTip(event, '426', 426)">
             CreateCloudRefAsync(value)
           </code>
-          <div class="tip" id="424">
+          <div class="tip" id="426">
             <strong>Signature:</strong> value:&#39;T -&gt; Async&lt;ICloudRef&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -305,10 +305,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '425', 425)" onmouseover="showTip(event, '425', 425)">
+          <code onmouseout="hideTip(event, '427', 427)" onmouseover="showTip(event, '427', 427)">
             CreateCloudRefAsync(container, value)
           </code>
-          <div class="tip" id="425">
+          <div class="tip" id="427">
             <strong>Signature:</strong> (container:string * value:&#39;T) -&gt; Async&lt;ICloudRef&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -324,10 +324,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '426', 426)" onmouseover="showTip(event, '426', 426)">
+          <code onmouseout="hideTip(event, '428', 428)" onmouseover="showTip(event, '428', 428)">
             CreateCloudSeq(values)
           </code>
-          <div class="tip" id="426">
+          <div class="tip" id="428">
             <strong>Signature:</strong> values:seq&lt;&#39;T&gt; -&gt; ICloudSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -343,10 +343,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '427', 427)" onmouseover="showTip(event, '427', 427)">
+          <code onmouseout="hideTip(event, '429', 429)" onmouseover="showTip(event, '429', 429)">
             CreateCloudSeq(container, values)
           </code>
-          <div class="tip" id="427">
+          <div class="tip" id="429">
             <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; ICloudSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -362,10 +362,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '428', 428)" onmouseover="showTip(event, '428', 428)">
+          <code onmouseout="hideTip(event, '430', 430)" onmouseover="showTip(event, '430', 430)">
             CreateCloudSeqAsync(values)
           </code>
-          <div class="tip" id="428">
+          <div class="tip" id="430">
             <strong>Signature:</strong> values:seq&lt;&#39;T&gt; -&gt; Async&lt;ICloudSeq&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -381,10 +381,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '429', 429)" onmouseover="showTip(event, '429', 429)">
+          <code onmouseout="hideTip(event, '431', 431)" onmouseover="showTip(event, '431', 431)">
             CreateCloudSeqAsync(container, values)
           </code>
-          <div class="tip" id="429">
+          <div class="tip" id="431">
             <strong>Signature:</strong> (container:string * values:seq&lt;&#39;T&gt;) -&gt; Async&lt;ICloudSeq&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -400,10 +400,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '430', 430)" onmouseover="showTip(event, '430', 430)">
+          <code onmouseout="hideTip(event, '432', 432)" onmouseover="showTip(event, '432', 432)">
             CreateMutableCloudRef(value)
           </code>
-          <div class="tip" id="430">
+          <div class="tip" id="432">
             <strong>Signature:</strong> value:&#39;T -&gt; IMutableCloudRef&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -419,10 +419,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '431', 431)" onmouseover="showTip(event, '431', 431)">
+          <code onmouseout="hideTip(event, '433', 433)" onmouseover="showTip(event, '433', 433)">
             CreateMutableCloudRef(id, value)
           </code>
-          <div class="tip" id="431">
+          <div class="tip" id="433">
             <strong>Signature:</strong> (id:string * value:&#39;T) -&gt; IMutableCloudRef&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -438,10 +438,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '432', 432)" onmouseover="showTip(event, '432', 432)">
+          <code onmouseout="hideTip(event, '434', 434)" onmouseover="showTip(event, '434', 434)">
             CreateMutableCloudRef(...)
           </code>
-          <div class="tip" id="432">
+          <div class="tip" id="434">
             <strong>Signature:</strong> (container:string * id:string * value:&#39;T) -&gt; IMutableCloudRef&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -457,10 +457,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '433', 433)" onmouseover="showTip(event, '433', 433)">
+          <code onmouseout="hideTip(event, '435', 435)" onmouseover="showTip(event, '435', 435)">
             CreateMutableCloudRefAsync(value)
           </code>
-          <div class="tip" id="433">
+          <div class="tip" id="435">
             <strong>Signature:</strong> value:&#39;T -&gt; Async&lt;IMutableCloudRef&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -476,10 +476,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '434', 434)" onmouseover="showTip(event, '434', 434)">
+          <code onmouseout="hideTip(event, '436', 436)" onmouseover="showTip(event, '436', 436)">
             CreateMutableCloudRefAsync(id, value)
           </code>
-          <div class="tip" id="434">
+          <div class="tip" id="436">
             <strong>Signature:</strong> (id:string * value:&#39;T) -&gt; Async&lt;IMutableCloudRef&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -495,10 +495,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '435', 435)" onmouseover="showTip(event, '435', 435)">
+          <code onmouseout="hideTip(event, '437', 437)" onmouseover="showTip(event, '437', 437)">
             CreateMutableCloudRefAsync(...)
           </code>
-          <div class="tip" id="435">
+          <div class="tip" id="437">
             <strong>Signature:</strong> (container:string * id:string * value:&#39;T) -&gt; Async&lt;IMutableCloudRef&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -514,53 +514,15 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '436', 436)" onmouseover="showTip(event, '436', 436)">
+          <code onmouseout="hideTip(event, '438', 438)" onmouseover="showTip(event, '438', 438)">
             DeleteContainer()
           </code>
-          <div class="tip" id="436">
+          <div class="tip" id="438">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L546-546" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Deletes the default container from store.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '437', 437)" onmouseover="showTip(event, '437', 437)">
-            DeleteContainer(container)
-          </code>
-          <div class="tip" id="437">
-            <strong>Signature:</strong> container:string -&gt; unit<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L516-516" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Deletes the specified container from store.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '438', 438)" onmouseover="showTip(event, '438', 438)">
-            DeleteContainerAsync()
-          </code>
-          <div class="tip" id="438">
-            <strong>Signature:</strong> unit -&gt; Async&lt;unit&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L542-542" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L568-568" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -572,14 +534,14 @@ Use the serialize function to write to the underlying stream.</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '439', 439)" onmouseover="showTip(event, '439', 439)">
-            DeleteContainerAsync(container)
+            DeleteContainer(container)
           </code>
           <div class="tip" id="439">
-            <strong>Signature:</strong> container:string -&gt; Async&lt;unit&gt;<br />
+            <strong>Signature:</strong> container:string -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L511-511" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L538-538" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -591,9 +553,123 @@ Use the serialize function to write to the underlying stream.</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '440', 440)" onmouseover="showTip(event, '440', 440)">
-            EnumerateCloudFiles()
+            DeleteContainerAsync()
           </code>
           <div class="tip" id="440">
+            <strong>Signature:</strong> unit -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L564-564" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Deletes the default container from store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '441', 441)" onmouseover="showTip(event, '441', 441)">
+            DeleteContainerAsync(container)
+          </code>
+          <div class="tip" id="441">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L533-533" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Deletes the specified container from store.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '442', 442)" onmouseover="showTip(event, '442', 442)">
+            EnumerateCloudArrays()
+          </code>
+          <div class="tip" id="442">
+            <strong>Signature:</strong> unit -&gt; ICloudArray []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L524-524" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of the CloudArrays contained in default container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '443', 443)" onmouseover="showTip(event, '443', 443)">
+            EnumerateCloudArrays(container)
+          </code>
+          <div class="tip" id="443">
+            <strong>Signature:</strong> container:string -&gt; ICloudArray []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L485-485" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of the CloudArrays contained in the specified folder.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '444', 444)" onmouseover="showTip(event, '444', 444)">
+            EnumerateCloudArraysAsync()
+          </code>
+          <div class="tip" id="444">
+            <strong>Signature:</strong> unit -&gt; Async&lt;ICloudArray []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L518-518" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of the CloudArrays contained in default container.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '445', 445)" onmouseover="showTip(event, '445', 445)">
+            EnumerateCloudArraysAsync(container)
+          </code>
+          <div class="tip" id="445">
+            <strong>Signature:</strong> container:string -&gt; Async&lt;ICloudArray []&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L478-478" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an array of the CloudArrays contained in the specified folder.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '446', 446)" onmouseover="showTip(event, '446', 446)">
+            EnumerateCloudFiles()
+          </code>
+          <div class="tip" id="446">
             <strong>Signature:</strong> unit -&gt; ICloudFile []<br />
                       </div>
         </td>
@@ -609,10 +685,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '441', 441)" onmouseover="showTip(event, '441', 441)">
+          <code onmouseout="hideTip(event, '447', 447)" onmouseover="showTip(event, '447', 447)">
             EnumerateCloudFiles(container)
           </code>
-          <div class="tip" id="441">
+          <div class="tip" id="447">
             <strong>Signature:</strong> container:string -&gt; ICloudFile []<br />
                       </div>
         </td>
@@ -628,10 +704,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '442', 442)" onmouseover="showTip(event, '442', 442)">
+          <code onmouseout="hideTip(event, '448', 448)" onmouseover="showTip(event, '448', 448)">
             EnumerateCloudFilesAsync()
           </code>
-          <div class="tip" id="442">
+          <div class="tip" id="448">
             <strong>Signature:</strong> unit -&gt; Async&lt;ICloudFile []&gt;<br />
                       </div>
         </td>
@@ -647,10 +723,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '443', 443)" onmouseover="showTip(event, '443', 443)">
+          <code onmouseout="hideTip(event, '449', 449)" onmouseover="showTip(event, '449', 449)">
             EnumerateCloudFilesAsync(container)
           </code>
-          <div class="tip" id="443">
+          <div class="tip" id="449">
             <strong>Signature:</strong> container:string -&gt; Async&lt;ICloudFile []&gt;<br />
                       </div>
         </td>
@@ -666,10 +742,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '444', 444)" onmouseover="showTip(event, '444', 444)">
+          <code onmouseout="hideTip(event, '450', 450)" onmouseover="showTip(event, '450', 450)">
             EnumerateCloudRefs()
           </code>
-          <div class="tip" id="444">
+          <div class="tip" id="450">
             <strong>Signature:</strong> unit -&gt; ICloudRef []<br />
                       </div>
         </td>
@@ -685,10 +761,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '445', 445)" onmouseover="showTip(event, '445', 445)">
+          <code onmouseout="hideTip(event, '451', 451)" onmouseover="showTip(event, '451', 451)">
             EnumerateCloudRefs(container)
           </code>
-          <div class="tip" id="445">
+          <div class="tip" id="451">
             <strong>Signature:</strong> container:string -&gt; ICloudRef []<br />
                       </div>
         </td>
@@ -704,10 +780,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '446', 446)" onmouseover="showTip(event, '446', 446)">
+          <code onmouseout="hideTip(event, '452', 452)" onmouseover="showTip(event, '452', 452)">
             EnumerateCloudRefsAsync()
           </code>
-          <div class="tip" id="446">
+          <div class="tip" id="452">
             <strong>Signature:</strong> unit -&gt; Async&lt;ICloudRef []&gt;<br />
                       </div>
         </td>
@@ -723,10 +799,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '447', 447)" onmouseover="showTip(event, '447', 447)">
+          <code onmouseout="hideTip(event, '453', 453)" onmouseover="showTip(event, '453', 453)">
             EnumerateCloudRefsAsync(container)
           </code>
-          <div class="tip" id="447">
+          <div class="tip" id="453">
             <strong>Signature:</strong> container:string -&gt; Async&lt;ICloudRef []&gt;<br />
                       </div>
         </td>
@@ -742,10 +818,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '448', 448)" onmouseover="showTip(event, '448', 448)">
+          <code onmouseout="hideTip(event, '454', 454)" onmouseover="showTip(event, '454', 454)">
             EnumerateCloudSeqs()
           </code>
-          <div class="tip" id="448">
+          <div class="tip" id="454">
             <strong>Signature:</strong> unit -&gt; ICloudSeq []<br />
                       </div>
         </td>
@@ -761,10 +837,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '449', 449)" onmouseover="showTip(event, '449', 449)">
+          <code onmouseout="hideTip(event, '455', 455)" onmouseover="showTip(event, '455', 455)">
             EnumerateCloudSeqs(container)
           </code>
-          <div class="tip" id="449">
+          <div class="tip" id="455">
             <strong>Signature:</strong> container:string -&gt; ICloudSeq []<br />
                       </div>
         </td>
@@ -780,10 +856,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '450', 450)" onmouseover="showTip(event, '450', 450)">
+          <code onmouseout="hideTip(event, '456', 456)" onmouseover="showTip(event, '456', 456)">
             EnumerateCloudSeqsAsync()
           </code>
-          <div class="tip" id="450">
+          <div class="tip" id="456">
             <strong>Signature:</strong> unit -&gt; Async&lt;ICloudSeq []&gt;<br />
                       </div>
         </td>
@@ -799,10 +875,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '451', 451)" onmouseover="showTip(event, '451', 451)">
+          <code onmouseout="hideTip(event, '457', 457)" onmouseover="showTip(event, '457', 457)">
             EnumerateCloudSeqsAsync(container)
           </code>
-          <div class="tip" id="451">
+          <div class="tip" id="457">
             <strong>Signature:</strong> container:string -&gt; Async&lt;ICloudSeq []&gt;<br />
                       </div>
         </td>
@@ -818,15 +894,15 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '452', 452)" onmouseover="showTip(event, '452', 452)">
+          <code onmouseout="hideTip(event, '458', 458)" onmouseover="showTip(event, '458', 458)">
             EnumerateContainers()
           </code>
-          <div class="tip" id="452">
+          <div class="tip" id="458">
             <strong>Signature:</strong> unit -&gt; string []<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L526-526" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L548-548" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -837,15 +913,15 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '453', 453)" onmouseover="showTip(event, '453', 453)">
+          <code onmouseout="hideTip(event, '459', 459)" onmouseover="showTip(event, '459', 459)">
             EnumerateContainersAsync()
           </code>
-          <div class="tip" id="453">
+          <div class="tip" id="459">
             <strong>Signature:</strong> unit -&gt; Async&lt;string []&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L521-521" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L543-543" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -856,34 +932,34 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '454', 454)" onmouseover="showTip(event, '454', 454)">
+          <code onmouseout="hideTip(event, '460', 460)" onmouseover="showTip(event, '460', 460)">
             GetCloudArray(id)
           </code>
-          <div class="tip" id="454">
+          <div class="tip" id="460">
             <strong>Signature:</strong> id:string -&gt; ICloudArray&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L502-502" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L512-512" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Returns the CloudArray with the specified container and id combination.</p>
+          <p>Returns the CloudArray in default container with the given id.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '455', 455)" onmouseover="showTip(event, '455', 455)">
+          <code onmouseout="hideTip(event, '461', 461)" onmouseover="showTip(event, '461', 461)">
             GetCloudArray(container, id)
           </code>
-          <div class="tip" id="455">
+          <div class="tip" id="461">
             <strong>Signature:</strong> (container:string * id:string) -&gt; ICloudArray&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L472-472" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L471-471" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -894,34 +970,34 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '456', 456)" onmouseover="showTip(event, '456', 456)">
+          <code onmouseout="hideTip(event, '462', 462)" onmouseover="showTip(event, '462', 462)">
             GetCloudArrayAsync(id)
           </code>
-          <div class="tip" id="456">
+          <div class="tip" id="462">
             <strong>Signature:</strong> id:string -&gt; Async&lt;ICloudArray&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L496-496" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L507-507" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Returns the CloudArray with the specified container and id combination.</p>
+          <p>Returns the CloudArray in default container with the given id.</p>
 
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '457', 457)" onmouseover="showTip(event, '457', 457)">
+          <code onmouseout="hideTip(event, '463', 463)" onmouseover="showTip(event, '463', 463)">
             GetCloudArrayAsync(container, id)
           </code>
-          <div class="tip" id="457">
+          <div class="tip" id="463">
             <strong>Signature:</strong> (container:string * id:string) -&gt; Async&lt;ICloudArray&lt;&#39;T&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L466-466" class="github-link">
+            <a href="http://github.com/nessos/MBrace/tree/master/src/MBrace.Client/StoreClient.fs#L465-465" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -932,10 +1008,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '458', 458)" onmouseover="showTip(event, '458', 458)">
+          <code onmouseout="hideTip(event, '464', 464)" onmouseover="showTip(event, '464', 464)">
             GetCloudFile(id)
           </code>
-          <div class="tip" id="458">
+          <div class="tip" id="464">
             <strong>Signature:</strong> id:string -&gt; ICloudFile<br />
                       </div>
         </td>
@@ -951,10 +1027,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '459', 459)" onmouseover="showTip(event, '459', 459)">
+          <code onmouseout="hideTip(event, '465', 465)" onmouseover="showTip(event, '465', 465)">
             GetCloudFile(container, id)
           </code>
-          <div class="tip" id="459">
+          <div class="tip" id="465">
             <strong>Signature:</strong> (container:string * id:string) -&gt; ICloudFile<br />
                       </div>
         </td>
@@ -970,10 +1046,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '460', 460)" onmouseover="showTip(event, '460', 460)">
+          <code onmouseout="hideTip(event, '466', 466)" onmouseover="showTip(event, '466', 466)">
             GetCloudFileAsync(name)
           </code>
-          <div class="tip" id="460">
+          <div class="tip" id="466">
             <strong>Signature:</strong> name:string -&gt; Async&lt;ICloudFile&gt;<br />
                       </div>
         </td>
@@ -989,10 +1065,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '461', 461)" onmouseover="showTip(event, '461', 461)">
+          <code onmouseout="hideTip(event, '467', 467)" onmouseover="showTip(event, '467', 467)">
             GetCloudFileAsync(container, name)
           </code>
-          <div class="tip" id="461">
+          <div class="tip" id="467">
             <strong>Signature:</strong> (container:string * name:string) -&gt; Async&lt;ICloudFile&gt;<br />
                       </div>
         </td>
@@ -1008,10 +1084,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '462', 462)" onmouseover="showTip(event, '462', 462)">
+          <code onmouseout="hideTip(event, '468', 468)" onmouseover="showTip(event, '468', 468)">
             GetCloudRef(id)
           </code>
-          <div class="tip" id="462">
+          <div class="tip" id="468">
             <strong>Signature:</strong> id:string -&gt; ICloudRef<br />
                       </div>
         </td>
@@ -1027,10 +1103,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '463', 463)" onmouseover="showTip(event, '463', 463)">
+          <code onmouseout="hideTip(event, '469', 469)" onmouseover="showTip(event, '469', 469)">
             GetCloudRef(container, id)
           </code>
-          <div class="tip" id="463">
+          <div class="tip" id="469">
             <strong>Signature:</strong> (container:string * id:string) -&gt; ICloudRef<br />
                       </div>
         </td>
@@ -1046,10 +1122,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '464', 464)" onmouseover="showTip(event, '464', 464)">
+          <code onmouseout="hideTip(event, '470', 470)" onmouseover="showTip(event, '470', 470)">
             GetCloudRefAsync(id)
           </code>
-          <div class="tip" id="464">
+          <div class="tip" id="470">
             <strong>Signature:</strong> id:string -&gt; Async&lt;ICloudRef&gt;<br />
                       </div>
         </td>
@@ -1065,10 +1141,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '465', 465)" onmouseover="showTip(event, '465', 465)">
+          <code onmouseout="hideTip(event, '471', 471)" onmouseover="showTip(event, '471', 471)">
             GetCloudRefAsync(container, id)
           </code>
-          <div class="tip" id="465">
+          <div class="tip" id="471">
             <strong>Signature:</strong> (container:string * id:string) -&gt; Async&lt;ICloudRef&gt;<br />
                       </div>
         </td>
@@ -1084,10 +1160,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '466', 466)" onmouseover="showTip(event, '466', 466)">
+          <code onmouseout="hideTip(event, '472', 472)" onmouseover="showTip(event, '472', 472)">
             GetCloudSeq(id)
           </code>
-          <div class="tip" id="466">
+          <div class="tip" id="472">
             <strong>Signature:</strong> id:string -&gt; ICloudSeq<br />
                       </div>
         </td>
@@ -1103,10 +1179,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '467', 467)" onmouseover="showTip(event, '467', 467)">
+          <code onmouseout="hideTip(event, '473', 473)" onmouseover="showTip(event, '473', 473)">
             GetCloudSeq(container, id)
           </code>
-          <div class="tip" id="467">
+          <div class="tip" id="473">
             <strong>Signature:</strong> (container:string * id:string) -&gt; ICloudSeq<br />
                       </div>
         </td>
@@ -1122,10 +1198,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '468', 468)" onmouseover="showTip(event, '468', 468)">
+          <code onmouseout="hideTip(event, '474', 474)" onmouseover="showTip(event, '474', 474)">
             GetCloudSeqAsync(id)
           </code>
-          <div class="tip" id="468">
+          <div class="tip" id="474">
             <strong>Signature:</strong> id:string -&gt; Async&lt;ICloudSeq&gt;<br />
                       </div>
         </td>
@@ -1141,10 +1217,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '469', 469)" onmouseover="showTip(event, '469', 469)">
+          <code onmouseout="hideTip(event, '475', 475)" onmouseover="showTip(event, '475', 475)">
             GetCloudSeqAsync(container, id)
           </code>
-          <div class="tip" id="469">
+          <div class="tip" id="475">
             <strong>Signature:</strong> (container:string * id:string) -&gt; Async&lt;ICloudSeq&gt;<br />
                       </div>
         </td>
@@ -1160,10 +1236,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '470', 470)" onmouseover="showTip(event, '470', 470)">
+          <code onmouseout="hideTip(event, '476', 476)" onmouseover="showTip(event, '476', 476)">
             GetMutableCloudRef(id)
           </code>
-          <div class="tip" id="470">
+          <div class="tip" id="476">
             <strong>Signature:</strong> id:string -&gt; IMutableCloudRef<br />
                       </div>
         </td>
@@ -1179,10 +1255,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '471', 471)" onmouseover="showTip(event, '471', 471)">
+          <code onmouseout="hideTip(event, '477', 477)" onmouseover="showTip(event, '477', 477)">
             GetMutableCloudRef(container, id)
           </code>
-          <div class="tip" id="471">
+          <div class="tip" id="477">
             <strong>Signature:</strong> (container:string * id:string) -&gt; IMutableCloudRef<br />
                       </div>
         </td>
@@ -1198,10 +1274,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '472', 472)" onmouseover="showTip(event, '472', 472)">
+          <code onmouseout="hideTip(event, '478', 478)" onmouseover="showTip(event, '478', 478)">
             GetMutableCloudRefAsync(id)
           </code>
-          <div class="tip" id="472">
+          <div class="tip" id="478">
             <strong>Signature:</strong> id:string -&gt; Async&lt;IMutableCloudRef&gt;<br />
                       </div>
         </td>
@@ -1217,10 +1293,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '473', 473)" onmouseover="showTip(event, '473', 473)">
+          <code onmouseout="hideTip(event, '479', 479)" onmouseover="showTip(event, '479', 479)">
             GetMutableCloudRefAsync(container, id)
           </code>
-          <div class="tip" id="473">
+          <div class="tip" id="479">
             <strong>Signature:</strong> (container:string * id:string) -&gt; Async&lt;IMutableCloudRef&gt;<br />
                       </div>
         </td>
@@ -1236,10 +1312,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '474', 474)" onmouseover="showTip(event, '474', 474)">
+          <code onmouseout="hideTip(event, '480', 480)" onmouseover="showTip(event, '480', 480)">
             GetMutableCloudRefs()
           </code>
-          <div class="tip" id="474">
+          <div class="tip" id="480">
             <strong>Signature:</strong> unit -&gt; IMutableCloudRef []<br />
                       </div>
         </td>
@@ -1255,10 +1331,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '475', 475)" onmouseover="showTip(event, '475', 475)">
+          <code onmouseout="hideTip(event, '481', 481)" onmouseover="showTip(event, '481', 481)">
             GetMutableCloudRefs(container)
           </code>
-          <div class="tip" id="475">
+          <div class="tip" id="481">
             <strong>Signature:</strong> container:string -&gt; IMutableCloudRef []<br />
                       </div>
         </td>
@@ -1274,10 +1350,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '476', 476)" onmouseover="showTip(event, '476', 476)">
+          <code onmouseout="hideTip(event, '482', 482)" onmouseover="showTip(event, '482', 482)">
             GetMutableCloudRefsAsync()
           </code>
-          <div class="tip" id="476">
+          <div class="tip" id="482">
             <strong>Signature:</strong> unit -&gt; Async&lt;IMutableCloudRef []&gt;<br />
                       </div>
         </td>
@@ -1293,10 +1369,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '477', 477)" onmouseover="showTip(event, '477', 477)">
+          <code onmouseout="hideTip(event, '483', 483)" onmouseover="showTip(event, '483', 483)">
             GetMutableCloudRefsAsync(container)
           </code>
-          <div class="tip" id="477">
+          <div class="tip" id="483">
             <strong>Signature:</strong> container:string -&gt; Async&lt;IMutableCloudRef []&gt;<br />
                       </div>
         </td>
@@ -1312,10 +1388,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '478', 478)" onmouseover="showTip(event, '478', 478)">
+          <code onmouseout="hideTip(event, '484', 484)" onmouseover="showTip(event, '484', 484)">
             Name
           </code>
-          <div class="tip" id="478">
+          <div class="tip" id="484">
             <strong>Signature:</strong> string<br />
                       </div>
         </td>
@@ -1331,10 +1407,10 @@ Use the serialize function to write to the underlying stream.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '479', 479)" onmouseover="showTip(event, '479', 479)">
+          <code onmouseout="hideTip(event, '485', 485)" onmouseover="showTip(event, '485', 485)">
             UploadFiles(paths, ?container)
           </code>
-          <div class="tip" id="479">
+          <div class="tip" id="485">
             <strong>Signature:</strong> (paths:string [] * container:string option) -&gt; ICloudFile []<br />
                       </div>
         </td>
@@ -1351,10 +1427,10 @@ Returns an array of CloudFiles that point to the uploaded resources.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '480', 480)" onmouseover="showTip(event, '480', 480)">
+          <code onmouseout="hideTip(event, '486', 486)" onmouseover="showTip(event, '486', 486)">
             UploadFilesAsync(paths, ?container)
           </code>
-          <div class="tip" id="480">
+          <div class="tip" id="486">
             <strong>Signature:</strong> (paths:string [] * container:string option) -&gt; Async&lt;ICloudFile []&gt;<br />
                       </div>
         </td>
@@ -1379,10 +1455,10 @@ Returns an array of CloudFiles that point to the uploaded resources.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '483', 483)" onmouseover="showTip(event, '483', 483)">
+          <code onmouseout="hideTip(event, '487', 487)" onmouseover="showTip(event, '487', 487)">
             Create(store)
           </code>
-          <div class="tip" id="483">
+          <div class="tip" id="487">
             <strong>Signature:</strong> store:ICloudStore -&gt; StoreClient<br />
                       </div>
         </td>
@@ -1398,10 +1474,10 @@ Returns an array of CloudFiles that point to the uploaded resources.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '484', 484)" onmouseover="showTip(event, '484', 484)">
+          <code onmouseout="hideTip(event, '488', 488)" onmouseover="showTip(event, '488', 488)">
             Default
           </code>
-          <div class="tip" id="484">
+          <div class="tip" id="488">
             <strong>Signature:</strong> StoreClient<br />
                       </div>
         </td>
