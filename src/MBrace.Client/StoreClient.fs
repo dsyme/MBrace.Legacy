@@ -442,8 +442,7 @@
 
         //---------------------------------------------------------------------------------
         // CloudArray
-        // TODO : Revise/populate
-        
+
         /// <summary>
         /// Creates a new CloudArray in given container.
         /// </summary>
@@ -472,10 +471,24 @@
         member this.GetCloudArray(container : string, id : string) : ICloudArray<'T> =
             Async.RunSynchronously <| this.GetCloudArrayAsync(container, id)
 
-
+        /// <summary>
+        ///   Returns an array of the CloudArrays contained in the specified folder.
+        /// </summary>
+        /// <param name="container">The folder to search.</param>
+        member this.EnumerateCloudArraysAsync(container : string) : Async<ICloudArray []> =
+            info.CloudArrayProvider.GetContained(container)
 
         /// <summary>
-        /// Creates a new CloudArray in given container.
+        ///   Returns an array of the CloudArrays contained in the specified folder.
+        /// </summary>
+        /// <param name="container">The folder to search.</param>
+        member this.EnumerateCloudArrays(container : string) : ICloudArray [] =
+            Async.RunSynchronously <| this.EnumerateCloudArraysAsync(container)
+
+        // Default container methods.
+
+        /// <summary>
+        /// Creates a new CloudArray in default container.
         /// </summary>
         /// <param name="container">The container (folder) of the MutableCloudRef in the underlying store.</param>
         /// <param name="values">The source sequence.</param>
@@ -483,24 +496,33 @@
             async { let! ca = info.CloudArrayProvider.Create(defaultContainer, newId(), values, typeof<'T>) in return ca :?> ICloudArray<'T> }
 
         /// <summary>
-        /// Creates a new CloudArray in given container.
+        /// Creates a new CloudArray in default container.
         /// </summary>
-        /// <param name="container">The container (folder) of the MutableCloudRef in the underlying store.</param>
         /// <param name="values">The source sequence.</param>
         member this.CreateCloudArray(values : seq<'T>) : ICloudArray<'T> =
             Async.RunSynchronously <| this.CreateCloudArrayAsync(values)
 
-        /// <summary>Returns the CloudArray with the specified container and id combination.</summary>
-        /// <param name="container">The container (folder) of the CloudArray in the underlying store.</param>
+        /// <summary>Returns the CloudArray in default container with the given id.</summary>
         /// <param name="id">The identifier of the CloudArray in the underlying store.</param>
         member this.GetCloudArrayAsync(id : string) : Async<ICloudArray<'T>> =
             async { let! ca = info.CloudArrayProvider.GetExisting(defaultContainer, id) in return ca :?> ICloudArray<'T> }
 
-        /// <summary>Returns the CloudArray with the specified container and id combination.</summary>
-        /// <param name="container">The container (folder) of the CloudArray in the underlying store.</param>
+        /// <summary>Returns the CloudArray in default container with the given id.</summary>
         /// <param name="id">The identifier of the CloudArray in the underlying store.</param>
         member this.GetCloudArray(id : string) : ICloudArray<'T> =
             Async.RunSynchronously <| this.GetCloudArrayAsync(id)
+
+        /// <summary>
+        ///   Returns an array of the CloudArrays contained in default container.
+        /// </summary>
+        member this.EnumerateCloudArraysAsync() : Async<ICloudArray []> =
+            info.CloudArrayProvider.GetContained(defaultContainer)
+
+        /// <summary>
+        ///   Returns an array of the CloudArrays contained in default container.
+        /// </summary>
+        member this.EnumerateCloudArrays() : ICloudArray [] =
+            Async.RunSynchronously <| this.EnumerateCloudArraysAsync()
 
 
         //---------------------------------------------------------------------------------

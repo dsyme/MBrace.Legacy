@@ -1,3 +1,6 @@
+### 0.5.13-alpha
+* Added StoreClient methods for CloudArrays.
+
 ### 0.5.12-alpha
 * Updated Thespian dependency.
 
