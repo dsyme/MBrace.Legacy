@@ -286,7 +286,6 @@ Target "Nuget.Runtime" (fun _ ->
             Files =
                 [  
                     yield! addAssembly @"tools" @"..\bin\Newtonsoft.Json.dll"
-                    yield! addAssembly @"tools" @"..\bin\FSharp.Compiler.Service.dll"
                     yield! addAssembly @"tools" @"..\bin\Mono.Cecil.dll"
                     yield! addAssembly @"tools" @"..\bin\FsPickler.dll"
                     yield! addAssembly @"tools" @"..\bin\FsPickler.Json.dll"
