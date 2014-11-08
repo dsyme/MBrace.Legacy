@@ -42,12 +42,21 @@ function Has-Net45
 	return $False
 }
 
+function DownloadFile($url, $target)
+{
+	$proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+	$proxy.Credentials = [net.CredentialCache]::DefaultCredentials
+	$wc = New-Object net.webclient
+	$wc.Proxy = $proxy
+	$wc.DownloadFile($url, $target)
+}
+
 function Download-Nuget
 {
 	$url = 'http://nuget.org/nuget.exe'
 	$target = "$Directory\nuget.exe"
 	write-host "Downloading file $url to $target"
-	(New-Object net.webclient).DownloadFile($url, $target)
+	DownloadFile $url $target
 }
 
 function CheckIf-Admin
@@ -59,7 +68,7 @@ function Install-Net45
 {
 	$url = "https://github.com/nessos/MBrace/raw/master/nuget/installer/dotNetFx45_Full_setup.exe"
 	$target = "$Directory\dotNetFx45_Full_setup.exe"
-	$(New-Object net.webclient).DownloadFile($url, $target)
+	DownloadFile $url $target
 	write-host "Running $target"
 	Start-Process -FilePath $target -ArgumentList /q, /norestart 
 }
