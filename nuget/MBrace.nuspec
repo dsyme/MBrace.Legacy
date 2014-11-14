@@ -5,9 +5,9 @@
 	  <version>@build.number@</version>
 	  <authors>@authors@</authors>
 	  <owners>@authors@</owners>
-	  <licenseUrl>https://github.com/nessos/MBrace/blob/master/LICENSE.md</licenseUrl>
-	  <projectUrl>https://nessos.github.io/MBrace</projectUrl>
-	  <iconUrl>http://nessos.github.io/MBrace/img/mbrace.png</iconUrl>
+	  <licenseUrl>https://github.com/mbraceproject/MBrace/blob/master/LICENSE.md</licenseUrl>
+	  <projectUrl>https://www.m-brace.net</projectUrl>
+	  <iconUrl>http://www.m-brace.net/img/mbrace.png</iconUrl>
 	  <requireLicenseAcceptance>false</requireLicenseAcceptance>
 	  <summary>@summary@</summary>
 	  <description>@description@</description>

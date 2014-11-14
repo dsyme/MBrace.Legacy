@@ -29,7 +29,7 @@ let private processMonitorBehaviorNormal (ctx: BehaviorContext<_>)
             | Some { State = Running } ->
                 try
                     // currently, TaskManager experiences delays when multiple tasks are being posted
-                    // giving rise to the following issue : https://github.com/nessos/MBrace/issues/2
+                    // giving rise to the following issue : https://github.com/mbraceproject/MBrace/issues/2
                     // This is possibly Thespian related, so implementing a workaround here until addressed;
                     // since GetTaskCount is a message merely forwarded to the TaskLog,
                     // simply eliminate the middleman and post directly. 

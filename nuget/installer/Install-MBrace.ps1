@@ -18,8 +18,7 @@
 	File Name  : Install-MBrace.ps1  
 	Requires   : PowerShell 3.0
 .LINK  
-	http://github.com/Nessos/MBrace
-	http://nessos.github.io/MBrace
+	http://github.com/mbraceproject/MBrace
 	http://www.m-brace.net/
 #>
 
@@ -66,7 +65,7 @@ function CheckIf-Admin
 
 function Install-Net45
 {
-	$url = "https://github.com/nessos/MBrace/raw/master/nuget/installer/dotNetFx45_Full_setup.exe"
+	$url = "https://github.com/mbraceproject/MBrace/raw/master/nuget/installer/dotNetFx45_Full_setup.exe"
 	$target = "$Directory\dotNetFx45_Full_setup.exe"
 	DownloadFile $url $target
 	write-host "Running $target"

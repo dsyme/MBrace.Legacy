@@ -34,7 +34,7 @@ as well as any clients, should be part of the same network in order to work prop
 In order to get a MBrace node running on a machine you need to download 
 the [MBrace.Runtime](http://nuget.org/packages/MBrace.Runtime) package.
 Any dependencies and executables are located in the `tools` subdirectory. Alternatively you can 
-use the [Install-MBrace.ps1](http://github.com/nessos/MBrace/raw/master/nuget/installer/Install-MBrace.ps1) powershell script that helps you install 
+use the [Install-MBrace.ps1](http://github.com/mbraceproject/MBrace/raw/master/nuget/installer/Install-MBrace.ps1) powershell script that helps you install 
 MBrace by downloading `.NET 4.5` if it's needed, downloading the
 runtime nuget package, adding firewall exceptions for the MBrace executables and finally 
 installing the MBrace runtime as a Windows Service.
@@ -75,7 +75,7 @@ you can do this using the [Set-ExecutionPolicy](http://technet.microsoft.com/en-
 
 
     RELATED LINKS
-        http://github.com/Nessos/MBrace
+        http://github.com/mbraceproject/MBrace
     	http://nessos.github.io/MBrace
     	http://www.m-brace.net/
 

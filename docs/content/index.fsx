@@ -63,10 +63,10 @@ let lines = proc.AwaitResult () // await completion
 (**
 
 For a quick dive into MBrace and applications, check out the 
-[`MBrace.Demos`](https://github.com/nessos/MBrace.Demos) solution.
+[`MBrace.Demos`](https://github.com/mbraceproject/MBrace.Demos) solution.
 
     [lang=bash]
-    git clone https://github.com/nessos/MBrace.Demos
+    git clone https://github.com/mbraceproject/MBrace.Demos
 
 ## Documentation & Tutorials
 
@@ -99,7 +99,7 @@ the project and submit pull requests.
 The library is available under the Apache License. 
 For more information see the [License file][license] in the GitHub repository. 
 
-  [gh]: https://github.com/nessos/MBrace
-  [issues]: https://github.com/nessos/MBrace/issues
-  [license]: https://github.com/nessos/MBrace/blob/master/LICENSE.md
+  [gh]: https://github.com/mbraceproject/MBrace
+  [issues]: https://github.com/mbraceproject/MBrace/issues
+  [license]: https://github.com/mbraceproject/MBrace/blob/master/LICENSE.md
 *)

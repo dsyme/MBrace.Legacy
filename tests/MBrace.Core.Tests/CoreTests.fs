@@ -210,7 +210,7 @@
             let result : int[] = <@ cloud { return! Cloud.Parallel [||] } @> |> test.ExecuteExpression
             result.Length |> should equal 0
 
-        // https://github.com/nessos/MBrace/issues/2
+        // https://github.com/mbraceproject/MBrace/issues/2
         [<Test; CloudParallelCategory>]
         member test.``2. Parallel : Cloud.Parallel large input size.`` () =
             let res = test.ExecuteExpression <@ Array.init 1000 (fun _ -> Cloud.Sleep 500) |> Cloud.Parallel @>
