@@ -122,7 +122,8 @@ You can find your storage account name and key using the Azure Management Portal
 
 *)
 
-#r "../bin/MBrace.Azure.dll"
+#I "../../packages/MBrace.Azure/lib/net45/" 
+#r "MBrace.Azure.dll"
 
 open Nessos.MBrace.Azure
 
@@ -138,7 +139,7 @@ Finally boot the runtime (the MBrace.Azure package will be uploaded to the runti
 and send your first cloud computation.
 *)
 
-let runtime = MBrace.Boot nodes
+let runtime = MBrace.Boot(nodes, store = azureStore)
 
 runtime.Run <@ cloud { return 42 } @>
 

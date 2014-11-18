@@ -9,7 +9,7 @@ let referenceBinaries = [ "MBrace.Core.dll" ; "MBrace.Lib.dll" ; "MBrace.Store.d
 //let website = "http://nessos.github.io/MBrace"
 let website = "http://www.m-brace.net"
 
-let githubLink = "http://github.com/mbraceprojects/MBrace"
+let githubLink = "http://github.com/mbraceproject/MBrace"
 
 // Specify more information about your project
 let info =
