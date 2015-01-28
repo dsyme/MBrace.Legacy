@@ -18,5 +18,5 @@ All documentation and related materials can be found [here](http://www.m-brace.n
 
 Head (branch `master`), Build & Unit tests
 
-* Windows/.NET [![Build status](https://ci.appveyor.com/api/projects/status/n567sx3mmbstl5q9/branch/master)](https://ci.appveyor.com/project/mbraceproject/mbrace/branch/master)
+* Windows/.NET [![Build status](https://ci.appveyor.com/api/projects/status/81hmynu7ucjnc6a7/branch/master?svg=true)](https://ci.appveyor.com/project/nessos/mbrace-legacy/branch/master)
 * Mac OS X/Mono 3.4 [![Build Status](https://travis-ci.org/mbraceproject/MBrace.Legacy.png?branch=master)](https://travis-ci.org/mbraceproject/MBrace.Legacy/branches)
